@@ -468,6 +468,7 @@ void GMainWindow::InitializeWidgets() {
     actionGroup_ScreenLayouts->addAction(ui->action_Screen_Layout_Hybrid_Screen);
     actionGroup_ScreenLayouts->addAction(ui->action_Screen_Layout_Side_by_Side);
     actionGroup_ScreenLayouts->addAction(ui->action_Screen_Layout_Separate_Windows);
+    actionGroup_ScreenLayouts->addAction(ui->action_Screen_Layout_Custom_Layout);
 }
 
 void GMainWindow::InitializeDebugWidgets() {
@@ -923,6 +924,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Screen_Layout_Hybrid_Screen, &GMainWindow::ChangeScreenLayout);
     connect_menu(ui->action_Screen_Layout_Side_by_Side, &GMainWindow::ChangeScreenLayout);
     connect_menu(ui->action_Screen_Layout_Separate_Windows, &GMainWindow::ChangeScreenLayout);
+    connect_menu(ui->action_Screen_Layout_Custom_Layout, &GMainWindow::ChangeScreenLayout);
     connect_menu(ui->action_Screen_Layout_Swap_Screens, &GMainWindow::OnSwapScreens);
     connect_menu(ui->action_Screen_Layout_Upright_Screens, &GMainWindow::OnRotateScreens);
 
@@ -2408,6 +2410,8 @@ void GMainWindow::ChangeScreenLayout() {
         new_layout = Settings::LayoutOption::SideScreen;
     } else if (ui->action_Screen_Layout_Separate_Windows->isChecked()) {
         new_layout = Settings::LayoutOption::SeparateWindows;
+    } else if (ui->action_Screen_Layout_Custom_Layout->isChecked()) {
+        new_layout = Settings::LayoutOption::CustomLayout;
     }
 
     Settings::values.layout_option = new_layout;
@@ -2429,6 +2433,8 @@ void GMainWindow::ToggleScreenLayout() {
         case Settings::LayoutOption::SideScreen:
             return Settings::LayoutOption::SeparateWindows;
         case Settings::LayoutOption::SeparateWindows:
+            return Settings::LayoutOption::CustomLayout;
+        case Settings::LayoutOption::CustomLayout:
             return Settings::LayoutOption::Default;
         default:
             LOG_ERROR(Frontend, "Unknown layout option {}",
@@ -3482,6 +3488,8 @@ void GMainWindow::SyncMenuUISettings() {
                                                       Settings::LayoutOption::SideScreen);
     ui->action_Screen_Layout_Separate_Windows->setChecked(
         Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
+    ui->action_Screen_Layout_Custom_Layout->setChecked(Settings::values.layout_option.GetValue() ==
+                                                      Settings::LayoutOption::CustomLayout);
     ui->action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen.GetValue());
     ui->action_Screen_Layout_Upright_Screens->setChecked(
         Settings::values.upright_screen.GetValue());

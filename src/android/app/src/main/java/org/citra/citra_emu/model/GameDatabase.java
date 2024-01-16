@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.utils.FileUtil;
@@ -14,9 +15,16 @@ import org.citra.citra_emu.utils.Log;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import rx.Observable;
 
@@ -112,99 +120,68 @@ public final class GameDatabase extends SQLiteOpenHelper {
     }
 
     public void scanLibrary(SQLiteDatabase database) {
-        // Before scanning known folders, go through the game table and remove any entries for which the file itself is missing.
-        Cursor fileCursor = database.query(TABLE_NAME_GAMES,
-                null,    // Get all columns.
-                null,    // Get all rows.
-                null,
-                null,    // No grouping.
-                null,
-                null);    // Order of games is irrelevant.
+        // Start transaction
+        database.beginTransaction();
+        try {
+            // Projection to select only necessary columns
+            String[] projection = {KEY_DB_ID, KEY_GAME_PATH};
+            Set<String> allowedExtensions = new HashSet<>(Arrays.asList(
+                    ".3ds", ".3dsx", ".elf", ".axf", ".cci", ".cxi", ".app", ".rar", ".zip", ".7z", ".torrent", ".tar", ".gz"));
 
-        // Possibly overly defensive, but ensures that moveToNext() does not skip a row.
-        fileCursor.moveToPosition(-1);
-
-        while (fileCursor.moveToNext()) {
-            String gamePath = fileCursor.getString(GAME_COLUMN_PATH);
-
-            if (!FileUtil.Exists(mContext, gamePath)) {
-                Log.error("[GameDatabase] Game file no longer exists. Removing from the library: " +
-                        gamePath);
-                database.delete(TABLE_NAME_GAMES,
-                        KEY_DB_ID + " = ?",
-                        new String[]{Long.toString(fileCursor.getLong(COLUMN_DB_ID))});
-            }
-        }
-
-        // Get a cursor listing all the folders the user has added to the library.
-        Cursor folderCursor = database.query(TABLE_NAME_FOLDERS,
-                null,    // Get all columns.
-                null,    // Get all rows.
-                null,
-                null,    // No grouping.
-                null,
-                null);    // Order of folders is irrelevant.
-
-        Set<String> allowedExtensions = new HashSet<String>(Arrays.asList(
-                ".3ds", ".3dsx", ".elf", ".axf", ".cci", ".cxi", ".app", ".rar", ".zip", ".7z", ".torrent", ".tar", ".gz"));
-
-        // Possibly overly defensive, but ensures that moveToNext() does not skip a row.
-        folderCursor.moveToPosition(-1);
-
-        // Iterate through all results of the DB query (i.e. all folders in the library.)
-        while (folderCursor.moveToNext()) {
-            String folderPath = folderCursor.getString(FOLDER_COLUMN_PATH);
-
-            Uri folder = Uri.parse(folderPath);
-            // If the folder is empty because it no longer exists, remove it from the library.
-            CheapDocument[] files = FileUtil.listFiles(mContext, folder);
-            if (files.length == 0) {
-                Log.error(
-                        "[GameDatabase] Folder no longer exists. Removing from the library: " + folderPath);
-                database.delete(TABLE_NAME_FOLDERS,
-                        KEY_DB_ID + " = ?",
-                        new String[]{Long.toString(folderCursor.getLong(COLUMN_DB_ID))});
+            // Use try-with-resources to ensure that the cursor is closed after usage
+            try (Cursor fileCursor = database.query(TABLE_NAME_GAMES, projection, null, null, null, null, null)) {
+                while (fileCursor.moveToNext()) {
+                    String gamePath = fileCursor.getString(GAME_COLUMN_PATH);
+                    if (!FileUtil.Exists(mContext, gamePath)) {
+                        database.delete(TABLE_NAME_GAMES, KEY_DB_ID + " = ?", new String[]{Long.toString(fileCursor.getLong(COLUMN_DB_ID))});
+                    }
+                }
             }
 
-            addGamesRecursive(database, files, allowedExtensions, 3);
+            try (Cursor folderCursor = database.query(TABLE_NAME_FOLDERS, new String[]{KEY_DB_ID, KEY_FOLDER_PATH}, null, null, null, null, null)) {
+                while (folderCursor.moveToNext()) {
+                    String folderPath = folderCursor.getString(FOLDER_COLUMN_PATH);
+                    Uri folder = Uri.parse(folderPath);
+                    CheapDocument[] files = FileUtil.listFiles(mContext, folder);
+                    if (files.length == 0) {
+                        database.delete(TABLE_NAME_FOLDERS, KEY_DB_ID + " = ?", new String[]{Long.toString(folderCursor.getLong(COLUMN_DB_ID))});
+                    }
+                    addGamesRecursive(database, files, allowedExtensions, 3);
+                }
+            }
+
+            // If any other operations are needed, add here
+
+            // Commit the transaction
+            database.setTransactionSuccessful();
+        } finally {
+            // End the transaction
+            database.endTransaction();
         }
-
-        fileCursor.close();
-        folderCursor.close();
-
-        Arrays.stream(NativeLibrary.GetInstalledGamePaths())
-                .forEach(filePath -> attemptToAddGame(database, filePath));
-
-        database.close();
     }
 
-    private void addGamesRecursive(SQLiteDatabase database, CheapDocument[] files,
-                                   Set<String> allowedExtensions, int depth) {
+    private void addGamesRecursive(SQLiteDatabase database, CheapDocument[] files, Set<String> allowedExtensions, int depth) {
         if (depth <= 0) {
             return;
         }
 
         for (CheapDocument file : files) {
             if (file.isDirectory()) {
-                Set<String> newExtensions = new HashSet<>(Arrays.asList(
-                        ".3ds", ".3dsx", ".elf", ".axf", ".cci", ".cxi", ".app"));
                 CheapDocument[] children = FileUtil.listFiles(mContext, file.getUri());
-                this.addGamesRecursive(database, children, newExtensions, depth - 1);
+                addGamesRecursive(database, children, allowedExtensions, depth - 1);
             } else {
                 String filename = file.getUri().toString();
-
                 int extensionStart = filename.lastIndexOf('.');
                 if (extensionStart > 0) {
-                    String fileExtension = filename.substring(extensionStart);
-
-                    // Check that the file has an extension we care about before trying to read out of it.
-                    if (allowedExtensions.contains(fileExtension.toLowerCase())) {
+                    String fileExtension = filename.substring(extensionStart).toLowerCase();
+                    if (allowedExtensions.contains(fileExtension)) {
                         attemptToAddGame(database, filename);
                     }
                 }
             }
         }
     }
+
 
     private static void attemptToAddGame(SQLiteDatabase database, String filePath) {
         GameInfo gameInfo;

@@ -37,7 +37,7 @@ public class EmulationMenuSettings {
     }
 
     public static int getLandscapeScreenLayout() {
-        return mPreferences.getInt("EmulationMenuSettings_LandscapeScreenLayout", LayoutOption_MobileLandscape);
+        return LayoutOption_MobilePortrait;
     }
 
     public static void setLandscapeScreenLayout(int value) {
@@ -67,7 +67,7 @@ public class EmulationMenuSettings {
     }
 
     public static boolean getShowOverlay() {
-        return mPreferences.getBoolean("EmulationMenuSettings_ShowOverylay", true);
+        return mPreferences.getBoolean("EmulationMenuSettings_ShowOverylay", false);
     }
 
     public static void setShowOverlay(boolean value) {

@@ -87,6 +87,7 @@
     <!-- Miscellaneous -->
     <string name="clear">Tøm</string>
     <string name="slider_default">Standard</string>
+    <string name="auto">Auto-skala</string>
     <string name="ini_saved">Lagret Innstillingene</string>
     <string name="gameid_saved">Lagret innstillinger for %1$s</string>
     <string name="error_saving">Feil ved lagring av %1$s.ini: %2$s</string>
@@ -161,4 +162,7 @@
     <string name="camera_select_image">Velg Bilde</string>
     <string name="camera">Kamera</string>
     <string name="camera_permission_needed">Citra trenger tilgang til kameraet ditt for å emulere 3DS-kameraene.\n\n Alternativt kan du også stille \"Bildekilde\" til \"Stillbilde\" i kamerainnstillinger.</string>
+
+    <!-- VR-specific -->
+    <string name="vr_gamepad_warning">Har problemer? Trykk @string/button_start + @string/button_select på gamepad for å veksle inngangsmodus</string>
 </resources>

@@ -87,6 +87,7 @@
     <!-- Miscellaneous -->
     <string name="clear">Effacer</string>
     <string name="slider_default">Par défaut</string>
+    <string name="auto">Échelle automatique</string>
     <string name="ini_saved">Paramètres sauvegardés</string>
     <string name="gameid_saved">Paramètres sauvegardés pour %1$s</string>
     <string name="error_saving">Erreur lors de l\'enregistrement de %1$s.ini: %2$s</string>
@@ -161,4 +162,7 @@
     <string name="camera_select_image">Sélection de l\'image</string>
     <string name="camera">Caméra</string>
     <string name="camera_permission_needed">Citra a besoin d\'accéder à votre caméra pour émuler les caméras de la 3DS.\n\nSinon, vous pouvez définir \"Image Source\" sur \"Image fixe\" dans les paramètres de la caméra.</string>
+
+    <!-- VR-specific -->
+    <string name="vr_gamepad_warning">Avoir des problèmes? Appuyez sur @string/button_start + @string/button_select sur le GamePad pour basculer les modes d\'entrée</string>
 </resources>

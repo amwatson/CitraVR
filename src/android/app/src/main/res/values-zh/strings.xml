@@ -87,6 +87,7 @@
     <!-- Miscellaneous -->
     <string name="clear">清除</string>
     <string name="slider_default">默认</string>
+    <string name="auto">自动尺度</string>
     <string name="ini_saved">已保存的设置</string>
     <string name="gameid_saved">已将设置保存于 %1$s 中</string>
     <string name="error_saving">保存 %1$s.ini 失败：%2$s</string>
@@ -161,4 +162,7 @@
     <string name="camera_select_image">选择图像</string>
     <string name="camera">摄像头</string>
     <string name="camera_permission_needed">Citra 需要访问您的摄像头来模拟 3DS 上的摄像头。\n\n或者，您也可以在设置—>摄像头中将“图像来源”设置为“静止图像”。</string>
+
+    <!-- VR-specific -->
+    <string name="vr_gamepad_warning">遇到麻烦？按@string/button_start + @string/button_select在GamePad上的@string/button_select切换输入模式</string>
 </resources>

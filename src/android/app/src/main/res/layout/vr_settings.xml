@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="400dp"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:theme="@style/Theme.Citra.Main"
+
+    >
+
+    <LinearLayout
+        android:id="@+id/vr_settings_root"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
+        android:orientation="vertical"
+        android:background="@color/design_default_color_background"
+        >
+    </LinearLayout>
+    <include
+        android:id="@+id/vr_subsettings_root"
+        android:visibility="gone"
+        layout="@layout/vr_settings_subsettings"/>
+
+
+
+</LinearLayout>

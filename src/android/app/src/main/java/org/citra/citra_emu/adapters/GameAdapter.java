@@ -27,6 +27,7 @@ import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.PicassoUtils;
 import org.citra.citra_emu.viewholders.GameViewHolder;
+import org.citra.citra_emu.vr.VrActivity;
 
 import java.util.stream.Stream;
 
@@ -207,8 +208,8 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> {
         mLastClickTime = SystemClock.elapsedRealtime();
 
         GameViewHolder holder = (GameViewHolder) view.getTag();
-
-        EmulationActivity.launch((FragmentActivity) view.getContext(), holder.path, holder.title);
+        VrActivity.launch(view.getContext(), holder.path, holder.title);
+      // EmulationActivity.launch((FragmentActivity) view.getContext(), holder.path, holder.title);
     }
 
     /**

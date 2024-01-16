@@ -32,9 +32,17 @@ add_library(citra-android SHARED
     native.h
     ndk_motion.cpp
     ndk_motion.h
+    vr/CursorLayer.cpp
+    vr/vr_main.cpp
+    vr/OpenXR.cpp
+    vr/gl/Egl.cpp
+    vr/GameSurfaceLayer.cpp
+    vr/XrController.cpp
+    vr/utils/JniUtils.cpp
 )
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-enum-enum-conversion")
 target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network adrenotools)
-target_link_libraries(citra-android PRIVATE android camera2ndk EGL glad inih jnigraphics log mediandk yuv)
+target_link_libraries(citra-android PRIVATE openxr_loader GLESv3 android
+        camera2ndk EGL glad inih jnigraphics lodepng log mediandk yuv)
 
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android)

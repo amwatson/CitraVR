@@ -31,6 +31,8 @@ import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.PermissionsHandler;
+import org.citra.citra_emu.vr.ErrorMessageLayer;
+import org.citra.citra_emu.vr.VrActivity;
 
 import java.lang.ref.WeakReference;
 import java.util.Date;
@@ -214,8 +216,8 @@ public final class NativeLibrary {
         ErrorUnknown,
     }
 
-    private static boolean coreErrorAlertResult = false;
-    private static final Object coreErrorAlertLock = new Object();
+    public static boolean coreErrorAlertResult = false;
+    public static final Object coreErrorAlertLock = new Object();
 
     public static class CoreErrorDialogFragment extends DialogFragment {
         static CoreErrorDialogFragment newInstance(String title, String message) {
@@ -265,8 +267,13 @@ public final class NativeLibrary {
             return;
         }
 
-        CoreErrorDialogFragment fragment = CoreErrorDialogFragment.newInstance(title, message);
-        fragment.show(emulationActivity.getSupportFragmentManager(), "coreError");
+        if (ErrorMessageLayer.instance != null) {
+            ErrorMessageLayer.showErrorWindow(title, message);
+        } else {
+            assert !(emulationActivity instanceof VrActivity);
+            CoreErrorDialogFragment fragment = CoreErrorDialogFragment.newInstance(title, message);
+            fragment.show(emulationActivity.getSupportFragmentManager(), "coreError");
+        }
     }
 
     /**

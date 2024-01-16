@@ -89,6 +89,7 @@
     <!-- Miscellaneous -->
     <string name="clear">지우기</string>
     <string name="slider_default">기본</string>
+    <string name="auto">자동 규모</string>
     <string name="ini_saved">저장된 설정</string>
     <string name="gameid_saved">%1$s의 저장된 설정</string>
     <string name="error_saving">%1$s.ini 저장 오류: %2$s </string>
@@ -163,4 +164,7 @@
     <string name="camera_select_image">이미지 선택</string>
     <string name="camera">카메라</string>
     <string name="camera_permission_needed">Citra는 3DS의 카메라를 에뮬레이션하기 위해 카메라에 액세스해야합니다.\n\n 그 대신에 카메라 설정에서 \"이미지 소스\"를 \"정지 이미지\"로 설정할 수도 있습니다.</string>
+
+    <!-- VR-specific -->
+    <string name="vr_gamepad_warning">문제가있다? 입력 모드를 전환하려면 게임 패드에서 @string/button_start + @string/button_select를 누릅니다.</string>
 </resources>

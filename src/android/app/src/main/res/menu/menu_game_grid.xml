@@ -6,6 +6,7 @@
         android:id="@+id/button_premium"
         android:icon="@drawable/ic_heart"
         android:title="@string/premium_text"
+        android:visible="false"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/button_file_menu"

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/popup_background"
+    android:padding="40dp"
+    android:layout_centerVertical="true"
+    android:elevation="8dp"
+    >
+
+    <TextView
+        android:id="@+id/vr_settings_slider_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Heading Text"
+        android:textSize="24sp" />
+    <RelativeLayout xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/text_value"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginLeft="@dimen/spacing_large"
+            android:layout_marginRight="@dimen/spacing_large"
+            android:theme="@style/VrSliderTheme" />
+
+        <TextView
+            android:id="@+id/text_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/spacing_medlarge"
+            android:layout_marginBottom="@dimen/spacing_medlarge"
+            android:text="75" />
+
+        <TextView
+            android:id="@+id/text_units"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/text_value"
+            android:layout_toEndOf="@+id/text_value"
+            android:text="%"/>
+
+    </RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:id="@+id/default_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/CitraButton"
+            android:text="@string/slider_default"/>
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="90dp"
+            android:layout_height="1dp"/>
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/CitraButton"
+            android:text="@android:string/cancel"/>
+        <Button
+            android:id="@+id/ok_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/CitraButton"
+            android:text="@android:string/ok"/>
+    </LinearLayout>
+
+</LinearLayout>

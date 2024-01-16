@@ -1,6 +1,9 @@
 package org.citra.citra_emu.ui.main;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -16,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -46,10 +50,12 @@ import org.citra.citra_emu.utils.CitraDirectoryHelper;
 import org.citra.citra_emu.utils.DirectoryInitialization;
 import org.citra.citra_emu.utils.FileBrowserHelper;
 import org.citra.citra_emu.utils.InsetsHelper;
+import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.PermissionsHandler;
 import org.citra.citra_emu.utils.PicassoUtils;
 import org.citra.citra_emu.utils.StartupHandler;
 import org.citra.citra_emu.utils.ThemeUtil;
+import org.citra.citra_emu.vr.VrActivity;
 
 /**
  * The main Activity of the Lollipop style UI. Manages several PlatformGamesFragments, which
@@ -133,6 +139,26 @@ public final class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+ //       Log.info("amwatson hasRun " + VrActivity.hasRun);
+        if (VrActivity.hasRun){
+            // Setup the intent for restart
+            Intent restartIntent = new Intent(this, MainActivity.class);
+            int pendingIntentId = 123456;  // Some random ID
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, pendingIntentId, restartIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            if (VrActivity.currentActivity != null) {
+                VrActivity.currentActivity.finishActivity();
+            }
+
+            // Setup the alarm to launch the intent after 100ms
+         /*   AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent);
+
+
+            // Kill the current process
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);*/
+
+        }
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(
             ()
@@ -197,6 +223,10 @@ public final class MainActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onResume() {
         super.onResume();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Request permission if it's not granted
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 0);
+        }
         mPresenter.addDirIfNeeded(new AddDirectoryHelper(this));
 
         ThemeUtil.setSystemBarMode(this, ThemeUtil.getIsLightMode(getResources()));
@@ -303,6 +333,7 @@ public final class MainActivity extends AppCompatActivity implements MainView {
     protected void onDestroy() {
         EmulationActivity.tryDismissRunningNotification(this);
         super.onDestroy();
+        System.gc();
     }
 
     /**

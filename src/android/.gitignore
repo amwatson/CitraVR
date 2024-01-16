@@ -60,3 +60,7 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
+
+# CMake generated folder
+CMakeFiles/
+cmake_config.txt

@@ -13,7 +13,7 @@ const char* sdl2_config_file = R"(
 # Escape characters $0 (for ':'), $1 (for ',') and $2 (for '$') can be used in values
 
 # for button input, the following devices are available:
-#  - "keyboard" (default) for keyboard input. Required parameters:
+#  - "gamepad" (default) for gamepad input. Required parameters:
 #      - "code": the code of the key to bind
 #  - "sdl" for joystick input using SDL. Required parameters:
 #      - "joystick": the index of the joystick to bind
@@ -26,28 +26,28 @@ const char* sdl2_config_file = R"(
 #      - "direction"(only used for axis): "+" means the button is triggered when the axis value
 #          is greater than the threshold; "-" means the button is triggered when the axis value
 #          is smaller than the threshold
-button_a=
-button_b=
-button_x=
-button_y=
-button_up=
-button_down=
-button_left=
-button_right=
-button_l=
-button_r=
-button_start=
-button_select=
-button_debug=
-button_gpio14=
-button_zl=
-button_zr=
+button_a=engine:gamepad,code:96
+button_b=engine:gamepad,code:97
+button_x=engine:gamepad,code:99
+button_y=engine:gamepad,code:100
+button_up=engine:gamepad,code:273
+button_down=engine:gamepad,code:274
+button_left=engine:gamepad,code:276
+button_right=engine:gamepad,code:275
+button_l=engine:gamepad,code:102
+button_r=engine:gamepad,code:103
+button_start=engine:gamepad,code:109
+button_select=engine:gamepad,code:108
+button_debug=engine:gamepad,code:9
+button_gpio14=engine:gamepad,code:49
+button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
+button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
 button_home=
 
 # for analog input, the following devices are available:
 #  - "analog_from_button" (default) for emulating analog input from direction buttons. Required parameters:
 #      - "up", "down", "left", "right": sub-devices for each direction.
-#          Should be in the format as a button input devices using escape characters, for example, "engine$0keyboard$1code$00"
+#          Should be in the format as a button input devices using escape characters, for example, "engine$0gamepad$1code$00"
 #      - "modifier": sub-devices as a modifier.
 #      - "modifier_scale": a float number representing the applied modifier scale to the analog input.
 #          Must be in range of 0.0-1.0. Defaults to 0.5
@@ -57,6 +57,7 @@ button_home=
 #      - "axis_y": the index of the axis to bind as y-axis (default to 1)
 circle_pad=
 c_stick=
+
 
 # for motion input, the following devices are available:
 #  - "motion_emu" (default) for emulating motion input from mouse input. Required parameters:
@@ -95,7 +96,7 @@ use_cpu_jit =
 # Underclocking can increase the performance of the game at the risk of freezing.
 # Overclocking may fix lag that happens on console, but also comes with the risk of freezing.
 # Range is any positive integer (but we suspect 25 - 400 is a good idea) Default is 100
-cpu_clock_percentage =
+cpu_clock_percentage=200
 
 [Renderer]
 # Whether to render using OpenGL
@@ -116,7 +117,7 @@ use_hw_shader =
 
 # Whether to use accurate multiplication in hardware shaders
 # 0: Off (Default. Faster, but causes issues in some games) 1: On (Slower, but correct)
-shaders_accurate_mul =
+shaders_accurate_mul =1
 
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
@@ -134,7 +135,7 @@ use_disk_shader_cache =
 # Resolution scale factor
 # 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution
-resolution_factor =
+resolution_factor =0
 
 # Whether to enable V-Sync (caps the framerate at 60FPS) or not.
 # 0 (default): Off, 1: On
@@ -156,11 +157,11 @@ bg_green =
 
 # Whether and how Stereoscopic 3D should be rendered
 # 0 (default): Off, 1: Side by Side, 2: Anaglyph, 3: Interlaced, 4: Reverse Interlaced, 5: Cardboard VR
-render_3d =
+render_3d =1
 
 # Change 3D Intensity
 # 0 - 100: Intensity. 0 (default)
-factor_3d =
+factor_3d =50
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
@@ -343,7 +344,7 @@ gdbstub_port=24689
 [WebService]
 # Whether or not to enable telemetry
 # 0 (default): No, 1: Yes
-enable_telemetry =
+enable_telemetry =0
 # URL for Web API
 web_api_url = https://api.citra-emu.org
 # Username and token for Citra Web Service

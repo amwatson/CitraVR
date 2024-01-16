@@ -45,6 +45,7 @@
 #include "jni/ndk_motion.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
+#include "vr/main_helper.h"
 
 #if CITRA_ARCH(arm64)
 #include <adrenotools/driver.h>
@@ -199,8 +200,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     const s64 audio_stretching_ticks{msToCycles(500)};
     audio_stretching_event =
         system.CoreTiming().RegisterEvent("AudioStretchingEvent", [&](u64, s64 cycles_late) {
+
+      const auto emulation_speed = system.GetAndResetPerfStats().emulation_speed;
             if (Settings::values.enable_audio_stretching) {
-                system.DSP().EnableStretching(system.GetAndResetPerfStats().emulation_speed < 0.95);
+               system.DSP().EnableStretching(emulation_speed < 0.98);
             }
 
             system.CoreTiming().ScheduleEvent(audio_stretching_ticks - cycles_late,
@@ -414,17 +417,19 @@ jlong Java_org_citra_citra_1emu_NativeLibrary_GetRunningTitleId(JNIEnv* env,
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadEvent(JNIEnv* env,
-                                                                [[maybe_unused]] jclass clazz,
-                                                                jstring j_device, jint j_button,
-                                                                jint action) {
-    bool consumed{};
-    if (action) {
-        consumed = InputManager::ButtonHandler()->PressKey(j_button);
-    } else {
-        consumed = InputManager::ButtonHandler()->ReleaseKey(j_button);
-    }
+    [[maybe_unused]] jclass clazz,
+    jstring j_device, jint j_button,
+    jint action) {
+  bool consumed{false};
+  if (InputManager::ButtonHandler()) {
 
-    return static_cast<jboolean>(consumed);
+    if (action) {
+      consumed = InputManager::ButtonHandler()->PressKey(j_button);
+    } else {
+      consumed = InputManager::ButtonHandler()->ReleaseKey(j_button);
+    }
+  }
+  return static_cast<jboolean>(consumed);
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadMoveEvent(JNIEnv* env,
@@ -444,15 +449,21 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadMoveEvent(JNIEnv* env,
         x /= r;
         y /= r;
     }
-    return static_cast<jboolean>(InputManager::AnalogHandler()->MoveJoystick(axis, x, y));
+    if (InputManager::AnalogHandler()) {
+      return static_cast<jboolean>(InputManager::AnalogHandler()->MoveJoystick(axis, x, y));
+    }
+    return static_cast<jboolean>(false);
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadAxisEvent(JNIEnv* env,
                                                                     [[maybe_unused]] jclass clazz,
                                                                     jstring j_device, jint axis_id,
                                                                     jfloat axis_val) {
+  if (InputManager::ButtonHandler()) {
     return static_cast<jboolean>(
         InputManager::ButtonHandler()->AnalogButtonEvent(axis_id, axis_val));
+  }
+  return static_cast<jboolean>(false);
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_onTouchEvent(JNIEnv* env,
@@ -608,6 +619,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_Run__Ljava_lang_String_2(JNIEnv* en
         running_cv.notify_all();
     }
 
+    vr::PrioritizeTid(gettid());
     const Core::System::ResultStatus result{RunCitra(path)};
     if (result != Core::System::ResultStatus::Success) {
         env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),

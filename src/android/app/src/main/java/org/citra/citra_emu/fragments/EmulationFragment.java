@@ -30,6 +30,7 @@ import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryStateReceiver;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.Log;
+import org.citra.citra_emu.vr.VrActivity;
 
 public final class EmulationFragment extends Fragment implements SurfaceHolder.Callback, Choreographer.FrameCallback {
     private static final String KEY_GAMEPATH = "gamepath";
@@ -95,7 +96,12 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
         View contents = inflater.inflate(R.layout.fragment_emulation, container, false);
 
         SurfaceView surfaceView = contents.findViewById(R.id.surface_emulation);
-        surfaceView.getHolder().addCallback(this);
+        if (!(getActivity() instanceof VrActivity)) {
+            Log.debug("[EmulationFragment] non-VR mode: adding surface callback");
+            surfaceView.getHolder().addCallback(this);
+        } else {
+            Log.debug("[EmulationFragment] VR mode: not adding surface callback");
+        }
 
         mInputOverlay = contents.findViewById(R.id.surface_input_overlay);
         mPerfStats = contents.findViewById(R.id.show_fps_text);
@@ -213,6 +219,22 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
 
             mPerfStats.setVisibility(View.GONE);
         }
+    }
+
+    public void surfaceCreated(Surface surface) {
+        Log.debug("[EmulationFragment] Surface created");
+        mEmulationState.newSurface(surface);
+        // We purposely don't do anything here.
+        // All work is done in surfaceChanged, which we are guaranteed to get even for surface creation.
+    }
+
+    public void surfaceChanged(Surface surface, int width, int height) {
+        Log.debug("[EmulationFragment] Surface changed. Resolution: " + width + "x" + height);
+        mEmulationState.newSurface(surface);
+    }
+
+    public void surfaceDestroyed() {
+        mEmulationState.clearSurface();
     }
 
     @Override

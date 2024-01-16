@@ -58,6 +58,7 @@
     <!-- Miscellaneous -->
     <string name="clear">クリア</string>
     <string name="slider_default">デフォルト</string>
+    <string name="auto">自動スケール</string>
     <string name="gameid_saved">設定を保存しました：%1$s</string>
     <!-- Game Grid Screen-->
     <string name="grid_menu_core_settings">設定</string>

@@ -472,8 +472,8 @@ struct Values {
     SwitchableSetting<float> bg_green{0.f, "bg_green"};
     SwitchableSetting<float> bg_blue{0.f, "bg_blue"};
 
-    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
-    SwitchableSetting<u32> factor_3d{0, "factor_3d"};
+    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::SideBySide, "render_3d"};
+    SwitchableSetting<u32> factor_3d{50, "factor_3d"};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
                                                            "mono_render_option"};
 

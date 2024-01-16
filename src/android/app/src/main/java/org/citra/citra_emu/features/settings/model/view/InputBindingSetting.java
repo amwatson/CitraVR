@@ -147,7 +147,7 @@ public final class InputBindingSetting extends SettingsItem {
     /**
      * Returns the settings key for the specified Citra button code.
      */
-    private static String getButtonKey(int buttonCode) {
+    public static String getButtonKey(int buttonCode) {
         switch (buttonCode) {
             case NativeLibrary.ButtonType.BUTTON_A:
                 return SettingsFile.KEY_BUTTON_A;

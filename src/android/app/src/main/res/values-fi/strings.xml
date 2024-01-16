@@ -56,6 +56,7 @@
     <!-- Miscellaneous -->
     <string name="clear">Tyhjennä</string>
     <string name="slider_default">Oletus</string>
+    <string name="auto">Automaattinen mittakaava</string>
     <!-- Game Grid Screen-->
     <string name="grid_menu_core_settings">Asetukset</string>
 

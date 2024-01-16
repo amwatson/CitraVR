@@ -109,6 +109,8 @@ public class FileUtil {
                 return -1;
             }
             return parcelFileDescriptor.detachFd();
+        } catch (IllegalArgumentException e) {
+            // Ignore, this is apparently an expected issue
         } catch (Exception e) {
             Log.error("[FileUtil]: Cannot open content uri, error: " + e.getMessage());
         }
@@ -170,6 +172,8 @@ public class FileUtil {
             final String[] columns = new String[] {DocumentsContract.Document.COLUMN_DOCUMENT_ID};
             c = context.getContentResolver().query(mUri, columns, null, null, null);
             return c.getCount() > 0;
+        } catch (IllegalArgumentException e) {
+            // Ignore, this is apparently an expected issue
         } catch (Exception e) {
             Log.info("[FileUtil] Cannot find file from given path, error: " + e.getMessage());
         } finally {

@@ -1,0 +1,70 @@
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minWidth="400dp"
+    android:layout_gravity="center_horizontal"
+    android:padding="20dp"
+    android:background="@drawable/vr_menu_background"
+    >
+    <LinearLayout
+        android:layout_width="400dp"
+        android:layout_height="0dp" />
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="Error"
+        android:textColor="@android:color/white"
+        android:textSize="34sp" />
+
+    <!-- Icon -->
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_stat_notification_logo" />
+
+    <!-- Main Message -->
+    <TextView
+        android:id="@+id/main_message"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:layout_below="@id/icon"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="Something went wrong."
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
+
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:id="@+id/button_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/main_message"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true">
+
+        <Button
+            android:id="@+id/abort_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/abort_button"/>
+
+        <Button
+            android:id="@+id/continue_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/continue_button"/>
+    </LinearLayout>
+</RelativeLayout>

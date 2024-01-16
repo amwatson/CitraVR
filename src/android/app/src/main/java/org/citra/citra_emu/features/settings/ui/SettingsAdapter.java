@@ -39,6 +39,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SingleChoiceViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SliderViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder;
+import org.citra.citra_emu.features.settings.utils.SettingsFile;
 import org.citra.citra_emu.ui.main.MainActivity;
 import org.citra.citra_emu.utils.Log;
 
@@ -55,6 +56,7 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
 
     private AlertDialog mDialog;
     private TextView mTextSliderValue;
+    private TextView mUnits;
 
     public SettingsAdapter(SettingsFragmentView view, Context context) {
         mView = view;
@@ -289,9 +291,16 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
 
         mTextSliderValue = view.findViewById(R.id.text_value);
         mTextSliderValue.setText(String.valueOf(mSliderProgress));
+        mUnits = view.findViewById(R.id.text_units);
+        mUnits.setText(item.getUnits());
+        if (mClickedItem.getKey().equals(SettingsFile.KEY_RESOLUTION_FACTOR) && mSliderProgress == 0) {
+            mTextSliderValue.setText(R.string.auto);
+            mUnits.setVisibility(View.GONE);
+        } else {
+            mTextSliderValue.setText(String.valueOf(mSliderProgress));
+        }
 
-        TextView units = view.findViewById(R.id.text_units);
-        units.setText(item.getUnits());
+
 
         slider.setValueFrom(item.getMin());
         slider.setValueTo(item.getMax());
@@ -469,6 +478,16 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
     @Override
     public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
         mSliderProgress = (int) value;
-        mTextSliderValue.setText(String.valueOf(mSliderProgress));
+        if (mClickedItem.getKey().equals(SettingsFile.KEY_RESOLUTION_FACTOR)) {
+            if (mSliderProgress == 0) {
+                mTextSliderValue.setText(R.string.auto);
+                mUnits.setVisibility(View.GONE);
+            } else {
+                mTextSliderValue.setText(String.valueOf(mSliderProgress));
+                mUnits.setVisibility(View.VISIBLE);
+            }
+        } else {
+            mTextSliderValue.setText(String.valueOf(mSliderProgress));
+        }
     }
 }

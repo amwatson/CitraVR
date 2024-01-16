@@ -22,14 +22,12 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentActivity;
 
 import org.citra.citra_emu.CitraApplication;
@@ -37,21 +35,21 @@ import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.contracts.OpenFileResultContract;
 import org.citra.citra_emu.features.cheats.ui.CheatsActivity;
+import org.citra.citra_emu.features.settings.model.SettingSection;
+import org.citra.citra_emu.features.settings.model.Settings;
+import org.citra.citra_emu.features.settings.model.StringSetting;
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting;
 import org.citra.citra_emu.features.settings.ui.SettingsActivity;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
 import org.citra.citra_emu.camera.StillImageCameraHelper;
 import org.citra.citra_emu.fragments.EmulationFragment;
-import org.citra.citra_emu.ui.main.MainActivity;
 import org.citra.citra_emu.utils.ControllerMappingHelper;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.FileBrowserHelper;
-import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.ForegroundService;
+import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.ThemeUtil;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +61,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.slider.Slider;
 
-public final class EmulationActivity extends AppCompatActivity {
+public class EmulationActivity extends AppCompatActivity {
     public static final String EXTRA_SELECTED_GAME = "SelectedGame";
     public static final String EXTRA_SELECTED_TITLE = "SelectedTitle";
     public static final int MENU_ACTION_EDIT_CONTROLS_PLACEMENT = 0;
@@ -149,6 +147,11 @@ public final class EmulationActivity extends AppCompatActivity {
     private String mSelectedTitle;
     private String mPath;
 
+    // settings state when the activity initializes
+    private Settings mInitSettings = new Settings();
+    private SettingSection mControlsSection = null;
+
+
     public static void launch(FragmentActivity activity, String path, String title) {
         Intent launcher = new Intent(activity, EmulationActivity.class);
 
@@ -204,6 +207,8 @@ public final class EmulationActivity extends AppCompatActivity {
         setTitle(mSelectedTitle);
 
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mInitSettings.loadSettings(null);
+        mControlsSection = mInitSettings.getSection(Settings.SECTION_CONTROLS);
 
         // Start a foreground service to prevent the app from getting killed in the background
         foregroundService = new Intent(EmulationActivity.this, ForegroundService.class);
@@ -528,11 +533,42 @@ public final class EmulationActivity extends AppCompatActivity {
         }
     }
 
+    private int getConfigButton(final int nativeButton) {
+        if (mControlsSection == null) {
+            return -1;
+        }
+        final String configKey = InputBindingSetting.getButtonKey(nativeButton);
+        if (configKey == null || configKey.isEmpty()) {
+            return -2;
+        }
+        final StringSetting configButtonStrSetting = (StringSetting)mControlsSection.getSetting(configKey);
+        if (configButtonStrSetting == null || configButtonStrSetting.getValue().isEmpty()) {
+            return -3;
+        }
+        final String configButtonStr = configButtonStrSetting.getValue();
+        String[] keyValuePairs = configButtonStr.split(",");
+        String[] codePair = keyValuePairs[1].split(":");
+        int code;
+        try {
+            code = Integer.parseInt(codePair[1]);
+        } catch (Exception e) {
+            return -4;
+        }
+        return code;
+    }
+
     // Gets button presses
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int action;
         int button = mPreferences.getInt(InputBindingSetting.getInputButtonKey(event.getKeyCode()), event.getKeyCode());
+        final boolean hasPreference = button != event.getKeyCode();
+        if (hasPreference ) {
+            final int configButton = getConfigButton(button);
+           if (configButton > 0) {
+               button = configButton;
+           }
+        }
 
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
@@ -693,9 +729,24 @@ public final class EmulationActivity extends AppCompatActivity {
             int nextMapping = mPreferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1);
             int guestOrientation = mPreferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1);
 
+            // add some defaults since other sources don't really take them
             if (nextMapping == -1 || guestOrientation == -1) {
-                // Axis is unmapped
-                continue;
+                if (axis == 14) /* right joystick up/down */ {
+                    nextMapping = NativeLibrary.ButtonType.STICK_C;
+                    guestOrientation = 1;
+                } else if (axis == 11) /* right joystick left/right */ {
+                    nextMapping = NativeLibrary.ButtonType.STICK_C;
+                    guestOrientation = 0;
+                } else if (axis == 1) /* left joystick up/down */ {
+                    nextMapping = NativeLibrary.ButtonType.STICK_LEFT;
+                    guestOrientation = 1;
+                } else if (axis == 0) /* left joystick left/right */ {
+                    nextMapping = NativeLibrary.ButtonType.STICK_LEFT;
+                    guestOrientation = 0;
+                } else {
+                    // Axis is unmapped
+                    continue;
+                }
             }
 
             if ((value > 0.f && value < 0.1f) || (value < 0.f && value > -0.1f)) {

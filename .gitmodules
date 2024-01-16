@@ -85,3 +85,6 @@
 [submodule "libadrenotools"]
     path = externals/libadrenotools
     url = https://github.com/bylaws/libadrenotools
+[submodule "externals/openxr-sdk-src"]
+	path = externals/openxr-sdk-src
+	url = https://github.com/KhronosGroup/OpenXR-SDK-Source

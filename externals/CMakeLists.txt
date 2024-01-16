@@ -259,3 +259,9 @@ endif()
 if (ANDROID)
     add_subdirectory(libadrenotools)
 endif()
+
+# OpenXR
+if (ANDROID)
+    add_subdirectory(openxr-sdk-src)
+endif()
+

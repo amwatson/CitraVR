@@ -477,7 +477,7 @@ private:
             {
                 bool shouldRenderCursor = false;
                 XrPosef cursorPose3d = XrMath::Posef::Identity();
-                XrVector2f pos2d = {0, 0};
+                XrVector2f cursorPos2d = {0, 0};
                 float scaleFactor = 0.01f;
                 CursorLayer::CursorType cursorType = CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
 
@@ -508,37 +508,37 @@ private:
                         if (gShouldShowErrorMessage) {
 #if defined(UI_LAYER)
                             shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
-                                start, end, pos2d, pos3d);
+                                start, end, cursorPos2d, pos3d);
                             position = pos3d;
                             // ALOGI("Cursor 3D pos: %f %f %f",
-                            //                                        pos3d.x,
-                            //                                        pos3d.y,
-                            //                                        pos3d.z);
+                            //                                        cursorPos3d.x,
+                            //                                        cursorPos3d.y,
+                            //                                        cursorPos3d.z);
 
-                            //  ALOGI("Cursor 2D coords: %f %f", pos2d.x,
-                            //    pos2d.y);
+                            //  ALOGI("Cursor 2D coords: %f %f", cursorPos2d.x,
+                            //    cursorPos2d.y);
                             if (triggerState.changedSinceLastSync) {
-                                mErrorMessageLayer->SendClickToWindow(pos2d,
+                                mErrorMessageLayer->SendClickToWindow(cursorPos2d,
                                                                       triggerState.currentState);
                             }
 #endif
                         } else {
                             shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
-                                start, end, pos2d, cursorPose3d);
-                            ALOG_INPUT_VERBOSE("Cursor 2D coords: %f %f", pos2d.x, pos2d.y);
+                                start, end, cursorPos2d, cursorPose3d);
+                            ALOG_INPUT_VERBOSE("Cursor 2D coords: %f %f", cursorPos2d.x, cursorPos2d.y);
                             if (triggerState.currentState == 0 &&
                                 triggerState.changedSinceLastSync) {
                                 jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                    pos2d.x, pos2d.y, 0);
+                                                    cursorPos2d.x, cursorPos2d.y, 0);
                             } else if (triggerState.changedSinceLastSync &&
                                        triggerState.currentState == 1) {
                                 jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                    pos2d.x, pos2d.y, 1);
+                                                    cursorPos2d.x, cursorPos2d.y, 1);
                             } else if (triggerState.currentState == 1 &&
                                        !triggerState.changedSinceLastSync) {
 
                                 jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                    pos2d.x, pos2d.y, 2);
+                                                    cursorPos2d.x, cursorPos2d.y, 2);
                             }
                             if (!shouldRenderCursor) {
                                 // Handling this here means L2/R2 are liable to
@@ -565,7 +565,7 @@ private:
                         if (!shouldRenderCursor) {
                             shouldRenderCursor =
                                 mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
-                                    start, end, pos2d, cursorPose3d);
+                                    start, end, cursorPos2d, cursorPose3d);
                             // If top panel is hit, trigger controls the
                             // position/rotation
                             if (shouldRenderCursor && triggerState.currentState) {

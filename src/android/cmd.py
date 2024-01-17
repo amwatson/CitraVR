@@ -77,7 +77,7 @@ def main():
     argv = sys.argv[1:]
     if len(argv) == 0:
         print(
-    """Usage: build.py [debug | profile | release] <options...>
+    """Usage: build.py [debug | release] <options...>
     options:
         - build
         - install

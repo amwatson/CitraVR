@@ -48,6 +48,8 @@ Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/fewerwrong)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F2F8TFU9H)
+
 ## License
 
 CitraVR is licensed under the GPLv2 (or any later version). Refer to the [LICENSE.txt](https://github.com/amwatson/CitraVR/blob/master/license.txt) file.

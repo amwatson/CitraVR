@@ -1,14 +1,14 @@
 <h1 align="center">
   <br>
-  <a href="https://citra-emu.org/"><img src="https://raw.githubusercontent.com/citra-emu/citra-assets/master/Main/citra_logo.svg" alt="Citra" width="200"></a>
+  <a href="https://citra-emu.org/"><img src="https://raw.githubusercontent.com/citra-emu/citra-assets/master/Main/citra_logo.svg" alt="CitraVR" width="200"></a>
   <br>
   <b>Citra</b>
   <br>
 </h1>
 
-<h4 align="center"><b>Citra</b> is the world's most popular, open-source, Nintendo 3DS emulator.
+<h4 align="center"><b>CitraVR</b> Port of the leading 3DS emulator, Citra.
 <br>
-It is written in C++ with portability in mind and builds are actively maintained for Windows, Linux, Android and macOS.
+It is designed for playing 3DS homebrew and personal game backups in 3D on the go with your Quest.
 </h4>
 
 <p align="center">
@@ -16,7 +16,7 @@ It is written in C++ with portability in mind and builds are actively maintained
         <img src="https://github.com/citra-emu/citra/workflows/citra-ci/badge.svg"
             alt="GitHub Actions Build Status">
     </a>
-    <a href="https://discord.gg/FAXfZV9">
+    <a href="https://discord.com/channels/747967102895390741/1196505250102792232">
         <img src="https://img.shields.io/discord/220740965957107713?color=%237289DA&label=Citra&logo=discord&logoColor=white"
             alt="Discord">
     </a>

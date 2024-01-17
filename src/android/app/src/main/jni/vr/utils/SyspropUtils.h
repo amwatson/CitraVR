@@ -5,7 +5,7 @@ Filename    :   SyspropUtils.h
 Content     :   Utility functions for accessing system properties
 
 Authors     :   Amanda M. Watson
-License     :   Licensed under GPLv2 or any later version.
+License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
 *******************************************************************************/

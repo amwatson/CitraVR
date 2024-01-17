@@ -5,7 +5,7 @@ Content     :   VR entrypoint for Android. Called from onCreate to iniitalize
                 the "VrApp" thread, which handles OpenXR and XR-specific
                 rendering.
 Authors     :   Amanda M. Watson
-License     :   Licensed under GPLv2 or any later version.
+License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
 *******************************************************************************/

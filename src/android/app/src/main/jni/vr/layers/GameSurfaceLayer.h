@@ -46,7 +46,7 @@ Content     :   Handles the projection of the "Game Surface" panels into XR.
                 except at the highest stereo depths.
 
 Authors     :   Amanda M. Watson
-License     :   Licensed under GPLv2 or any later version.
+License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
 *******************************************************************************/

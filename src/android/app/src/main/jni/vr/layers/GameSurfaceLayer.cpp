@@ -7,7 +7,7 @@ Content     :   Handles the projection of the "Game Surface" panels into XR.
                 panel (mono touchpad).
 
 Authors     :   Amanda M. Watson
-License     :   Licensed under GPLv2 or any later version.
+License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
 *******************************************************************************/

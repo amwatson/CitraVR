@@ -6,7 +6,7 @@ Content     :   XR-specific input handling. Specifically defines the XR
                 tracked controllers and their input states, not gamepad.
 
 Authors     :   Amanda M. Watson
-License     :   Licensed under GPLv2 or any later version.
+License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
 *******************************************************************************/

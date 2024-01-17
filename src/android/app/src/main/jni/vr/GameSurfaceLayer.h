@@ -52,10 +52,10 @@ License     :   Licensed under GPLv2 or any later version.
 *******************************************************************************/
 #pragma once
 
+#include "../../../../../../core/3ds.h" // for 3ds screen sizes.
 #include "OpenXR.h"
 #include "Swapchain.h"
 #include "utils/Common.h"
-#include "../../../../../../core/3ds.h" // for 3ds screen sizes.
 
 #include <jni.h>
 
@@ -69,16 +69,14 @@ License     :   Licensed under GPLv2 or any later version.
 
 ================================================================================
 */
-class GameSurfaceLayer
-{
+class GameSurfaceLayer {
 
 public:
     // Density scale for surface. Citra's auto-scale sets this as the internal
     // resolution.
     static constexpr uint32_t SCALE_FACTOR = 5;
-    static constexpr float    DEFAULT_QUAD_DENSITY =
-        240 * static_cast<float>(SCALE_FACTOR);
-    static constexpr float DEFAULT_CYLINDER_RADIUS                = 2.0f;
+    static constexpr float DEFAULT_QUAD_DENSITY = 240 * static_cast<float>(SCALE_FACTOR);
+    static constexpr float DEFAULT_CYLINDER_RADIUS = 2.0f;
     static constexpr float DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES = 55.0f;
 
     /** Constructor.
@@ -87,8 +85,8 @@ public:
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
      */
-    GameSurfaceLayer(const XrVector3f&& position, JNIEnv* jni,
-                     jobject activityObject, const XrSession& session);
+    GameSurfaceLayer(const XrVector3f&& position, JNIEnv* jni, jobject activityObject,
+                     const XrSession& session);
     ~GameSurfaceLayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -126,21 +124,16 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool GetRayIntersectionWithPanel(const XrVector3f& start,
-                                     const XrVector3f& end,
-                                     XrVector2f&       result2d,
-                                     XrPosef&          result3d) const;
-    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
-                                             const XrVector3f& end,
-                                             XrVector2f&       result2d,
-                                             XrPosef&          result3d) const;
+    bool GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
+                                     XrVector2f& result2d, XrPosef& result3d) const;
+    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start, const XrVector3f& end,
+                                             XrVector2f& result2d, XrPosef& result3d) const;
     void SetTopPanelFromController(const XrVector3f& controllerPosition);
 
     void SetTopPanelFromThumbstick(const float thumbstickY);
 
 private:
-    int  Init(const jobject activityObject, const XrVector3f& position,
-              const XrSession& session);
+    int Init(const jobject activityObject, const XrVector3f& position, const XrSession& session);
     void Shutdown();
 
     /** Creates the swapchain.
@@ -148,31 +141,29 @@ private:
     void CreateSwapchain();
 
     static constexpr uint32_t SURFACE_WIDTH =
-        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth) *
-        SCALE_FACTOR) - 1500;
+        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth) * SCALE_FACTOR) -
+        1500;
     static constexpr uint32_t SURFACE_HEIGHT =
         (Core::kScreenTopHeight + Core::kScreenBottomHeight) * SCALE_FACTOR;
 
     // Width and height should both be even numbers, as the swapchain will
     // be split twice: once (horizontally) for stereo views, and once
     // (vertically) for the upper/lower screen.
-    static_assert((SURFACE_WIDTH % 2) == 0,
-                  "Swapchain width must be a multiple of 2");
-    static_assert((SURFACE_HEIGHT % 2) == 0,
-                  "Swapchain height must be a multiple of 2");
+    static_assert((SURFACE_WIDTH % 2) == 0, "Swapchain width must be a multiple of 2");
+    static_assert((SURFACE_HEIGHT % 2) == 0, "Swapchain height must be a multiple of 2");
 
     const XrSession session_;
-    Swapchain       swapchain_;
+    Swapchain swapchain_;
 
     XrPosef topPanelFromWorld_;
     XrPosef lowerPanelFromWorld_;
 
     //============================
     // JNI objects
-    JNIEnv* env_                = nullptr;
-    jobject activityObject_     = nullptr;
-    jclass  vrGameSurfaceClass_ = nullptr;
-    jobject surface_            = nullptr;
+    JNIEnv* env_ = nullptr;
+    jobject activityObject_ = nullptr;
+    jclass vrGameSurfaceClass_ = nullptr;
+    jobject surface_ = nullptr;
 
     //============================
     // JNI methods

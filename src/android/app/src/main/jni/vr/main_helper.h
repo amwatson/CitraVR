@@ -12,9 +12,8 @@ License     :   Licensed under GPLv2 or any later version.
 
 #pragma once
 #include "OpenXR.h"
-namespace vr
-{
+namespace vr {
 
 XrSession& GetSession();
-void       PrioritizeTid(const int tid);
+void PrioritizeTid(const int tid);
 } // namespace vr

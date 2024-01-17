@@ -17,7 +17,7 @@ License     :   Licensed under GPLv2 or any later version.
 #include <EGL/egl.h>
 
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
-#define XR_USE_PLATFORM_ANDROID       1
+#define XR_USE_PLATFORM_ANDROID 1
 
 #include <openxr/openxr_platform.h>
 
@@ -32,18 +32,12 @@ CursorLayer
 ================================================================================
 */
 
-class CursorLayer
-{
+class CursorLayer {
 public:
     /** The type of cursor to render.
      *  Determines the color of the cursor.
      **/
-    enum class CursorType
-    {
-        CURSOR_TYPE_NORMAL,
-        CURSOR_TYPE_TOP_PANEL,
-        NUM_CURSOR_TYPES
-    };
+    enum class CursorType { CURSOR_TYPE_NORMAL, CURSOR_TYPE_TOP_PANEL, NUM_CURSOR_TYPES };
     /**
      * @param session a valid XR Session
      */
@@ -58,14 +52,12 @@ public:
      *  @param scaleFactor the scale factor to apply to the cursor
      *  @param cursorType the type of cursor to render
      */
-    void Frame(const XrSpace& space, XrCompositionLayerQuad& layer,
-               const XrPosef& cursorPose, const float scaleFactor,
-               const CursorType& cursorType) const;
+    void Frame(const XrSpace& space, XrCompositionLayerQuad& layer, const XrPosef& cursorPose,
+               const float scaleFactor, const CursorType& cursorType) const;
 
 private:
     /** Helper class to manage the cursor image. */
-    class CursorImage
-    {
+    class CursorImage {
     public:
         /** Create a new cursor image.
          *
@@ -76,13 +68,14 @@ private:
         ~CursorImage();
 
         /** Get the swapchain used to render the cursor. */
-        const Swapchain& GetSwapchain() const { return mSwapchain; }
+        const Swapchain& GetSwapchain() const {
+            return mSwapchain;
+        }
 
     private:
-        Swapchain                                mSwapchain;
+        Swapchain mSwapchain;
         std::vector<XrSwapchainImageOpenGLESKHR> mSwapchainImages;
     };
 
-    std::array<CursorImage, static_cast<size_t>(CursorType::NUM_CURSOR_TYPES)>
-        mCursorImages;
+    std::array<CursorImage, static_cast<size_t>(CursorType::NUM_CURSOR_TYPES)> mCursorImages;
 };

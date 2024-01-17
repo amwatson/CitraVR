@@ -13,9 +13,8 @@ License     :   Licensed under GPLv2 or any later version.
 #pragma once
 #include <openxr/openxr.h>
 
-struct Swapchain
-{
+struct Swapchain {
     XrSwapchain Handle;
-    uint32_t    Width;
-    uint32_t    Height;
+    uint32_t Width;
+    uint32_t Height;
 };

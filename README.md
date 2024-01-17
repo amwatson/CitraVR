@@ -13,7 +13,7 @@ It is designed for playing 3DS homebrew and personal game backups in 3D on the g
 
 <p align="center">
     <a href="https://github.com/citra-emu/citra/actions/">
-        <img src="https://github.com/citra-emu/citra/workflows/citra-ci/badge.svg"
+        <img src="https://github.com/amwatson/CitraVR/workflows/citra-ci/badge.svg"
             alt="GitHub Actions Build Status">
     </a>
     <a href="https://discord.com/channels/747967102895390741/1196505250102792232">

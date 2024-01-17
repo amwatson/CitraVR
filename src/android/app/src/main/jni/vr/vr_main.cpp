@@ -228,6 +228,8 @@ private:
         // Doesn't actually matter, except to make the indices
         // consistent in traces
         mFrameIndex++;
+
+        // Log time to first frame
         if (mFrameIndex == 1) {
             std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
             ALOGI("Time to first frame: %lld ms",
@@ -801,7 +803,10 @@ struct VRAppHandle {
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz) {
+    // Log the creat start time, which will be used to calculate the total
+    // time to first frame.
     gOnCreateStartTime = std::chrono::steady_clock::now();
+
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     return VRAppHandle(new VRApp(jvm, env->NewGlobalRef(thiz))).l;

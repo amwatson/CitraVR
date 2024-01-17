@@ -45,7 +45,7 @@ Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967
 [Building for Quest](https://github.com/amwatson/CitraVR/wiki/Building-for-Quest)
 
 ## Support
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F2F8TFU9H)
+[Buy me a beer](https://www.buymeacoffee.com/fewerwrong)
 
 ## License
 

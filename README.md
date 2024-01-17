@@ -47,6 +47,7 @@ Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967
 ## Support
 [Buy me a beer](https://www.buymeacoffee.com/fewerwrong)
 
+You can also [buy the original \(non-VR\) Citra project a beer](https://www.patreon.com/citraemu)
 ## License
 
 CitraVR is licensed under the GPLv2 (or any later version). Refer to the [LICENSE.txt](https://github.com/amwatson/CitraVR/blob/master/license.txt) file.

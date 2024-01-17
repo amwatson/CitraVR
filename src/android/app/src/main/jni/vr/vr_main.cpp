@@ -142,7 +142,6 @@ public:
             exit(0);
         }
         jni->DeleteGlobalRef(mActivityObject);
-        mVm->DetachCurrentThread();
     }
 
     void MainLoop() {
@@ -211,8 +210,6 @@ public:
             Frame(jni);
         }
 
-        // de-init openXR before losing the JNIEnv
-        gOpenXr->Shutdown();
         mVm->DetachCurrentThread();
     }
 
@@ -817,6 +814,11 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jlong handl
     exit(0);
     if (handle != 0) {
         delete VRAppHandle(handle).p;
+    }
+    // Even though OpenXR is created on a different thread, this
+    // should be ok because thread exit is a fence, and the delete waits to join.
+    if (gOpenXr != nullptr) {
+        gOpenXr->Shutdown();
     }
 }
 

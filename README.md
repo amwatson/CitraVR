@@ -17,7 +17,7 @@ It is designed for playing 3DS homebrew and personal game backups in 3D on the g
             alt="GitHub Actions Build Status">
     </a>
     <a href="https://discord.com/channels/747967102895390741/1196505250102792232">
-        <img src="https://img.shields.io/discord/220740965957107713?color=%237289DA&label=Citra&logo=discord&logoColor=white"
+        <img src="https://img.shields.io/discord/220740965957107713?color=%237289DA&label=CitraVR&logo=discord&logoColor=white"
             alt="Discord">
     </a>
 </p>

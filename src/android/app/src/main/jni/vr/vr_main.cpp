@@ -13,9 +13,11 @@ License     :   Licensed under GPLv2 or any later version.
 #include "OpenXR.h"
 #include "utils/LogUtils.h"
 
+#include "XrController.h"
 #include "layers/CursorLayer.h"
 #include "layers/GameSurfaceLayer.h"
-#include "XrController.h"
+#include "layers/PassthroughLayer.h"
+
 #include "utils/Common.h"
 #include "utils/XrMath.h"
 
@@ -70,15 +72,6 @@ constexpr XrPerfSettingsLevelEXT kGpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EX
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::atomic<bool> gShouldShowErrorMessage = {false};
 std::unique_ptr<OpenXr> gOpenXr;
-
-DECL_PFN(xrCreatePassthroughFB);
-DECL_PFN(xrDestroyPassthroughFB);
-DECL_PFN(xrPassthroughStartFB);
-DECL_PFN(xrPassthroughPauseFB);
-DECL_PFN(xrCreatePassthroughLayerFB);
-DECL_PFN(xrDestroyPassthroughLayerFB);
-DECL_PFN(xrPassthroughLayerPauseFB);
-DECL_PFN(xrPassthroughLayerResumeFB);
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID forwardVRInputMethodID, const int androidButtonCode,
@@ -171,6 +164,8 @@ public:
         vr::gSession = gOpenXr->session_;
         mInputStateStatic =
             std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->session_);
+
+        mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
                                                                mActivityObject, gOpenXr->session_);
@@ -212,40 +207,10 @@ public:
             FAIL("could not get openSettingsMenuMethodID");
         }
 
-        INIT_PFN(xrCreatePassthroughFB);
-        INIT_PFN(xrDestroyPassthroughFB);
-        INIT_PFN(xrPassthroughStartFB);
-        INIT_PFN(xrPassthroughPauseFB);
-        INIT_PFN(xrCreatePassthroughLayerFB);
-        INIT_PFN(xrDestroyPassthroughLayerFB);
-        INIT_PFN(xrPassthroughLayerPauseFB);
-        INIT_PFN(xrPassthroughLayerResumeFB);
-
-        {
-
-            XrPassthroughCreateInfoFB ptci = {XR_TYPE_PASSTHROUGH_CREATE_INFO_FB};
-            XrResult result;
-            OXR(result = xrCreatePassthroughFB(gOpenXr->session_, &ptci, &mPassthrough));
-
-            if (XR_SUCCEEDED(result)) {
-                XrPassthroughLayerCreateInfoFB plci = {XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB};
-                plci.passthrough = mPassthrough;
-                plci.purpose = XR_PASSTHROUGH_LAYER_PURPOSE_RECONSTRUCTION_FB;
-                OXR(xrCreatePassthroughLayerFB(gOpenXr->session_, &plci, &mPassthroughLayer));
-            }
-
-            OXR(xrPassthroughStartFB(mPassthrough));
-            OXR(xrPassthroughLayerResumeFB(mPassthroughLayer));
-        }
-
         while (!mIsStopRequested) {
             Frame(jni);
         }
 
-        OXR(xrPassthroughLayerPauseFB(mPassthroughLayer));
-        OXR(xrPassthroughPauseFB(mPassthrough));
-        OXR(xrDestroyPassthroughFB(mPassthrough));
-        mPassthrough = XR_NULL_HANDLE;
         // de-init openXR before losing the JNIEnv
         gOpenXr->Shutdown();
         mVm->DetachCurrentThread();
@@ -452,16 +417,12 @@ private:
         uint32_t layerCount = 0;
         std::vector<XrCompositionLayer> layers(gOpenXr->maxLayerCount_, XrCompositionLayer{});
 
+        // First, add the passthrough layer
         {
 
-            if (mPassthroughLayer != XR_NULL_HANDLE) {
-                XrCompositionLayerPassthroughFB passthrough_layer = {
-                    XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB};
-                passthrough_layer.layerHandle = mPassthroughLayer;
-                passthrough_layer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-                passthrough_layer.space = XR_NULL_HANDLE;
-                layers[layerCount++].Passthrough = passthrough_layer;
-            }
+            XrCompositionLayerPassthroughFB passthroughLayer = {};
+            mPassthroughLayer->Frame(passthroughLayer);
+            layers[layerCount++].Passthrough = passthroughLayer;
         }
 
         mGameSurfaceLayer->Frame(gOpenXr->localSpace_, layers, layerCount);
@@ -525,7 +486,8 @@ private:
                         } else {
                             shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, cursorPose3d);
-                            ALOG_INPUT_VERBOSE("Cursor 2D coords: %f %f", cursorPos2d.x, cursorPos2d.y);
+                            ALOG_INPUT_VERBOSE("Cursor 2D coords: %f %f", cursorPos2d.x,
+                                               cursorPos2d.y);
                             if (triggerState.currentState == 0 &&
                                 triggerState.changedSinceLastSync) {
                                 jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
@@ -817,12 +779,10 @@ private:
     std::unique_ptr<UILayer> mErrorMessageLayer;
 #endif
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
+    std::unique_ptr<PassthroughLayer> mPassthroughLayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame mInputStateFrame;
-
-    XrPassthroughFB mPassthrough = XR_NULL_HANDLE;
-    XrPassthroughLayerFB mPassthroughLayer = XR_NULL_HANDLE;
 
     jmethodID mForwardVRInputMethodID = nullptr;
     jmethodID mForwardVRJoystickMethodID = nullptr;

@@ -37,8 +37,9 @@ add_library(citra-android SHARED
     vr/OpenXR.cpp
     vr/gl/Egl.cpp
     vr/XrController.cpp
-    vr/layers/GameSurfaceLayer.cpp
     vr/layers/CursorLayer.cpp
+    vr/layers/GameSurfaceLayer.cpp
+    vr/layers/PassthroughLayer.cpp
     vr/utils/JniUtils.cpp
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-enum-enum-conversion")

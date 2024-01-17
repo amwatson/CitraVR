@@ -13,8 +13,8 @@ License     :   Licensed under GPLv2 or any later version.
 #include "OpenXR.h"
 #include "utils/LogUtils.h"
 
-#include "CursorLayer.h"
-#include "GameSurfaceLayer.h"
+#include "layers/CursorLayer.h"
+#include "layers/GameSurfaceLayer.h"
 #include "XrController.h"
 #include "utils/Common.h"
 #include "utils/XrMath.h"

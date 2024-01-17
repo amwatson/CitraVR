@@ -10,7 +10,7 @@ License     :   Licensed under GPLv2 or any later version.
 
 #pragma once
 
-#include "Swapchain.h"
+#include "../Swapchain.h"
 
 #include <jni.h> // needed for openxr_platform.h when XR_USE_PLATFORM_ANDROID is defined
 

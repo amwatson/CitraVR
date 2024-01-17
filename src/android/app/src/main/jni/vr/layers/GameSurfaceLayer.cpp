@@ -14,10 +14,10 @@ License     :   Licensed under GPLv2 or any later version.
 
 #include "GameSurfaceLayer.h"
 
-#include "utils/JniUtils.h"
-#include "utils/LogUtils.h"
-#include "utils/SyspropUtils.h"
-#include "utils/XrMath.h"
+#include "../utils/JniUtils.h"
+#include "../utils/LogUtils.h"
+#include "../utils/SyspropUtils.h"
+#include "../utils/XrMath.h"
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>

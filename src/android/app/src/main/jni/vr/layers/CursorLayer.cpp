@@ -10,9 +10,9 @@ License     :   Licensed under GPLv2 or any later version.
 
 #include "CursorLayer.h"
 
-#include "OpenXR.h"
-#include "utils/LogUtils.h"
-#include "utils/XrMath.h"
+#include "../OpenXR.h"
+#include "../utils/LogUtils.h"
+#include "../utils/XrMath.h"
 
 namespace {
 

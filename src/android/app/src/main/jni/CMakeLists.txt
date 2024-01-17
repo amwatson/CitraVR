@@ -32,12 +32,13 @@ add_library(citra-android SHARED
     native.h
     ndk_motion.cpp
     ndk_motion.h
-    vr/CursorLayer.cpp
+    # VR-specific
     vr/vr_main.cpp
     vr/OpenXR.cpp
     vr/gl/Egl.cpp
-    vr/GameSurfaceLayer.cpp
     vr/XrController.cpp
+    vr/layers/GameSurfaceLayer.cpp
+    vr/layers/CursorLayer.cpp
     vr/utils/JniUtils.cpp
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-enum-enum-conversion")

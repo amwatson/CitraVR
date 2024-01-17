@@ -2,11 +2,11 @@
   <br>
   <a href="https://citra-emu.org/"><img src="https://raw.githubusercontent.com/citra-emu/citra-assets/master/Main/citra_logo.svg" alt="CitraVR" width="200"></a>
   <br>
-  <b>Citra</b>
+  <b>CitraVR</b>
   <br>
 </h1>
 
-<h4 align="center"><b>CitraVR</b> Port of the leading 3DS emulator, Citra.
+<h4 align="center">Port of the leading 3DS emulator, Citra.
 <br>
 It is designed for playing 3DS homebrew and personal game backups in 3D on the go with your Quest.
 </h4>

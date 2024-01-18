@@ -14,13 +14,11 @@ import org.citra.citra_emu.fragments.EmulationFragment;
  * Note: this is set up to require the min number of changes possible to
  *existing Citra code, in case an upstream merge is desired.
  **/
-public class GameSurfaceLayer
-{
-    public static void setSurface(VrActivity activity, Surface surface)
-    {
+public class GameSurfaceLayer {
+    public static void setSurface(VrActivity activity, Surface surface) {
         assert activity != null;
-        ((EmulationFragment)activity.getSupportFragmentManager()
-             .findFragmentById(R.id.frame_emulation_fragment))
+        ((EmulationFragment)activity.getSupportFragmentManager().findFragmentById(
+             R.id.frame_emulation_fragment))
             .surfaceCreated(surface);
     }
 }

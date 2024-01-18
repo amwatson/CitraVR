@@ -132,6 +132,8 @@ public final class SettingsFile {
     public static final String KEY_CAMERA_INNER_CONFIG = "camera_inner_config";
     public static final String KEY_CAMERA_INNER_FLIP = "camera_inner_flip";
 
+    public static final String KEY_VR_ENVIRONMENT = "vr_environment";
+
     public static final String KEY_LOG_FILTER = "log_filter";
 
     private static BiMap<String, String> sectionsMap = new BiMap<>();

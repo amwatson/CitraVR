@@ -203,4 +203,15 @@
         <item>4</item>
         <item>5</item>
     </integer-array>
+
+    <string-array name="vrBackgroundNames">
+        <item>Passthrough</item>
+        <item>Void (black)</item>
+    </string-array>
+
+    <integer-array name="vrBackgroundValues">
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
 </resources>

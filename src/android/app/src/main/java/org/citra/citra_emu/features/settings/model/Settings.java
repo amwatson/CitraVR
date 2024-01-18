@@ -25,13 +25,14 @@ public class Settings {
     public static final String SECTION_UTILITY = "Utility";
     public static final String SECTION_AUDIO = "Audio";
     public static final String SECTION_DEBUG = "Debug";
+    public static final String SECTION_VR = "VR";
 
     private String gameId;
 
     private static final Map<String, List<String>> configFileSectionsMap = new HashMap<>();
 
     static {
-        configFileSectionsMap.put(SettingsFile.FILE_NAME_CONFIG, Arrays.asList(SECTION_PREMIUM, SECTION_CORE, SECTION_SYSTEM, SECTION_CAMERA, SECTION_CONTROLS, SECTION_RENDERER, SECTION_LAYOUT, SECTION_UTILITY, SECTION_AUDIO, SECTION_DEBUG));
+        configFileSectionsMap.put(SettingsFile.FILE_NAME_CONFIG, Arrays.asList(SECTION_PREMIUM, SECTION_CORE, SECTION_SYSTEM, SECTION_CAMERA, SECTION_CONTROLS, SECTION_RENDERER, SECTION_LAYOUT, SECTION_UTILITY, SECTION_AUDIO, SECTION_DEBUG, SECTION_VR));
     }
 
     /**

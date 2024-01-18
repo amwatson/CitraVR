@@ -322,6 +322,11 @@ camera_inner_name =
 camera_inner_config =
 camera_inner_flip =
 
+[VR]
+# Background to display behind 3DS windows
+# 1: Passthrough (default), 2: Void (black)
+vr_environment =
+
 [Miscellaneous]
 # A filter which removes logs below a certain logging level.
 # Examples: *:Debug Kernel.SVC:Trace Service.*:Critical

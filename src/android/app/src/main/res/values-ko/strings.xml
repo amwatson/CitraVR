@@ -167,4 +167,6 @@
 
     <!-- VR-specific -->
     <string name="vr_gamepad_warning">문제가있다? 입력 모드를 전환하려면 게임 패드에서 @string/button_start + @string/button_select를 누릅니다.</string>
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR 환경</string>
 </resources>

@@ -109,4 +109,7 @@
     <string name="blank_input_not_allowed">空白だけの入力はできません</string>
     <string name="empty_input_not_allowed">入力なしのまま進めることはできません</string>
 
+    <!-- VR-specific -->
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR環境</string>
     </resources>

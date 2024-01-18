@@ -131,6 +131,9 @@ public final class SettingsFragmentPresenter {
             case Settings.SECTION_DEBUG:
                 addDebugSettings(sl);
                 break;
+            case Settings.SECTION_VR:
+                addVRSettings(sl);
+                break;
             default:
                 mView.showToastMessage("Unimplemented menu", false);
                 return;
@@ -143,7 +146,7 @@ public final class SettingsFragmentPresenter {
     private void addConfigSettings(ArrayList<SettingsItem> sl) {
         mView.getActivity().setTitle(R.string.preferences_settings);
 
-    //    sl.add(new SubmenuSetting(null, null, R.string.preferences_premium, 0, Settings.SECTION_PREMIUM));
+        //sl.add(new SubmenuSetting(null, null, R.string.preferences_premium, 0, Settings.SECTION_PREMIUM));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_general, 0, Settings.SECTION_CORE));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_system, 0, Settings.SECTION_SYSTEM));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_camera, 0, Settings.SECTION_CAMERA));
@@ -151,6 +154,7 @@ public final class SettingsFragmentPresenter {
         sl.add(new SubmenuSetting(null, null, R.string.preferences_graphics, 0, Settings.SECTION_RENDERER));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_audio, 0, Settings.SECTION_AUDIO));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_debug, 0, Settings.SECTION_DEBUG));
+        sl.add(new SubmenuSetting(null, null, R.string.preferences_vr, 0, Settings.SECTION_VR));
     }
 
     private void addPremiumSettings(ArrayList<SettingsItem> sl) {
@@ -418,5 +422,13 @@ public final class SettingsFragmentPresenter {
         sl.add(new CheckBoxSetting(SettingsFile.KEY_HW_SHADER, Settings.SECTION_RENDERER, R.string.hw_shaders, R.string.hw_shaders_description, true, hardwareShader, true, mView));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_USE_VSYNC, Settings.SECTION_RENDERER, R.string.vsync, R.string.vsync_description, true, vsyncEnable));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_RENDERER_DEBUG, Settings.SECTION_DEBUG, R.string.renderer_debug, R.string.renderer_debug_description, false, rendererDebug));
+    }
+
+    // This is going to make an upstream pull *very* obnoxious
+    private void addVRSettings(ArrayList<SettingsItem> sl) {
+        mView.getActivity().setTitle(R.string.preferences_vr);
+        SettingSection vrSection = mSettings.getSection(Settings.SECTION_VR);
+        Setting vrEnvironment = vrSection.getSetting(SettingsFile.KEY_VR_ENVIRONMENT);
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, 1, vrEnvironment));
     }
 }

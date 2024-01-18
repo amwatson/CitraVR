@@ -165,4 +165,6 @@
 
     <!-- VR-specific -->
     <string name="vr_gamepad_warning">Avoir des problèmes? Appuyez sur @string/button_start + @string/button_select sur le GamePad pour basculer les modes d\'entrée</string>
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">Environnement VR</string>
 </resources>

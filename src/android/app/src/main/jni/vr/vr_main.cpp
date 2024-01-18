@@ -17,6 +17,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "layers/CursorLayer.h"
 #include "layers/GameSurfaceLayer.h"
 #include "layers/PassthroughLayer.h"
+#include "vr_settings.h"
 
 #include "utils/Common.h"
 #include "utils/XrMath.h"
@@ -164,7 +165,11 @@ public:
         mInputStateStatic =
             std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->session_);
 
-        mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
+        assert(VRSettings::values.vr_environment > 0);
+        // If user set "Void" in settings, don't render passthrough
+        if (VRSettings::values.vr_environment != 2) {
+            mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
+        }
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
                                                                mActivityObject, gOpenXr->session_);
@@ -417,7 +422,7 @@ private:
         std::vector<XrCompositionLayer> layers(gOpenXr->maxLayerCount_, XrCompositionLayer{});
 
         // First, add the passthrough layer
-        {
+        if (mPassthroughLayer != nullptr) {
 
             XrCompositionLayerPassthroughFB passthroughLayer = {};
             mPassthroughLayer->Frame(passthroughLayer);

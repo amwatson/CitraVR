@@ -33,10 +33,11 @@ add_library(citra-android SHARED
     ndk_motion.cpp
     ndk_motion.h
     # VR-specific
-    vr/vr_main.cpp
     vr/OpenXR.cpp
     vr/gl/Egl.cpp
     vr/XrController.cpp
+    vr/vr_main.cpp
+    vr/vr_settings.cpp
     vr/layers/CursorLayer.cpp
     vr/layers/GameSurfaceLayer.cpp
     vr/layers/PassthroughLayer.cpp

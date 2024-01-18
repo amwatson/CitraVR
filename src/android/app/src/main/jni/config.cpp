@@ -22,6 +22,8 @@
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
 #include "network/network_settings.h"
+#include "vr/vr_settings.h"
+#include "vr/utils/LogUtils.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -259,6 +261,10 @@ void Config::ReadValues() {
         "Camera", "camera_outer_left_config", std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
         sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
+
+    // VR
+    VRSettings::values.vr_environment = sdl2_config->GetInteger(
+          "VR", "vr_environment", 1);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);

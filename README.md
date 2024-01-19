@@ -2,11 +2,11 @@
   <br>
   <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
   <br>
-  <b>CitraVR</b>
+  <b>CitraVR (Beta)</b>
   <br>
 </h1>
 
-<h4 align="center">Port of the leading 3DS emulator, <a href="https://github.com/citra-emu/citra">Citra</a>.
+<h4 align="center">Standalone VR Port of the leading 3DS emulator, <a href="https://github.com/citra-emu/citra">Citra</a>.
 <br>
 It is designed for playing 3DS homebrew and personal game backups in 3D on the go with your Quest.
 </h4>
@@ -36,7 +36,9 @@ For a full list of games Citra supports, please visit their [Compatibility page]
 
 Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967102895390741/1196505250102792232).
 
-## Releases
+## Users
+[How to install and run CitraVR on Quest](https://github.com/amwatson/CitraVR/wiki/Install-Run-on-Quest)
+
 
 ## Development
 

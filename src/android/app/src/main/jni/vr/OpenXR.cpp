@@ -53,15 +53,6 @@ namespace {
 #define DECL_PFN(pfn) PFN_##pfn pfn = nullptr
 #define INIT_PFN(pfn) OXR(xrGetInstanceProcAddr(instance, #pfn, (PFN_xrVoidFunction*)(&pfn)))
 
-DECL_PFN(xrEnumerateDisplayRefreshRatesFB);
-DECL_PFN(xrRequestDisplayRefreshRateFB);
-
-void InitOXRFunctions(const XrInstance xrInstance) {
-    assert(xrInstance != XR_NULL_HANDLE);
-    INIT_PFN(xrEnumerateDisplayRefreshRatesFB);
-    INIT_PFN(xrRequestDisplayRefreshRateFB);
-}
-
 [[maybe_unused]] void XrEnumerateLayerProperties() {
     XrResult result;
     PFN_xrEnumerateApiLayerProperties xrEnumerateApiLayerProperties;
@@ -160,7 +151,6 @@ XrInstance XrInstanceCreate() {
         XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
         XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME,
         XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
-        XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME,
         XR_KHR_COMPOSITION_LAYER_EQUIRECT2_EXTENSION_NAME,
         XR_KHR_ANDROID_SURFACE_SWAPCHAIN_EXTENSION_NAME,
         XR_FB_COMPOSITION_LAYER_SETTINGS_EXTENSION_NAME,
@@ -271,34 +261,6 @@ XrSystemId XrGetSystemId(const XrInstance& instanceLocal) {
         return XR_NULL_SYSTEM_ID;
     }
     return systemId;
-}
-
-// TODO give users a choice, since the highest refresh rate also drains battery
-// life.
-void SetHighestRefreshRate(const XrSession& session) {
-    // attempts to set desired refresh rate. If not available, sets highest
-    // refresh rate.
-    static constexpr float desiredRefreshRate = 90.0f;
-    // Enumerate refresh rates
-    uint32_t numRefreshRates = 0;
-    OXR(xrEnumerateDisplayRefreshRatesFB(session, 0, &numRefreshRates, nullptr));
-    std::vector<float> availableRefreshRates(numRefreshRates);
-    OXR(xrEnumerateDisplayRefreshRatesFB(session, availableRefreshRates.size(), &numRefreshRates,
-                                         availableRefreshRates.data()));
-    assert((size_t)numRefreshRates == availableRefreshRates.size());
-    bool hasDesiredRefreshRate = false;
-    float maxRefreshRate = 0;
-    for (auto r : availableRefreshRates) {
-        if (r == desiredRefreshRate) {
-            hasDesiredRefreshRate = true;
-        }
-        if (r > maxRefreshRate) {
-            maxRefreshRate = r;
-        }
-    }
-    const float refreshRate = hasDesiredRefreshRate ? desiredRefreshRate : maxRefreshRate;
-    ALOGI("Setting max refresh rate %.1fHz", refreshRate);
-    OXR(xrRequestDisplayRefreshRateFB(session, refreshRate));
 }
 
 size_t GetMaxLayerCount(const XrInstance& instanceLocal, const XrSystemId& systemId) {
@@ -534,11 +496,6 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
         }
     }
 
-    ///////////////////////////////////////////
-    // Initialize the global OpenXR functions
-    ///////////////////////////////////////////
-    InitOXRFunctions(instance_);
-
     ///////////////////////////////
     // Create the OpenXR Session.
     //////////////////////////////
@@ -547,9 +504,6 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
         ALOGE("Failed to create XR session");
         return -6;
     }
-
-    SetHighestRefreshRate(session_);
-
     return 0;
 }
 

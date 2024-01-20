@@ -2,14 +2,14 @@
     <!-- Pressed state -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#F2A177"/> <!-- Pressed color -->
+            <solid android:color="#9FFFCB"/> <!-- Pressed color -->
             <corners android:radius="4dp"/>
         </shape>
     </item>
     <!-- Default state -->
     <item>
         <shape android:shape="rectangle">
-          <solid android:color="#AD5D5D"/> <!-- Default color -->
+            <solid android:color="#40826D"/> <!-- Default color -->
             <corners android:radius="4dp"/>
         </shape>
     </item>

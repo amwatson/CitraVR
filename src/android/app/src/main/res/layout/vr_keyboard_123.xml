@@ -1,26 +1,104 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="match_parent"
-  android:layout_height="wrap_content"
-  android:theme="@style/Theme.Citra.Main"
-  android:orientation="vertical"
-  android:padding="16dp">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:theme="@style/Theme.Citra.Main">
 
-
- <!-- Row for numbers -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-   <Button android:id="@+id/key1" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="1"/>
-            <Button android:id="@+id/key2" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="2"/>
-            <Button android:id="@+id/key3" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3"/>
-            <Button android:id="@+id/key4" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4"/>
-            <Button android:id="@+id/key5" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5"/>
-            <Button android:id="@+id/key6" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="6"/>
-            <Button android:id="@+id/key7" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="7"/>
-            <Button android:id="@+id/key8" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="8"/>
-            <Button android:id="@+id/key9" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="9"/>
-            <Button android:id="@+id/key0" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="0"/>
+
+        <Button
+            android:id="@+id/key1"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="1" />
+
+        <Button
+            android:id="@+id/key2"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="2" />
+
+        <Button
+            android:id="@+id/key3"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="3" />
+
+        <Button
+            android:id="@+id/key4"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="4" />
+
+        <Button
+            android:id="@+id/key5"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="5" />
+
+        <Button
+            android:id="@+id/key6"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="6" />
+
+        <Button
+            android:id="@+id/key7"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="7" />
+
+        <Button
+            android:id="@+id/key8"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="8" />
+
+        <Button
+            android:id="@+id/key9"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="9" />
+
+        <Button
+            android:id="@+id/key0"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="0" />
 
     </LinearLayout>
 
@@ -29,16 +107,96 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-    <Button android:id="@+id/keyAt" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="@"/>
-    <Button android:id="@+id/keyHash" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="#"/>
-    <Button android:id="@+id/keyDollar" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="$"/>
-    <Button android:id="@+id/keyPercent" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="%"/>
-    <Button android:id="@+id/keyAmpersand" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="&amp;"/>
-    <Button android:id="@+id/keyStar" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="*"/>
-    <Button android:id="@+id/keyMinus" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="-"/>
-    <Button android:id="@+id/keyPlus" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="+"/>
-    <Button android:id="@+id/keyLParen" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="("/>
-    <Button android:id="@+id/keyRParen" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text=")"/>
+
+        <Button
+            android:id="@+id/keyAt"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="@" />
+
+        <Button
+            android:id="@+id/keyHash"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="#" />
+
+        <Button
+            android:id="@+id/keyDollar"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="$" />
+
+        <Button
+            android:id="@+id/keyPercent"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="%" />
+
+        <Button
+            android:id="@+id/keyAmpersand"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="&amp;" />
+
+        <Button
+            android:id="@+id/keyStar"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="*" />
+
+        <Button
+            android:id="@+id/keyMinus"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="-" />
+
+        <Button
+            android:id="@+id/keyPlus"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_letter"
+            android:text="+" />
+
+        <Button
+            android:id="@+id/keyLParen"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="(" />
+
+        <Button
+            android:id="@+id/keyRParen"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text=")" />
     </LinearLayout>
 
     <!-- Row for more symbols and actions like delete or enter -->
@@ -46,29 +204,131 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
- <Button android:id="@+id/keyShift" android:tag="key_modifier"  style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Shift"/>
 
-    <Button android:id="@+id/keyExclamation" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="!"/>
-    <Button android:id="@+id/keyQuote" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&quot;"/>
-    <Button android:id="@+id/keyApostrophe" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="'"/>
-    <Button android:id="@+id/keyColon" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text=":"/>
-    <Button android:id="@+id/keySemicolon" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text=";"/>
-    <Button android:id="@+id/keySlash" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="/"/>
-    <Button android:id="@+id/keyQuestionMark" android:tag="key_letter" style="@style/VrKeyboardButtonStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="?"/>
- <Button android:id="@+id/keyBackspace" android:tag="key_modifier" style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Del"/>
+        <Button
+            android:id="@+id/keyShift"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:backgroundTint="#B53838"
+            android:tag="key_modifier"
+            android:text="Shift" />
+
+        <Button
+            android:id="@+id/keyExclamation"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="!" />
+
+        <Button
+            android:id="@+id/keyQuote"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="&quot;" />
+
+        <Button
+            android:id="@+id/keyApostrophe"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="'" />
+
+        <Button
+            android:id="@+id/keyColon"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text=":" />
+
+        <Button
+            android:id="@+id/keySemicolon"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text=";" />
+
+        <Button
+            android:id="@+id/keySlash"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="/" />
+
+        <Button
+            android:id="@+id/keyQuestionMark"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_letter"
+            android:text="?" />
+
+        <Button
+            android:id="@+id/keyBackspace"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:tag="key_modifier"
+            android:text="Del" />
 
     </LinearLayout>
- <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal">
-    <Button android:id="@+id/keyAbc" android:tag="key_modifier" style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="abc"/>
-    <Button android:id="@+id/keySpace" android:tag="key_modifier" style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="4" android:text="Space"/>
-    <Button android:id="@+id/keyLeft" android:tag="key_modifier" style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&lt;"/>
-    <Button android:id="@+id/keyRight" android:tag="key_modifier" style="@style/VrKeyboardButtonStyleModifier" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&gt;"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
+        <Button
+            android:id="@+id/keyAbc"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:tag="key_modifier"
+            android:text="abc" />
 
+        <Button
+            android:id="@+id/keySpace"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:tag="key_modifier"
+            android:text="Space" />
+
+        <Button
+            android:id="@+id/keyLeft"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_modifier"
+            android:text="&lt;" />
+
+        <Button
+            android:id="@+id/keyRight"
+            style="@style/VrKeyboardButtonStyleModifier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:tag="key_modifier"
+            android:text="&gt;" />
     </LinearLayout>
 
 </LinearLayout>

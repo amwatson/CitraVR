@@ -304,7 +304,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
-            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + 125;
+            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + 250/2;
             layer.subImage.imageRect.offset.y = 0;
             layer.subImage.imageRect.extent.width = panelWidth - 250;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
@@ -340,7 +340,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
-        layer.subImage.imageRect.offset.x = 225;
+        layer.subImage.imageRect.offset.x = 450/2;
         layer.subImage.imageRect.offset.y = panelHeight + verticalBorderTex;
         layer.subImage.imageRect.extent.width = panelWidth - 450;
         layer.subImage.imageRect.extent.height = panelHeight;

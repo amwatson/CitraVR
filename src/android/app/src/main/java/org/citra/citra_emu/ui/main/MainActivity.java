@@ -139,26 +139,6 @@ public final class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
- //       Log.info("amwatson hasRun " + VrActivity.hasRun);
-        if (VrActivity.hasRun){
-            // Setup the intent for restart
-            Intent restartIntent = new Intent(this, MainActivity.class);
-            int pendingIntentId = 123456;  // Some random ID
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, pendingIntentId, restartIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            if (VrActivity.currentActivity != null) {
-                VrActivity.currentActivity.finishActivity();
-            }
-
-            // Setup the alarm to launch the intent after 100ms
-         /*   AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent);
-
-
-            // Kill the current process
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(1);*/
-
-        }
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(
             ()

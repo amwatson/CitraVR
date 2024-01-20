@@ -326,6 +326,12 @@ camera_inner_flip =
 # Background to display behind 3DS windows
 # 1: Passthrough (default), 2: Void (black)
 vr_environment =
+# Overrides other settings to remove overhead and maximize game performance.
+# - Sets the void environment
+# - Disables audio emulation
+# - Does *not* disable stereo rendering
+# false (default): Off, true: On
+vr_extra_performance_mode =
 
 [Miscellaneous]
 # A filter which removes logs below a certain logging level.

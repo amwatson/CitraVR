@@ -109,6 +109,10 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<Type, range
 }
 
 void Config::ReadValues() {
+    // VR::extra performance mode (configured first because it overrides other values)
+    VRSettings::values.extra_performance_mode_enabled = sdl2_config->GetInteger(
+        "VR", "vr_extra_performance_mode", 0) != 0;
+
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
@@ -204,9 +208,16 @@ void Config::ReadValues() {
 
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);
-    ReadSetting("Audio", Settings::values.enable_audio_stretching);
-    ReadSetting("Audio", Settings::values.volume);
-    ReadSetting("Audio", Settings::values.output_type);
+    if (!VRSettings::values.extra_performance_mode_enabled) {
+      ReadSetting("Audio", Settings::values.enable_audio_stretching);
+      ReadSetting("Audio", Settings::values.volume);
+      ReadSetting("Audio", Settings::values.output_type);
+    } else {
+      Settings::values.enable_audio_stretching = 0;
+      Settings::values.volume = 0;
+      Settings::values.output_type = AudioCore::SinkType::Null /* No audio output */;
+    }
+
     ReadSetting("Audio", Settings::values.output_device);
     ReadSetting("Audio", Settings::values.input_type);
     ReadSetting("Audio", Settings::values.input_device);
@@ -263,7 +274,7 @@ void Config::ReadValues() {
         sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
 
     // VR
-    VRSettings::values.vr_environment = sdl2_config->GetInteger(
+    VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ? 2 /* void environment */: sdl2_config->GetInteger(
           "VR", "vr_environment", 1);
 
     // Miscellaneous

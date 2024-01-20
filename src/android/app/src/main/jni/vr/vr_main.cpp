@@ -68,7 +68,7 @@ void PrioritizeTid(const int tid) {
 } // namespace vr
 
 namespace {
-constexpr XrPerfSettingsLevelEXT kCpuPerfLevel = XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
+constexpr XrPerfSettingsLevelEXT kCpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 constexpr XrPerfSettingsLevelEXT kGpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::atomic<bool> gShouldShowErrorMessage = {false};
@@ -146,11 +146,13 @@ public:
     }
 
     void MainLoop() {
-        JNIEnv* jni;
-        if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
-            FAIL("%s(): Could not attach to JVM", __FUNCTION__);
-        }
+      JNIEnv* jni;
+      if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
+        FAIL("%s(): Could not attach to JVM", __FUNCTION__);
+      }
         mEnv = jni;
+
+        ALOGI("VR Extra Performance Mode: %s", VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
         // Gotta set this after the JNIEnv is attached, or else it'll be
         // overwritten
         prctl(PR_SET_NAME, (long)"CS::Main", 0, 0, 0);
@@ -165,7 +167,7 @@ public:
         mInputStateStatic =
             std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->session_);
 
-        assert(VRSettings::values.vr_environment > 0);
+        assert(VRSettings::values.vr_environment > 0 && VRSettings::values.vr_environment <= 2);
         // If user set "Void" in settings, don't render passthrough
         if (VRSettings::values.vr_environment != 2) {
             mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);

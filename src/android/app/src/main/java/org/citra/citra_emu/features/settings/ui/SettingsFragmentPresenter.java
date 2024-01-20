@@ -429,6 +429,9 @@ public final class SettingsFragmentPresenter {
         mView.getActivity().setTitle(R.string.preferences_vr);
         SettingSection vrSection = mSettings.getSection(Settings.SECTION_VR);
         Setting vrEnvironment = vrSection.getSetting(SettingsFile.KEY_VR_ENVIRONMENT);
+        Setting vrExtraPerformanceMode = vrSection.getSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE);
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, 1, vrEnvironment));
+        sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE, Settings.SECTION_VR, R.string.vsync, R.string.vsync_description, false, vrExtraPerformanceMode));
+
     }
 }

@@ -36,7 +36,6 @@ public class VrActivity extends EmulationActivity {
         Intent intent = new Intent(context, VrActivity.class);
         final int mainDisplayId = getMainDisplay(context);
         if (mainDisplayId < 0) {
-            // TODO handle error
             throw new RuntimeException("Could not find main display");
         }
         ActivityOptions options = ActivityOptions.makeBasic().setLaunchDisplayId(mainDisplayId);
@@ -65,7 +64,6 @@ public class VrActivity extends EmulationActivity {
         super.onCreate(savedInstanceState);
         mHandle = nativeOnCreate();
         Log.info("VR [Java] onCreate()");
-        // TODO assert mHandle != null
     }
 
     @Override

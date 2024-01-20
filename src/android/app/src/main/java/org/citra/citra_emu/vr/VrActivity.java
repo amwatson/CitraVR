@@ -55,15 +55,15 @@ public class VrActivity extends EmulationActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.info("VR [Java] onCreate()");
         if (hasRun) {
-            Log.info("VRActivity already existed");
+            Log.info("VR [Java] VRActivity already existed");
             finish();
         }
         hasRun = true;
         currentActivity = this;
         super.onCreate(savedInstanceState);
         mHandle = nativeOnCreate();
-        Log.info("VR [Java] onCreate()");
     }
 
     @Override

@@ -112,4 +112,6 @@
     <!-- VR-specific -->
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR環境</string>
+    <string name="vr_error_two_instances_title">エラー：2つのCitraVRインスタンスを検出しました</string>
+    <string name="vr_error_two_instances_message">CitraVRを使用した致命的な打ち上げバグを検出しました。これは既知の問題です。\n\n問題が解決されました。もう一度ゲームを起動してみてください。</string>
     </resources>

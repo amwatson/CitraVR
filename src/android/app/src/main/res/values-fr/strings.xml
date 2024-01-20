@@ -167,4 +167,6 @@
     <string name="vr_gamepad_warning">Avoir des problèmes? Appuyez sur @string/button_start + @string/button_select sur le GamePad pour basculer les modes d\'entrée</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">Environnement VR</string>
+    <string name="vr_error_two_instances_title">Erreur: détecté deux instances CitraVR</string>
+    <string name="vr_error_two_instances_message">Détecté un bogue de lancement fatal avec CitraVR. C\'est un problème connu. \n\nLe problème est désormais résolu. Veuillez essayer de lancer à nouveau le jeu. </string>
 </resources>

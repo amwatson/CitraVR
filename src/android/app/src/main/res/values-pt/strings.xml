@@ -167,4 +167,6 @@
     <string name="vr_gamepad_warning">Tendo problemas? Pressione @string/button_start + @string/button_select no gamepad para alternar os modos de entrada</string>
     <string name="preferences_vr">Vr</string>
     <string name="vr_background">Ambiente VR</string>
+    <string name="vr_error_two_instances_title">Erro: detectado duas instâncias de CitraVR</string>
+    <string name="vr_error_two_instances_message">Detectou um bug de lançamento fatal com CitraVR. Este é um problema conhecido. \n\nO problema agora está resolvido. Por favor, tente lançar o jogo novamente. </string>
 </resources>

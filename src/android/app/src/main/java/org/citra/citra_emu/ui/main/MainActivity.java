@@ -184,6 +184,17 @@ public final class MainActivity extends AppCompatActivity implements MainView {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
+        // Check for the TWO_INSTANCES string extra
+        if (getIntent().getBooleanExtra(VrActivity.EXTRA_ERROR_TWO_INSTANCES, false)) {
+          Log.error("Error: two instances of CitraVr::VrActivity were running at the same time!");
+          // Show an alert dialog explaining the situation
+          new MaterialAlertDialogBuilder(this)
+              .setTitle(R.string.vr_error_two_instances_title)
+              .setMessage(R.string.vr_error_two_instances_message)
+              .setIcon(R.mipmap.ic_launcher)
+              .setPositiveButton(android.R.string.ok, null)
+              .show();
+        }
     }
 
     @Override

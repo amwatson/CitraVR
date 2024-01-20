@@ -294,4 +294,6 @@
     <string name="vr_background">VR Environment</string>
     <string name="vr_keyboard_left">&lt;</string>
     <string name="vr_keyboard_right">&gt;</string>
+    <string name="vr_error_two_instances_title">Error: Detected Two CitraVR Instances</string>
+    <string name="vr_error_two_instances_message">Detected a fatal launch bug with CitraVR.  This is a known issue. \n\nThe problem is now resolved.   Please try launching the game again. </string>
 </resources>

@@ -167,4 +167,6 @@
     <string name="vr_gamepad_warning">Har problemer? Trykk @string/button_start + @string/button_select på gamepad for å veksle inngangsmodus</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR -miljø</string>
+    <string name="vr_error_two_instances_title">Feil: oppdaget to CitraVR -forekomster</string>
+    <string name="vr_error_two_instances_message">Oppdaget en dødelig lanseringsfeil med CitraVR. Dette er et kjent spørsmål. \n\nProblemet er nå løst. Vennligst prøv å starte spillet igjen. </string>
 </resources>

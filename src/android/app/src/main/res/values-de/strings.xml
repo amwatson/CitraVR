@@ -167,4 +167,6 @@
     <string name="vr_gamepad_warning">Probleme haben? Drücken Sie @string/button_start + @string/button_select im Gamepad, um die Eingangsmodi zu umschalten</string>
     <string name="preferences_vr">Vr</string>
     <string name="vr_background">VR -Umgebung</string>
+    <string name="vr_error_two_instances_title">Fehler: Erkennete zwei CitraVR -Instanzen</string>
+    <string name="vr_error_two_instances_message">Erkannte einen tödlichen Startfehler mit CitraVR. Dies ist ein bekanntes Problem. \n\nDas Problem ist jetzt gelöst. Bitte versuchen Sie, das Spiel erneut zu starten. </string>
 </resources>

@@ -19,6 +19,8 @@ import org.citra.citra_emu.features.settings.utils.SettingsFile;
 import org.citra.citra_emu.utils.Log;
 public class VrActivity extends EmulationActivity {
 
+  public static final String EXTRA_ERROR_TWO_INSTANCES = "org.citra.citra_emu.vr.ERROR_TWO_INSTANCES";
+
     private long mHandle = 0;
     public static boolean hasRun = false;
     public static VrActivity currentActivity = null;
@@ -56,13 +58,23 @@ public class VrActivity extends EmulationActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.info("VR [Java] onCreate()");
-        if (hasRun) {
+        super.onCreate(savedInstanceState);
+       if (hasRun) {
             Log.info("VR [Java] VRActivity already existed");
             finish();
+            // When we detect two instances running, due to bad cleanup
+            // handling, we have to terminate both of them. Restart the main
+            // activity with an error message telling the user what happened.
+            Intent relaunchMainIntent = new Intent(this, org.citra.citra_emu.ui.main.MainActivity.class);
+            relaunchMainIntent.putExtra(EXTRA_ERROR_TWO_INSTANCES, true);
+            startActivity(relaunchMainIntent);
+            if (currentActivity != null) {
+                currentActivity.finish();
+            }
+            return;
         }
         hasRun = true;
         currentActivity = this;
-        super.onCreate(savedInstanceState);
         mHandle = nativeOnCreate();
     }
 

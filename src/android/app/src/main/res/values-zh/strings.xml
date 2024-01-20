@@ -167,4 +167,6 @@
     <string name="vr_gamepad_warning">遇到麻烦？按@string/button_start + @string/button_select在GamePad上的@string/button_select切换输入模式</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR环境</string>
+    <string name="vr_error_two_instances_title">错误：检测到两个CitraVR实例</string>
+    <string name="vr_error_two_instances_message">通过CitraVR检测到致命的发射错误。这是一个已知的问题。\n\n现在解决了问题。请尝试再次启动游戏。</string>
 </resources>

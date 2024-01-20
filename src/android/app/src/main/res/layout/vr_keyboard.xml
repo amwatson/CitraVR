@@ -49,6 +49,7 @@ app's packagename and returns information for the wrong window.-->
 
         <Button
             android:id="@+id/keyPositive"
+            style="@style/VrKeyboardButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -57,6 +58,7 @@ app's packagename and returns information for the wrong window.-->
 
         <Button
             android:id="@+id/keyNeutral"
+            style="@style/VrKeyboardButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -65,6 +67,7 @@ app's packagename and returns information for the wrong window.-->
 
         <Button
             android:id="@+id/keyNegative"
+            style="@style/VrKeyboardButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

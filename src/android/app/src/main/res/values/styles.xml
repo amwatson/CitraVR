@@ -68,6 +68,8 @@
         <item name="android:textColor">@android:color/black</item>
         <item name="android:textSize">16sp</item>
         <item name="android:padding">12dp</item>
+        <item name="colorControlActivated">@color/citra_primary</item>
+        <item name="colorControlNormal">@color/citra_primary</item>
     </style>
 
 </resources>

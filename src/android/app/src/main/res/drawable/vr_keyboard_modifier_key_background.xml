@@ -9,7 +9,7 @@
     <!-- Default state -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#F8BE00"/> <!-- Default color -->
+            <solid android:color="@color/citra_primary"/> <!-- Default color -->
             <corners android:radius="4dp"/>
         </shape>
     </item>

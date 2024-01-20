@@ -1,0 +1,78 @@
+<!--FML for having to write this f$%king keyboard.
+
+I would not have had to do this were it not for a bug/idiosyncrasy
+in Quest's window manager that returns the wrong value for "is this window in
+focus?" when the packagename of the foregrounded window content is the same as
+the backgrounded immersive window (even when the two activities/windows are in
+different processes).
+
+This bug prevents me from pulling up the Quest system keyboard.
+
+Why it happens: Quest's window manager is performing a single check based on the
+app's packagename and returns information for the wrong window.-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/vr_keyboard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginHorizontal="30dp"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingTop="40dp"
+    android:theme="@style/Theme.Citra.Main">
+
+
+    <EditText
+        android:id="@+id/vrKeyboardText"
+        style="@style/VrKeyboardEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:inputType="text" />
+
+    <LinearLayout
+        android:id="@+id/vr_keyboard_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/keyPositive"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@android:string/ok"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/keyNeutral"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/i_forgot"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/keyNegative"
+            style="@style/VrKeyboardButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@android:string/cancel"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

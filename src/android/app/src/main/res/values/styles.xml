@@ -50,5 +50,26 @@
         <item name="colorPrimary">@color/citra_primary</item>
     </style>
 
+    <!-- Style for VR keyboard buttons -->
+    <style name="VrKeyboardButtonStyle" parent="Widget.Material3.Button">
+      <item name="android:background">@drawable/vr_keyboard_key_background</item>
+      <item name="android:textSize">18sp</item>
+      <item name="android:textColor">@android:color/white</item>
+      <item name="android:padding">10dp</item>
+      <item name="android:layout_margin">2dp</item>
+     <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="VrKeyboardButtonStyleModifier" parent="@style/VrKeyboardButtonStyle">
+        <item name="android:background">@drawable/vr_keyboard_modifier_key_background</item>
+    </style>
+
+    <style name="VrKeyboardEditText" parent="Widget.AppCompat.EditText">
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:padding">12dp</item>
+        <item name="colorControlActivated">@color/citra_primary</item>
+        <item name="colorControlNormal">@color/citra_primary</item>
+    </style>
 
 </resources>

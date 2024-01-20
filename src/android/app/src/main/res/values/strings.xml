@@ -290,7 +290,8 @@
 
     <!-- VR-specific -->
     <string name="vr_gamepad_warning">Having trouble?  Press @string/button_start + @string/button_select on the gamepad to toggle input modes</string>
-
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR Environment</string>
+    <string name="vr_keyboard_left">&lt;</string>
+    <string name="vr_keyboard_right">&gt;</string>
 </resources>

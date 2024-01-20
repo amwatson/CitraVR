@@ -142,7 +142,7 @@ private:
 
     static constexpr uint32_t SURFACE_WIDTH =
         (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth) * SCALE_FACTOR) -
-        1500;
+        300 * SCALE_FACTOR;
     static constexpr uint32_t SURFACE_HEIGHT =
         (Core::kScreenTopHeight + Core::kScreenBottomHeight) * SCALE_FACTOR;
 

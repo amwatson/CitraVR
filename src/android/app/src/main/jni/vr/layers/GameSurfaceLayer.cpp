@@ -304,15 +304,15 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
-            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + 250/2;
+            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + (50/2) * SCALE_FACTOR;
             layer.subImage.imageRect.offset.y = 0;
-            layer.subImage.imageRect.extent.width = panelWidth - 250;
+            layer.subImage.imageRect.extent.width = panelWidth - 50 * SCALE_FACTOR;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex = 0;
             layer.pose = topPanelFromWorld_;
             // Scale to get the desired density within the visible area (if we
             // want).
-            const auto scale = GetDensityScaleForSize(panelWidth - 250, -panelHeight, 1.0f);
+            const auto scale = GetDensityScaleForSize(panelWidth - 50 * SCALE_FACTOR, -panelHeight, 1.0f);
             layer.size.width = scale.x;
             layer.size.height = scale.y;
 
@@ -340,14 +340,14 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
-        layer.subImage.imageRect.offset.x = 450/2;
+        layer.subImage.imageRect.offset.x = (90/2) * SCALE_FACTOR;
         layer.subImage.imageRect.offset.y = panelHeight + verticalBorderTex;
-        layer.subImage.imageRect.extent.width = panelWidth - 450;
+        layer.subImage.imageRect.extent.width = panelWidth - 90 * SCALE_FACTOR;
         layer.subImage.imageRect.extent.height = panelHeight;
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale =
-            GetDensityScaleForSize(panelWidth - 450, -panelHeight, kLowerPanelScaleFactor);
+            GetDensityScaleForSize(panelWidth - 90 * SCALE_FACTOR, -panelHeight, kLowerPanelScaleFactor);
         layer.size.width = scale.x;
         layer.size.height = scale.y;
         layers[layerCount++].mQuad = layer;

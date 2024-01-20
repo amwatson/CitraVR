@@ -97,4 +97,6 @@
     <string name="vr_background">VR -ympäristö</string>
     <string name="vr_error_two_instances_title">VIRHE: havaitsi kaksi CitraVR -tapausta</string>
     <string name="vr_error_two_instances_message">Havaitsi kohtalokkaan käynnistysvirheen CitraVR: n kanssa. Tämä on tunnettu asia. \n\nongelma on nyt ratkaistu. Yritä käynnistää peli uudelleen. </string>
+    <string name="vr_extra_performance_mode_description">Ohittaa muiden asetusten arvon yleiskustannusten minimoimiseksi ja suorituskyvyn maksimimiseksi. HUOMAUTUS: Kun tämä asetus on käytössä, seuraavien asetusten käyttäjän arvot jätetään huomiotta: VR -ympäristö (valitsee aina "tyhjä"), kaikki ääni (käytöstä poistettu)</string>
+    <string name="vr_extra_performance_mode">VR Extra Performance -tila</string>
 </resources>

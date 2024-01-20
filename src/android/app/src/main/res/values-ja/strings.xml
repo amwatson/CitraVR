@@ -114,4 +114,6 @@
     <string name="vr_background">VR環境</string>
     <string name="vr_error_two_instances_title">エラー：2つのCitraVRインスタンスを検出しました</string>
     <string name="vr_error_two_instances_message">CitraVRを使用した致命的な打ち上げバグを検出しました。これは既知の問題です。\n\n問題が解決されました。もう一度ゲームを起動してみてください。</string>
+    <string name="vr_extra_performance_mode_description">オーバーヘッドを最小限に抑え、パフォーマンスを最大化するために、他の設定の値をオーバーライドします。注：この設定が有効になっている場合、次の設定のユーザーの値は無視されます：VR環境（常に「void」を選択）、すべてのオーディオ（無効）</string>
+    <string name="vr_extra_performance_mode">VR追加パフォーマンスモード</string>
     </resources>

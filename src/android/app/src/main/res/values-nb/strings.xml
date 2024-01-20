@@ -169,4 +169,6 @@
     <string name="vr_background">VR -miljø</string>
     <string name="vr_error_two_instances_title">Feil: oppdaget to CitraVR -forekomster</string>
     <string name="vr_error_two_instances_message">Oppdaget en dødelig lanseringsfeil med CitraVR. Dette er et kjent spørsmål. \n\nProblemet er nå løst. Vennligst prøv å starte spillet igjen. </string>
+    <string name="vr_extra_performance_mode_description">Overstyrer verdien av andre innstillinger for å minimere overhead og maksimalisere ytelsen. Merk: Når denne innstillingen er aktivert, blir brukerens verdier for følgende innstillinger ignorert: VR -miljø (velger alltid "Void"), All Audio (deaktivert)</string>
+    <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
 </resources>

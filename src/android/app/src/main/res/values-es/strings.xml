@@ -173,4 +173,6 @@
     <string name="vr_background">Entorno de realidad virtual</string>
     <string name="vr_error_two_instances_title">Error: detectó dos instancias CitraVR</string>
     <string name="vr_error_two_instances_message">Detectó un error de lanzamiento fatal con CitraVR. Este es un problema conocido. \n\nEl problema ahora se resuelve. Intente volver a lanzar el juego. </string>
+    <string name="vr_extra_performance_mode_description">Anula el valor de otras configuraciones para minimizar los gastos generales y maxmimizar el rendimiento. Nota: Cuando esta configuración está habilitada, se ignoran los valores del usuario para la siguiente configuración: entorno VR (siempre selecciona "nulo"), todo audio (deshabilitado)</string>
+    <string name="vr_extra_performance_mode">Modo de rendimiento adicional VR</string>
 </resources>

@@ -1,35 +1,20 @@
 package org.citra.citra_emu.vr;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.InputFilter;
-import android.text.Spanned;
-import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContract;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.DialogFragment;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.io.Serializable;
-import java.util.Objects;
 import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.applets.SoftwareKeyboard;
@@ -41,6 +26,7 @@ public class VrKeyboardActivity extends android.app.Activity {
         "org.citra.citra_emu.vr.KEYBOARD_INPUT_CONFIG";
     private static final String EXTRA_KEYBOARD_RESULT = "org.citra.citra_emu.vr.KEYBOARD_RESULT";
 
+    // Result sent to the (Citra) software keyboard.
     public static class Result implements Serializable {
         public static enum Type { None, Positive, Neutral, Negative }
         ;
@@ -150,11 +136,12 @@ public class VrKeyboardActivity extends android.app.Activity {
         showKeyboardType(KeyboardType.Abc);
     }
 
+    // Finish the activity when it loses focus, like an AlertDialog.
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (!hasFocus) {
-            finish(); // Finish the activity when it loses focus, like an AlertDialog.
+            finish();
         }
     }
 
@@ -341,7 +328,6 @@ public class VrKeyboardActivity extends android.app.Activity {
             });
         }
     }
-
     private void addLetterKeyHandlersForViewGroup(final ViewGroup viewGroup,
                                                   final boolean isShifted) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {

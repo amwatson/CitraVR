@@ -30,7 +30,10 @@ It is designed for playing 3DS homebrew and personal game backups in 3D on the g
 
 ## Compatibility
 
-CitraVR runs on Meta Quest 2 and Meta Quest 3.
+CitraVR supports the following devices:
+- Meta Quest 2
+- Meta Quest Pro
+- Meta Quest 3
 
 For a full list of games Citra supports, please visit their [Compatibility page](https://citra-emu.org/game/)
 

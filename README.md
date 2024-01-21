@@ -31,7 +31,7 @@ Specifically:
 
 A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emultor](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
 
-The project is still small, but I'm looking forward to improving it as time goes on.
+The project is still small, but I'm looking for ways to improve it as time goes on.
 
 ## Features
 - Stereoscopic rendering
@@ -64,7 +64,8 @@ Grab the latest release [here](https://github.com/amwatson/CitraVR/releases)
 See the [CitraVR Known Issues](https://github.com/amwatson/CitraVR/wiki/CitraVR-Known-Issues)
 
 ## How to Install and Run
-[How to install and run CitraVR on Quest](https://github.com/amwatson/CitraVR/wiki/Install-Run-on-Quest)
+- [How to install and run CitraVR on Quest](https://github.com/amwatson/CitraVR/wiki/Install-Run-on-Quest)
+- [How to back up 3DS Games](https://github.com/amwatson/CitraVR/wiki/Backing-up-3DS-Games)
 
 ## Building
 [Building for Quest](https://github.com/amwatson/CitraVR/wiki/Building-for-Quest)

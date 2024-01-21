@@ -21,6 +21,7 @@ It is designed for playing 3DS homebrew and personal game backups in 3D on the g
 <p align="center">
   <a href="#compatibility">Compatibility</a> |
   <a href="#releases">Releases</a> |
+  <a href="#known-issues">Known Issues</a> |
   <a href="#how-to-install-and-run">How to Install and Run</a> |
   <a href="#building">Building</a> |
   <a href="#need-help">Need Help?</a> |
@@ -41,7 +42,10 @@ For a full list of games Citra supports, please visit their [Compatibility page]
 Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967102895390741/1196505250102792232).
 
 ## Releases
-[List of Releases](https://github.com/amwatson/CitraVR/releases)
+Grab the latest release [here](https://github.com/amwatson/CitraVR/releases)
+
+## Known Issues
+See the [CitraVR Known Issues](https://github.com/amwatson/CitraVR/wiki/CitraVR-Known-Issues)
 
 ## How to Install and Run
 [How to install and run CitraVR on Quest](https://github.com/amwatson/CitraVR/wiki/Install-Run-on-Quest)

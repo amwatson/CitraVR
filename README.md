@@ -6,17 +6,10 @@
   <br>
 </h1>
 
-<h4 align="center">Standalone VR Port of the leading 3DS emulator, <a href="https://github.com/citra-emu/citra">Citra</a>.
-<br>
-It is designed for playing 3DS homebrew and personal game backups in 3D on the go with your Quest.
+<h4 align="center"> Play 3DS homebrew and personal game backups in 3D on the go with your Quest.
+</br>
+  CitraVR is a GPL-licensed, engineless OpenXR application with all source code publicly available.
 </h4>
-
-<p align="center">
-        <a href="https://discord.com/channels/747967102895390741/1196505250102792232">
-        <img src="https://img.shields.io/discord/220740965957107713?color=%237289DA&label=CitraVR&logo=discord&logoColor=white"
-            alt="Discord">
-    </a>
-</p>
 
 <p align="center">
   <a href="#compatibility">Compatibility</a> |
@@ -29,17 +22,40 @@ It is designed for playing 3DS homebrew and personal game backups in 3D on the g
   <a href="#license">License</a>
 </p>
 
+## Introduction
+I originally created this project to a be a proof-of-concept of some techniques XR developers were curious about. 
+Specifically:
+- Building a 2D/3D hybrid app
+- Rendering a 2D interactive window of non-VR content in VR
+- Using VR layers to get sharp, crisp text and visuals.
+
+A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emultor](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
+
+The project is still small, but I'm looking forward to improving it as time goes on.
+
+## Features
+- Stereoscopic rendering
+- Broad controller support
+- Large, moveable/resizeable screen
+- Playable in mixed reality
+- low-overhead port
+- Fully-GPL-licesed, 100% independent of the Meta SDK
 
 ## Compatibility
 
+### HMDs
 CitraVR supports the following devices:
 - Meta Quest 2
 - Meta Quest Pro
 - Meta Quest 3
 
-For a full list of games Citra supports, please visit their [Compatibility page](https://citra-emu.org/game/)
+### Games
+For a full list of games that work well on CitraVR, please visit \[need link to compat sheet\]
 
-Need help? Please [join the CitraVR Discord](https://discord.com/channels/747967102895390741/1196505250102792232).
+### Controllers/Input 
+CitraVR maps the Quest controllers in a way that makes most games on the platform playable with the default mapping. 
+
+For games that need access to more inputs, or if a player needs to access more inputs faster, CitraVR also supports a multitude of 3rd party wired USB and wireless bluetooth controllers. 
 
 ## Releases
 Grab the latest release [here](https://github.com/amwatson/CitraVR/releases)

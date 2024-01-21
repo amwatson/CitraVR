@@ -38,8 +38,8 @@ The project is still small, but I'm looking for ways to improve it as time goes 
 - Broad controller support
 - Large, moveable/resizeable screen
 - Playable in mixed reality
-- low-overhead port
-- Fully-GPL-licesed, 100% independent of the Meta SDK
+- Low-overhead port
+- Fully GPL-licensed, 100% independent of the Meta SDK
 
 ## Compatabillty
 

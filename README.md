@@ -50,7 +50,7 @@ CitraVR supports the following devices:
 - Meta Quest 3
 
 ### Games
-For a full list of games that work well on CitraVR, please visit \[need link to compat sheet\]
+For a full list of games that work well on CitraVR, please visit the [CitraVR compatability list](https://docs.google.com/document/d/1Jezf64_s5m1lbj3mD--Ye2ew3su0hTAeBWNx3ViMtHI/edit?usp=sharing)
 
 ### Controllers/Input 
 CitraVR maps the Quest controllers in a way that makes most games on the platform playable with the default mapping. 

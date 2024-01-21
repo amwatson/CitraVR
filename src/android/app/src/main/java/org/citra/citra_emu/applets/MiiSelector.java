@@ -8,21 +8,17 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-
-import org.citra.citra_emu.NativeLibrary;
-import org.citra.citra_emu.R;
-import org.citra.citra_emu.activities.EmulationActivity;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import org.citra.citra_emu.NativeLibrary;
+import org.citra.citra_emu.R;
+import org.citra.citra_emu.activities.EmulationActivity;
 
 public final class MiiSelector {
     public static class MiiSelectorConfig implements java.io.Serializable {
@@ -58,8 +54,8 @@ public final class MiiSelector {
             final Activity emulationActivity = Objects.requireNonNull(getActivity());
 
             MiiSelectorConfig config =
-                    Objects.requireNonNull((MiiSelectorConfig) Objects.requireNonNull(getArguments())
-                            .getSerializable("config"));
+                Objects.requireNonNull((MiiSelectorConfig)Objects.requireNonNull(getArguments())
+                                           .getSerializable("config"));
 
             // Note: we intentionally leave out the Standard Mii in the native code so that
             // the string can get translated
@@ -68,24 +64,22 @@ public final class MiiSelector {
             list.addAll(Arrays.asList(config.mii_names));
 
             final int initialIndex = config.initially_selected_mii_index < list.size()
-                    ? (int) config.initially_selected_mii_index
-                    : 0;
+                                         ? (int)config.initially_selected_mii_index
+                                         : 0;
             data.index = initialIndex;
             MaterialAlertDialogBuilder builder =
-                    new MaterialAlertDialogBuilder(emulationActivity)
-                            .setTitle(config.title.isEmpty()
-                                    ? emulationActivity.getString(R.string.mii_selector)
-                                    : config.title)
-                            .setSingleChoiceItems(list.toArray(new String[]{}), initialIndex,
-                                    (dialog, which) -> {
-                                        data.index = which;
-                                    })
-                            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                                data.return_code = 0;
-                                synchronized (finishLock) {
-                                    finishLock.notifyAll();
-                                }
-                            });
+                new MaterialAlertDialogBuilder(emulationActivity)
+                    .setTitle(config.title.isEmpty()
+                                  ? emulationActivity.getString(R.string.mii_selector)
+                                  : config.title)
+                    .setSingleChoiceItems(list.toArray(new String[] {}), initialIndex,
+                                          (dialog, which) -> { data.index = which; })
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                        data.return_code = 0;
+                        synchronized (finishLock) {
+                            finishLock.notifyAll();
+                        }
+                    });
             if (config.enable_cancel_button) {
                 builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
                     data.return_code = 1;
@@ -111,16 +105,34 @@ public final class MiiSelector {
         fragment.show(emulationActivity.getSupportFragmentManager(), "mii_selector");
     }
 
-    public static MiiSelectorData Execute(MiiSelectorConfig config) {
-        NativeLibrary.sEmulationActivity.get().runOnUiThread(() -> ExecuteImpl(config));
+    // FIXME VR does not currently implement Mii selection. Pick a default Mii
+    // or one the user has selected previously.
+    private static void vrExecuteImpl(MiiSelectorConfig config) {
+        data = new MiiSelectorData(0, 0);
+        ArrayList<String> list = new ArrayList<>();
+        list.add(NativeLibrary.sEmulationActivity.get().getString(R.string.standard_mii));
+        list.addAll(Arrays.asList(config.mii_names));
 
-        synchronized (finishLock) {
-            try {
-                finishLock.wait();
-            } catch (Exception ignored) {
+        final int initialIndex = config.initially_selected_mii_index < list.size()
+                                     ? (int)config.initially_selected_mii_index
+                                     : 0;
+        data.index = initialIndex;
+        data.return_code = 0;
+    }
+
+    public static MiiSelectorData Execute(MiiSelectorConfig config) {
+        if (NativeLibrary.sEmulationActivity.get() instanceof org.citra.citra_emu.vr.VrActivity) {
+            vrExecuteImpl(config);
+        } else {
+            NativeLibrary.sEmulationActivity.get().runOnUiThread(() -> ExecuteImpl(config));
+
+            synchronized (finishLock) {
+                try {
+                    finishLock.wait();
+                } catch (Exception ignored) {
+                }
             }
         }
-
         return data;
     }
 }

@@ -269,11 +269,11 @@ public final class NativeLibrary {
 
         if (ErrorMessageLayer.instance != null) {
             ErrorMessageLayer.showErrorWindow(title, message);
-            Log.error("[NativeLibrary] Core error: " + title + ": " + message);
-        } else {
-            assert !(emulationActivity instanceof VrActivity);
+        } else if (!(emulationActivity instanceof VrActivity)) {
             CoreErrorDialogFragment fragment = CoreErrorDialogFragment.newInstance(title, message);
             fragment.show(emulationActivity.getSupportFragmentManager(), "coreError");
+        } else {
+            Log.error("[NativeLibrary] Core error: " + title + ": " + message);
         }
     }
 

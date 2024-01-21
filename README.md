@@ -1,4 +1,4 @@
-<h1 align="center">
+c<h1 align="center">
   <br>
   <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
   <br>
@@ -12,7 +12,7 @@
 </h4>
 
 <p align="center">
-  <a href="#compatibility">Compatibility</a> |
+  <a href="#compatabillty">Compatabillty</a> |
   <a href="#releases">Releases</a> |
   <a href="#known-issues">Known Issues</a> |
   <a href="#how-to-install-and-run">How to Install and Run</a> |
@@ -41,7 +41,7 @@ The project is still small, but I'm looking for ways to improve it as time goes 
 - low-overhead port
 - Fully-GPL-licesed, 100% independent of the Meta SDK
 
-## Compatibility
+## Compatabillty
 
 ### HMDs
 CitraVR supports the following devices:

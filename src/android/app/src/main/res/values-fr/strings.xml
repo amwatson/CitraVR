@@ -171,4 +171,6 @@
     <string name="vr_error_two_instances_message">Détecté un bogue de lancement fatal avec CitraVR. C\'est un problème connu. \n\nLe problème est désormais résolu. Veuillez essayer de lancer à nouveau le jeu. </string>
     <string name="vr_extra_performance_mode_description">Recouvre la valeur des autres paramètres pour minimiser les frais généraux et les performances maxonimiales. Remarque: Lorsque ce paramètre est activé, les valeurs de l\'utilisateur pour les paramètres suivants sont ignorées: Environnement VR (Sélectionne toujours "void"), tout l\'audio (désactivé)</string>
     <string name="vr_extra_performance_mode">Mode de performance supplémentaire VR</string>
+    <string name="vr_cpu_level">Niveau du processeur</string>
+    <string name="vr_cpu_level_description">Des niveaux plus élevés peuvent améliorer les performances audio / émulation, mais draineront la batterie plus rapidement</string>
 </resources>

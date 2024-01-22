@@ -173,4 +173,6 @@
     <string name="vr_error_two_instances_message">CitraVR로 치명적인 발사 버그를 감지했습니다. 이것은 알려진 문제입니다. \n\n이제 문제가 해결되었습니다. 게임을 다시 시작하십시오. </string>
     <string name="vr_extra_performance_mode_description">오버 헤드를 최소화하고 성능을 최대화하기 위해 다른 설정의 값을 무시합니다. 참고 :이 설정이 활성화되면 다음 설정에 대한 사용자의 값은 무시됩니다.  VR 환경 (항상 "void"를 선택), 모든 오디오 (비활성화)</string>
     <string name="vr_extra_performance_mode">VR 추가 성능 모드</string>
+    <string name="vr_cpu_level">CPU 레벨</string>
+    <string name="vr_cpu_level_description">레벨이 높을수록 오디오/에뮬레이션 성능이 향상 될 수 있지만 배터리가 더 빨리 배터리를 배출합니다. </string>
 </resources>

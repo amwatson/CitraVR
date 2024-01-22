@@ -171,4 +171,6 @@
     <string name="vr_error_two_instances_message">Ho rilevato un bug di lancio fatale con CitraVR. Questo è un problema noto. \n\nIl problema è ora risolto. Prova a lanciare di nuovo il gioco. </string>
     <string name="vr_extra_performance_mode_description">Scora il valore di altre impostazioni per ridurre al minimo le prestazioni generali e maxmimizza. Nota: quando questa impostazione è abilitata, i valori dell\'utente per le seguenti impostazioni vengono ignorati: Ambiente VR (seleziona sempre "vuoto"), tutto audio (disabilitato)</string>
     <string name="vr_extra_performance_mode">Modalità di prestazione extra VR</string>
+    <string name="vr_cpu_level">Livello CPU</string>
+    <string name="vr_cpu_level_description">Livelli più alti possono migliorare le prestazioni audio/emulazione, ma prosciugheranno la batteria più velocemente</string>
 </resources>

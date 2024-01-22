@@ -171,4 +171,6 @@
     <string name="vr_error_two_instances_message">通过CitraVR检测到致命的发射错误。这是一个已知的问题。\n\n现在解决了问题。请尝试再次启动游戏。</string>
     <string name="vr_extra_performance_mode_description">覆盖其他设置的价值，以最大程度地减少开销并最大程度地提高性能。注意：启用此设置后，忽略了以下设置的用户值：VR环境（始终选择“ void”），所有音频（禁用）</string>
     <string name="vr_extra_performance_mode">VR额外的性能模式</string>
+    <string name="vr_cpu_level">CPU级别</string>
+    <string name="vr_cpu_level_description">较高的水平可以改善音频/仿真性能，但会更快地排出电池</string>
 </resources>

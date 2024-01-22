@@ -17,7 +17,7 @@
   <a href="#known-issues">Known Issues</a> |
   <a href="#how-to-install-and-run">How to Install and Run</a> |
   <a href="#building">Building</a> |
-  <a href="#need-help">Need Help?</a> |
+  <a href="#discord">Discord</a> |
   <a href="#support">Support</a> |
   <a href="#license">License</a>
 </p>

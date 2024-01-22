@@ -430,9 +430,10 @@ public final class SettingsFragmentPresenter {
         SettingSection vrSection = mSettings.getSection(Settings.SECTION_VR);
         Setting vrEnvironment = vrSection.getSetting(SettingsFile.KEY_VR_ENVIRONMENT);
         Setting vrExtraPerformanceMode = vrSection.getSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE);
+        Setting vrCpuLevel = vrSection.getSetting(SettingsFile.KEY_VR_CPU_LEVEL);
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, 1, vrEnvironment));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE, Settings.SECTION_VR, R.string.vr_extra_performance_mode, R.string.vr_extra_performance_mode_description, false, vrExtraPerformanceMode));
-        sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, 1, vrEnvironment));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_CPU_LEVEL, Settings.SECTION_VR, R.string.vr_cpu_level, R.string.vr_cpu_level_decription, R.array.vrCpuLevelNames, R.array.vrCpuLevelValues, 4, vrCpuLevel));
 
     }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="vrCpuLevelNames">
+        <item>Høy (3)</item>
+        <item>Boost (4)</item>
+    </string-array>
+
+    <integer-array name="vrCpuLevelValues">
+        <item>3</item>
+        <item>4</item>
+    </integer-array>
+
+</resources>

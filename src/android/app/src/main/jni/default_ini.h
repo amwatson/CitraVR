@@ -96,7 +96,7 @@ use_cpu_jit =
 # Underclocking can increase the performance of the game at the risk of freezing.
 # Overclocking may fix lag that happens on console, but also comes with the risk of freezing.
 # Range is any positive integer (but we suspect 25 - 400 is a good idea) Default is 100
-cpu_clock_percentage=200
+cpu_clock_percentage=
 
 [Renderer]
 # Whether to render using OpenGL

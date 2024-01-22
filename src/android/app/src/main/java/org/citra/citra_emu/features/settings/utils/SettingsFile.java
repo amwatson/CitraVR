@@ -131,9 +131,10 @@ public final class SettingsFile {
     public static final String KEY_CAMERA_INNER_NAME = "camera_inner_name";
     public static final String KEY_CAMERA_INNER_CONFIG = "camera_inner_config";
     public static final String KEY_CAMERA_INNER_FLIP = "camera_inner_flip";
-
     public static final String KEY_VR_ENVIRONMENT = "vr_environment";
     public static final String KEY_VR_EXTRA_PERFORMANCE_MODE = "vr_extra_performance_mode";
+
+    public static final String KEY_VR_CPU_LEVEL = "vr_cpu_level";
 
     public static final String KEY_LOG_FILTER = "log_filter";
 

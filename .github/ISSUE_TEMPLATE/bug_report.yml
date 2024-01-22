@@ -3,7 +3,7 @@ description: File a bug report
 body:
   - type: markdown
     attributes:
-      value: Tech support does not belong here. You should only file an issue here if you think you have experienced an actual bug with Citra.
+      value: Tech support does not belong here. You should only file an issue here if you think you have experienced an actual bug with CitraVR.
   - type: checkboxes
     attributes:
       label: Is there an existing issue for this?
@@ -15,7 +15,7 @@ body:
     attributes:
       label: Affected Build(s)
       description: List the affected build(s) that this issue applies to.
-      placeholder: Nightly 1234 / Canary 1234
+      placeholder: v0.2
     validations:
       required: true
   - type: textarea
@@ -51,14 +51,10 @@ body:
     attributes:
       label: System Configuration
       placeholder: |
-        CPU: Intel i5-10400 / AMD Ryzen 5 3600
-        GPU/Driver: NVIDIA GeForce GTX 1060 (Driver 512.95)
-        RAM: 16GB DDR4-3200
-        OS: Windows 11 22H2 (Build 22621.819)
+        HMD: Quest 2, Quest 3, Quest Pro
       value: |
-        CPU:
-        GPU/Driver:
-        RAM:
-        OS:
+        HMD:
     validations:
       required: true
+
+

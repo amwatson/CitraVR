@@ -18,6 +18,7 @@
   <a href="#how-to-install-and-run">How to Install and Run</a> |
   <a href="#building">Building</a> |
   <a href="#discord">Discord</a> |
+  <a href="#need-help">Need Help?</a> |
   <a href="#support">Support</a> |
   <a href="#license">License</a>
 </p>
@@ -72,6 +73,10 @@ See the [CitraVR Known Issues](https://github.com/amwatson/CitraVR/wiki/CitraVR-
 
 ## Discord 
 Join the [Flat2VR](https://flat2vr.com/) discord and from there join [cvr-join](https://discord.com/channels/747967102895390741/1196505250102792232) to get access to the CitraVR community and support forums
+
+# Need Help?
+To file a bug report or a feature request, please [submit an issue](https://github.com/amwatson/CitraVR/issues/new/choose).
+Otherwise, follow the instructions for <a href="#discord">Discord</a> and post in [cvr-support](https://discord.com/channels/747967102895390741/1196505719910957176)
 
 ## Support
 [Buy me a beer](https://www.buymeacoffee.com/fewerwrong)

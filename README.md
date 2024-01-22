@@ -70,8 +70,8 @@ See the [CitraVR Known Issues](https://github.com/amwatson/CitraVR/wiki/CitraVR-
 ## Building
 [Building for Quest](https://github.com/amwatson/CitraVR/wiki/Building-for-Quest)
 
-## Need Help? 
-[Submit an issue](https://github.com/amwatson/CitraVR/issues), or join the cvr-support channel on [Discord](https://discord.com/channels/747967102895390741/1196505250102792232)
+## Discord 
+Join the [Flat2VR](https://flat2vr.com/) discord and from there join [cvr-join](https://discord.com/channels/747967102895390741/1196505250102792232) to get access to the CitraVR community and support forums
 
 ## Support
 [Buy me a beer](https://www.buymeacoffee.com/fewerwrong)

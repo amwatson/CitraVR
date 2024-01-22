@@ -277,6 +277,11 @@ void Config::ReadValues() {
     VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ? 2 /* void environment */: sdl2_config->GetInteger(
           "VR", "vr_environment", 1);
 
+    VRSettings::values.cpu_level =
+      VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
+      : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
+            "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
+
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
 

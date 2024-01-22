@@ -68,7 +68,6 @@ void PrioritizeTid(const int tid) {
 } // namespace vr
 
 namespace {
-constexpr XrPerfSettingsLevelEXT kCpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 constexpr XrPerfSettingsLevelEXT kGpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::atomic<bool> gShouldShowErrorMessage = {false};
@@ -639,9 +638,12 @@ private:
                     (PFN_xrVoidFunction*)(&pfnPerfSettingsSetPerformanceLevelEXT)));
 
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
-                    gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_CPU_EXT, kCpuPerfLevel));
+                    gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_CPU_EXT, VRSettings::values.cpu_level));
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
                     gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
+                ALOGI("%s(): Set clock levels to CPU:%d, GPU:%d", __FUNCTION__,
+                    VRSettings::values.cpu_level, kGpuPerfLevel);
+
 
                 PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
                 OXR(xrGetInstanceProcAddr(

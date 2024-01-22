@@ -1,0 +1,103 @@
+diff --git a/src/common/filesystem_utils.cpp b/src/common/filesystem_utils.cpp
+--- a/src/common/filesystem_utils.cpp
++++ b/src/common/filesystem_utils.cpp
+@@ -60,6 +60,8 @@
+ 
+ bool FileSysUtilsPathExists(const std::string& path) { return FS_PREFIX::exists(path); }
+ 
++bool FileSysUtilsLinkerPathExists(const std::string& path) { return FileSysUtilsPathExists(path); }
++
+ bool FileSysUtilsIsAbsolutePath(const std::string& path) {
+     FS_PREFIX::path file_path(path);
+     return file_path.is_absolute();
+@@ -139,6 +141,8 @@
+     return (GetFileAttributesW(utf8_to_wide(path).c_str()) != INVALID_FILE_ATTRIBUTES);
+ }
+ 
++bool FileSysUtilsLinkerPathExists(const std::string& path) { return FileSysUtilsPathExists(path); }
++
+ bool FileSysUtilsIsAbsolutePath(const std::string& path) {
+     bool pathStartsWithDir = (path.size() >= 1) && ((path[0] == DIRECTORY_SYMBOL) || (path[0] == ALTERNATE_DIRECTORY_SYMBOL));
+ 
+@@ -245,6 +249,20 @@
+ 
+ bool FileSysUtilsPathExists(const std::string& path) { return (access(path.c_str(), F_OK) != -1); }
+ 
++bool FileSysUtilsLinkerPathExists(const std::string& path) {
++  #ifdef XR_USE_PLATFORM_ANDROID
++  // Android's linker supports linking to libraries in zip files in the format of
++  // /path/to/zip!/path/to/lib
++  size_t pos = path.find("!/");
++  if (pos != std::string::npos) {
++    std::string apkPath = path.substr(0, pos);
++    // Assume the entry exists
++    return FileSysUtilsPathExists(apkPath);
++  }
++  #endif
++  return FileSysUtilsPathExists(path);
++}
++
+ bool FileSysUtilsIsAbsolutePath(const std::string& path) { return (path[0] == DIRECTORY_SYMBOL); }
+ 
+ bool FileSysUtilsGetCurrentPath(std::string& path) {
+diff --git a/src/common/filesystem_utils.hpp b/src/common/filesystem_utils.hpp
+--- a/src/common/filesystem_utils.hpp
++++ b/src/common/filesystem_utils.hpp
+@@ -21,6 +21,9 @@
+ // Determine if the provided path exists on the filesystem
+ bool FileSysUtilsPathExists(const std::string& path);
+ 
++// Determine if the provided path exists to the linker
++bool FileSysUtilsLinkerPathExists(const std::string& path);
++
+ // Get the current directory
+ bool FileSysUtilsGetCurrentPath(std::string& path);
+ 
+diff --git a/src/loader/manifest_file.cpp b/src/loader/manifest_file.cpp
+--- a/src/loader/manifest_file.cpp
++++ b/src/loader/manifest_file.cpp
+@@ -602,7 +602,7 @@
+     if (lib_path.find('\\') != std::string::npos || lib_path.find('/') != std::string::npos) {
+         // If the library_path is an absolute path, just use that if it exists
+         if (FileSysUtilsIsAbsolutePath(lib_path)) {
+-            if (!FileSysUtilsPathExists(lib_path)) {
++            if (!FileSysUtilsLinkerPathExists(lib_path)) {
+                 error_ss << filename << " library " << lib_path << " does not appear to exist";
+                 LoaderLogger::LogErrorMessage("", error_ss.str());
+                 return;
+@@ -618,7 +618,7 @@
+                 canonical_path = filename;
+             }
+             if (!FileSysUtilsGetParentPath(canonical_path, file_parent) ||
+-                !FileSysUtilsCombinePaths(file_parent, lib_path, combined_path) || !FileSysUtilsPathExists(combined_path)) {
++                !FileSysUtilsCombinePaths(file_parent, lib_path, combined_path) || !FileSysUtilsLinkerPathExists(combined_path)) {
+                 error_ss << filename << " library " << combined_path << " does not appear to exist";
+                 LoaderLogger::LogErrorMessage("", error_ss.str());
+                 return;
+@@ -842,7 +842,7 @@
+     if (library_path.find('\\') != std::string::npos || library_path.find('/') != std::string::npos) {
+         // If the library_path is an absolute path, just use that if it exists
+         if (FileSysUtilsIsAbsolutePath(library_path)) {
+-            if (!FileSysUtilsPathExists(library_path)) {
++            if (!FileSysUtilsLinkerPathExists(library_path)) {
+                 error_ss << filename << " library " << library_path << " does not appear to exist";
+                 LoaderLogger::LogErrorMessage("", error_ss.str());
+                 return;
+@@ -890,7 +890,7 @@
+     std::string combined_path;
+     std::string file_parent;
+     if (!FileSysUtilsGetParentPath(json_filename, file_parent) ||
+-        !FileSysUtilsCombinePaths(file_parent, library_path, combined_path) || !FileSysUtilsPathExists(combined_path)) {
++        !FileSysUtilsCombinePaths(file_parent, library_path, combined_path) || !FileSysUtilsLinkerPathExists(combined_path)) {
+         out_combined_path = combined_path;
+         return false;
+     }
+@@ -903,7 +903,7 @@
+                                                  std::string &out_combined_path) {
+     std::string combined_path;
+     std::string file_parent = GetAndroidNativeLibraryDir();
+-    if (!FileSysUtilsCombinePaths(file_parent, library_path, combined_path) || !FileSysUtilsPathExists(combined_path)) {
++    if (!FileSysUtilsCombinePaths(file_parent, library_path, combined_path) || !FileSysUtilsLinkerPathExists(combined_path)) {
+         out_combined_path = combined_path;
+         return false;
+     }

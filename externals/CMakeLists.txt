@@ -262,6 +262,26 @@ endif()
 
 # OpenXR
 if (ANDROID)
+    execute_process(COMMAND patch -p1
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/externals/openxr-sdk-src
+            INPUT_FILE ${CMAKE_SOURCE_DIR}/externals/openxr-android-linker-path-exists-fix.patch)
+    execute_process(COMMAND patch -p1 --reverse --silent --dry-run
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/externals/openxr-sdk-src
+            INPUT_FILE ${CMAKE_SOURCE_DIR}/externals/openxr-android-linker-path-exists-fix.patch
+            RESULT_VARIABLE SUCCESS)
+    if(${SUCCESS})
+        # If patch did not work try with git
+        execute_process(COMMAND git apply
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/externals/openxr-sdk-src
+            INPUT_FILE ${CMAKE_SOURCE_DIR}/externals/openxr-android-linker-path-exists-fix.patch)
+        execute_process(COMMAND git apply --reverse --check
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/externals/openxr-sdk-src
+            INPUT_FILE ${CMAKE_SOURCE_DIR}/externals/openxr-android-linker-path-exists-fix.patch
+            RESULT_VARIABLE SUCCESS)
+        if(${SUCCESS})
+            message(FATAL_ERROR "Error: Failed to apply openxr-android-linker-path-exists-fix.patch")
+        endif()
+    endif()
     add_subdirectory(openxr-sdk-src)
 endif()
 

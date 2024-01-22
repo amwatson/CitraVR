@@ -1,4 +1,4 @@
-c<h1 align="center">
+<h1 align="center">
   <br>
   <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
   <br>

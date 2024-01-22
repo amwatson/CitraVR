@@ -12,6 +12,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "OpenXR.h"
 
+#include "utils/Common.h"
 #include "utils/LogUtils.h"
 
 #include <openxr/openxr_platform.h>

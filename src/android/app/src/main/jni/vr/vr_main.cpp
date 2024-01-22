@@ -454,7 +454,7 @@ private:
                         : InputStateFrame::LEFT_CONTROLLER;
                 // assert that we do not choose an inactive controller
                 // unless neither controller is available.
-                assert(mInputStateFrame.mIsHandActive[preferredController] ||
+                assert(mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand] ||
                        !mInputStateFrame.mIsHandActive[nonPreferredController]);
 
                 {

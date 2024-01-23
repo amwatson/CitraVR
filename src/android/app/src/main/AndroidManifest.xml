@@ -75,6 +75,7 @@
 
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
+            android:configChanges="density|orientation|screenSize|keyboard|keyboardHidden|uiMode"
             android:exported="true"
             android:resizeableActivity="false"
             android:screenOrientation="landscape"

@@ -65,8 +65,8 @@ public class CitraApplication extends Application {
         }
 
         NativeLibrary.LogDeviceInfo();
-        // TODO (amwatsonn) Disabled because this triggers a bug on Quest.
-        //createNotificationChannel();
+
+        createNotificationChannel();
 
         databaseHelper = new GameDatabase(this);
     }

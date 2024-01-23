@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.hardware.display.DisplayManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.InputDevice;
@@ -25,6 +26,17 @@ public class VrActivity extends EmulationActivity {
     public static boolean hasRun = false;
     public static VrActivity currentActivity = null;
     ClickRunnable clickRunnable = new ClickRunnable();
+
+    static {
+        if (Build.BRAND.equals("oculus")) {
+            try {
+                System.loadLibrary("openxr_forwardloader.oculus");
+            } catch (UnsatisfiedLinkError e) {
+                // This was needed before v62
+                // In v62 this library is deleted
+            }
+        }
+    }
 
     public final ActivityResultLauncher<SoftwareKeyboard.KeyboardConfig> mVrKeyboardLauncher =
         registerForActivityResult(new VrKeyboardActivity.Contract(),

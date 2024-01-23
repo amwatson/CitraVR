@@ -26,10 +26,6 @@ public class VrActivity extends EmulationActivity {
     public static VrActivity currentActivity = null;
     ClickRunnable clickRunnable = new ClickRunnable();
 
-    static {
-        System.loadLibrary("openxr_forwardloader.oculus");
-    }
-
     public final ActivityResultLauncher<SoftwareKeyboard.KeyboardConfig> mVrKeyboardLauncher =
         registerForActivityResult(new VrKeyboardActivity.Contract(),
                                   result -> VrKeyboardActivity.onFinishResult(result));

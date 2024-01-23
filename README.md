@@ -30,7 +30,7 @@ Specifically:
 - Rendering a 2D interactive window of non-VR content in VR
 - Using VR layers to get sharp, crisp text and visuals.
 
-A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emultor](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
+A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emulator](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
 
 The project is still small, but I'm looking for ways to improve it as time goes on.
 

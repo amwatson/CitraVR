@@ -122,42 +122,36 @@ const char* XrSessionStateToString(const XrSessionState state) {
     }
 }
 
-
-enum class HMDType {
-  UNKNOWN = 0,
-  QUEST1,
-  QUEST2,
-  QUEST3,
-  QUESTPRO
-};
+enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
 
 HMDType StringToHmdType(const std::string& hmdType) {
-  if (hmdType == "Quest") {
-    return HMDType::QUEST1;
-  } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
-    return HMDType::QUEST2;
-  } else if (hmdType == "Quest 3") {
-    return HMDType::QUEST3;
-  } else if (hmdType == "Quest Pro") {
-    return HMDType::QUESTPRO;
-  }
-  return HMDType::UNKNOWN;
+    if (hmdType == "Quest") {
+        return HMDType::QUEST1;
+    } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
+        return HMDType::QUEST2;
+    } else if (hmdType == "Quest 3") {
+        return HMDType::QUEST3;
+    } else if (hmdType == "Quest Pro") {
+        return HMDType::QUESTPRO;
+    }
+    return HMDType::UNKNOWN;
 }
 
 uint32_t GetDefaultGameResolutionFactorForHmd(const HMDType& hmdType) {
-  static constexpr uint32_t kDefaultResolutionFactor = 2;
-  switch (hmdType) {
+    static constexpr uint32_t kDefaultResolutionFactor = 2;
+    switch (hmdType) {
     case HMDType::QUEST3:
-      return 3;
+        return 3;
     case HMDType::UNKNOWN:
-      ALOGW("Warning: Unknown HMD type, using default scale factor of %d", kDefaultResolutionFactor);
+        ALOGW("Warning: Unknown HMD type, using default scale factor of %d",
+              kDefaultResolutionFactor);
     case HMDType::QUEST1:
-      ALOGW("Warning: Unsupported HMD type, using default scale factor of %d", kDefaultResolutionFactor);
+        ALOGW("Warning: Unsupported HMD type, using default scale factor of %d",
+              kDefaultResolutionFactor);
     case HMDType::QUEST2:
     case HMDType::QUESTPRO:
-      return kDefaultResolutionFactor;
-  }
-
+        return kDefaultResolutionFactor;
+    }
 }
 
 } // anonymous namespace
@@ -185,13 +179,14 @@ public:
     }
 
     void MainLoop() {
-      JNIEnv* jni;
-      if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
-        FAIL("%s(): Could not attach to JVM", __FUNCTION__);
-      }
+        JNIEnv* jni;
+        if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
+            FAIL("%s(): Could not attach to JVM", __FUNCTION__);
+        }
         mEnv = jni;
 
-        ALOGI("VR Extra Performance Mode: %s", VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
+        ALOGI("VR Extra Performance Mode: %s",
+              VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
         // Gotta set this after the JNIEnv is attached, or else it'll be
         // overwritten
         prctl(PR_SET_NAME, (long)"CS::Main", 0, 0, 0);
@@ -213,18 +208,22 @@ public:
         }
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         {
-          const std::string hmdTypeStr = SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
-          const HMDType hmdType = StringToHmdType(hmdTypeStr);
-          ALOGI("HMD type: %s (%d)", hmdTypeStr.c_str(), hmdType);
+            const std::string hmdTypeStr =
+                SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
+            const HMDType hmdType = StringToHmdType(hmdTypeStr);
+            ALOGI("HMD type: %s (%d)", hmdTypeStr.c_str(), hmdType);
 
-          const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(hmdType);
-          const uint32_t resolutionFactorFromPreferences =  VRSettings::values.resolution_factor;
-          const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences : defaultResolutionFactor;
-          if (resolutionFactor != defaultResolutionFactor) {
-            ALOGI("Using resolution factor of %dx instead of HMD default %dx", resolutionFactor, defaultResolutionFactor);
-          }
-          mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
-              mActivityObject, gOpenXr->session_, resolutionFactor);
+            const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(hmdType);
+            const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
+            const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0
+                                                  ? resolutionFactorFromPreferences
+                                                  : defaultResolutionFactor;
+            if (resolutionFactor != defaultResolutionFactor) {
+                ALOGI("Using resolution factor of %dx instead of HMD default %dx", resolutionFactor,
+                      defaultResolutionFactor);
+            }
+            mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(
+                XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->session_, resolutionFactor);
         }
 
 #if defined(UI_LAYER)
@@ -690,13 +689,13 @@ private:
                     gOpenXr->instance_, "xrPerfSettingsSetPerformanceLevelEXT",
                     (PFN_xrVoidFunction*)(&pfnPerfSettingsSetPerformanceLevelEXT)));
 
-                OXR(pfnPerfSettingsSetPerformanceLevelEXT(
-                    gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_CPU_EXT, VRSettings::values.cpu_level));
+                OXR(pfnPerfSettingsSetPerformanceLevelEXT(gOpenXr->session_,
+                                                          XR_PERF_SETTINGS_DOMAIN_CPU_EXT,
+                                                          VRSettings::values.cpu_level));
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
                     gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
                 ALOGI("%s(): Set clock levels to CPU:%d, GPU:%d", __FUNCTION__,
-                    VRSettings::values.cpu_level, kGpuPerfLevel);
-
+                      VRSettings::values.cpu_level, kGpuPerfLevel);
 
                 PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
                 OXR(xrGetInstanceProcAddr(

@@ -53,7 +53,7 @@ public:
     // EGL context
     std::unique_ptr<EglContext> eglContext_;
 
-  private:
+private:
     int32_t OpenXRInit(JavaVM* const jvm, const jobject activityObject);
     int32_t XrViewConfigInit();
     int32_t XrSpaceInit();

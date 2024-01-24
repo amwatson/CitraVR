@@ -11,12 +11,12 @@ License     :   Licensed under GPLv3 or any later version.
 #include <openxr/openxr.h>
 
 class PassthroughLayer {
-  public:
+public:
     PassthroughLayer(const XrSession& session);
     ~PassthroughLayer();
     void Frame(XrCompositionLayerPassthroughFB& layer) const;
 
-  private:
+private:
     XrPassthroughFB mPassthrough = XR_NULL_HANDLE;
     XrPassthroughLayerFB mPassthroughLayer = XR_NULL_HANDLE;
 }; // class PassthroughLayer

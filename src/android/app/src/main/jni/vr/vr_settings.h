@@ -25,26 +25,26 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace VRSettings {
 
-  static inline XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
+static inline XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
     switch (cpu_level_pref) {
-      case 1:
+    case 1:
         return XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT;
-      case 2:
+    case 2:
         return XR_PERF_SETTINGS_LEVEL_SUSTAINED_LOW_EXT;
-      case 3:
+    case 3:
         return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
-      case 4:
+    case 4:
         return XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
-      default:
+    default:
         FAIL("Invalid CPU level preference %d", cpu_level_pref);
     }
-  }
+}
 
 struct Values {
-  bool extra_performance_mode_enabled = false;
-  int32_t vr_environment = 0;
-  XrPerfSettingsLevelEXT cpu_level = XR_HIGHEST_CPU_PERF_LEVEL;
-  uint32_t resolution_factor = 0;
+    bool extra_performance_mode_enabled = false;
+    int32_t vr_environment = 0;
+    XrPerfSettingsLevelEXT cpu_level = XR_HIGHEST_CPU_PERF_LEVEL;
+    uint32_t resolution_factor = 0;
 } extern values;
 
 } // namespace VRSettings

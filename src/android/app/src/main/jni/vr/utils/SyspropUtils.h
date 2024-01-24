@@ -12,8 +12,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #pragma once
 
-#include <sys/system_properties.h>
 #include <string>
+#include <sys/system_properties.h>
 
 namespace SyspropUtils {
 static inline float GetSysPropAsFloat(const char* propertyName, const float defaultValue) {
@@ -56,7 +56,8 @@ static inline int32_t GetSysPropAsInt(const char* propertyName, const int32_t de
     return defaultValue;
 }
 
-static inline std::string GetSysPropAsString(const char* propertyName, const std::string& defaultValue) {
+static inline std::string GetSysPropAsString(const char* propertyName,
+                                             const std::string& defaultValue) {
     char value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 

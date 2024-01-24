@@ -52,10 +52,10 @@ License     :   Licensed under GPLv3 or any later version.
 *******************************************************************************/
 #pragma once
 
-#include "core/3ds.h" // for 3ds screen sizes.
 #include "../OpenXR.h"
 #include "../Swapchain.h"
 #include "../utils/Common.h"
+#include "core/3ds.h" // for 3ds screen sizes.
 
 #include <jni.h>
 

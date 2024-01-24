@@ -378,7 +378,7 @@ public final class SettingsFragmentPresenter {
         //Setting preloadTextures = utilitySection.getSetting(SettingsFile.KEY_PRELOAD_TEXTURES);
 
         sl.add(new HeaderSetting(null, null, R.string.renderer, 0));
-        sl.add(new SingleChoiceSetting(SettingsFile.KEY_GRAPHICS_API, Settings.SECTION_RENDERER, R.string.graphics_api, 0, R.array.graphicsApiNames, R.array.graphicsApiValues, 0, graphicsApi));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_GRAPHICS_API, Settings.SECTION_RENDERER, R.string.graphics_api, 0, R.array.graphicsApiNames, R.array.graphicsApiValues, 1, graphicsApi));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_SPIRV_SHADER_GEN, Settings.SECTION_RENDERER, R.string.spirv_shader_gen, R.string.spirv_shader_gen_description, true, spirvShaderGen));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_ASYNC_SHADERS, Settings.SECTION_RENDERER, R.string.async_shaders, R.string.async_shaders_description, false, asyncShaders));
         sl.add(new SliderSetting(SettingsFile.KEY_RESOLUTION_FACTOR, Settings.SECTION_RENDERER, R.string.internal_resolution, R.string.internal_resolution_description, 0, 10, "x", 0, resolutionFactor));

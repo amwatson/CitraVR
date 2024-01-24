@@ -53,6 +53,16 @@ public:
     // EGL context
     std::unique_ptr<EglContext> eglContext_;
 
+    enum class HMDType {
+      UNKNOWN = 0,
+      QUEST1,
+      QUEST2,
+      QUEST3,
+      QUESTPRO
+    };
+
+    HMDType hmdType_ = HMDType::UNKNOWN;
+
 private:
     int32_t OpenXRInit(JavaVM* const jvm, const jobject activityObject);
     int32_t XrViewConfigInit();

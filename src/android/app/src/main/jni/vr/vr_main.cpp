@@ -22,6 +22,8 @@ License     :   Licensed under GPLv3 or any later version.
 #include "utils/Common.h"
 #include "utils/XrMath.h"
 
+#include "common/settings.h"
+
 #include <android/native_window_jni.h>
 #include <jni.h>
 
@@ -120,6 +122,23 @@ const char* XrSessionStateToString(const XrSessionState state) {
         return "Unknown";
     }
 }
+
+uint32_t GetDefaultGameResolutionFactorForHmd(const OpenXr::HMDType& hmdType) {
+  static constexpr uint32_t kDefaultResolutionFactor = 2;
+  switch (hmdType) {
+    case OpenXr::HMDType::QUEST3:
+      return 3;
+    case OpenXr::HMDType::UNKNOWN:
+      ALOGW("Warning: Unknown HMD type, using default scale factor of %d", kDefaultResolutionFactor);
+    case OpenXr::HMDType::QUEST1:
+      ALOGW("Warning: Unsupported HMD type, using default scale factor of %d", kDefaultResolutionFactor);
+    case OpenXr::HMDType::QUEST2:
+    case OpenXr::HMDType::QUESTPRO:
+      return kDefaultResolutionFactor;
+  }
+
+}
+
 } // anonymous namespace
 
 class VRApp {
@@ -172,8 +191,17 @@ public:
             mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
         }
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
-        mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
-                                                               mActivityObject, gOpenXr->session_);
+        {
+          const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(gOpenXr->hmdType_);
+          const uint32_t resolutionFactorFromPreferences =  Settings::values.resolution_factor.GetValue();
+          const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences : defaultResolutionFactor;
+          if (resolutionFactor != defaultResolutionFactor) {
+            ALOGI("Using resolution factor of %d instead of HMD default %d", resolutionFactor, defaultResolutionFactor);
+          }
+          mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
+              mActivityObject, gOpenXr->session_, resolutionFactor);
+        }
+
 #if defined(UI_LAYER)
         mErrorMessageLayer = std::make_unique<UILayer>("org/citra/citra_emu/vr/ErrorMessageLayer",
                                                        XrVector3f{0, 0, -0.7}, jni, mActivityObject,

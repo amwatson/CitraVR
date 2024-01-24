@@ -72,10 +72,7 @@ License     :   Licensed under GPLv3 or any later version.
 class GameSurfaceLayer {
 
 public:
-    // Density scale for surface. Citra's auto-scale sets this as the internal
-    // resolution.
-    static constexpr uint32_t SCALE_FACTOR = 5;
-    static constexpr float DEFAULT_QUAD_DENSITY = 240 * static_cast<float>(SCALE_FACTOR);
+    static constexpr float DEFAULT_QUAD_DENSITY = 240;
     static constexpr float DEFAULT_CYLINDER_RADIUS = 2.0f;
     static constexpr float DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES = 55.0f;
 
@@ -86,7 +83,7 @@ public:
      * @param session a valid XrSession
      */
     GameSurfaceLayer(const XrVector3f&& position, JNIEnv* jni, jobject activityObject,
-                     const XrSession& session);
+                     const XrSession& session, const uint32_t resolutionFactor);
     ~GameSurfaceLayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -140,23 +137,26 @@ private:
      */
     void CreateSwapchain();
 
-    static constexpr uint32_t SURFACE_WIDTH =
-        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth) * SCALE_FACTOR) -
-        300 * SCALE_FACTOR;
-    static constexpr uint32_t SURFACE_HEIGHT =
-        (Core::kScreenTopHeight + Core::kScreenBottomHeight) * SCALE_FACTOR;
+    static constexpr uint32_t SURFACE_WIDTH_UNSCALED =
+        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth)) - 300;
+    static constexpr uint32_t SURFACE_HEIGHT_UNSCALED =
+        (Core::kScreenTopHeight + Core::kScreenBottomHeight);
 
     // Width and height should both be even numbers, as the swapchain will
     // be split twice: once (horizontally) for stereo views, and once
     // (vertically) for the upper/lower screen.
-    static_assert((SURFACE_WIDTH % 2) == 0, "Swapchain width must be a multiple of 2");
-    static_assert((SURFACE_HEIGHT % 2) == 0, "Swapchain height must be a multiple of 2");
+    static_assert((SURFACE_WIDTH_UNSCALED % 2) == 0, "Swapchain width must be a multiple of 2");
+    static_assert((SURFACE_HEIGHT_UNSCALED % 2) == 0, "Swapchain height must be a multiple of 2");
 
     const XrSession session_;
     Swapchain swapchain_;
 
     XrPosef topPanelFromWorld_;
     XrPosef lowerPanelFromWorld_;
+
+    // Density scale for surface. Citra's auto-scale sets this as the internal
+    // resolution.
+    const uint32_t resolutionFactor_;
 
     //============================
     // JNI objects

@@ -28,7 +28,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float kLowerPanelScaleFactor = 0.75f;
+constexpr float lowerPanelScaleFactor = 0.75f;
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
  *
@@ -71,8 +71,8 @@ public:
 static constexpr std::chrono::milliseconds kMinTimeBetweenChecks(500);
 
 // Get density on an interval
-float GetDensitySysprop() {
-    static constexpr float kDefaultDensity = GameSurfaceLayer::DEFAULT_QUAD_DENSITY;
+float GetDensitySysprop(const uint32_t resolutionFactor) {
+    const float kDefaultDensity = GameSurfaceLayer::DEFAULT_QUAD_DENSITY * resolutionFactor;
     static float lastDensity = kDefaultDensity;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
@@ -206,8 +206,8 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
 
 // Uses a density for scaling and sets aspect ratio
 XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeight,
-                                  const float scaleFactor) {
-    const float density = GetDensitySysprop();
+                                  const float scaleFactor, const uint32_t resolutionFactor) {
+    const float density = GetDensitySysprop(resolutionFactor);
     return XrVector2f{2.0f * static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
            scaleFactor;
@@ -220,9 +220,9 @@ XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
 } // anonymous namespace
 
 GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, jobject activityObject,
-                                   const XrSession& session)
+                                   const XrSession& session, const uint32_t resolutionFactor)
     : session_(session), topPanelFromWorld_(CreateTopPanelFromWorld(position)),
-      lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)), env_(env),
+      lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)), resolutionFactor_(resolutionFactor), env_(env),
       activityObject_(activityObject)
 
 {
@@ -291,6 +291,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     } else {
         // Create the Top Display Panel (Flat display)
         for (uint32_t eye = 0; eye < 2; eye++) {
+            const uint32_t cropHoriz = 50 * resolutionFactor_;
             XrCompositionLayerQuad layer = {};
 
             layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
@@ -304,15 +305,15 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
-            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + (50/2) * SCALE_FACTOR;
+            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + cropHoriz/2;
             layer.subImage.imageRect.offset.y = 0;
-            layer.subImage.imageRect.extent.width = panelWidth - 50 * SCALE_FACTOR;
+            layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex = 0;
             layer.pose = topPanelFromWorld_;
             // Scale to get the desired density within the visible area (if we
             // want).
-            const auto scale = GetDensityScaleForSize(panelWidth - 50 * SCALE_FACTOR, -panelHeight, 1.0f);
+            const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight, 1.0f, resolutionFactor_);
             layer.size.width = scale.x;
             layer.size.height = scale.y;
 
@@ -327,6 +328,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
     {
+        const uint32_t cropHoriz = 90 * resolutionFactor_;
         XrCompositionLayerQuad layer = {};
 
         layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
@@ -340,14 +342,14 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
-        layer.subImage.imageRect.offset.x = (90/2) * SCALE_FACTOR;
+        layer.subImage.imageRect.offset.x = cropHoriz/2;
         layer.subImage.imageRect.offset.y = panelHeight + verticalBorderTex;
-        layer.subImage.imageRect.extent.width = panelWidth - 90 * SCALE_FACTOR;
+        layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
         layer.subImage.imageRect.extent.height = panelHeight;
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale =
-            GetDensityScaleForSize(panelWidth - 90 * SCALE_FACTOR, -panelHeight, kLowerPanelScaleFactor);
+            GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight, lowerPanelScaleFactor, resolutionFactor_);
         layer.size.width = scale.x;
         layer.size.height = scale.y;
         layers[layerCount++].mQuad = layer;
@@ -362,7 +364,7 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(const XrVector3f& sta
 {
     const uint32_t panelWidth = swapchain_.Width / 2;
     const uint32_t panelHeight = swapchain_.Height / 2;
-    const auto scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f);
+    const auto scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f, resolutionFactor_);
     return ::GetRayIntersectionWithPanel(topPanelFromWorld_, panelWidth, panelHeight, scale, start,
                                          end, result2d, result3d);
 }
@@ -372,7 +374,7 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start, cons
     const uint32_t panelWidth = swapchain_.Width / 2;
     const uint32_t panelHeight = swapchain_.Height / 2;
     const XrVector2f scale =
-        GetDensityScaleForSize(panelWidth, panelHeight, kLowerPanelScaleFactor);
+        GetDensityScaleForSize(panelWidth, panelHeight, lowerPanelScaleFactor, resolutionFactor_);
     return ::GetRayIntersectionWithPanel(lowerPanelFromWorld_, panelWidth, panelHeight, scale,
                                          start, end, result2d, result3d);
 }
@@ -442,8 +444,8 @@ void GameSurfaceLayer::CreateSwapchain() {
         xsci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
         xsci.format = 0;
         xsci.sampleCount = 0;
-        xsci.width = SURFACE_WIDTH;
-        xsci.height = SURFACE_HEIGHT;
+        xsci.width = SURFACE_WIDTH_UNSCALED * resolutionFactor_;
+        xsci.height = SURFACE_HEIGHT_UNSCALED * resolutionFactor_;
 
         xsci.faceCount = 0;
         xsci.arraySize = 0;
@@ -451,6 +453,8 @@ void GameSurfaceLayer::CreateSwapchain() {
         // surface-backed swapchain. You just have to scale everything
         // so that you do not need them.
         xsci.mipCount = 0;
+
+        ALOGI("GameSurfaceLayer: Creating swapchain of size %dx%d (%dx%d with resolution factor %d)", xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED, resolutionFactor_);
 
         PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
         assert(OpenXr::GetInstance() != XR_NULL_HANDLE);

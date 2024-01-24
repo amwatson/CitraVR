@@ -20,6 +20,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "vr_settings.h"
 
 #include "utils/Common.h"
+#include "utils/SyspropUtils.h"
 #include "utils/XrMath.h"
 
 #include <android/native_window_jni.h>
@@ -121,17 +122,39 @@ const char* XrSessionStateToString(const XrSessionState state) {
     }
 }
 
-uint32_t GetDefaultGameResolutionFactorForHmd(const OpenXr::HMDType& hmdType) {
+
+enum class HMDType {
+  UNKNOWN = 0,
+  QUEST1,
+  QUEST2,
+  QUEST3,
+  QUESTPRO
+};
+
+HMDType StringToHmdType(const std::string& hmdType) {
+  if (hmdType == "Quest") {
+    return HMDType::QUEST1;
+  } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
+    return HMDType::QUEST2;
+  } else if (hmdType == "Quest 3") {
+    return HMDType::QUEST3;
+  } else if (hmdType == "Quest Pro") {
+    return HMDType::QUESTPRO;
+  }
+  return HMDType::UNKNOWN;
+}
+
+uint32_t GetDefaultGameResolutionFactorForHmd(const HMDType& hmdType) {
   static constexpr uint32_t kDefaultResolutionFactor = 2;
   switch (hmdType) {
-    case OpenXr::HMDType::QUEST3:
+    case HMDType::QUEST3:
       return 3;
-    case OpenXr::HMDType::UNKNOWN:
+    case HMDType::UNKNOWN:
       ALOGW("Warning: Unknown HMD type, using default scale factor of %d", kDefaultResolutionFactor);
-    case OpenXr::HMDType::QUEST1:
+    case HMDType::QUEST1:
       ALOGW("Warning: Unsupported HMD type, using default scale factor of %d", kDefaultResolutionFactor);
-    case OpenXr::HMDType::QUEST2:
-    case OpenXr::HMDType::QUESTPRO:
+    case HMDType::QUEST2:
+    case HMDType::QUESTPRO:
       return kDefaultResolutionFactor;
   }
 
@@ -190,7 +213,11 @@ public:
         }
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         {
-          const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(gOpenXr->hmdType_);
+          const std::string hmdTypeStr = SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
+          const HMDType hmdType = StringToHmdType(hmdTypeStr);
+          ALOGI("HMD type: %s (%d)", hmdTypeStr.c_str(), hmdType);
+
+          const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(hmdType);
           const uint32_t resolutionFactorFromPreferences =  VRSettings::values.resolution_factor;
           const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences : defaultResolutionFactor;
           if (resolutionFactor != defaultResolutionFactor) {

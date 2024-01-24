@@ -14,7 +14,6 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "utils/Common.h"
 #include "utils/LogUtils.h"
-#include "utils/SyspropUtils.h"
 
 #include <openxr/openxr_platform.h>
 
@@ -283,21 +282,6 @@ size_t GetMaxLayerCount(const XrInstance& instanceLocal, const XrSystemId& syste
 
     return systemProperties.graphicsProperties.maxLayerCount;
 }
-
-OpenXr::HMDType StringToHmdType(const std::string& hmdType) {
-  if (hmdType == "Quest") {
-    return OpenXr::HMDType::QUEST1;
-  } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
-      return OpenXr::HMDType::QUEST2;
-  } else if (hmdType == "Quest 3") {
-    return OpenXr::HMDType::QUEST3;
-  } else if (hmdType == "Quest Pro") {
-    return OpenXr::HMDType::QUESTPRO;
-  }
-  return OpenXr::HMDType::UNKNOWN;
-}
-
-
 } // anonymous namespace
 
 XrInstance& OpenXr::GetInstance() {
@@ -520,11 +504,6 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
         ALOGE("Failed to create XR session");
         return -6;
     }
-
-    const std::string hmdType = SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
-    hmdType_ = StringToHmdType(hmdType);
-    ALOGI("HMD type: %s (%d)", hmdType.c_str(), hmdType_);
-
     return 0;
 }
 

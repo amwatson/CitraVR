@@ -288,8 +288,19 @@ void Config::ReadValues() {
         sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
 
     // VR
-    VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ? 2 /* void environment */: sdl2_config->GetInteger(
-          "VR", "vr_environment", 1);
+
+    // Note: hmdType is not read as a preference. It is initialized here so that it can
+    // be used to determine per-hmd settings in the config
+    {
+      const std::string hmdTypeStr = VRSettings::GetHMDTypeStr();
+      LOG_INFO(Config, "HMD type: {}", hmdTypeStr.c_str());
+      VRSettings::values.hmd_type = VRSettings::HmdTypeFromStr(hmdTypeStr);
+    }
+    VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ?
+      static_cast<long>(VRSettings::VREnvironmentType::VOID) : sdl2_config->GetInteger(
+          "VR", "vr_environment",
+          static_cast<long>(VRSettings::values.hmd_type == VRSettings::HMDType::QUEST3 ?
+            VRSettings::VREnvironmentType::PASSTHROUGH : VRSettings::VREnvironmentType::VOID));
 
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL

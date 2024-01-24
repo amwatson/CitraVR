@@ -15,7 +15,6 @@ License     :   Licensed under GPLv3 or any later version.
 #pragma once
 
 #include "OpenXR.h"
-#include "utils/LogUtils.h"
 
 #include <string>
 
@@ -25,26 +24,22 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace VRSettings {
 
-static inline XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
-    switch (cpu_level_pref) {
-    case 1:
-        return XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT;
-    case 2:
-        return XR_PERF_SETTINGS_LEVEL_SUSTAINED_LOW_EXT;
-    case 3:
-        return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
-    case 4:
-        return XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
-    default:
-        FAIL("Invalid CPU level preference %d", cpu_level_pref);
-    }
-}
+enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
+enum class VREnvironmentType { PASSTHROUGH = 1, VOID = 2 };
+
+// Given a CPU level preference, return the corresponding OpenXR performance level
+XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref);
+// Return the HMD type as a string (queried from ro.product.model)
+std::string GetHMDTypeStr();
+// Given a string from GetHMDTypeStr(), return the corresponding HMDType
+HMDType HmdTypeFromStr(const std::string& hmdType);
 
 struct Values {
     bool extra_performance_mode_enabled = false;
     int32_t vr_environment = 0;
     XrPerfSettingsLevelEXT cpu_level = XR_HIGHEST_CPU_PERF_LEVEL;
     uint32_t resolution_factor = 0;
+    HMDType hmd_type = HMDType::UNKNOWN;
 } extern values;
 
 } // namespace VRSettings

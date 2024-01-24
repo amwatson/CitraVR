@@ -95,7 +95,7 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
     }
 }
 
-const char* XrSessionStateToString(const XrSessionState state) {
+[[maybe_unused]] const char* XrSessionStateToString(const XrSessionState state) {
     switch (state) {
     case XR_SESSION_STATE_UNKNOWN:
         return "XR_SESSION_STATE_UNKNOWN";
@@ -122,34 +122,19 @@ const char* XrSessionStateToString(const XrSessionState state) {
     }
 }
 
-enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
-
-HMDType StringToHmdType(const std::string& hmdType) {
-    if (hmdType == "Quest") {
-        return HMDType::QUEST1;
-    } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
-        return HMDType::QUEST2;
-    } else if (hmdType == "Quest 3") {
-        return HMDType::QUEST3;
-    } else if (hmdType == "Quest Pro") {
-        return HMDType::QUESTPRO;
-    }
-    return HMDType::UNKNOWN;
-}
-
-uint32_t GetDefaultGameResolutionFactorForHmd(const HMDType& hmdType) {
+uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
     static constexpr uint32_t kDefaultResolutionFactor = 2;
     switch (hmdType) {
-    case HMDType::QUEST3:
+    case VRSettings::HMDType::QUEST3:
         return 3;
-    case HMDType::UNKNOWN:
+    case VRSettings::HMDType::UNKNOWN:
         ALOGW("Warning: Unknown HMD type, using default scale factor of %d",
               kDefaultResolutionFactor);
-    case HMDType::QUEST1:
+    case VRSettings::HMDType::QUEST1:
         ALOGW("Warning: Unsupported HMD type, using default scale factor of %d",
               kDefaultResolutionFactor);
-    case HMDType::QUEST2:
-    case HMDType::QUESTPRO:
+    case VRSettings::HMDType::QUEST2:
+    case VRSettings::HMDType::QUESTPRO:
         return kDefaultResolutionFactor;
     }
 }
@@ -201,19 +186,25 @@ public:
         mInputStateStatic =
             std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->session_);
 
-        assert(VRSettings::values.vr_environment > 0 && VRSettings::values.vr_environment <= 2);
+        //////////////////////////////////////////////////
+        // Create the layers
+        //////////////////////////////////////////////////
+
+        // Create the background layer.
+        assert(VRSettings::values.vr_environment ==
+                   static_cast<int32_t>(VRSettings::VREnvironmentType::VOID) ||
+               VRSettings::values.vr_environment ==
+                   static_cast<int32_t>(VRSettings::VREnvironmentType::PASSTHROUGH));
         // If user set "Void" in settings, don't render passthrough
-        if (VRSettings::values.vr_environment != 2) {
+        if (VRSettings::values.vr_environment !=
+            static_cast<int32_t>(VRSettings::VREnvironmentType::VOID)) {
             mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
         }
-        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
-        {
-            const std::string hmdTypeStr =
-                SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
-            const HMDType hmdType = StringToHmdType(hmdTypeStr);
-            ALOGI("HMD type: %s (%d)", hmdTypeStr.c_str(), hmdType);
 
-            const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(hmdType);
+        // Create the game surface layer.
+        {
+            const uint32_t defaultResolutionFactor =
+                GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
             const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
             const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0
                                                   ? resolutionFactorFromPreferences
@@ -226,11 +217,18 @@ public:
                 XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->session_, resolutionFactor);
         }
 
+        // Create the cursor layer.
+        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
+
 #if defined(UI_LAYER)
         mErrorMessageLayer = std::make_unique<UILayer>("org/citra/citra_emu/vr/ErrorMessageLayer",
                                                        XrVector3f{0, 0, -0.7}, jni, mActivityObject,
                                                        gOpenXr->session_);
 #endif
+
+        //////////////////////////////////////////////////
+        // Intialize JNI methods
+        //////////////////////////////////////////////////
 
         mForwardVRInputMethodID =
             jni->GetMethodID(jni->GetObjectClass(mActivityObject), "forwardVRInput", "(IZ)V");
@@ -263,6 +261,10 @@ public:
         if (mOpenSettingsMethodID == nullptr) {
             FAIL("could not get openSettingsMenuMethodID");
         }
+
+        //////////////////////////////////////////////////
+        // Frame loop
+        //////////////////////////////////////////////////
 
         while (!mIsStopRequested) {
             Frame(jni);
@@ -806,7 +808,7 @@ private:
                       __func__);
                 break;
             case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                const XrEventDataPerfSettingsEXT* pfs =
+                [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
                     (XrEventDataPerfSettingsEXT*)(baseEventHeader);
                 ALOGV("%s(): Received "
                       "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type %d "

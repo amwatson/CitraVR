@@ -15,7 +15,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <android/log.h>
 #include <stdlib.h>
 #ifndef LOG_TAG
-#define LOG_TAG "Citra::VR"
+#define LOG_TAG "Citra::Input"
 #endif
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
@@ -26,6 +26,7 @@ License     :   Licensed under GPLv3 or any later version.
 #else
 #define ALOGD(...)
 #endif
+
 #define FAIL(...)                                                                                  \
     do {                                                                                           \
         __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);                              \

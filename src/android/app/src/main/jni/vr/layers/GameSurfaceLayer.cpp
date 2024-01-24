@@ -454,7 +454,7 @@ void GameSurfaceLayer::CreateSwapchain() {
         // so that you do not need them.
         xsci.mipCount = 0;
 
-        ALOGI("GameSurfaceLayer: Creating swapchain of size %dx%d (%dx%d with resolution factor %d)", xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED, resolutionFactor_);
+        ALOGI("GameSurfaceLayer: Creating swapchain of size %dx%d (%dx%d with resolution factor %dx)", xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED, resolutionFactor_);
 
         PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
         assert(OpenXr::GetInstance() != XR_NULL_HANDLE);

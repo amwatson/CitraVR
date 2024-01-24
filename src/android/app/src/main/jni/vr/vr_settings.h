@@ -44,6 +44,7 @@ struct Values {
   bool extra_performance_mode_enabled = false;
   int32_t vr_environment = 0;
   XrPerfSettingsLevelEXT cpu_level = XR_HIGHEST_CPU_PERF_LEVEL;
+  uint32_t resolution_factor = 0;
 } extern values;
 
 } // namespace VRSettings

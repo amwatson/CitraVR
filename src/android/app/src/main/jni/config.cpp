@@ -158,7 +158,21 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.spirv_shader_gen);
     ReadSetting("Renderer", Settings::values.use_hw_shader);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
-    ReadSetting("Renderer", Settings::values.resolution_factor);
+
+    // VR-specific: use a custom scale factor to scale swapchain and then set
+    // Citra's internal resolution to auto.
+    // NOTE: I'm not certain whether this is the most graphics-friendly move
+    // or not. I think it's ok because resolution is always at least 1x the
+    // orginal scale, so unless I factor z-scaling into the equation,
+    // Citra's renderer won't handle artifacts for scaling down in any cases.
+    // And this will make it scale up higher than it would if VR and non-VR
+    // maintained separate factors. In this case, texture size is 1:1 with the
+    // swapchain size. Someone should check me on this logic.
+    VRSettings::values.resolution_factor = sdl2_config->GetInteger("Renderer",
+        Settings::values.resolution_factor.GetLabel(),
+        Settings::values.resolution_factor.GetDefault());
+    Settings::values.resolution_factor.SetValue(0);
+
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
 

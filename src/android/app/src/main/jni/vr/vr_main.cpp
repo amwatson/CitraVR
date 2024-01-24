@@ -22,8 +22,6 @@ License     :   Licensed under GPLv3 or any later version.
 #include "utils/Common.h"
 #include "utils/XrMath.h"
 
-#include "common/settings.h"
-
 #include <android/native_window_jni.h>
 #include <jni.h>
 
@@ -193,10 +191,10 @@ public:
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         {
           const uint32_t defaultResolutionFactor = GetDefaultGameResolutionFactorForHmd(gOpenXr->hmdType_);
-          const uint32_t resolutionFactorFromPreferences =  Settings::values.resolution_factor.GetValue();
+          const uint32_t resolutionFactorFromPreferences =  VRSettings::values.resolution_factor;
           const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences : defaultResolutionFactor;
           if (resolutionFactor != defaultResolutionFactor) {
-            ALOGI("Using resolution factor of %d instead of HMD default %d", resolutionFactor, defaultResolutionFactor);
+            ALOGI("Using resolution factor of %dx instead of HMD default %dx", resolutionFactor, defaultResolutionFactor);
           }
           mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(XrVector3f{0, 0, -2.0f}, jni,
               mActivityObject, gOpenXr->session_, resolutionFactor);

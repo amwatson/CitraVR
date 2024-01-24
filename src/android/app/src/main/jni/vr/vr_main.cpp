@@ -35,7 +35,6 @@ License     :   Licensed under GPLv3 or any later version.
 #include <sys/prctl.h>
 #include <unistd.h>
 
-#define USE_INGAME_MENU
 #if defined(DEBUG_INPUT_VERBOSE)
 #define ALOG_INPUT_VERBOSE(...) ALOGI(__VA_ARGS__)
 #else
@@ -96,7 +95,7 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
     }
 }
 
-[[maybe_unused]] const char* XrSessionStateToString(const XrSessionState state) {
+const char* XrSessionStateToString(const XrSessionState state) {
     switch (state) {
     case XR_SESSION_STATE_UNKNOWN:
         return "XR_SESSION_STATE_UNKNOWN";
@@ -209,7 +208,6 @@ public:
         }
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
         {
-
             const std::string hmdTypeStr =
                 SyspropUtils::GetSysPropAsString("ro.product.model", "unknown");
             const HMDType hmdType = StringToHmdType(hmdTypeStr);
@@ -808,7 +806,7 @@ private:
                       __func__);
                 break;
             case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                const XrEventDataPerfSettingsEXT* pfs =
                     (XrEventDataPerfSettingsEXT*)(baseEventHeader);
                 ALOGV("%s(): Received "
                       "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type %d "

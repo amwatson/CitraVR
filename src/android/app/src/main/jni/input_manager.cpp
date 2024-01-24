@@ -19,6 +19,25 @@
 #include <android/log.h>
 #include <stdlib.h>
 
+#if !defined(LOG_TAG)
+#define LOG_TAG "citra"
+#endif
+
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define ALOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define ALOGV(...)                                                             \
+    __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#ifndef NDEBUG
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#else
+#define ALOGD(...)
+#endif
+#define FAIL(...)                                                              \
+    do {                                                                       \
+        __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);          \
+        abort();                                                               \
+    } while (0)
 namespace InputManager {
 
 static std::shared_ptr<ButtonFactory> button;
@@ -314,6 +333,7 @@ NDKMotionFactory* NDKMotionHandler() {
 }
 
 void Init() {
+  ALOGI("initializing input manager");
     button = std::make_shared<ButtonFactory>();
     analog = std::make_shared<AnalogFactory>();
     motion = std::make_shared<NDKMotionFactory>();
@@ -323,6 +343,7 @@ void Init() {
 }
 
 void Shutdown() {
+  ALOGI("shutting down input manager");
     Input::UnregisterFactory<Input::ButtonDevice>("gamepad");
     Input::UnregisterFactory<Input::AnalogDevice>("gamepad");
     Input::UnregisterFactory<Input::MotionDevice>("motion_emu");

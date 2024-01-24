@@ -101,7 +101,6 @@ enum class Class : u8 {
     Movie,           ///< Movie (Input Recording) Playback
     WebService,      ///< Interface to Citra Web Services
     RPC_Server,      ///< RPC server
-    VR,              ///< VR emulation
     Count,           ///< Total number of logging classes
 };
 

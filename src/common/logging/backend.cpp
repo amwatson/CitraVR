@@ -33,6 +33,29 @@
 #include "common/string_util.h"
 #include "common/thread.h"
 
+#include <android/log.h>
+#include <stdlib.h>
+#if !defined(LOG_TAG)
+#define LOG_TAG "citra"
+#endif
+
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define ALOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define ALOGV(...)                                                             \
+    __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#ifndef NDEBUG
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#else
+#define ALOGD(...)
+#endif
+#define FAIL(...)                                                              \
+    do {                                                                       \
+        __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);          \
+        abort();                                                               \
+    } while (0)
+
+
 namespace Common::Log {
 
 namespace {
@@ -236,6 +259,7 @@ public:
 
     void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                    const char* function, std::string message) {
+      ALOGI("CitraMessage file: %s, line: %d, function: %s, message: %s", filename, line_num, function, message.c_str());
         if (!filter.CheckMessage(log_class, log_level)) {
             return;
         }

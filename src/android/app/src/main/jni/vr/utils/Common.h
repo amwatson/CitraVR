@@ -21,7 +21,7 @@ License     :   Licensed under GPLv3 or any later version.
 #define BAIL_ON_COND(cond, errorStr, returnCode)                                                   \
     do {                                                                                           \
         if (cond) {                                                                                \
-            ALOGE("ERROR (%s): %s", __FUNCTION__, errorStr);                                       \
+            ALOGE("ERROR ({}): {}", __FUNCTION__, errorStr);                                       \
             return (returnCode);                                                                   \
         }                                                                                          \
     } while (0)
@@ -30,7 +30,7 @@ License     :   Licensed under GPLv3 or any later version.
     do {                                                                                           \
         const int32_t ret = fn;                                                                    \
         if (ret < 0) {                                                                             \
-            ALOGE("ERROR (%s): %s() returned %d", __FUNCTION__, #fn, ret);                         \
+            ALOGE("ERROR ({}): {}() returned {}", __FUNCTION__, #fn, ret);                         \
             return (returnCode);                                                                   \
         }                                                                                          \
     } while (0)

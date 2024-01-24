@@ -42,6 +42,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
 import org.citra.citra_emu.ui.main.MainActivity;
 import org.citra.citra_emu.utils.Log;
+import org.citra.citra_emu.vr.VRUtils;
 
 import java.util.ArrayList;
 
@@ -294,8 +295,8 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
         mUnits = view.findViewById(R.id.text_units);
         mUnits.setText(item.getUnits());
         if (mClickedItem.getKey().equals(SettingsFile.KEY_RESOLUTION_FACTOR) && mSliderProgress == 0) {
-            mTextSliderValue.setText(R.string.auto);
-            mUnits.setVisibility(View.GONE);
+            final String sliderText = mContext.getString(R.string.auto) + ": " + VRUtils.getDefaultResolutionFactor();
+            mTextSliderValue.setText(sliderText);
         } else {
             mTextSliderValue.setText(String.valueOf(mSliderProgress));
         }
@@ -480,11 +481,10 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
         mSliderProgress = (int) value;
         if (mClickedItem.getKey().equals(SettingsFile.KEY_RESOLUTION_FACTOR)) {
             if (mSliderProgress == 0) {
-                mTextSliderValue.setText(R.string.auto);
-                mUnits.setVisibility(View.GONE);
+                final String sliderText = mContext.getString(R.string.auto) + ": " + VRUtils.getDefaultResolutionFactor();
+                mTextSliderValue.setText(sliderText);
             } else {
                 mTextSliderValue.setText(String.valueOf(mSliderProgress));
-                mUnits.setVisibility(View.VISIBLE);
             }
         } else {
             mTextSliderValue.setText(String.valueOf(mSliderProgress));

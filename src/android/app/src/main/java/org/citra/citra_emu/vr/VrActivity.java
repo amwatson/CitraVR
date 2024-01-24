@@ -211,4 +211,5 @@ public class VrActivity extends EmulationActivity {
             }
         }
     }
+
 }

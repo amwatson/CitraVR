@@ -25,7 +25,7 @@ License     :   Licensed under GPLv3 or any later version.
     do {                                                                                           \
         const int32_t ret = fn;                                                                    \
         if (ret < 0) {                                                                             \
-            ALOGE("ERROR (%s): %s() returned %d", __FUNCTION__, #fn, ret);                         \
+            ALOGE("ERROR ({}): {}() returned {}", __FUNCTION__, #fn, ret);                         \
             return (returnCode);                                                                   \
         }                                                                                          \
     } while (0)
@@ -38,7 +38,7 @@ void OXR_CheckErrors(XrResult result, const char* function, bool failOnError) {
         if (failOnError) {
             FAIL("OpenXR error: %s: %s\n", function, errorBuffer);
         } else {
-            ALOGV("OpenXR error: %s: %s\n", function, errorBuffer);
+            ALOGV("OpenXR error: {}: {}\n", function, errorBuffer);
         }
     }
 }
@@ -79,7 +79,7 @@ namespace {
     OXR(xrEnumerateApiLayerProperties(numInputLayers, &numOutputLayers, layerProperties.data()));
 
     for (uint32_t i = 0; i < numOutputLayers; i++) {
-        ALOGI("Found layer %s", layerProperties[i].layerName);
+        ALOGI("Found layer {}", layerProperties[i].layerName);
     }
 }
 
@@ -109,7 +109,7 @@ int XrCheckRequiredExtensions(const char* const* requiredExtensionNames,
         uint32_t numOutputExtensions = 0;
         OXR(xrEnumerateInstanceExtensionProperties(NULL, numInputExtensions, &numOutputExtensions,
                                                    NULL));
-        ALOGV("xrEnumerateInstanceExtensionProperties found %u extension(s).", numOutputExtensions);
+        ALOGV("xrEnumerateInstanceExtensionProperties found {} extension(s).", numOutputExtensions);
 
         numInputExtensions = numOutputExtensions;
 
@@ -124,7 +124,7 @@ int XrCheckRequiredExtensions(const char* const* requiredExtensionNames,
                                                    extensionProperties.data()));
 #ifndef NDEBUG
         for (uint32_t i = 0; i < numOutputExtensions; i++) {
-            ALOGV("Extension #%d = '%s'.", i, extensionProperties[i].extensionName);
+            ALOGV("Extension #{} = '{}'.", i, extensionProperties[i].extensionName);
         }
 #endif
 
@@ -132,13 +132,13 @@ int XrCheckRequiredExtensions(const char* const* requiredExtensionNames,
             bool found = false;
             for (uint32_t j = 0; j < numOutputExtensions; j++) {
                 if (!strcmp(requiredExtensionNames[i], extensionProperties[j].extensionName)) {
-                    ALOGD("Found required extension %s", requiredExtensionNames[i]);
+                    ALOGD("Found required extension {}", requiredExtensionNames[i]);
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                ALOGE("Failed to find required extension %s", requiredExtensionNames[i]);
+                ALOGE("Failed to find required extension {}", requiredExtensionNames[i]);
                 return -2;
             }
         }
@@ -185,7 +185,7 @@ XrInstance XrInstanceCreate() {
     XrInstance instanceLocal;
     OXR(initResult = xrCreateInstance(&ici, &instanceLocal));
     if (initResult != XR_SUCCESS) {
-        ALOGE("ERROR(%s()): Failed to create XR instance_: %d.", __FUNCTION__, initResult);
+        ALOGE("ERROR({}()): Failed to create XR instance_: {}.", __FUNCTION__, initResult);
         return XR_NULL_HANDLE;
     }
     // Log runtime instance info
@@ -194,7 +194,7 @@ XrInstance XrInstanceCreate() {
         instanceInfo.type = XR_TYPE_INSTANCE_PROPERTIES;
         instanceInfo.next = NULL;
         OXR(xrGetInstanceProperties(instanceLocal, &instanceInfo));
-        ALOGV("Runtime %s: Version : %u.%u.%u", instanceInfo.runtimeName,
+        ALOGV("Runtime {}: Version : {}.{}.{}", instanceInfo.runtimeName,
               XR_VERSION_MAJOR(instanceInfo.runtimeVersion),
               XR_VERSION_MINOR(instanceInfo.runtimeVersion),
               XR_VERSION_PATCH(instanceInfo.runtimeVersion));
@@ -216,7 +216,7 @@ int32_t XrInitializeLoaderTrampoline(JavaVM* jvm, jobject activityObject) {
         loaderInitializeInfoAndroid.applicationContext = activityObject;
         xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR*)&loaderInitializeInfoAndroid);
     } else {
-        ALOGE("%s(): xrInitializeLoaderKHR is NULL", __FUNCTION__);
+        ALOGE("{}(): xrInitializeLoaderKHR is NULL", __FUNCTION__);
         return -1;
     }
     return 0;
@@ -241,7 +241,7 @@ XrSession XrSessionCreate(const XrInstance& localInstance, const XrSystemId& sys
     XrResult initResult;
     OXR(initResult = xrCreateSession(localInstance, &sessionCreateInfo, &session));
     if (initResult != XR_SUCCESS) {
-        ALOGE("Failed to create XR session: %d.", initResult);
+        ALOGE("Failed to create XR session: {}.", initResult);
         return XR_NULL_HANDLE;
     }
     return session;
@@ -258,7 +258,7 @@ XrSystemId XrGetSystemId(const XrInstance& instanceLocal) {
     XrResult initResult;
     OXR(initResult = xrGetSystem(instanceLocal, &sgi, &systemId));
     if (initResult != XR_SUCCESS) {
-        ALOGE("ERROR (%s()): Failed to get system.", __FUNCTION__);
+        ALOGE("ERROR ({}()): Failed to get system.", __FUNCTION__);
         return XR_NULL_SYSTEM_ID;
     }
     return systemId;
@@ -269,14 +269,14 @@ size_t GetMaxLayerCount(const XrInstance& instanceLocal, const XrSystemId& syste
     systemProperties.type = XR_TYPE_SYSTEM_PROPERTIES;
     OXR(xrGetSystemProperties(instanceLocal, systemId, &systemProperties));
 
-    ALOGV("System Properties: Name=%s VendorId=%x", systemProperties.systemName,
+    ALOGV("System Properties: Name={} VendorId={}", systemProperties.systemName,
           systemProperties.vendorId);
-    ALOGV("System Graphics Properties: MaxWidth=%d MaxHeight=%d MaxLayers=%d",
+    ALOGV("System Graphics Properties: MaxWidth={} MaxHeight={} MaxLayers={}",
           systemProperties.graphicsProperties.maxSwapchainImageWidth,
           systemProperties.graphicsProperties.maxSwapchainImageHeight,
           systemProperties.graphicsProperties.maxLayerCount);
-    ALOGV("System Tracking Properties: OrientationTracking=%s "
-          "PositionTracking=%s",
+    ALOGV("System Tracking Properties: OrientationTracking={} "
+          "PositionTracking={}",
           systemProperties.trackingProperties.orientationTracking ? "True" : "False",
           systemProperties.trackingProperties.positionTracking ? "True" : "False");
 
@@ -310,20 +310,20 @@ int32_t OpenXr::XrViewConfigInit() {
     OXR(xrEnumerateViewConfigurations(instance_, systemId_, viewportConfigTypeCount,
                                       &viewportConfigTypeCount, viewportConfigurationTypes.data()));
 
-    ALOGV("Available Viewport Configuration Types: %d", viewportConfigTypeCount);
+    ALOGV("Available Viewport Configuration Types: {}", viewportConfigTypeCount);
 
     bool foundSupportedViewport;
     for (uint32_t i = 0; i < viewportConfigTypeCount; i++) {
         const XrViewConfigurationType viewportConfigType = viewportConfigurationTypes[i];
 
-        ALOGV("Viewport configuration type %d : %s", viewportConfigType,
+        ALOGV("Viewport configuration type {} : {}", viewportConfigType,
               viewportConfigType == VIEW_CONFIG_TYPE ? "Selected" : "");
 
         XrViewConfigurationProperties viewportConfig;
         viewportConfig.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
         OXR(xrGetViewConfigurationProperties(instance_, systemId_, viewportConfigType,
                                              &viewportConfig));
-        ALOGV("FovMutable=%s ConfigurationType %d", viewportConfig.fovMutable ? "true" : "false",
+        ALOGV("FovMutable={} ConfigurationType {}", viewportConfig.fovMutable ? "true" : "false",
               viewportConfig.viewConfigurationType);
 
         uint32_t viewCount;
@@ -347,12 +347,12 @@ int32_t OpenXr::XrViewConfigInit() {
                 const XrViewConfigurationView* element = &elements[e];
                 (void)element;
 
-                ALOGV("Viewport [%d]: Recommended Width=%d Height=%d "
-                      "SampleCount=%d",
+                ALOGV("Viewport [{}]: Recommended Width={} Height={} "
+                      "SampleCount={}",
                       e, element->recommendedImageRectWidth, element->recommendedImageRectHeight,
                       element->recommendedSwapchainSampleCount);
 
-                ALOGV("Viewport [%d]: Max Width=%d Height=%d SampleCount=%d", e,
+                ALOGV("Viewport [{}]: Max Width={} Height={} SampleCount={}", e,
                       element->maxImageRectWidth, element->maxImageRectHeight,
                       element->maxSwapchainSampleCount);
             }
@@ -366,7 +366,7 @@ int32_t OpenXr::XrViewConfigInit() {
                 }
             }
         } else {
-            ALOGD("Empty viewport configuration type: %d", viewCount);
+            ALOGD("Empty viewport configuration type: {}", viewCount);
         }
     }
     if (!foundSupportedViewport) {
@@ -490,7 +490,7 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
             const XrVersion eglVersion = XR_MAKE_VERSION(eglMajor, eglMinor, 0);
             if (eglVersion < graphicsRequirements.minApiVersionSupported ||
                 eglVersion > graphicsRequirements.maxApiVersionSupported) {
-                ALOGE("GLES version %d.%d not supported", eglMajor, eglMinor);
+                ALOGE("GLES version {}.{} not supported", eglMajor, eglMinor);
                 return -5;
             }
         }

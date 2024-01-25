@@ -64,7 +64,7 @@ void PrioritizeTid(const int tid) {
 
     OXR(pfnSetAndroidApplicationThreadKHR(gSession, XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR, tid));
     gPriorityTid = tid;
-    ALOGD("Setting prio tid from original code %d", vr::gPriorityTid);
+    ALOGD("Setting prio tid from original code {}", vr::gPriorityTid);
 }
 } // namespace vr
 
@@ -89,7 +89,7 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
                                 jmethodID forwardVRInputMethodID, const int androidButtonCode,
                                 const XrActionStateBoolean& actionState, const char* buttonName) {
     if (ShouldForwardButtonState(actionState)) {
-        ALOG_INPUT_VERBOSE("Forwarding %s button state: %d", buttonName, actionState.currentState);
+        ALOG_INPUT_VERBOSE("Forwarding {} button state: {}", buttonName, actionState.currentState);
         ForwardButtonStateChangeToCitra(jni, activityObject, forwardVRInputMethodID,
                                         androidButtonCode, actionState.currentState);
     }
@@ -128,10 +128,10 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
     case VRSettings::HMDType::QUEST3:
         return 3;
     case VRSettings::HMDType::UNKNOWN:
-        ALOGW("Warning: Unknown HMD type, using default scale factor of %d",
+        ALOGW("Warning: Unknown HMD type, using default scale factor of {}",
               kDefaultResolutionFactor);
     case VRSettings::HMDType::QUEST1:
-        ALOGW("Warning: Unsupported HMD type, using default scale factor of %d",
+        ALOGW("Warning: Unsupported HMD type, using default scale factor of {}",
               kDefaultResolutionFactor);
     case VRSettings::HMDType::QUEST2:
     case VRSettings::HMDType::QUESTPRO:
@@ -157,7 +157,7 @@ public:
         if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
             // on most of the android systems, calling exit() isn't like the end
             // of the world. The reapers get to it within a few seconds
-            ALOGD("%s() ERROR: could not attach to JVM", __FUNCTION__);
+            ALOGD("{}() ERROR: could not attach to JVM", __FUNCTION__);
             exit(0);
         }
         jni->DeleteGlobalRef(mActivityObject);
@@ -170,7 +170,7 @@ public:
         }
         mEnv = jni;
 
-        ALOGI("VR Extra Performance Mode: %s",
+        ALOGI("VR Extra Performance Mode: {}",
               VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
         // Gotta set this after the JNIEnv is attached, or else it'll be
         // overwritten
@@ -210,7 +210,7 @@ public:
                                                   ? resolutionFactorFromPreferences
                                                   : defaultResolutionFactor;
             if (resolutionFactor != defaultResolutionFactor) {
-                ALOGI("Using resolution factor of %dx instead of HMD default %dx", resolutionFactor,
+                ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
                       defaultResolutionFactor);
             }
             mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(
@@ -292,7 +292,7 @@ private:
         // Log time to first frame
         if (mFrameIndex == 1) {
             std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-            ALOGI("Time to first frame: %lld ms",
+            ALOGI("Time to first frame: {} ms",
                   std::chrono::duration_cast<std::chrono::milliseconds>(now - gOnCreateStartTime)
                       .count());
         }
@@ -530,12 +530,12 @@ private:
                             shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, pos3d);
                             position = pos3d;
-                            // ALOGI("Cursor 3D pos: %f %f %f",
+                            // ALOGI("Cursor 3D pos: {} {} {}",
                             //                                        cursorPos3d.x,
                             //                                        cursorPos3d.y,
                             //                                        cursorPos3d.z);
 
-                            //  ALOGI("Cursor 2D coords: %f %f", cursorPos2d.x,
+                            //  ALOGI("Cursor 2D coords: {} {}", cursorPos2d.x,
                             //    cursorPos2d.y);
                             if (triggerState.changedSinceLastSync) {
                                 mErrorMessageLayer->SendClickToWindow(cursorPos2d,
@@ -545,7 +545,7 @@ private:
                         } else {
                             shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, cursorPose3d);
-                            ALOG_INPUT_VERBOSE("Cursor 2D coords: %f %f", cursorPos2d.x,
+                            ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x,
                                                cursorPos2d.y);
                             if (triggerState.currentState == 0 &&
                                 triggerState.changedSinceLastSync) {
@@ -696,7 +696,7 @@ private:
                                                           VRSettings::values.cpu_level));
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
                     gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
-                ALOGI("%s(): Set clock levels to CPU:%d, GPU:%d", __FUNCTION__,
+                ALOGI("{}(): Set clock levels to CPU:{}, GPU:{}", __FUNCTION__,
                       VRSettings::values.cpu_level, kGpuPerfLevel);
 
                 PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
@@ -705,7 +705,7 @@ private:
                     (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
 
                 if (vr::gPriorityTid > 0) {
-                    ALOGD("Setting prio tid from main %d", vr::gPriorityTid);
+                    ALOGD("Setting prio tid from main {}", vr::gPriorityTid);
                     OXR(pfnSetAndroidApplicationThreadKHR(gOpenXr->session_,
                                                           XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR,
                                                           vr::gPriorityTid));
@@ -729,22 +729,22 @@ private:
     void HandleSessionStateChangedEvent(const XrEventDataSessionStateChanged& newState) {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
-            ALOGV("%s(): Received XR_SESSION_STATE_CHANGED state %s->%s "
-                  "session=%p time=%ld",
+            ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
+                  "session={} time={}",
                   __func__, XrSessionStateToString(lastState),
                   XrSessionStateToString(newState.state), newState.session, newState.time);
         }
         lastState = newState.state;
         switch (newState.state) {
         case XR_SESSION_STATE_FOCUSED:
-            ALOGV("%s(): Received XR_SESSION_STATE_FOCUSED event", __func__);
+            ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
             if (!mHasFocus) {
                 mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID);
             }
             mHasFocus = true;
             break;
         case XR_SESSION_STATE_VISIBLE:
-            ALOGV("%s(): Received XR_SESSION_STATE_VISIBLE event", __func__);
+            ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
             if (mHasFocus) {
                 mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID);
             }
@@ -778,13 +778,13 @@ private:
 
             switch (baseEventHeader->type) {
             case XR_TYPE_EVENT_DATA_EVENTS_LOST:
-                ALOGV("%s(): Received "
+                ALOGV("{}(): Received "
                       "XR_TYPE_EVENT_DATA_EVENTS_LOST "
                       "event",
                       __func__);
                 break;
             case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
-                ALOGV("%s(): Received "
+                ALOGV("{}(): Received "
                       "XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING event",
                       __func__);
                 break;
@@ -792,37 +792,37 @@ private:
                 const XrEventDataSessionStateChanged* ssce =
                     (XrEventDataSessionStateChanged*)(baseEventHeader);
                 if (ssce != nullptr) {
-                    ALOGV("%s(): Received "
+                    ALOGV("{}(): Received "
                           "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
                           __func__);
                     HandleSessionStateChangedEvent(*ssce);
                 } else {
-                    ALOGE("%s(): Received "
+                    ALOGE("{}(): Received "
                           "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
                           __func__);
                 }
             } break;
             case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
-                ALOGV("%s(): Received "
+                ALOGV("{}(): Received "
                       "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
                       __func__);
                 break;
             case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
                 [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
                     (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                ALOGV("%s(): Received "
-                      "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type %d "
-                      "subdomain %d : level %d -> level %d",
+                ALOGV("{}(): Received "
+                      "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
+                      "subdomain {} : level {} -> level {}",
                       __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
             } break;
             case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
-                ALOGV("%s(): Received "
+                ALOGV("{}(): Received "
                       "XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING "
                       "event",
                       __func__);
                 break;
             default:
-                ALOGV("%s(): Unknown event", __func__);
+                ALOGV("{}(): Unknown event", __func__);
                 break;
             }
         }
@@ -904,3 +904,4 @@ Java_org_citra_citra_1emu_vr_VRUtils_getDefaultResolutionFactor(JNIEnv* env, jcl
     const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }
+

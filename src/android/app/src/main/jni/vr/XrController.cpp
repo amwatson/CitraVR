@@ -28,7 +28,7 @@ namespace {
 XrAction CreateAction(XrActionSet actionSet, XrActionType type, const char* actionName,
                       const char* localizedName, int countSubactionPaths = 0,
                       XrPath* subactionPaths = nullptr) {
-    ALOG_INPUT_VERBOSE("CreateAction %s, %d" actionName, countSubactionPaths);
+    ALOG_INPUT_VERBOSE("CreateAction {}, {}" actionName, countSubactionPaths);
 
     XrActionCreateInfo aci = {};
     aci.type = XR_TYPE_ACTION_CREATE_INFO;

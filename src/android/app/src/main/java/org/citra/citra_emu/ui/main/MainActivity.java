@@ -184,6 +184,10 @@ public final class MainActivity extends AppCompatActivity implements MainView {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Request permission if it's not granted
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 0);
+        }
         // Check for the TWO_INSTANCES string extra
         if (getIntent().getBooleanExtra(VrActivity.EXTRA_ERROR_TWO_INSTANCES, false)) {
           Log.error("Error: two instances of CitraVr::VrActivity were running at the same time!");
@@ -214,10 +218,6 @@ public final class MainActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onResume() {
         super.onResume();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // Request permission if it's not granted
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 0);
-        }
         mPresenter.addDirIfNeeded(new AddDirectoryHelper(this));
 
         ThemeUtil.setSystemBarMode(this, ThemeUtil.getIsLightMode(getResources()));

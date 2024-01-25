@@ -14,6 +14,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "GameSurfaceLayer.h"
 
+#include "../vr_settings.h"
+
 #include "../utils/JniUtils.h"
 #include "../utils/LogUtils.h"
 #include "../utils/SyspropUtils.h"
@@ -223,9 +225,15 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
                                    const XrSession& session, const uint32_t resolutionFactor)
     : session_(session), topPanelFromWorld_(CreateTopPanelFromWorld(position)),
       lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)),
-      resolutionFactor_(resolutionFactor), env_(env), activityObject_(activityObject)
+      resolutionFactor_(resolutionFactor),
+      useImmersiveMode_(VRSettings::values.vr_immersive_mode_enabled), env_(env),
+      activityObject_(activityObject)
 
 {
+    if (useImmersiveMode_) {
+        ALOGI("Using immersive mode");
+        topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
+    }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'", initializationStatus);
@@ -252,8 +260,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
-    const int32_t useCylinder = GetCylinderSysprop();
-    if (useCylinder == 1) {
+    const bool useCylinder = (GetCylinderSysprop() != 0) || useImmersiveMode_;
+    if (useCylinder) {
 
         // Create the Top Display Panel (Curved display)
         for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
@@ -284,7 +292,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // scale of the texture.
             const float radius = GetRadiusSysprop();
             layer.radius = radius;
-            layer.centralAngle = GetCentralAngleSysprop() * MATH_FLOAT_PI / 180.0f;
+            layer.centralAngle = (!useImmersiveMode_ ? GetCentralAngleSysprop() : 55.0f * 5.0f) *
+                                 MATH_FLOAT_PI / 180.0f;
             layer.aspectRatio = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
         }
@@ -343,10 +352,13 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
-        layer.subImage.imageRect.offset.x = cropHoriz / 2;
-        layer.subImage.imageRect.offset.y = panelHeight + verticalBorderTex;
-        layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
-        layer.subImage.imageRect.extent.height = panelHeight;
+        layer.subImage.imageRect.offset.x =
+            !useImmersiveMode_ ? cropHoriz / 2 : (90/2) * resolutionFactor_ / 5 + 2 * panelWidth / 5;;
+        layer.subImage.imageRect.offset.y =
+            !useImmersiveMode_ ? panelHeight + verticalBorderTex
+                               : panelHeight + verticalBorderTex + 2 * panelWidth / 5 - 4 * 5;
+        layer.subImage.imageRect.extent.width = !useImmersiveMode_ ? panelWidth - cropHoriz : (panelWidth - 90 * resolutionFactor_) / 5;
+        layer.subImage.imageRect.extent.height = !useImmersiveMode_ ? panelHeight : panelHeight / 5;
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,

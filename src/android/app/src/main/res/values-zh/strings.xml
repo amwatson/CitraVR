@@ -173,4 +173,6 @@
     <string name="vr_extra_performance_mode">VR额外的性能模式</string>
     <string name="vr_cpu_level">CPU级别</string>
     <string name="vr_cpu_level_description">较高的水平可以改善音频/仿真性能，但会更快地排出电池</string>
+    <string name="vr_immersive_mode_title">实验：沉浸式模式</string>
+    <string name="vr_immersive_mode_description">在VR180风格的游戏玩家的圆柱体周围扭曲顶部屏幕</string>
 </resources>

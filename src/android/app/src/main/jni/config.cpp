@@ -301,11 +301,24 @@ void Config::ReadValues() {
           "VR", "vr_environment",
           static_cast<long>(VRSettings::values.hmd_type == VRSettings::HMDType::QUEST3 ?
             VRSettings::VREnvironmentType::PASSTHROUGH : VRSettings::VREnvironmentType::VOID));
-
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
             "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
+    VRSettings::values.vr_immersive_mode_enabled = sdl2_config->GetBoolean(
+        "VR", "vr_immersive_mode", false);
+    Settings::values.vr_immersive_mode_enabled = VRSettings::values.vr_immersive_mode_enabled;
+
+    if (VRSettings::values.vr_immersive_mode_enabled) {
+      LOG_INFO(Config, "VR immersive mode enabled");
+      // Math was done using resolution factor 5, so if resolution is always 5x in
+      // immersive mode, I can avoid generalizing.
+      VRSettings::values.resolution_factor = 5;
+      // no point rendering passthrough in immersive mode
+      VRSettings::values.vr_environment =
+        static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
+    }
+
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);

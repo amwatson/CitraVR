@@ -173,4 +173,6 @@
     <string name="vr_extra_performance_mode">VR Modo de desempenho extra</string>
     <string name="vr_cpu_level">Nível da CPU</string>
     <string name="vr_cpu_level_description">Níveis mais altos podem melhorar o desempenho de áudio/emulação, mas drenará a bateria mais rapidamente</string>
+    <string name="vr_immersive_mode_title">Experimental: modo imersivo</string>
+    <string name="vr_immersive_mode_description">Distorce a tela superior em torno de um cilindro para jogabilidade no estilo VR180</string>
 </resources>

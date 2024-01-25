@@ -158,6 +158,9 @@ private:
     // resolution.
     const uint32_t resolutionFactor_;
 
+    // When true, top screen is projected onto a 180-degree cylinder.
+    const bool useImmersiveMode_;
+
     //============================
     // JNI objects
     JNIEnv* env_ = nullptr;

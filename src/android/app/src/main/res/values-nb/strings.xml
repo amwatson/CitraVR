@@ -173,6 +173,6 @@
     <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
     <string name="vr_cpu_level">CPU -nivå</string>
     <string name="vr_cpu_level_description">Høyere nivåer kan forbedre ytelsen til lyd/emulering, men vil tømme batteriet raskere</string>
-    <string name="vr_immersive_mode_title">Eksperimentell: oppslukende modus</string>
-    <string name="vr_immersive_mode_description">Varger toppskjermen rundt en sylinder for VR180-stil gameplay</string>
+    <string name="vr_immersive_mode_title">(Eksperimentell): VR180 oppslukende modus</string>
+    <string name="vr_immersive_mode_description">Utvider toppskjermen rundt en sylinder for VR180-stil gameplay (merk: oppløsningen er lav og kan ikke endres)</string>
 </resources>

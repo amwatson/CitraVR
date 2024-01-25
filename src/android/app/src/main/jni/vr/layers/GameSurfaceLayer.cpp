@@ -233,6 +233,7 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
     if (useImmersiveMode_) {
         ALOGI("Using immersive mode");
         topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
+        lowerPanelFromWorld_.position.y = -1.0f;
     }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
@@ -353,11 +354,14 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
         layer.subImage.imageRect.offset.x =
-            !useImmersiveMode_ ? cropHoriz / 2 : (90/2) * resolutionFactor_ / 5 + 2 * panelWidth / 5;;
+            !useImmersiveMode_ ? cropHoriz / 2
+                               : (90 / 2) * resolutionFactor_ / 5 + 2 * panelWidth / 5;
+        ;
         layer.subImage.imageRect.offset.y =
             !useImmersiveMode_ ? panelHeight + verticalBorderTex
                                : panelHeight + verticalBorderTex + 2 * panelWidth / 5 - 4 * 5;
-        layer.subImage.imageRect.extent.width = !useImmersiveMode_ ? panelWidth - cropHoriz : (panelWidth - 90 * resolutionFactor_) / 5;
+        layer.subImage.imageRect.extent.width =
+            !useImmersiveMode_ ? panelWidth - cropHoriz : (panelWidth - 90 * resolutionFactor_) / 5;
         layer.subImage.imageRect.extent.height = !useImmersiveMode_ ? panelHeight : panelHeight / 5;
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;

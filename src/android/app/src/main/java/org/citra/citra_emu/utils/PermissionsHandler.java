@@ -13,6 +13,9 @@ import androidx.fragment.app.FragmentActivity;
 
 import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.R;
+import org.citra.citra_emu.vr.VrActivity;
+
+import java.io.File;
 
 public class PermissionsHandler {
     public static final String CITRA_DIRECTORY = "CITRA_DIRECTORY";
@@ -38,6 +41,9 @@ public class PermissionsHandler {
             Uri uri = getCitraDirectory();
             if (uri == null)
                 return false;
+            if (VrActivity.useLegacyStorage()) {
+                return true;
+            }
             int takeFlags = (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
             DocumentFile root = DocumentFile.fromTreeUri(context, uri);
@@ -51,11 +57,19 @@ public class PermissionsHandler {
 
     @Nullable
     public static Uri getCitraDirectory() {
-        String directoryString = mPreferences.getString(CITRA_DIRECTORY, "");
-        if (directoryString.isEmpty()) {
-            return null;
+        if (VrActivity.useLegacyStorage()) {
+            File directory = new File("/sdcard/citra-emu/");
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+            return Uri.parse(directory.getAbsolutePath());
+        } else {
+            String directoryString = mPreferences.getString(CITRA_DIRECTORY, "");
+            if (directoryString.isEmpty()) {
+                return null;
+            }
+            return Uri.parse(directoryString);
         }
-        return Uri.parse(directoryString);
     }
 
     public static boolean setCitraDirectory(String uriString) {

@@ -199,6 +199,26 @@ public final class MainActivity extends AppCompatActivity implements MainView {
               .setPositiveButton(android.R.string.ok, null)
               .show();
         }
+
+        // Ask for storage access on legacy storage devices
+        if (VrActivity.useLegacyStorage()) {
+            String[] permissions = {
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            };
+            if ((checkSelfPermission(permissions[0]) != PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(permissions[1]) != PackageManager.PERMISSION_GRANTED)) {
+                requestPermissions(permissions, -1);
+            }
+        }
+
+        // Launch game intent
+        Intent intent = getIntent();
+        if (intent.getBooleanExtra(EmulationActivity.EXTRA_LAUNCH_SELECTED, false)) {
+            String path = intent.getStringExtra(EmulationActivity.EXTRA_SELECTED_GAME);
+            String title = intent.getStringExtra(EmulationActivity.EXTRA_SELECTED_TITLE);
+            VrActivity.launch(this, path, title);
+        }
     }
 
     @Override

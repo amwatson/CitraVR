@@ -123,6 +123,11 @@ android {
         create("nightly") {
             dimension = "version"
         }
+
+        create("pico") {
+            dimension = "version"
+            applicationIdSuffix = ".pico"
+        }
     }
 
     externalNativeBuild {

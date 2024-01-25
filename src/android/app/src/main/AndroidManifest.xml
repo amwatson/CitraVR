@@ -52,6 +52,7 @@
         <intent>
             <action android:name="org.khronos.openxr.OpenXRApiLayerService" />
         </intent>
+        <package android:name="org.citra.citra_emu.pico" />
     </queries>
 
     <application

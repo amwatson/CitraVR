@@ -49,6 +49,7 @@ import org.citra.citra_emu.utils.FileBrowserHelper;
 import org.citra.citra_emu.utils.ForegroundService;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.ThemeUtil;
+import org.citra.citra_emu.vr.VrActivity;
 
 import java.lang.annotation.Retention;
 import java.util.Collections;
@@ -64,6 +65,7 @@ import com.google.android.material.slider.Slider;
 public class EmulationActivity extends AppCompatActivity {
     public static final String EXTRA_SELECTED_GAME = "SelectedGame";
     public static final String EXTRA_SELECTED_TITLE = "SelectedTitle";
+    public static final String EXTRA_LAUNCH_SELECTED = "LaunchSelected";
     public static final int MENU_ACTION_EDIT_CONTROLS_PLACEMENT = 0;
     public static final int MENU_ACTION_TOGGLE_CONTROLS = 1;
     public static final int MENU_ACTION_ADJUST_SCALE = 2;

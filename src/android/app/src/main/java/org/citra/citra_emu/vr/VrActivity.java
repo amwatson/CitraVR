@@ -5,6 +5,8 @@ import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +23,8 @@ import org.citra.citra_emu.utils.Log;
 public class VrActivity extends EmulationActivity {
 
   public static final String EXTRA_ERROR_TWO_INSTANCES = "org.citra.citra_emu.vr.ERROR_TWO_INSTANCES";
+
+    private static final String PICO_PACKAGE = "org.citra.citra_emu.pico";
 
     private long mHandle = 0;
     public static boolean hasRun = false;
@@ -43,6 +47,14 @@ public class VrActivity extends EmulationActivity {
                                   result -> VrKeyboardActivity.onFinishResult(result));
 
     public static void launch(Context context, final String gamePath, final String gameTitle) {
+        if (isPicoHeadset() && isPicoApkInstalled(context)) {
+            launchPico(context, gamePath, gameTitle);
+        } else {
+            launchMeta(context, gamePath, gameTitle);
+        }
+    }
+
+    private static void launchMeta(Context context, final String gamePath, final String gameTitle) {
         Intent intent = new Intent(context, VrActivity.class);
         final int mainDisplayId = getMainDisplay(context);
         if (mainDisplayId < 0) {
@@ -61,6 +73,40 @@ public class VrActivity extends EmulationActivity {
             context.startActivity(intent, options.toBundle());
         }
         ((Activity)(context)).finish();
+    }
+
+    private static void launchPico(Context context, final String gamePath, final String gameTitle) {
+        Intent intent;
+        if (context.getPackageName().compareTo(PICO_PACKAGE) == 0) {
+            intent = new Intent(context, VrActivity.class);
+        } else {
+            intent = context.getPackageManager().getLaunchIntentForPackage(PICO_PACKAGE);
+            intent.putExtra(EmulationActivity.EXTRA_LAUNCH_SELECTED, true);
+        }
+
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra(EmulationActivity.EXTRA_SELECTED_GAME, gamePath);
+        intent.putExtra(EmulationActivity.EXTRA_SELECTED_TITLE, gameTitle);
+        context.startActivity(intent);
+        ((Activity)(context)).finish();
+    }
+
+    private static boolean isPicoApkInstalled(Context context) {
+        PackageManager pm = context.getPackageManager();
+        for (ApplicationInfo app : pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
+            if (app.packageName.equals(PICO_PACKAGE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isPicoHeadset() {
+        return Build.BRAND.compareToIgnoreCase("Pico") == 0;
+    }
+
+    public static boolean useLegacyStorage() {
+        return isPicoHeadset();
     }
 
     @Override

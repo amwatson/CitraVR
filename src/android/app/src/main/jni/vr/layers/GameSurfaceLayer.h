@@ -158,7 +158,16 @@ private:
     // resolution.
     const uint32_t resolutionFactor_;
 
-    // When true, top screen is projected onto a 180-degree cylinder.
+    // EXPERIMENTAL: When true, the top screen + its extents
+    // (previously-unseen parts of the scene) are projected onto a 275-degree
+    // cylinder. Note that the perceived resolution is lower,
+    // as the output image is larger, both in texture size and perceived layer
+    // size.
+    //
+    // Rendering a higher-resolution image would likely require
+    // performance optimizations to avoid maxing out the GPU, e.g.:
+    //   - Multiview (requires a merged Citra/CitraVR renderer)
+    //   - Rendering the top-screen and bottom screen separately.
     const bool useImmersiveMode_;
 
     //============================

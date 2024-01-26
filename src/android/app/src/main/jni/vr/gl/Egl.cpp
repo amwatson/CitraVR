@@ -56,7 +56,7 @@ EglContext::EglContext() {
 
     const int32_t ret = Init();
     if (ret < 0) {
-        FAIL("EglContext::EglContext() failed: ret=%i", ret);
+        FAIL("EglContext::EglContext() failed: ret=%d", ret);
     }
 }
 
@@ -68,7 +68,7 @@ EglContext::~EglContext() {
 int32_t EglContext::Init() {
     mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (mDisplay == EGL_NO_DISPLAY) {
-        ALOGE("        eglGetDisplay() failed: %s", EglErrorToStr(eglGetError()));
+        ALOGE("        eglGetDisplay() failed: {}", EglErrorToStr(eglGetError()));
         return -1;
     }
     {
@@ -76,7 +76,7 @@ int32_t EglContext::Init() {
         EGLint majorVersion = 0;
         EGLint minorVersion = 0;
         if (eglInitialize(mDisplay, &majorVersion, &minorVersion) == EGL_FALSE) {
-            ALOGE("        eglInitialize() failed: %s", EglErrorToStr(eglGetError()));
+            ALOGE("        eglInitialize() failed: {}", EglErrorToStr(eglGetError()));
             return -2;
         }
     }
@@ -98,7 +98,7 @@ int32_t EglContext::Init() {
                                     EGL_NONE};
 
     if (eglChooseConfig(mDisplay, configAttribs, &mConfig, 1, &numConfigs) == EGL_FALSE) {
-        ALOGE("        eglChooseConfig() failed: %s", EglErrorToStr(eglGetError()));
+        ALOGE("        eglChooseConfig() failed: {}", EglErrorToStr(eglGetError()));
         return -3;
     }
     // print out chosen config attributes
@@ -106,37 +106,37 @@ int32_t EglContext::Init() {
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_RED_SIZE, &value);
-        ALOGV("            EGL_RED_SIZE: %i", value);
+        ALOGV("            EGL_RED_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_GREEN_SIZE, &value);
-        ALOGV("            EGL_GREEN_SIZE: %i", value);
+        ALOGV("            EGL_GREEN_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_BLUE_SIZE, &value);
-        ALOGV("            EGL_BLUE_SIZE: %i", value);
+        ALOGV("            EGL_BLUE_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_ALPHA_SIZE, &value);
-        ALOGV("            EGL_ALPHA_SIZE: %i", value);
+        ALOGV("            EGL_ALPHA_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_DEPTH_SIZE, &value);
-        ALOGV("            EGL_DEPTH_SIZE: %i", value);
+        ALOGV("            EGL_DEPTH_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_STENCIL_SIZE, &value);
-        ALOGV("            EGL_STENCIL_SIZE: %i", value);
+        ALOGV("            EGL_STENCIL_SIZE: {}", value);
     }
     {
         EGLint value = 0;
         eglGetConfigAttrib(mDisplay, mConfig, EGL_SAMPLES, &value);
-        ALOGV("            EGL_SAMPLES: %i", value);
+        ALOGV("            EGL_SAMPLES: {}", value);
     }
 
     EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
@@ -145,7 +145,7 @@ int32_t EglContext::Init() {
           "contextAttribs)");
     mContext = eglCreateContext(mDisplay, mConfig, EGL_NO_CONTEXT, contextAttribs);
     if (mContext == EGL_NO_CONTEXT) {
-        ALOGE("        eglCreateContext() failed: %s", EglErrorToStr(eglGetError()));
+        ALOGE("        eglCreateContext() failed: {}", EglErrorToStr(eglGetError()));
         return -4;
     }
     const EGLint surfaceAttribs[] = {EGL_WIDTH, 16, EGL_HEIGHT, 16, EGL_NONE};
@@ -153,7 +153,7 @@ int32_t EglContext::Init() {
           "surfaceAttribs)");
     mDummySurface = eglCreatePbufferSurface(mDisplay, mConfig, surfaceAttribs);
     if (mDummySurface == EGL_NO_SURFACE) {
-        ALOGE("        eglCreatePbufferSurface() failed: %s", EglErrorToStr(eglGetError()));
+        ALOGE("        eglCreatePbufferSurface() failed: {}", EglErrorToStr(eglGetError()));
         eglDestroyContext(mDisplay, mContext);
         mContext = EGL_NO_CONTEXT;
         return -5;
@@ -161,7 +161,7 @@ int32_t EglContext::Init() {
     ALOGV("        eglMakeCurrent(mDisplay, mDummySurface, mDummySurface, "
           "mContext)");
     if (eglMakeCurrent(mDisplay, mDummySurface, mDummySurface, mContext) == EGL_FALSE) {
-        ALOGE("        eglMakeCurrent() failed: %s", EglErrorToStr(eglGetError()));
+        ALOGE("        eglMakeCurrent() failed: {}", EglErrorToStr(eglGetError()));
         eglDestroySurface(mDisplay, mDummySurface);
         eglDestroyContext(mDisplay, mContext);
         mContext = EGL_NO_CONTEXT;

@@ -472,7 +472,7 @@ void GameSurfaceLayer::CreateSwapchain() {
         xsci.mipCount = 0;
 
         ALOGI(
-            "GameSurfaceLayer: Creating swapchain of size %dx%d (%dx%d with resolution factor %dx)",
+            "GameSurfaceLayer: Creating swapchain of size {}x{} ({}x{} with resolution factor {}x)",
             xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED,
             resolutionFactor_);
 

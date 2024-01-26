@@ -31,6 +31,9 @@ License     :   Licensed under GPLv3 or any later version.
 namespace {
 
 constexpr float lowerPanelScaleFactor = 0.75f;
+
+const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
+
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
  *
@@ -226,14 +229,14 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
     : session_(session), topPanelFromWorld_(CreateTopPanelFromWorld(position)),
       lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)),
       resolutionFactor_(resolutionFactor),
-      useImmersiveMode_(VRSettings::values.vr_immersive_mode_enabled), env_(env),
+      useImmersiveMode_(VRSettings::values.vr_immersive_mode), env_(env),
       activityObject_(activityObject)
 
 {
     if (useImmersiveMode_) {
         ALOGI("Using immersive mode");
         topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
-        lowerPanelFromWorld_.position.y = -1.0f;
+        lowerPanelFromWorld_.position.y = -1.0f - (0.5f * (useImmersiveMode_-1));
     }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
@@ -293,7 +296,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // scale of the texture.
             const float radius = GetRadiusSysprop();
             layer.radius = radius;
-            layer.centralAngle = (!useImmersiveMode_ ? GetCentralAngleSysprop() : 55.0f * 5.0f) *
+            layer.centralAngle = (!useImmersiveMode_ ? GetCentralAngleSysprop() : 55.0f * immersiveLevelFactor[useImmersiveMode_]) *
                                  MATH_FLOAT_PI / 180.0f;
             layer.aspectRatio = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
@@ -354,15 +357,11 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
         layer.subImage.imageRect.offset.x =
-            !useImmersiveMode_ ? cropHoriz / 2
-                               : (90 / 2) * resolutionFactor_ / 5 + 2 * panelWidth / 5;
-        ;
+                (cropHoriz / 2) / immersiveLevelFactor[useImmersiveMode_] + panelWidth * (0.5f - (0.5f / immersiveLevelFactor[useImmersiveMode_]));
         layer.subImage.imageRect.offset.y =
-            !useImmersiveMode_ ? panelHeight + verticalBorderTex
-                               : panelHeight + verticalBorderTex + 2 * panelWidth / 5 - 4 * 5;
-        layer.subImage.imageRect.extent.width =
-            !useImmersiveMode_ ? panelWidth - cropHoriz : (panelWidth - 90 * resolutionFactor_) / 5;
-        layer.subImage.imageRect.extent.height = !useImmersiveMode_ ? panelHeight : panelHeight / 5;
+                panelHeight + verticalBorderTex + panelHeight * (0.5f - (0.5f / immersiveLevelFactor[useImmersiveMode_]));
+        layer.subImage.imageRect.extent.width = (panelWidth - cropHoriz) / immersiveLevelFactor[useImmersiveMode_];
+        layer.subImage.imageRect.extent.height = panelHeight / immersiveLevelFactor[useImmersiveMode_];
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,

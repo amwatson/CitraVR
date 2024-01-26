@@ -305,11 +305,11 @@ void Config::ReadValues() {
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
             "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
-    VRSettings::values.vr_immersive_mode_enabled = sdl2_config->GetBoolean(
-        "VR", "vr_immersive_mode", false);
-    Settings::values.vr_immersive_mode_enabled = VRSettings::values.vr_immersive_mode_enabled;
+    VRSettings::values.vr_immersive_mode = sdl2_config->GetInteger(
+        "VR", "vr_immersive_mode", 0);
+    Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;
 
-    if (VRSettings::values.vr_immersive_mode_enabled) {
+    if (VRSettings::values.vr_immersive_mode) {
       LOG_INFO(Config, "VR immersive mode enabled");
       // Math was done using resolution factor 5, so if resolution is always 5x in
       // immersive mode, I can avoid generalizing.

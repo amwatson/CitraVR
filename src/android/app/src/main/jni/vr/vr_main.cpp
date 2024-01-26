@@ -206,9 +206,10 @@ public:
             const uint32_t defaultResolutionFactor =
                 GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
             const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
-            const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0
+            const uint32_t resolutionFactor = (resolutionFactorFromPreferences > 0
                                                   ? resolutionFactorFromPreferences
-                                                  : defaultResolutionFactor;
+                                                  : defaultResolutionFactor);
+
             if (resolutionFactor != defaultResolutionFactor) {
                 ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
                       defaultResolutionFactor);

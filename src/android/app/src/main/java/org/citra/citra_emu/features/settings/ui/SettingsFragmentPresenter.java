@@ -436,6 +436,6 @@ public final class SettingsFragmentPresenter {
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, VRUtils.getHMDType() == VRUtils.HMDType.QUEST3.getValue() ? 1 : 2, vrEnvironment));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE, Settings.SECTION_VR, R.string.vr_extra_performance_mode, R.string.vr_extra_performance_mode_description, false, vrExtraPerformanceMode));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_CPU_LEVEL, Settings.SECTION_VR, R.string.vr_cpu_level, R.string.vr_cpu_level_description, R.array.vrCpuLevelNames, R.array.vrCpuLevelValues, 4, vrCpuLevel));
-        sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_IMMERSIVE_MODE, Settings.SECTION_VR, R.string.vr_immersive_mode_title, R.string.vr_immersive_mode_description, false, vrImmersiveMode));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_IMMERSIVE_MODE, Settings.SECTION_VR, R.string.vr_immersive_mode_title, R.string.vr_immersive_mode_description, R.array.vrImmersiveModeNames, R.array.vrImmersiveModeValues, 0, vrImmersiveMode));
     }
 }

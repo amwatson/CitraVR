@@ -527,7 +527,7 @@ struct Values {
     u64 audio_bitrate;
 
     // VR
-    bool vr_immersive_mode_enabled;
+    Setting<s32> vr_immersive_mode{0, "vr_immersive_mode"};
 };
 
 extern Values values;

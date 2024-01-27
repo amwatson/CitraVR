@@ -26,23 +26,23 @@ const char* sdl2_config_file = R"(
 #      - "direction"(only used for axis): "+" means the button is triggered when the axis value
 #          is greater than the threshold; "-" means the button is triggered when the axis value
 #          is smaller than the threshold
-button_a=engine:gamepad,code:96
-button_b=engine:gamepad,code:97
-button_x=engine:gamepad,code:99
-button_y=engine:gamepad,code:100
-button_up=
-button_down=
-button_left=
-button_right=
-button_l=engine:gamepad,code:102
-button_r=engine:gamepad,code:103
-button_start=engine:gamepad,code:109
-button_select=engine:gamepad,code:108
-button_debug=engine:gamepad,code:9
-button_gpio14=engine:gamepad,code:49
-button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
-button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
-button_home=
+# button_a=engine:gamepad,code:96
+# button_b=engine:gamepad,code:97
+# button_x=engine:gamepad,code:99
+# button_y=engine:gamepad,code:100
+# button_up=
+# button_down=
+# button_left=
+# button_right=
+# button_l=engine:gamepad,code:102
+# button_r=engine:gamepad,code:103
+# button_start=engine:gamepad,code:109
+# button_select=engine:gamepad,code:108
+# button_debug=engine:gamepad,code:9
+# button_gpio14=engine:gamepad,code:49
+# button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
+# button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
+# button_home=
 
 # for analog input, the following devices are available:
 #  - "analog_from_button" (default) for emulating analog input from direction buttons. Required parameters:
@@ -55,8 +55,8 @@ button_home=
 #      - "joystick": the index of the joystick to bind
 #      - "axis_x": the index of the axis to bind as x-axis (default to 0)
 #      - "axis_y": the index of the axis to bind as y-axis (default to 1)
-circle_pad=
-c_stick=
+# circle_pad=
+# c_stick=
 
 
 # for motion input, the following devices are available:

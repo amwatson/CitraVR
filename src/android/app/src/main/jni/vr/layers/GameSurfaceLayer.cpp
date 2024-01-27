@@ -417,12 +417,10 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const jobject activityObject, const XrVector3f& position,
                                const XrSession& session) {
-    static const std::string gameSurfaceClassName =
-        "org/citra/citra_emu/vr/GameSurfaceLayer";
-    vrGameSurfaceClass_ = JniUtils::GetGlobalClassReference(
-        env_, activityObject, gameSurfaceClassName.c_str());
-    BAIL_ON_COND(vrGameSurfaceClass_ == nullptr,
-                 "No java Game Surface Layer class", -1);
+    static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
+    vrGameSurfaceClass_ =
+        JniUtils::GetGlobalClassReference(env_, activityObject, gameSurfaceClassName.c_str());
+    BAIL_ON_COND(vrGameSurfaceClass_ == nullptr, "No java Game Surface Layer class", -1);
     CreateSwapchain();
     SetSurface();
 

@@ -316,6 +316,8 @@ void Config::ReadValues() {
       // We originally had two immersive modes, but I cut them down to fit in
       // the shader map's bitfield.
       VRSettings::values.vr_immersive_mode = 2;
+      // When immersive mode is enabled, only OpenGL is supported.
+      Settings::values.graphics_api = Settings::GraphicsAPI::OpenGL;
     }
 
     // Miscellaneous

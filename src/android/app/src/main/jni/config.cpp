@@ -310,6 +310,10 @@ void Config::ReadValues() {
 
     if (Settings::values.vr_use_immersive_mode) {
       LOG_INFO(Config, "VR immersive mode enabled");
+
+      // Use a min setting of 3x to avoid extremely low resolutions
+      VRSettings::values.resolution_factor = std::max(3,  static_cast<int>(VRSettings::values.resolution_factor));
+
       // no point rendering passthrough in immersive mode
       VRSettings::values.vr_environment =
         static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);

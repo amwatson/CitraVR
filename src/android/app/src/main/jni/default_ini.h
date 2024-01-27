@@ -116,8 +116,8 @@ spirv_shader_gen =
 use_hw_shader =
 
 # Whether to use accurate multiplication in hardware shaders
-# 0: Off (Default. Faster, but causes issues in some games) 1: On (Slower, but correct)
-shaders_accurate_mul =1
+# 0: Off (Faster, but causes issues in some games) 1: On (Default. Slower, but correct)
+# shaders_accurate_mul =
 
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
@@ -133,9 +133,9 @@ use_vsync_new =
 use_disk_shader_cache =
 
 # Resolution scale factor
-# 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
+# 0: Auto (Default. Scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution
-resolution_factor =0
+# resolution_factor =
 
 # Whether to enable V-Sync (caps the framerate at 60FPS) or not.
 # 0 (default): Off, 1: On
@@ -156,12 +156,12 @@ bg_blue =
 bg_green =
 
 # Whether and how Stereoscopic 3D should be rendered
-# 0 (default): Off, 1: Side by Side, 2: Anaglyph, 3: Interlaced, 4: Reverse Interlaced, 5: Cardboard VR
-render_3d =1
+# 0: Off, 1 (default): Side by Side, 2: Anaglyph, 3: Interlaced, 4: Reverse Interlaced, 5: Cardboard VR
+# render_3d =
 
 # Change 3D Intensity
-# 0 - 100: Intensity. 0 (default)
-factor_3d =50
+# 0 - 100: Intensity. 50 (default)
+# factor_3d =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.

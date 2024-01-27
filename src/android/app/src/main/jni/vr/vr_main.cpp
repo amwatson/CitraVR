@@ -489,7 +489,26 @@ private:
             layers[layerCount++].Passthrough = passthroughLayer;
         }
 
-        mGameSurfaceLayer->Frame(gOpenXr->localSpace_, layers, layerCount);
+        if (VRSettings::values.vr_toggleable_lower_panel)
+        {
+            if (mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER].currentState ||
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER].currentState)
+            {
+                if (!mTogglingLowerPanel)
+                {
+                    mVisibleLowerPanel = !mVisibleLowerPanel;
+                    mTogglingLowerPanel = true;
+                }
+            }
+            else
+            {
+                mTogglingLowerPanel = false;
+            }
+        }
+
+        const bool visibleLowerPanel = !VRSettings::values.vr_toggleable_lower_panel || mVisibleLowerPanel;
+
+        mGameSurfaceLayer->Frame(gOpenXr->localSpace_, layers, layerCount, visibleLowerPanel);
 #if defined(UI_LAYER)
         if (gShouldShowErrorMessage) {
             XrCompositionLayerQuad quadLayer = {};
@@ -857,6 +876,9 @@ private:
     jmethodID mResumeGameMethodID = nullptr;
     jmethodID mPauseGameMethodID = nullptr;
     jmethodID mOpenSettingsMethodID = nullptr;
+
+    bool mTogglingLowerPanel = false;
+    bool mVisibleLowerPanel = true;
 };
 
 struct VRAppHandle {

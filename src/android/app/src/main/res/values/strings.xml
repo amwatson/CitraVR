@@ -298,6 +298,8 @@
     <string name="vr_error_two_instances_message">Detected a fatal launch bug with CitraVR.  This is a known issue. \n\nThe problem is now resolved.   Please try launching the game again. </string>
     <string name="vr_extra_performance_mode_description">Overrides the value of other settings to minimize overhead and maxmimize performance.  NOTE: when this setting is enabled, the user\'s values for the following settings are ignored: VR Environment (always selects "Void"), all audio (disabled)</string>
     <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
+    <string name="vr_toggleable_lower_panel_description">VR Toggle visibility of the lower panel when the tumbrest is touched on either controller</string>
+    <string name="vr_toggleable_lower_panel">VR Toggleable Lower Panel</string>
     <string name="vr_cpu_level">CPU level</string>
     <string name="vr_cpu_level_description">Higher levels may improve audio/emulation performance, but will drain the battery faster</string>
     <string name="vr_immersive_mode_title">(Experimental): VR180 Immersive Mode</string>

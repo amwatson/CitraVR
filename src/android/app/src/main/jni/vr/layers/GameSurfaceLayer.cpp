@@ -30,8 +30,6 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float lowerPanelScaleFactor = 0.75f;
-
 const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
 
 /** Used to translate texture coordinates into the corresponding coordinates
@@ -236,7 +234,7 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
     if (immersiveMode_ > 0) {
         ALOGI("Using VR immersive mode {}", immersiveMode_);
         topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
-        lowerPanelFromWorld_.position.y = -1.0f - (0.5f * (immersiveMode_ - 1));
+        lowerPanelFromWorld_.position.y = -1.0f;
     }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
@@ -255,7 +253,7 @@ void GameSurfaceLayer::SetSurface() const {
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-                             uint32_t& layerCount) const
+                             uint32_t& layerCount, const bool visibleLowerPanel) const
 
 {
     const uint32_t panelWidth = swapchain_.Width / 2;
@@ -335,6 +333,37 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layers[layerCount++].mQuad = layer;
         }
     }
+
+    /*
+     * This bit is entirely optional, rather than having the panel appear/disappear it emerge in
+     * smoothly, however to achieve it I had to make the scale factor mutable, which I appreciate
+     * might not be following the intention of this class.
+     * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
+     * variable directly.
+     */
+    const auto panelZoomSpeed = 0.1f;
+    if (visibleLowerPanel && lowerPanelScaleFactor < 1.0f)
+    {
+        if (lowerPanelScaleFactor == 0.0f)
+        {
+            lowerPanelScaleFactor = panelZoomSpeed;
+        }
+        else
+        {
+            lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
+            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, 1.0f);
+        }
+    }
+    else if (!visibleLowerPanel && lowerPanelScaleFactor > 0.0f)
+    {
+        lowerPanelScaleFactor /= 1.0f + panelZoomSpeed;
+        if (lowerPanelScaleFactor < panelZoomSpeed)
+        {
+            lowerPanelScaleFactor = 0.0f;
+        }
+    }
+
+
     // Create the Lower Display Panel (flat touchscreen)
     // When citra is in stereo mode, this panel is also rendered in stereo (i.e.
     // twice), but the image is mono. Therefore, take the right half of the
@@ -342,6 +371,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // FIXME we waste rendering time rendering both displays. That said, We also
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
+    if (lowerPanelScaleFactor > 0.0f)
     {
         const uint32_t cropHoriz = 90 * resolutionFactor_;
         XrCompositionLayerQuad layer = {};
@@ -370,8 +400,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.pose = lowerPanelFromWorld_;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
                                                   lowerPanelScaleFactor, resolutionFactor_);
-        layer.size.width = scale.x;
-        layer.size.height = scale.y;
+        layer.size.width = scale.x * lowerPanelScaleFactor;
+        layer.size.height = scale.y * lowerPanelScaleFactor;
         layers[layerCount++].mQuad = layer;
     }
 }

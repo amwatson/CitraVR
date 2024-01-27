@@ -206,9 +206,13 @@ public:
             const uint32_t defaultResolutionFactor =
                 GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
             const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
+            // add a couple factors to resolution with immersive mode so users
+            // aren't resetting their default settings to get higher res. min
+            // resolution factor for immersive is 3x.
+            const uint32_t immersiveModeOffset = (VRSettings::values.vr_immersive_mode > 0) ? 2 : 0;
             const uint32_t resolutionFactor = (resolutionFactorFromPreferences > 0
                                                   ? resolutionFactorFromPreferences
-                                                  : defaultResolutionFactor);
+                                                  : defaultResolutionFactor) + immersiveModeOffset;
 
             if (resolutionFactor != defaultResolutionFactor) {
                 ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
@@ -905,4 +909,3 @@ Java_org_citra_citra_1emu_vr_VRUtils_getDefaultResolutionFactor(JNIEnv* env, jcl
     const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }
-

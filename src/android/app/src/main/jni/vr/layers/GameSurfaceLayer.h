@@ -174,7 +174,7 @@ private:
     // Used to nicely present the lower panel when in toggleable mode.
     // Instead of it just appearing instantly, it emerges in a hopefully pleasant
     // fashion
-    mutable float lowerPanelScaleFactor = 1.0f;
+    mutable float lowerPanelScaleFactor = 0.0f;
 
     //============================
     // JNI objects

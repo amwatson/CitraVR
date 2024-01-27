@@ -30,6 +30,9 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
+constexpr float defaultLowerPanelScaleFactor = 0.75f;
+constexpr float panelZoomSpeed = 0.15f; // larger = faster, this seems to be an agreeable number
+
 const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
 
 /** Used to translate texture coordinates into the corresponding coordinates
@@ -341,8 +344,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
      * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
      * variable directly.
      */
-    const auto panelZoomSpeed = 0.15f; // larger = faster
-    if (visibleLowerPanel && lowerPanelScaleFactor < 1.0f)
+    if (visibleLowerPanel && lowerPanelScaleFactor < defaultLowerPanelScaleFactor)
     {
         if (lowerPanelScaleFactor == 0.0f)
         {
@@ -351,7 +353,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         else
         {
             lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
-            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, 1.0f);
+            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, defaultLowerPanelScaleFactor);
         }
     }
     else if (!visibleLowerPanel && lowerPanelScaleFactor > 0.0f)
@@ -389,7 +391,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.subImage.swapchain = swapchain_.Handle;
         layer.subImage.imageRect.offset.x =
             (cropHoriz / 2) / immersiveLevelFactor[immersiveMode_] +
-            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_])) + 1;
+            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_])) +
+            (immersiveMode_ ? 1 : 0); // corrects a slight offset in immersive mode
         layer.subImage.imageRect.offset.y =
             panelHeight + verticalBorderTex +
             panelHeight * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));

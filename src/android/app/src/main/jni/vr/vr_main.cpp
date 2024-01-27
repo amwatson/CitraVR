@@ -489,7 +489,7 @@ private:
             layers[layerCount++].Passthrough = passthroughLayer;
         }
 
-        if (VRSettings::values.vr_toggleable_lower_panel)
+        if (VRSettings::values.vr_toggleable_lower_panel == 1)
         {
             if (mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER].currentState ||
                 mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER].currentState)
@@ -504,6 +504,11 @@ private:
             {
                 mTogglingLowerPanel = false;
             }
+        }
+        else if (VRSettings::values.vr_toggleable_lower_panel == 2)
+        {
+            mVisibleLowerPanel = (mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER].currentState ||
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER].currentState);
         }
 
         const bool visibleLowerPanel = !VRSettings::values.vr_toggleable_lower_panel || mVisibleLowerPanel;

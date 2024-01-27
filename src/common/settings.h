@@ -528,7 +528,7 @@ struct Values {
 
     // VR
     Setting<bool> vr_use_immersive_mode{false, "vr_immersive_mode"};
-    Setting<bool> vr_toggleable_lower_panel{false, "vr_toggleable_lower_panel"};
+    Setting<u32> vr_toggleable_lower_panel{0, "vr_toggleable_lower_panel"};
 };
 
 extern Values values;

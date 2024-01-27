@@ -308,8 +308,8 @@ void Config::ReadValues() {
     Settings::values.vr_use_immersive_mode = sdl2_config->GetBoolean(
         "VR", "vr_immersive_mode", false);
 
-    VRSettings::values.vr_toggleable_lower_panel = sdl2_config->GetBoolean(
-        "VR", "vr_toggleable_lower_panel", false);
+    VRSettings::values.vr_toggleable_lower_panel = sdl2_config->GetInteger(
+        "VR", "vr_toggleable_lower_panel", 0);
     Settings::values.vr_toggleable_lower_panel = VRSettings::values.vr_toggleable_lower_panel;
 
     if (Settings::values.vr_use_immersive_mode) {

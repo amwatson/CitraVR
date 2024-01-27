@@ -224,4 +224,16 @@
         <item>3</item>
         <item>4</item>
     </integer-array>
+
+    <string-array name="vrToggleableLowerPanelNames">
+        <item>Always Visible</item>
+        <item>Toggle Visibility on Thumbrest Touch</item>
+        <item>Visible only when Thumbrest Touched</item>
+    </string-array>
+
+    <integer-array name="vrToggleableLowerPanelValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
 </resources>

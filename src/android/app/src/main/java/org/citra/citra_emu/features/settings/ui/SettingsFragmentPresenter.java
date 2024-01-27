@@ -438,6 +438,6 @@ public final class SettingsFragmentPresenter {
         sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE, Settings.SECTION_VR, R.string.vr_extra_performance_mode, R.string.vr_extra_performance_mode_description, false, vrExtraPerformanceMode));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_CPU_LEVEL, Settings.SECTION_VR, R.string.vr_cpu_level, R.string.vr_cpu_level_description, R.array.vrCpuLevelNames, R.array.vrCpuLevelValues, 4, vrCpuLevel));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_IMMERSIVE_MODE, Settings.SECTION_VR, R.string.vr_immersive_mode_title, R.string.vr_immersive_mode_description, false, vrImmersiveMode));
-        sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_TOGGLEABLE_LOWER_PANEL, Settings.SECTION_VR, R.string.vr_toggleable_lower_panel, R.string.vr_toggleable_lower_panel_description, false, vrToggleableLowerPanel));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_TOGGLEABLE_LOWER_PANEL, Settings.SECTION_VR, R.string.vr_toggleable_lower_panel, R.string.vr_toggleable_lower_panel_description, R.array.vrToggleableLowerPanelNames, R.array.vrToggleableLowerPanelValues, 0, vrToggleableLowerPanel));
     }
 }

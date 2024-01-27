@@ -341,7 +341,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
      * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
      * variable directly.
      */
-    const auto panelZoomSpeed = 0.1f;
+    const auto panelZoomSpeed = 0.15f; // larger = faster
     if (visibleLowerPanel && lowerPanelScaleFactor < 1.0f)
     {
         if (lowerPanelScaleFactor == 0.0f)
@@ -389,7 +389,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.subImage.swapchain = swapchain_.Handle;
         layer.subImage.imageRect.offset.x =
             (cropHoriz / 2) / immersiveLevelFactor[immersiveMode_] +
-            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_])) + 1;
         layer.subImage.imageRect.offset.y =
             panelHeight + verticalBorderTex +
             panelHeight * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));

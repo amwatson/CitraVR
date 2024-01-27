@@ -7,14 +7,14 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/optional/optional.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/result.h"
+#include "core/hle/service/gsp/gsp_command.h"
+#include "core/hle/service/gsp/gsp_interrupt.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -22,57 +22,12 @@ class System;
 }
 
 namespace Kernel {
+class HLERequestContext;
+class Process;
 class SharedMemory;
 } // namespace Kernel
 
 namespace Service::GSP {
-
-/// GSP interrupt ID
-enum class InterruptId : u8 {
-    PSC0 = 0x00,
-    PSC1 = 0x01,
-    PDC0 = 0x02, // Seems called every vertical screen line
-    PDC1 = 0x03, // Seems called every frame
-    PPF = 0x04,
-    P3D = 0x05,
-    DMA = 0x06,
-};
-
-/// GSP command ID
-enum class CommandId : u32 {
-    REQUEST_DMA = 0x00,
-    /// Submits a commandlist for execution by the GPU.
-    SUBMIT_GPU_CMDLIST = 0x01,
-
-    // Fills a given memory range with a particular value
-    SET_MEMORY_FILL = 0x02,
-
-    // Copies an image and optionally performs color-conversion or scaling.
-    // This is highly similar to the GameCube's EFB copy feature
-    SET_DISPLAY_TRANSFER = 0x03,
-
-    // Conceptionally similar to SET_DISPLAY_TRANSFER and presumable uses the same hardware path
-    SET_TEXTURE_COPY = 0x04,
-    /// Flushes up to 3 cache regions in a single command.
-    CACHE_FLUSH = 0x05,
-};
-
-/// GSP thread interrupt relay queue
-struct InterruptRelayQueue {
-    // Index of last interrupt in the queue
-    u8 index;
-    // Number of interrupts remaining to be processed by the userland code
-    u8 number_interrupts;
-    // Error code - zero on success, otherwise an error has occurred
-    u8 error_code;
-    u8 padding1;
-
-    u32 missed_PDC0;
-    u32 missed_PDC1;
-
-    InterruptId slot[0x34]; ///< Interrupt ID slots
-};
-static_assert(sizeof(InterruptRelayQueue) == 0x40, "InterruptRelayQueue struct has incorrect size");
 
 struct FrameBufferInfo {
     u32 active_fb; // 0 = first, 1 = second
@@ -95,96 +50,8 @@ struct FrameBufferUpdate {
     u32 pad2;
 };
 static_assert(sizeof(FrameBufferUpdate) == 0x40, "Struct has incorrect size");
-// TODO: Not sure if this padding is correct.
-// Chances are the second block is stored at offset 0x24 rather than 0x20.
-#ifndef _MSC_VER
 static_assert(offsetof(FrameBufferUpdate, framebuffer_info[1]) == 0x20,
               "FrameBufferInfo element has incorrect alignment");
-#endif
-
-/// GSP command
-struct Command {
-    BitField<0, 8, CommandId> id;
-
-    union {
-        struct {
-            u32 source_address;
-            u32 dest_address;
-            u32 size;
-        } dma_request;
-
-        struct {
-            u32 address;
-            u32 size;
-            u32 flags;
-            u32 unused[3];
-            u32 do_flush;
-        } submit_gpu_cmdlist;
-
-        struct {
-            u32 start1;
-            u32 value1;
-            u32 end1;
-
-            u32 start2;
-            u32 value2;
-            u32 end2;
-
-            u16 control1;
-            u16 control2;
-        } memory_fill;
-
-        struct {
-            u32 in_buffer_address;
-            u32 out_buffer_address;
-            u32 in_buffer_size;
-            u32 out_buffer_size;
-            u32 flags;
-        } display_transfer;
-
-        struct {
-            u32 in_buffer_address;
-            u32 out_buffer_address;
-            u32 size;
-            u32 in_width_gap;
-            u32 out_width_gap;
-            u32 flags;
-        } texture_copy;
-
-        struct {
-            struct {
-                u32 address;
-                u32 size;
-            } regions[3];
-        } cache_flush;
-
-        u8 raw_data[0x1C];
-    };
-};
-static_assert(sizeof(Command) == 0x20, "Command struct has incorrect size");
-
-/// GSP shared memory GX command buffer header
-struct CommandBuffer {
-    union {
-        u32 hex;
-
-        // Current command index. This index is updated by GSP module after loading the command
-        // data, right before the command is processed. When this index is updated by GSP module,
-        // the total commands field is decreased by one as well.
-        BitField<0, 8, u32> index;
-
-        // Total commands to process, must not be value 0 when GSP module handles commands. This
-        // must be <=15 when writing a command to shared memory. This is incremented by the
-        // application when writing a command to shared memory, after increasing this value
-        // TriggerCmdReqQueue is only used if this field is value 1.
-        BitField<8, 8, u32> number_commands;
-    };
-
-    u32 unk[7];
-
-    Command commands[0xF];
-};
-static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
 constexpr u32 FRAMEBUFFER_WIDTH = 240;
 constexpr u32 FRAMEBUFFER_WIDTH_POW2 = 256;
@@ -216,14 +83,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
-            *this);
-        ar& gsp;
-        ar& interrupt_event;
-        ar& thread_id;
-        ar& registered;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -249,6 +109,12 @@ public:
      * @returns FramebufferUpdate Information about the specified framebuffer.
      */
     FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
+
+    /// Gets a pointer to a thread command buffer in GSP shared memory
+    CommandBuffer* GetCommandBuffer(u32 thread_id);
+
+    /// Gets a pointer to the interrupt relay queue for a given thread index
+    InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id);
 
     /**
      * Retreives the ID of the thread with GPU rights.
@@ -381,9 +247,25 @@ private:
     void UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx);
 
     /**
-     * GSP_GPU::AcquireRight service function
+     * GSP_GPU::TryAcquireRight service function
+     *  Inputs:
+     *      0 : Header code [0x00150002]
+     *      1 : Handle translate header (0x0)
+     *      2 : Process handle
      *  Outputs:
-     *      1: Result code
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void TryAcquireRight(Kernel::HLERequestContext& ctx);
+
+    /**
+     * GSP_GPU::AcquireRight service function
+     *  Inputs:
+     *      0 : Header code [0x00160042]
+     *      1 : Flags
+     *      2 : Handle translate header (0x0)
+     *      3 : Process handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
      */
     void AcquireRight(Kernel::HLERequestContext& ctx);
 
@@ -466,6 +348,17 @@ private:
     /// Force the 3D LED State (0 = On, Non-Zero = Off)
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
 
+    /**
+     * GSP_GPU::SetInternalPriorities service function
+     *  Inputs:
+     *      0 : Header code [0x001E0080]
+     *      1 : Session thread priority
+     *      2 : Session thread priority with rights
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetInternalPriorities(Kernel::HLERequestContext& ctx);
+
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
@@ -473,13 +366,17 @@ private:
 
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
+    Result AcquireGpuRight(const Kernel::HLERequestContext& ctx,
+                           const std::shared_ptr<Kernel::Process>& process, u32 flag,
+                           bool blocking);
+
     Core::System& system;
 
     /// GSP shared memory
     std::shared_ptr<Kernel::SharedMemory> shared_memory;
 
-    /// Thread id that currently has GPU rights or UINT32_MAX if none.
-    u32 active_thread_id = UINT32_MAX;
+    /// Thread id that currently has GPU rights or std::numeric_limits<u32>::max() if none.
+    u32 active_thread_id = std::numeric_limits<u32>::max();
 
     bool first_initialization = true;
 
@@ -490,24 +387,14 @@ private:
     static constexpr u32 MaxGSPThreads = 4;
 
     /// Thread ids currently in use by the sessions connected to the GSPGPU service.
-    std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
+    std::array<bool, MaxGSPThreads> used_thread_ids{};
 
     friend class SessionData;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& shared_memory;
-        ar& active_thread_id;
-        ar& first_initialization;
-        ar& used_thread_ids;
-        ar& saved_vram;
-    }
-
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
-
-ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
 
 } // namespace Service::GSP
 

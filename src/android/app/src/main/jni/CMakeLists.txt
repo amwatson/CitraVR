@@ -19,19 +19,15 @@ add_library(citra-android SHARED
     default_ini.h
     emu_window/emu_window.cpp
     emu_window/emu_window.h
-    emu_window/emu_window_gl.cpp
-    emu_window/emu_window_gl.h
-    emu_window/emu_window_vk.cpp
-    emu_window/emu_window_vk.h
     game_info.cpp
     game_settings.cpp
     game_settings.h
     id_cache.cpp
     id_cache.h
     native.cpp
-    native.h
     ndk_motion.cpp
     ndk_motion.h
+    system_save_game.cpp
     # VR-specific
     vr/OpenXR.cpp
     vr/gl/Egl.cpp
@@ -42,10 +38,28 @@ add_library(citra-android SHARED
     vr/layers/GameSurfaceLayer.cpp
     vr/layers/PassthroughLayer.cpp
     vr/utils/JniUtils.cpp
+
 )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-enum-enum-conversion")
-target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network adrenotools)
-target_link_libraries(citra-android PRIVATE openxr_loader GLESv3 android
-        camera2ndk EGL glad inih jnigraphics lodepng log mediandk yuv)
+
+target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network)
+target_link_libraries(citra-android PRIVATE android camera2ndk GLESv3 inih jnigraphics
+  log mediandk openxr_loader yuv)
+
+if (ENABLE_OPENGL)
+    target_sources(citra-android PRIVATE
+        emu_window/emu_window_gl.cpp
+        emu_window/emu_window_gl.h
+    )
+    target_link_libraries(citra-android PRIVATE EGL glad)
+endif()
+if (ENABLE_VULKAN)
+    target_sources(citra-android PRIVATE
+        emu_window/emu_window_vk.cpp
+        emu_window/emu_window_vk.h
+    )
+    if ("arm64" IN_LIST ARCHITECTURE)
+        target_link_libraries(citra-android PRIVATE adrenotools)
+    endif()
+endif()
 
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android)

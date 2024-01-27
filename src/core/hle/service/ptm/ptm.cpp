@@ -20,6 +20,7 @@
 #include "core/hle/service/ptm/ptm_u.h"
 
 SERIALIZE_EXPORT_IMPL(Service::PTM::Module)
+SERVICE_CONSTRUCT_IMPL(Service::PTM::Module)
 
 namespace Service::PTM {
 
@@ -30,7 +31,7 @@ void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -40,7 +41,7 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->shell_open);
 }
 
@@ -48,7 +49,7 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(static_cast<u32>(ChargeLevels::CompletelyFull)); // Set to a completely full battery
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -58,7 +59,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -68,7 +69,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->pedometer_is_counting);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -90,7 +91,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(buffer);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x{:x}, for {} hours", start_time,
@@ -101,7 +102,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(0);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -111,7 +112,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -120,7 +121,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 void CheckNew3DS(IPC::RequestBuilder& rb) {
     const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(is_new_3ds);
 
     LOG_DEBUG(Service_PTM, "called isNew3DS = 0x{:08x}", static_cast<u32>(is_new_3ds));
@@ -136,17 +137,18 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    auto& share_page = Core::System::GetInstance().Kernel().GetSharedPageHandler();
+    auto& share_page = ptm->system.Kernel().GetSharedPageHandler();
     const u64 console_time = share_page.GetSystemTimeSince2000();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(console_time);
 }
 
 static void WriteGameCoinData(GameCoin gamecoin_data) {
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
+    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory,
+                                                                FileSys::ExtSaveDataType::Shared);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
     auto archive_result = extdata_archive_factory.Open(archive_path, 0);
@@ -154,7 +156,7 @@ static void WriteGameCoinData(GameCoin gamecoin_data) {
 
     FileSys::Path gamecoin_path("/gamecoin.dat");
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() == FileSys::ResultNotFormatted) {
         // Format the archive to create the directories
         extdata_archive_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
         // Open it again to get a valid archive now that the folder exists
@@ -179,7 +181,8 @@ static void WriteGameCoinData(GameCoin gamecoin_data) {
 
 static GameCoin ReadGameCoinData() {
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
+    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory,
+                                                                FileSys::ExtSaveDataType::Shared);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
     auto archive_result = extdata_archive_factory.Open(archive_path, 0);
@@ -205,18 +208,27 @@ static GameCoin ReadGameCoinData() {
     return gamecoin_data;
 }
 
-Module::Module() {
+Module::Module(Core::System& system_) : system(system_) {
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
+    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory,
+                                                                FileSys::ExtSaveDataType::Shared);
     const FileSys::Path archive_path(ptm_shared_extdata_id);
     const auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     // If the archive didn't exist, write the default game coin file
-    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() == FileSys::ResultNotFormatted) {
         WriteGameCoinData(default_game_coin);
     }
 }
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& shell_open;
+    ar& battery_is_charging;
+    ar& pedometer_is_counting;
+}
+SERIALIZE_IMPL(Module)
 
 u16 Module::GetPlayCoins() {
     return ReadGameCoinData().total_coins;
@@ -235,7 +247,7 @@ Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto ptm = std::make_shared<Module>();
+    auto ptm = std::make_shared<Module>(system);
     std::make_shared<PTM_Gets>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Play>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Sets>(ptm)->InstallAsService(service_manager);

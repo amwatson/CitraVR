@@ -43,6 +43,7 @@ private:
 
     void UpdateBirthdayComboBox(int birthmonth_index);
     void UpdateInitTime(int init_clock);
+    void UpdateInitTicks(int init_ticks_type);
     void RefreshConsoleID();
 
     void SetupPerGameUI();
@@ -53,6 +54,7 @@ private:
     std::unique_ptr<Ui::ConfigureSystem> ui;
     Core::System& system;
     ConfigurationShared::CheckState is_new_3ds;
+    ConfigurationShared::CheckState lle_applets;
     bool enabled = false;
 
     std::shared_ptr<Service::CFG::Module> cfg;

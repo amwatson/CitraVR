@@ -22,7 +22,6 @@
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/service.h"
 #include "core/movie.h"
-#include "video_core/video_core.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
 SERIALIZE_EXPORT_IMPL(Service::HID::Module)
@@ -47,6 +46,8 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
         LoadInputDevices();
     }
     ar& state.hex;
+    ar& circle_pad_old_x;
+    ar& circle_pad_old_y;
     // Update events are set in the constructor
     // Devices are set from the implementation (and are stateless afaik)
 }
@@ -307,7 +308,7 @@ void Module::UpdateGyroscopeCallback(std::uintptr_t user_data, s64 cycles_late) 
 void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 7);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(hid->shared_mem, hid->event_pad_or_touch_1, hid->event_pad_or_touch_2,
                        hid->event_accelerometer, hid->event_gyroscope, hid->event_debug_pad);
 }
@@ -324,7 +325,7 @@ void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_HID, "called");
 }
@@ -340,7 +341,7 @@ void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_HID, "called");
 }
@@ -356,7 +357,7 @@ void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_HID, "called");
 }
@@ -372,7 +373,7 @@ void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_HID, "called");
 }
@@ -381,7 +382,7 @@ void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestCon
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(gyroscope_coef);
 }
 
@@ -389,7 +390,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     const s16 param_unit = 6700; // an approximate value taken from hw
     GyroscopeCalibrateParam param = {
@@ -408,7 +409,7 @@ void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
     const u8 volume = static_cast<u8>(0x3F * Settings::values.volume.GetValue());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(volume);
 }
 

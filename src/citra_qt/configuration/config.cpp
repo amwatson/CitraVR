@@ -54,8 +54,11 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 28> Config::default_hotkeys {{
-     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),     Qt::ApplicationShortcut}},
+const std::array<UISettings::Shortcut, 30> Config::default_hotkeys {{
+     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
+     {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
+     {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
+     {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     Qt::WindowShortcut}},
      {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), Qt::ApplicationShortcut}},
@@ -68,7 +71,6 @@ const std::array<UISettings::Shortcut, 28> Config::default_hotkeys {{
      {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Load from Newest Slot"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), Qt::WindowShortcut}},
-     {QStringLiteral("Mute Audio"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     Qt::ApplicationShortcut}},
      {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     Qt::WindowShortcut}},
      {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     Qt::WindowShortcut}},
@@ -76,13 +78,13 @@ const std::array<UISettings::Shortcut, 28> Config::default_hotkeys {{
      {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     Qt::WindowShortcut}},
      {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     Qt::WindowShortcut}},
      {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Per-Game Speed"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Per-Game Speed"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    Qt::WindowShortcut}},
      {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     Qt::ApplicationShortcut}},
     }};
 // clang-format on
 
@@ -450,6 +452,7 @@ void Config::ReadCoreValues() {
 
     if (global) {
         ReadBasicSetting(Settings::values.use_cpu_jit);
+        ReadBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 
     qt_config->endGroup();
@@ -528,6 +531,7 @@ void Config::ReadMiscellaneousValues() {
     qt_config->beginGroup(QStringLiteral("Miscellaneous"));
 
     ReadBasicSetting(Settings::values.log_filter);
+    ReadBasicSetting(Settings::values.enable_gamemode);
 
     qt_config->endGroup();
 }
@@ -644,6 +648,7 @@ void Config::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.bg_blue);
 
     ReadGlobalSetting(Settings::values.texture_filter);
+    ReadGlobalSetting(Settings::values.texture_sampling);
 
     if (global) {
         ReadBasicSetting(Settings::values.use_shader_jit);
@@ -677,12 +682,15 @@ void Config::ReadSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
     ReadGlobalSetting(Settings::values.is_new_3ds);
+    ReadGlobalSetting(Settings::values.lle_applets);
     ReadGlobalSetting(Settings::values.region_value);
 
     if (global) {
         ReadBasicSetting(Settings::values.init_clock);
         ReadBasicSetting(Settings::values.init_time);
         ReadBasicSetting(Settings::values.init_time_offset);
+        ReadBasicSetting(Settings::values.init_ticks_type);
+        ReadBasicSetting(Settings::values.init_ticks_override);
         ReadBasicSetting(Settings::values.plugin_loader_enabled);
         ReadBasicSetting(Settings::values.allow_plugin_loader);
     }
@@ -762,6 +770,7 @@ void Config::ReadUIValues() {
         ReadBasicSetting(UISettings::values.callout_flags);
         ReadBasicSetting(UISettings::values.show_console);
         ReadBasicSetting(UISettings::values.pause_when_in_background);
+        ReadBasicSetting(UISettings::values.mute_when_in_background);
         ReadBasicSetting(UISettings::values.hide_mouse);
     }
 
@@ -972,6 +981,7 @@ void Config::SaveCoreValues() {
 
     if (global) {
         WriteBasicSetting(Settings::values.use_cpu_jit);
+        WriteBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 
     qt_config->endGroup();
@@ -1044,6 +1054,7 @@ void Config::SaveMiscellaneousValues() {
     qt_config->beginGroup(QStringLiteral("Miscellaneous"));
 
     WriteBasicSetting(Settings::values.log_filter);
+    WriteBasicSetting(Settings::values.enable_gamemode);
 
     qt_config->endGroup();
 }
@@ -1128,6 +1139,7 @@ void Config::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.bg_blue);
 
     WriteGlobalSetting(Settings::values.texture_filter);
+    WriteGlobalSetting(Settings::values.texture_sampling);
 
     if (global) {
         WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),
@@ -1161,12 +1173,15 @@ void Config::SaveSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
     WriteGlobalSetting(Settings::values.is_new_3ds);
+    WriteGlobalSetting(Settings::values.lle_applets);
     WriteGlobalSetting(Settings::values.region_value);
 
     if (global) {
         WriteBasicSetting(Settings::values.init_clock);
         WriteBasicSetting(Settings::values.init_time);
         WriteBasicSetting(Settings::values.init_time_offset);
+        WriteBasicSetting(Settings::values.init_ticks_type);
+        WriteBasicSetting(Settings::values.init_ticks_override);
         WriteBasicSetting(Settings::values.plugin_loader_enabled);
         WriteBasicSetting(Settings::values.allow_plugin_loader);
     }
@@ -1229,6 +1244,7 @@ void Config::SaveUIValues() {
         WriteBasicSetting(UISettings::values.callout_flags);
         WriteBasicSetting(UISettings::values.show_console);
         WriteBasicSetting(UISettings::values.pause_when_in_background);
+        WriteBasicSetting(UISettings::values.mute_when_in_background);
         WriteBasicSetting(UISettings::values.hide_mouse);
     }
 

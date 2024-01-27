@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
@@ -38,11 +37,10 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& next_timer_callback_id;
-        ar& timer_callback_table;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
+
+class ResourceLimit;
 
 class Timer final : public WaitObject {
 public:
@@ -96,6 +94,8 @@ public:
      */
     void Signal(s64 cycles_late);
 
+    std::shared_ptr<ResourceLimit> resource_limit;
+
 private:
     ResetType reset_type; ///< The ResetType of this timer
 
@@ -115,15 +115,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<WaitObject>(*this);
-        ar& reset_type;
-        ar& initial_delay;
-        ar& interval_delay;
-        ar& signaled;
-        ar& name;
-        ar& callback_id;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel

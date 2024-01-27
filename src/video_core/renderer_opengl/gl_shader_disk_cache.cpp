@@ -83,7 +83,7 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
     }
 
     // Just for future proofing, save the sizes of the array to the file
-    const std::size_t reg_array_len = Pica::Regs::NUM_REGS;
+    const std::size_t reg_array_len = Pica::RegsInternal::NUM_REGS;
     if (file.WriteObject(static_cast<u64>(reg_array_len)) != 1) {
         return false;
     }
@@ -206,6 +206,10 @@ ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file, bool compressed) {
     if (compressed) {
         const std::vector<u8> decompressed =
             Common::Compression::DecompressDataZSTD(precompiled_file);
+        if (decompressed.empty()) {
+            LOG_ERROR(Render_OpenGL, "Could not decompress precompiled shader cache.");
+            return std::nullopt;
+        }
         SaveArrayToPrecompiled(decompressed.data(), decompressed.size());
     } else {
         SaveArrayToPrecompiled(precompiled_file.data(), precompiled_file.size());

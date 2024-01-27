@@ -7,7 +7,6 @@
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "jni/emu_window/emu_window_vk.h"
-#include "video_core/video_core.h"
 
 class GraphicsContext_Android final : public Frontend::GraphicsContext {
 public:
@@ -50,4 +49,8 @@ bool EmuWindow_Android_Vulkan::CreateWindowSurface() {
 
 std::unique_ptr<Frontend::GraphicsContext> EmuWindow_Android_Vulkan::CreateSharedContext() const {
     return std::make_unique<GraphicsContext_Android>(driver_library);
+}
+
+std::shared_ptr<Common::DynamicLibrary> EmuWindow_Android_Vulkan::GetDriverLibrary() {
+    return driver_library;
 }

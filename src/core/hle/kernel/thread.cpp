@@ -4,36 +4,46 @@
 
 #include <algorithm>
 #include <climits>
-#include <list>
-#include <vector>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/math_util.h"
 #include "common/serialization/boost_flat_set.h"
+#include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
 #include "core/hle/kernel/errors.h"
-#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Thread)
+SERIALIZE_EXPORT_IMPL(Kernel::WakeupCallback)
 
 namespace Kernel {
 
 template <class Archive>
+void ThreadManager::serialize(Archive& ar, const unsigned int) {
+    ar& current_thread;
+    ar& ready_queue;
+    ar& wakeup_callback_table;
+    ar& thread_list;
+}
+SERIALIZE_IMPL(ThreadManager)
+
+template <class Archive>
 void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar& boost::serialization::base_object<WaitObject>(*this);
-    ar&* context.get();
+    ar& context;
     ar& thread_id;
     ar& status;
     ar& entry_point;
@@ -51,8 +61,11 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar& name;
     ar& wakeup_callback;
 }
-
 SERIALIZE_IMPL(Thread)
+
+template <class Archive>
+void WakeupCallback::serialize(Archive& ar, const unsigned int) {}
+SERIALIZE_IMPL(WakeupCallback)
 
 bool Thread::ShouldWait(const Thread* thread) const {
     return status != ThreadStatus::Dead;
@@ -63,9 +76,9 @@ void Thread::Acquire(Thread* thread) {
 }
 
 Thread::Thread(KernelSystem& kernel, u32 core_id)
-    : WaitObject(kernel), context(kernel.GetThreadManager(core_id).NewContext()),
-      can_schedule(true), core_id(core_id), thread_manager(kernel.GetThreadManager(core_id)) {}
-Thread::~Thread() {}
+    : WaitObject(kernel), core_id(core_id), thread_manager(kernel.GetThreadManager(core_id)) {}
+
+Thread::~Thread() = default;
 
 Thread* ThreadManager::GetCurrentThread() const {
     return current_thread.get();
@@ -101,6 +114,7 @@ void Thread::Stop() {
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::CITRA_PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
     if (auto process = owner_process.lock()) {
         process->tls_slots[tls_page].reset(tls_slot);
+        process->resource_limit->Release(ResourceLimitType::Thread, 1);
     }
 }
 
@@ -244,13 +258,15 @@ void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
     thread->ResumeFromWait();
 }
 
-void Thread::WakeAfterDelay(s64 nanoseconds) {
+void Thread::WakeAfterDelay(s64 nanoseconds, bool thread_safe_mode) {
     // Don't schedule a wakeup if the thread wants to wait forever
     if (nanoseconds == -1)
         return;
+    std::size_t core = thread_safe_mode ? core_id : std::numeric_limits<std::size_t>::max();
 
     thread_manager.kernel.timing.ScheduleEvent(nsToCycles(nanoseconds),
-                                               thread_manager.ThreadWakeupEventType, thread_id);
+                                               thread_manager.ThreadWakeupEventType, thread_id,
+                                               core, thread_safe_mode);
 }
 
 void Thread::ResumeFromWait() {
@@ -316,38 +332,37 @@ void ThreadManager::DebugThreadQueue() {
  * @param entry_point Address of entry point for execution
  * @param arg User argument for thread
  */
-static void ResetThreadContext(const std::unique_ptr<ARM_Interface::ThreadContext>& context,
-                               u32 stack_top, u32 entry_point, u32 arg) {
-    context->Reset();
-    context->SetCpuRegister(0, arg);
-    context->SetProgramCounter(entry_point);
-    context->SetStackPointer(stack_top);
-    context->SetCpsr(USER32MODE | ((entry_point & 1) << 5)); // Usermode and THUMB mode
+static void ResetThreadContext(Core::ARM_Interface::ThreadContext& context, u32 stack_top,
+                               u32 entry_point, u32 arg) {
+    context.cpu_registers[0] = arg;
+    context.SetProgramCounter(entry_point);
+    context.SetStackPointer(stack_top);
+    context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
 }
 
 ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     std::string name, VAddr entry_point, u32 priority, u32 arg, s32 processor_id, VAddr stack_top,
-    std::shared_ptr<Process> owner_process) {
+    std::shared_ptr<Process> owner_process, bool make_ready) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
-        return ERR_OUT_OF_RANGE;
+        return ResultOutOfRange;
     }
 
     if (processor_id > ThreadProcessorIdMax) {
         LOG_ERROR(Kernel_SVC, "Invalid processor id: {}", processor_id);
-        return ERR_OUT_OF_RANGE_KERNEL;
+        return ResultOutOfRangeKernel;
     }
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
     if (!memory.IsValidVirtualAddress(*owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
         // TODO: Verify error
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return Result(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
+                      ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    auto thread{std::make_shared<Thread>(*this, processor_id)};
+    auto thread = std::make_shared<Thread>(*this, processor_id);
 
     thread_managers[processor_id]->thread_list.push_back(thread);
     thread_managers[processor_id]->ready_queue.prepare(priority);
@@ -370,8 +385,11 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     // to initialize the context
     ResetThreadContext(thread->context, stack_top, entry_point, arg);
 
-    thread_managers[processor_id]->ready_queue.push_back(thread->current_priority, thread.get());
-    thread->status = ThreadStatus::Ready;
+    if (make_ready) {
+        thread_managers[processor_id]->ready_queue.push_back(thread->current_priority,
+                                                             thread.get());
+        thread->status = ThreadStatus::Ready;
+    }
 
     return thread;
 }
@@ -408,15 +426,35 @@ void Thread::BoostPriority(u32 priority) {
 
 std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
                                         std::shared_ptr<Process> owner_process) {
+
+    constexpr s64 sleep_app_thread_ns = 2'600'000'000LL;
+    constexpr u32 system_module_tid_high = 0x00040130;
+
+    const bool is_lle_service =
+        static_cast<u32>(owner_process->codeset->program_id >> 32) == system_module_tid_high;
+
+    s64 sleep_time_ns = 0;
+    if (!is_lle_service && kernel.GetAppMainThreadExtendedSleep()) {
+        if (Settings::values.delay_start_for_lle_modules) {
+            sleep_time_ns = sleep_app_thread_ns;
+        }
+        kernel.SetAppMainThreadExtendedSleep(false);
+    }
+
     // Initialize new "main" thread
     auto thread_res =
         kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
-                            Memory::HEAP_VADDR_END, owner_process);
+                            Memory::HEAP_VADDR_END, owner_process, sleep_time_ns == 0);
 
     std::shared_ptr<Thread> thread = std::move(thread_res).Unwrap();
 
-    thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO |
-                              FPSCR_IXC); // 0x03C00010
+    thread->context.fpscr =
+        FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
+
+    if (sleep_time_ns != 0) {
+        thread->status = ThreadStatus::WaitSleep;
+        thread->WakeAfterDelay(sleep_time_ns);
+    }
 
     // Note: The newly created thread will be run when the scheduler fires.
     return thread;
@@ -444,12 +482,12 @@ void ThreadManager::Reschedule() {
     SwitchContext(next);
 }
 
-void Thread::SetWaitSynchronizationResult(ResultCode result) {
-    context->SetCpuRegister(0, result.raw);
+void Thread::SetWaitSynchronizationResult(Result result) {
+    context.cpu_registers[0] = result.raw;
 }
 
 void Thread::SetWaitSynchronizationOutput(s32 output) {
-    context->SetCpuRegister(1, output);
+    context.cpu_registers[1] = output;
 }
 
 s32 Thread::GetWaitObjectIndex(const WaitObject* object) const {

@@ -3,12 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <codecvt>
 #include <cstring>
-#include <locale>
 #include <memory>
 #include <vector>
 #include <fmt/format.h>
+#include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "common/string_util.h"
@@ -32,6 +31,7 @@
 
 namespace Loader {
 
+using namespace Common::Literals;
 static const u64 UPDATE_MASK = 0x0000000e00000000;
 
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
@@ -113,8 +113,7 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8);
 
-        std::shared_ptr<CodeSet> codeset =
-            Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id);
+        std::shared_ptr<CodeSet> codeset = system.Kernel().CreateCodeSet(process_name, program_id);
 
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
@@ -148,13 +147,40 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::move(code);
 
-        process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+        process = system.Kernel().CreateProcess(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
-        process->resource_limit =
-            Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-                static_cast<Kernel::ResourceLimitCategory>(
-                    overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
+        const auto category = static_cast<Kernel::ResourceLimitCategory>(
+            overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category);
+        process->resource_limit = system.Kernel().ResourceLimit().GetForCategory(category);
+
+        // When running N3DS-unaware titles pm will lie about the amount of memory available.
+        // This means RESLIMIT_COMMIT = APPMEMALLOC doesn't correspond to the actual size of
+        // APPLICATION. See:
+        // https://github.com/LumaTeam/Luma3DS/blob/e2778a45/sysmodules/pm/source/launch.c#L237
+        auto& ncch_caps = overlay_ncch->exheader_header.arm11_system_local_caps;
+        const auto o3ds_mode = static_cast<Kernel::MemoryMode>(ncch_caps.system_mode.Value());
+        const auto n3ds_mode = static_cast<Kernel::New3dsMemoryMode>(ncch_caps.n3ds_mode);
+        const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
+        if (is_new_3ds && n3ds_mode == Kernel::New3dsMemoryMode::Legacy &&
+            category == Kernel::ResourceLimitCategory::Application) {
+            u64 new_limit = 0;
+            switch (o3ds_mode) {
+            case Kernel::MemoryMode::Prod:
+                new_limit = 64_MiB;
+                break;
+            case Kernel::MemoryMode::Dev1:
+                new_limit = 96_MiB;
+                break;
+            case Kernel::MemoryMode::Dev2:
+                new_limit = 80_MiB;
+                break;
+            default:
+                break;
+            }
+            process->resource_limit->SetLimitValue(Kernel::ResourceLimitType::Commit,
+                                                   static_cast<s32>(new_limit));
+        }
 
         // Set the default CPU core for this process
         process->ideal_processor =
@@ -171,10 +197,17 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         u32 stack_size = overlay_ncch->exheader_header.codeset_info.stack_size;
 
         // On real HW this is done with FS:Reg, but we can be lazy
-        auto fs_user =
-            Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
-                "fs:USER");
-        fs_user->Register(process->process_id, process->codeset->program_id, filepath);
+        auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+        fs_user->RegisterProgramInfo(process->process_id, process->codeset->program_id, filepath);
+
+        Service::FS::FS_USER::ProductInfo product_info{};
+        std::memcpy(product_info.product_code.data(), overlay_ncch->ncch_header.product_code,
+                    product_info.product_code.size());
+        std::memcpy(&product_info.remaster_version,
+                    overlay_ncch->exheader_header.codeset_info.flags.remaster_version,
+                    sizeof(product_info.remaster_version));
+        product_info.maker_code = overlay_ncch->ncch_header.maker_code;
+        fs_user->RegisterProductInfo(process->process_id, product_info);
 
         process->Run(priority, stack_size);
         return ResultStatus::Success;
@@ -187,8 +220,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
         return;
     }
 
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    ASSERT_MSG(cfg, "CFG Module missing!");
+    preferred_regions.clear();
 
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
@@ -196,19 +228,16 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
         std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout = smdh.region_lockout;
         constexpr u32 REGION_COUNT = 7;
-        std::vector<u32> regions;
         for (u32 region = 0; region < REGION_COUNT; ++region) {
             if (region_lockout & 1) {
-                regions.push_back(region);
+                preferred_regions.push_back(region);
             }
             region_lockout >>= 1;
         }
-        cfg->SetPreferredRegionCodes(regions);
     } else {
         const auto region = Core::GetSystemTitleRegion(program_id);
         if (region.has_value()) {
-            const std::array regions{region.value()};
-            cfg->SetPreferredRegionCodes(regions);
+            preferred_regions.push_back(region.value());
         }
     }
 }
@@ -245,7 +274,6 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
         overlay_ncch = &update_ncch;
     }
 
-    auto& system = Core::System::GetInstance();
     system.TelemetrySession().AddField(Common::Telemetry::FieldType::Session, "ProgramId",
                                        program_id);
 

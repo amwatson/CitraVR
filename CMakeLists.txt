@@ -17,6 +17,12 @@ include(CMakeDependentOption)
 
 project(citra LANGUAGES C CXX ASM)
 
+# Some submodules like to pick their own default build type if not specified.
+# Make sure we default to Release build type always, unless the generator has custom types.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 if (APPLE)
     # Silence warnings on empty objects, for example when platform-specific code is #ifdef'd out.
     set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -68,15 +74,17 @@ CMAKE_DEPENDENT_OPTION(ENABLE_DEDICATED_ROOM "Enable generating dedicated room e
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
 
-CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
+# TODO: cubeb currently causes issues on macOS, see: https://github.com/mozilla/cubeb/issues/771
+CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT APPLE" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ON "NOT APPLE" OFF)
+option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
-CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_AUDIOTOOLBOX "Use AudioToolbox decoder (preferred over FFmpeg)" ON "APPLE" OFF)
+option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
 CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundling target." ON "NOT ANDROID AND NOT IOS" OFF)
 
@@ -86,19 +94,16 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
-# System library options
-CMAKE_DEPENDENT_OPTION(USE_SYSTEM_QT "Use the system Qt lib (instead of the bundled one)" OFF "ENABLE_QT;MSVC OR APPLE" ON)
-CMAKE_DEPENDENT_OPTION(USE_SYSTEM_MOLTENVK "Use the system MoltenVK lib (instead of the bundled one)" OFF "APPLE" OFF)
-option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
-option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
-option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
-option(USE_SYSTEM_LIBUSB "Use the system libusb (instead of the bundled libusb)" OFF)
-option(USE_SYSTEM_CPP_JWT "Use the system cpp-jwt (instead of the bundled one)" OFF)
-option(USE_SYSTEM_SOUNDTOUCH "Use the system SoundTouch (instead of the bundled one)" OFF)
+include(CitraHandleSystemLibs)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
     set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
+
+    # This ensures that pre-compiled headers won't invalidate build caches for every fresh checkout.
+    if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        list(APPEND CMAKE_CXX_COMPILE_OPTIONS_CREATE_PCH -Xclang -fno-pch-timestamp)
+    endif()
 endif()
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
@@ -233,7 +238,7 @@ find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
     if (NOT USE_SYSTEM_QT)
-        download_qt(6.5.1)
+        download_qt(6.6.0)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
@@ -254,20 +259,22 @@ find_package(tsl-robin-map QUIET)
 # ======================================
 
 if (APPLE)
-    if (NOT USE_SYSTEM_MOLTENVK)
-        download_moltenvk()
-    endif()
-    find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
-    message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
-
     if (NOT IOS)
         # Umbrella framework for everything GUI-related
         find_library(COCOA_LIBRARY Cocoa REQUIRED)
     endif()
-
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
+
+    if (ENABLE_VULKAN)
+        if (NOT USE_SYSTEM_MOLTENVK)
+            download_moltenvk()
+        endif()
+        find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+        message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
+        set(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${MOLTENVK_LIBRARY})
+    endif()
 elseif (WIN32)
     set(PLATFORM_LIBRARIES winmm ws2_32)
     if (MINGW)

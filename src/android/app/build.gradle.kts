@@ -3,10 +3,15 @@
 // Refer to the license.txt file included.
 
 import android.databinding.tool.ext.capitalizeUS
+import de.undercouch.gradle.tasks.download.Download
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("de.undercouch.download") version "5.5.0"
+    id("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.8.21"
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 /**
@@ -15,14 +20,16 @@ plugins {
  * next 680 years.
  */
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
-val abiFilter = listOf("arm64-v8a"/*, "x86", "x86_64"*/)
+val abiFilter = listOf("arm64-v8a", "x86_64")
+
+val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
 
 @Suppress("UnstableApiUsage")
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-33"
-    ndkVersion = "25.2.9519653"
+    compileSdkVersion = "android-34"
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -31,6 +38,15 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    androidResources {
+        generateLocaleConfig = true
+    }
+
+    packaging {
+        // This is necessary for libadrenotools custom driver loading
+        jniLibs.useLegacyPackaging = true
     }
 
     buildFeatures {
@@ -47,7 +63,8 @@ android {
         // TODO If this is ever modified, change application_id in strings.xml
         applicationId = "org.citra.citra_emu"
         minSdk = 28
-        targetSdk = 33
+        //noinspection ExpiredTargetSdkVersion
+        targetSdk = 30
         versionCode = autoVersion
         versionName = getGitVersion()
 
@@ -65,6 +82,9 @@ android {
                 )
             }
         }
+
+        buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
+        buildConfigField("String", "BRANCH", "\"${getBranch()}\"")
     }
 
     val keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -88,6 +108,12 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
         }
 
         // builds a release build that doesn't need signing
@@ -97,9 +123,15 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             isDebuggable = true
             isJniDebuggable = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
+            isDefault = true
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -131,11 +163,19 @@ android {
             path = file("../../../CMakeLists.txt")
         }
     }
+
+    sourceSets {
+        named("main") {
+            // Set up path for downloaded native libraries
+            jniLibs.srcDir(downloadedJniLibsPath)
+        }
+    }
 }
 
 dependencies {
-    implementation("androidx.activity:activity-ktx:1.7.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
@@ -143,19 +183,38 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.work:work-runtime:2.8.1")
-
-    // For loading huge screenshots from the disk.
-    implementation("com.squareup.picasso:picasso:2.71828")
-
-    // Allows FRP-style asynchronous operations in Android.
-    implementation("io.reactivex:rxandroid:1.2.1")
-
     implementation("org.ini4j:ini4j:0.5.4")
-    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
+    implementation("info.debatty:java-string-similarity:2.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("io.coil-kt:coil:2.2.2")
+}
 
-    // Please don't upgrade the billing library as the newer version is not GPL-compatible
-    implementation("com.android.billingclient:billing:2.0.3")
+// Download Vulkan Validation Layers from the KhronosGroup GitHub.
+val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
+    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-1.3.261.1/android-binaries-sdk-1.3.261.1-android.zip")
+    dest(file("${buildDir}/tmp/Vulkan-ValidationLayers.zip"))
+    onlyIfModified(true)
+}
+
+// Extract Vulkan Validation Layers into the downloaded native libraries directory.
+val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLayers") {
+    dependsOn(downloadVulkanValidationLayers)
+    from(zipTree(downloadVulkanValidationLayers.get().dest)) {
+        // Exclude the top level directory in the zip as it violates the expected jniLibs directory structure.
+        eachFile {
+            relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
+        }
+        includeEmptyDirs = false
+    }
+    into(downloadedJniLibsPath)
+}
+
+tasks.named("preBuild") {
+    dependsOn(unzipVulkanValidationLayers)
 }
 
 fun getGitVersion(): String {
@@ -179,6 +238,34 @@ fun getGitVersion(): String {
     }
 
     return versionName
+}
+
+fun getGitHash(): String =
+    runGitCommand(ProcessBuilder("git", "rev-parse", "--short", "HEAD")) ?: "dummy-hash"
+
+fun getBranch(): String =
+    runGitCommand(ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")) ?: "dummy-branch"
+
+fun runGitCommand(command: ProcessBuilder) : String? {
+    try {
+        command.directory(project.rootDir)
+        val process = command.start()
+        val inputStream = process.inputStream
+        val errorStream = process.errorStream
+        process.waitFor()
+
+        return if (process.exitValue() == 0) {
+            inputStream.bufferedReader()
+                .use { it.readText().trim() } // return the value of gitHash
+        } else {
+            val errorMessage = errorStream.bufferedReader().use { it.readText().trim() }
+            logger.error("Error running git command: $errorMessage")
+            return null
+        }
+    } catch (e: Exception) {
+        logger.error("$e: Cannot find git")
+        return null
+    }
 }
 
 android.applicationVariants.configureEach {

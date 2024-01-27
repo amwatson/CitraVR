@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <glad/glad.h>
-
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -24,11 +22,13 @@
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_software/renderer_software.h"
-#include "video_core/video_core.h"
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
+#include <glad/glad.h>
+
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
@@ -73,7 +73,7 @@ void EmuThread::run() {
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
-    system.Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             emit LoadProgress(stage, value, total);
         });
@@ -137,32 +137,51 @@ void EmuThread::run() {
 #endif
 }
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
+static std::unique_ptr<QOpenGLContext> CreateQOpenGLContext(bool gles) {
+    QSurfaceFormat format;
+    if (gles) {
+        format.setRenderableType(QSurfaceFormat::RenderableType::OpenGLES);
+        format.setVersion(3, 2);
+    } else {
+        format.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
+        format.setVersion(4, 3);
+    }
+    format.setProfile(QSurfaceFormat::CoreProfile);
+
+    if (Settings::values.renderer_debug) {
+        format.setOption(QSurfaceFormat::FormatOption::DebugContext);
+    }
+
+    // TODO: expose a setting for buffer value (ie default/single/double/triple)
+    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
+    format.setSwapInterval(0);
+
+    auto context = std::make_unique<QOpenGLContext>();
+    context->setFormat(format);
+    if (!context->create()) {
+        LOG_ERROR(Frontend, "Unable to create OpenGL context with GLES = {}", gles);
+        return nullptr;
+    }
+    return context;
+}
+
 class OpenGLSharedContext : public Frontend::GraphicsContext {
 public:
     /// Create the original context that should be shared from
     explicit OpenGLSharedContext() {
-        QSurfaceFormat format;
-
-        format.setVersion(4, 3);
-        format.setProfile(QSurfaceFormat::CoreProfile);
-
-        if (Settings::values.renderer_debug) {
-            format.setOption(QSurfaceFormat::FormatOption::DebugContext);
-        }
-
-        // TODO: expose a setting for buffer value (ie default/single/double/triple)
-        format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
-        format.setSwapInterval(0);
-
-        context = std::make_unique<QOpenGLContext>();
-        context->setFormat(format);
-        if (!context->create()) {
-            LOG_ERROR(Frontend, "Unable to create main openGL context");
+        // First, try to create a context with the requested type.
+        context = CreateQOpenGLContext(Settings::values.use_gles.GetValue());
+        if (context == nullptr) {
+            // On failure, fall back to context with flipped type.
+            context = CreateQOpenGLContext(!Settings::values.use_gles.GetValue());
+            if (context == nullptr) {
+                LOG_ERROR(Frontend, "Unable to create any OpenGL context.");
+            }
         }
 
         offscreen_surface = std::make_unique<QOffscreenSurface>(nullptr);
-        offscreen_surface->setFormat(format);
+        offscreen_surface->setFormat(context->format());
         offscreen_surface->create();
         surface = offscreen_surface.get();
     }
@@ -178,7 +197,7 @@ public:
         context->setShareContext(share_context);
         context->setFormat(format);
         if (!context->create()) {
-            LOG_ERROR(Frontend, "Unable to create shared openGL context");
+            LOG_ERROR(Frontend, "Unable to create shared OpenGL context");
         }
 
         surface = main_surface;
@@ -186,6 +205,10 @@ public:
 
     ~OpenGLSharedContext() {
         OpenGLSharedContext::DoneCurrent();
+    }
+
+    bool IsGLES() override {
+        return context->format().renderableType() == QSurfaceFormat::RenderableType::OpenGLES;
     }
 
     void SwapBuffers() override {
@@ -235,7 +258,7 @@ public:
     virtual ~RenderWidget() = default;
 };
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
 class OpenGLRenderWidget : public RenderWidget {
 public:
     explicit OpenGLRenderWidget(GRenderWindow* parent, Core::System& system_, bool is_secondary)
@@ -261,9 +284,7 @@ public:
         }
         context->MakeCurrent();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        if (VideoCore::g_renderer) {
-            VideoCore::g_renderer->TryPresent(100, is_secondary);
-        }
+        system.GPU().Renderer().TryPresent(100, is_secondary);
         context->SwapBuffers();
         glFinish();
     }
@@ -284,6 +305,7 @@ private:
 };
 #endif
 
+#ifdef ENABLE_VULKAN
 class VulkanRenderWidget : public RenderWidget {
 public:
     explicit VulkanRenderWidget(GRenderWindow* parent) : RenderWidget(parent) {
@@ -303,7 +325,9 @@ public:
         return nullptr;
     }
 };
+#endif
 
+#ifdef ENABLE_SOFTWARE_RENDERER
 struct SoftwareRenderWidget : public RenderWidget {
     explicit SoftwareRenderWidget(GRenderWindow* parent, Core::System& system_)
         : RenderWidget(parent), system(system_) {}
@@ -344,7 +368,7 @@ struct SoftwareRenderWidget : public RenderWidget {
     }
 
     QImage LoadFramebuffer(VideoCore::ScreenId screen_id) {
-        const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.Renderer());
+        const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.GPU().Renderer());
         const auto& info = renderer.Screen(screen_id);
         const int width = static_cast<int>(info.width);
         const int height = static_cast<int>(info.height);
@@ -356,6 +380,7 @@ struct SoftwareRenderWidget : public RenderWidget {
 private:
     Core::System& system;
 };
+#endif
 
 static Frontend::WindowSystemType GetWindowSystemType() {
     // Determine WSI type based on Qt platform.
@@ -364,7 +389,8 @@ static Frontend::WindowSystemType GetWindowSystemType() {
         return Frontend::WindowSystemType::Windows;
     else if (platform_name == QStringLiteral("xcb"))
         return Frontend::WindowSystemType::X11;
-    else if (platform_name == QStringLiteral("wayland"))
+    else if (platform_name == QStringLiteral("wayland") ||
+             platform_name == QStringLiteral("wayland-egl"))
         return Frontend::WindowSystemType::Wayland;
     else if (platform_name == QStringLiteral("cocoa") || platform_name == QStringLiteral("ios"))
         return Frontend::WindowSystemType::MacOS;
@@ -413,7 +439,8 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread_, Core::Sys
     setLayout(layout);
 
     this->setMouseTracking(true);
-    strict_context_required = QGuiApplication::platformName() == QStringLiteral("wayland");
+    strict_context_required = QGuiApplication::platformName() == QStringLiteral("wayland") ||
+                              QGuiApplication::platformName() == QStringLiteral("wayland-egl");
 
     GMainWindow* parent = GetMainWindow();
     connect(this, &GRenderWindow::FirstFrameDisplayed, parent, &GMainWindow::OnLoadComplete);
@@ -613,16 +640,39 @@ bool GRenderWindow::InitRenderTarget() {
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
+#ifdef ENABLE_SOFTWARE_RENDERER
     case Settings::GraphicsAPI::Software:
         InitializeSoftware();
         break;
+#endif
+#ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         if (!InitializeOpenGL() || !LoadOpenGL()) {
             return false;
         }
         break;
+#endif
+#ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
         InitializeVulkan();
+        break;
+#endif
+    default:
+        LOG_CRITICAL(Frontend,
+                     "Unknown or unsupported graphics API {}, falling back to available default",
+                     graphics_api);
+#ifdef ENABLE_OPENGL
+        if (!InitializeOpenGL() || !LoadOpenGL()) {
+            return false;
+        }
+#elif ENABLE_VULKAN
+        InitializeVulkan();
+#elif ENABLE_SOFTWARE_RENDERER
+        InitializeSoftware();
+#else
+// TODO: Add a null renderer backend for this, perhaps.
+#error "At least one renderer must be enabled."
+#endif
         break;
     }
 
@@ -653,17 +703,18 @@ void GRenderWindow::ReleaseRenderTarget() {
 }
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
+    auto& renderer = system.GPU().Renderer();
     if (res_scale == 0) {
-        res_scale = system.Renderer().GetResolutionScaleFactor();
+        res_scale = renderer.GetResolutionScaleFactor();
     }
 
     const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale, is_secondary)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
-    system.Renderer().RequestScreenshot(
+    renderer.RequestScreenshot(
         screenshot_image.bits(),
-        [this, screenshot_path] {
+        [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();
-            if (screenshot_image.mirrored(false, true).save(screenshot_path)) {
+            if (screenshot_image.mirrored(false, invert_y).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
             } else {
                 LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);
@@ -676,8 +727,8 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal
     setMinimumSize(minimal_size.first, minimal_size.second);
 }
 
+#ifdef ENABLE_OPENGL
 bool GRenderWindow::InitializeOpenGL() {
-#ifdef HAS_OPENGL
     if (!QOpenGLContext::supportsThreadedOpenGL()) {
         QMessageBox::warning(this, tr("OpenGL not available!"),
                              tr("OpenGL shared contexts are not supported."));
@@ -702,29 +753,19 @@ bool GRenderWindow::InitializeOpenGL() {
     child_widget->windowHandle()->setFormat(format);
 
     return true;
-#else
-    QMessageBox::warning(this, tr("OpenGL not available!"),
-                         tr("Citra has not been compiled with OpenGL support."));
-    return false;
-#endif
 }
 
-void GRenderWindow::InitializeVulkan() {
-    auto child = new VulkanRenderWidget(this);
-    child_widget = child;
-    child_widget->windowHandle()->create();
-    main_context = std::make_unique<DummyContext>();
-}
-
-void GRenderWindow::InitializeSoftware() {
-    child_widget = new SoftwareRenderWidget(this, system);
-    main_context = std::make_unique<DummyContext>();
+static void* GetProcAddressGL(const char* name) {
+    return reinterpret_cast<void*>(QOpenGLContext::currentContext()->getProcAddress(name));
 }
 
 bool GRenderWindow::LoadOpenGL() {
     auto context = CreateSharedContext();
     auto scope = context->Acquire();
-    if (!gladLoadGL()) {
+    const auto gles = context->IsGLES();
+
+    auto gl_load_func = gles ? gladLoadGLES2Loader : gladLoadGLLoader;
+    if (!gl_load_func(GetProcAddressGL)) {
         QMessageBox::warning(
             this, tr("Error while initializing OpenGL!"),
             tr("Your GPU may not support OpenGL, or you do not have the latest graphics driver."));
@@ -734,10 +775,17 @@ bool GRenderWindow::LoadOpenGL() {
     const QString renderer =
         QString::fromUtf8(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
-    if (!GLAD_GL_VERSION_4_3) {
+    if (!gles && !GLAD_GL_VERSION_4_3) {
         LOG_ERROR(Frontend, "GPU does not support OpenGL 4.3: {}", renderer.toStdString());
         QMessageBox::warning(this, tr("Error while initializing OpenGL 4.3!"),
                              tr("Your GPU may not support OpenGL 4.3, or you do not have the "
+                                "latest graphics driver.<br><br>GL Renderer:<br>%1")
+                                 .arg(renderer));
+        return false;
+    } else if (gles && !GLAD_GL_ES_VERSION_3_2) {
+        LOG_ERROR(Frontend, "GPU does not support OpenGL ES 3.2: {}", renderer.toStdString());
+        QMessageBox::warning(this, tr("Error while initializing OpenGL ES 3.2!"),
+                             tr("Your GPU may not support OpenGL ES 3.2, or you do not have the "
                                 "latest graphics driver.<br><br>GL Renderer:<br>%1")
                                  .arg(renderer));
         return false;
@@ -745,6 +793,23 @@ bool GRenderWindow::LoadOpenGL() {
 
     return true;
 }
+#endif
+
+#ifdef ENABLE_VULKAN
+void GRenderWindow::InitializeVulkan() {
+    auto child = new VulkanRenderWidget(this);
+    child_widget = child;
+    child_widget->windowHandle()->create();
+    main_context = std::make_unique<DummyContext>();
+}
+#endif
+
+#ifdef ENABLE_SOFTWARE_RENDERER
+void GRenderWindow::InitializeSoftware() {
+    child_widget = new SoftwareRenderWidget(this, system);
+    main_context = std::make_unique<DummyContext>();
+}
+#endif
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
@@ -759,7 +824,7 @@ void GRenderWindow::showEvent(QShowEvent* event) {
 }
 
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     if (graphics_api == Settings::GraphicsAPI::OpenGL) {
         auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());

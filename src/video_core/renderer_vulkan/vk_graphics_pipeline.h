@@ -3,10 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/thread_worker.h"
+#include "video_core/pica/regs_pipeline.h"
+#include "video_core/pica/regs_rasterizer.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_common.h"
-#include "video_core/shader/generator/glsl_shader_gen.h"
-#include "video_core/shader/generator/spv_shader_gen.h"
 
 namespace Common {
 
@@ -88,6 +88,9 @@ struct DynamicState {
     u8 stencil_reference;
     u8 stencil_compare_mask;
     u8 stencil_write_mask;
+
+    Common::Rectangle<u32> scissor;
+    Common::Rectangle<s32> viewport;
 
     bool operator==(const DynamicState& other) const noexcept {
         return std::memcmp(this, &other, sizeof(DynamicState)) == 0;

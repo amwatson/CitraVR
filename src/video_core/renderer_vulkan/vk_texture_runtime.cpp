@@ -4,6 +4,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include "common/literals.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "video_core/custom_textures/material.h"
@@ -35,6 +36,7 @@ using VideoCore::MapType;
 using VideoCore::PixelFormat;
 using VideoCore::SurfaceType;
 using VideoCore::TextureType;
+using namespace Common::Literals;
 
 struct RecordParams {
     vk::ImageAspectFlags aspect;
@@ -117,9 +119,9 @@ u32 UnpackDepthStencil(const VideoCore::StagingData& data, vk::Format dest) {
 }
 
 boost::container::small_vector<vk::ImageMemoryBarrier, 3> MakeInitBarriers(
-    vk::ImageAspectFlags aspect, std::span<const vk::Image> images, size_t num_images) {
+    vk::ImageAspectFlags aspect, std::span<const vk::Image> images, std::size_t num_images) {
     boost::container::small_vector<vk::ImageMemoryBarrier, 3> barriers;
-    for (size_t i = 0; i < num_images; i++) {
+    for (std::size_t i = 0; i < num_images; i++) {
         barriers.push_back(vk::ImageMemoryBarrier{
             .srcAccessMask = vk::AccessFlagBits::eNone,
             .dstAccessMask = vk::AccessFlagBits::eNone,
@@ -187,15 +189,6 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
         UNREACHABLE();
     }
 
-    if (!debug_name.empty() && instance->HasDebuggingToolAttached()) {
-        const vk::DebugUtilsObjectNameInfoEXT name_info = {
-            .objectType = vk::ObjectType::eImage,
-            .objectHandle = reinterpret_cast<u64>(unsafe_image),
-            .pObjectName = debug_name.data(),
-        };
-        instance->GetDevice().setDebugUtilsObjectNameEXT(name_info);
-    }
-
     const vk::Image image{unsafe_image};
     const vk::ImageViewCreateInfo view_info = {
         .image = image,
@@ -211,6 +204,12 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
         },
     };
     vk::UniqueImageView image_view = instance->GetDevice().createImageViewUnique(view_info);
+
+    if (!debug_name.empty() && instance->HasDebuggingToolAttached()) {
+        Vulkan::SetObjectName(instance->GetDevice(), image, debug_name);
+        Vulkan::SetObjectName(instance->GetDevice(), image_view.get(), "{} View({})", debug_name,
+                              vk::to_string(aspect));
+    }
 
     return Handle{
         .alloc = allocation,
@@ -244,8 +243,8 @@ vk::ImageSubresourceRange MakeSubresourceRange(vk::ImageAspectFlags aspect, u32 
     };
 }
 
-constexpr u64 UPLOAD_BUFFER_SIZE = 512 * 1024 * 1024;
-constexpr u64 DOWNLOAD_BUFFER_SIZE = 16 * 1024 * 1024;
+constexpr u64 UPLOAD_BUFFER_SIZE = 512_MiB;
+constexpr u64 DOWNLOAD_BUFFER_SIZE = 16_MiB;
 
 } // Anonymous namespace
 
@@ -1562,7 +1561,7 @@ DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f color, std::string
     if (!has_debug_tool) {
         return;
     }
-    scheduler.Record([color, label](vk::CommandBuffer cmdbuf) {
+    scheduler.Record([color, label = std::string(label)](vk::CommandBuffer cmdbuf) {
         const vk::DebugUtilsLabelEXT debug_label = {
             .pLabelName = label.data(),
             .color = std::array{color[0], color[1], color[2], color[3]},

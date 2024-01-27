@@ -13,9 +13,15 @@
 
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_sdl2.h"
+#ifdef ENABLE_OPENGL
 #include "citra/emu_window/emu_window_sdl2_gl.h"
+#endif
+#ifdef ENABLE_SOFTWARE_RENDERER
 #include "citra/emu_window/emu_window_sdl2_sw.h"
+#endif
+#ifdef ENABLE_VULKAN
 #include "citra/emu_window/emu_window_sdl2_vk.h"
+#endif
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -36,7 +42,12 @@
 #include "core/telemetry_session.h"
 #include "input_common/main.h"
 #include "network/network.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
+
+#ifdef __unix__
+#include "common/linux/gamemode.h"
+#endif
 
 #undef _UNICODE
 #include <getopt.h>
@@ -349,16 +360,36 @@ int main(int argc, char** argv) {
 
     const auto create_emu_window = [&](bool fullscreen,
                                        bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
-        switch (Settings::values.graphics_api.GetValue()) {
+        const auto graphics_api = Settings::values.graphics_api.GetValue();
+        switch (graphics_api) {
+#ifdef ENABLE_OPENGL
         case Settings::GraphicsAPI::OpenGL:
             return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
+#endif
+#ifdef ENABLE_VULKAN
         case Settings::GraphicsAPI::Vulkan:
             return std::make_unique<EmuWindow_SDL2_VK>(system, fullscreen, is_secondary);
+#endif
+#ifdef ENABLE_SOFTWARE_RENDERER
         case Settings::GraphicsAPI::Software:
             return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
+#endif
+        default:
+            LOG_CRITICAL(
+                Frontend,
+                "Unknown or unsupported graphics API {}, falling back to available default",
+                graphics_api);
+#ifdef ENABLE_OPENGL
+            return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
+#elif ENABLE_VULKAN
+            return std::make_unique<EmuWindow_SDL2_VK>(system, fullscreen, is_secondary);
+#elif ENABLE_SOFTWARE_RENDERER
+            return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
+#else
+// TODO: Add a null renderer backend for this, perhaps.
+#error "At least one renderer must be enabled."
+#endif
         }
-        LOG_ERROR(Frontend, "Invalid Graphics API, using OpenGL");
-        return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
     };
 
     const auto emu_window{create_emu_window(fullscreen, false)};
@@ -434,13 +465,18 @@ int main(int argc, char** argv) {
         movie.StartRecording(movie_record, movie_record_author);
     }
     if (!dump_video.empty() && DynamicLibrary::FFmpeg::LoadFFmpeg()) {
+        auto& renderer = system.GPU().Renderer();
         const auto layout{
-            Layout::FrameLayoutFromResolutionScale(system.Renderer().GetResolutionScaleFactor())};
-        auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+            Layout::FrameLayoutFromResolutionScale(renderer.GetResolutionScaleFactor())};
+        auto dumper = std::make_shared<VideoDumper::FFmpegBackend>(renderer);
         if (dumper->StartDumping(dump_video, layout)) {
             system.RegisterVideoDumper(dumper);
         }
     }
+
+#ifdef __unix__
+    Common::Linux::StartGamemode();
+#endif
 
     std::thread main_render_thread([&emu_window] { emu_window->Present(); });
     std::thread secondary_render_thread([&secondary_window] {
@@ -450,7 +486,7 @@ int main(int argc, char** argv) {
     });
 
     std::atomic_bool stop_run;
-    system.Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             LOG_DEBUG(Frontend, "Loading stage {} progress {} {}", static_cast<u32>(stage), value,
                       total);
@@ -492,6 +528,10 @@ int main(int argc, char** argv) {
     InputCommon::Shutdown();
 
     system.Shutdown();
+
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
 
     detached_tasks.WaitForAllTasks();
     return 0;

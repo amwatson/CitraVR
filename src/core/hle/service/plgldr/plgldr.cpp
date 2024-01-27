@@ -26,25 +26,21 @@
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/file_sys/plugin_3gx.h"
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/loader/loader.h"
 
 SERIALIZE_EXPORT_IMPL(Service::PLGLDR::PLG_LDR)
+SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
-const Kernel::CoreVersion PLG_LDR::plgldr_version = Kernel::CoreVersion(1, 0, 0);
-PLG_LDR::PluginLoaderContext PLG_LDR::plgldr_context;
-bool PLG_LDR::allow_game_change = true;
-PAddr PLG_LDR::plugin_fb_addr = 0;
+static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
 
-PLG_LDR::PLG_LDR() : ServiceFramework{"plg:ldr", 1} {
+PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, nullptr, "LoadPlugin"},
@@ -66,6 +62,33 @@ PLG_LDR::PLG_LDR() : ServiceFramework{"plg:ldr", 1} {
     plgldr_context.memory_changed_handle = 0;
     plgldr_context.plugin_loaded = false;
 }
+
+template <class Archive>
+void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
+    ar& is_enabled;
+    ar& allow_game_change;
+    ar& plugin_loaded;
+    ar& is_default_path;
+    ar& plugin_path;
+    ar& use_user_load_parameters;
+    ar& user_load_parameters;
+    ar& plg_event;
+    ar& plg_reply;
+    ar& memory_changed_handle;
+    ar& is_exe_load_function_set;
+    ar& exe_load_checksum;
+    ar& load_exe_func;
+    ar& load_exe_args;
+    ar& plugin_fb_addr;
+}
+SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
+
+template <class Archive>
+void PLG_LDR::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& plgldr_context;
+}
+SERIALIZE_IMPL(PLG_LDR)
 
 void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel) {
     if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded) {
@@ -91,7 +114,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
                                   std::string(plgldr_context.user_load_parameters.path + 1);
         plgldr_context.is_default_path = false;
         plgldr_context.plugin_path = plugin_file;
-        plugin_loader.Load(plgldr_context, process, kernel);
+        plugin_loader.Load(plgldr_context, process, kernel, *this);
     } else {
         const std::string plugin_root =
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) + "luma/plugins/";
@@ -103,7 +126,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
             if (!child.isDirectory && child.physicalName.ends_with(".3gx")) {
                 plgldr_context.is_default_path = false;
                 plgldr_context.plugin_path = child.physicalName;
-                if (plugin_loader.Load(plgldr_context, process, kernel) ==
+                if (plugin_loader.Load(plgldr_context, process, kernel, *this) ==
                     Loader::ResultStatus::Success) {
                     return;
                 }
@@ -114,7 +137,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         if (FileUtil::Exists(default_path)) {
             plgldr_context.is_default_path = true;
             plgldr_context.plugin_path = default_path;
-            plugin_loader.Load(plgldr_context, process, kernel);
+            plugin_loader.Load(plgldr_context, process, kernel, *this);
         }
     }
 }
@@ -130,21 +153,22 @@ void PLG_LDR::OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kern
 }
 
 ResultVal<Kernel::Handle> PLG_LDR::GetMemoryChangedHandle(Kernel::KernelSystem& kernel) {
-    if (plgldr_context.memory_changed_handle)
+    if (plgldr_context.memory_changed_handle) {
         return plgldr_context.memory_changed_handle;
+    }
 
-    std::shared_ptr<Kernel::Event> evt = kernel.CreateEvent(
-        Kernel::ResetType::OneShot,
-        fmt::format("event-{:08x}", Core::System::GetInstance().GetRunningCore().GetReg(14)));
-    CASCADE_RESULT(plgldr_context.memory_changed_handle,
-                   kernel.GetCurrentProcess()->handle_table.Create(std::move(evt)));
-
+    std::shared_ptr<Kernel::Event> evt =
+        kernel.CreateEvent(Kernel::ResetType::OneShot,
+                           fmt::format("event-{:08x}", system.GetRunningCore().GetReg(14)));
+    R_TRY(kernel.GetCurrentProcess()->handle_table.Create(
+        std::addressof(plgldr_context.memory_changed_handle), std::move(evt)));
     return plgldr_context.memory_changed_handle;
 }
 
 void PLG_LDR::OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& kernel) {
-    if (!plgldr_context.plugin_loaded || !plgldr_context.memory_changed_handle)
+    if (!plgldr_context.plugin_loaded || !plgldr_context.memory_changed_handle) {
         return;
+    }
 
     std::shared_ptr<Kernel::Event> evt =
         kernel.GetCurrentProcess()->handle_table.Get<Kernel::Event>(
@@ -159,7 +183,7 @@ void PLG_LDR::IsEnabled(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(plgldr_context.is_enabled);
 }
 
@@ -167,13 +191,13 @@ void PLG_LDR::SetEnabled(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     bool enabled = rp.Pop<u32>() == 1;
 
-    bool can_change = enabled == plgldr_context.is_enabled || allow_game_change;
+    bool can_change = enabled == plgldr_context.is_enabled || plgldr_context.allow_game_change;
     if (can_change) {
         plgldr_context.is_enabled = enabled;
         Settings::values.plugin_loader_enabled.SetValue(enabled);
     }
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push((can_change) ? RESULT_SUCCESS : Kernel::ERR_NOT_AUTHORIZED);
+    rb.Push((can_change) ? ResultSuccess : Kernel::ResultNotAuthorized);
 }
 
 void PLG_LDR::SetLoadSettings(Kernel::HLERequestContext& ctx) {
@@ -197,7 +221,7 @@ void PLG_LDR::SetLoadSettings(Kernel::HLERequestContext& ctx) {
         std::min(sizeof(PluginLoaderContext::PluginLoadParameters::config), config.GetSize()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void PLG_LDR::DisplayErrorMessage(Kernel::HLERequestContext& ctx) {
@@ -219,14 +243,14 @@ void PLG_LDR::DisplayErrorMessage(Kernel::HLERequestContext& ctx) {
               std::string(title_data.data()), std::string(desc_data.data()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void PLG_LDR::GetPLGLDRVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(plgldr_version.raw);
 }
 
@@ -238,7 +262,7 @@ void PLG_LDR::GetArbiter(Kernel::HLERequestContext& ctx) {
     // signal the plgldr service thread when a event is ready. Instead we just send
     // an error and the 3GX plugin will take care of it.
     // (We never send any events anyways)
-    rb.Push(Kernel::ERR_NOT_IMPLEMENTED);
+    rb.Push(Kernel::ResultNotImplemented);
 }
 
 void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
@@ -259,7 +283,7 @@ void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
     path.Write(plugin_path.c_str(), 0, std::min(path.GetSize(), plugin_path.length() + 1));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(path);
 }
 
@@ -273,7 +297,7 @@ std::shared_ptr<PLG_LDR> GetService(Core::System& system) {
 }
 
 void InstallInterfaces(Core::System& system) {
-    std::make_shared<PLG_LDR>()->InstallAsNamedPort(system.Kernel());
+    std::make_shared<PLG_LDR>(system)->InstallAsNamedPort(system.Kernel());
 }
 
 } // namespace Service::PLGLDR

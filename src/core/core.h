@@ -8,13 +8,15 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <boost/optional.hpp>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
+#include "core/cheats/cheats.h"
+#include "core/hle/service/apt/applet_manager.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "core/movie.h"
 #include "core/perf_stats.h"
-
-class ARM_Interface;
 
 namespace Frontend {
 class EmuWindow;
@@ -50,18 +52,18 @@ struct New3dsHwCapabilities;
 enum class MemoryMode : u8;
 } // namespace Kernel
 
-namespace Cheats {
-class CheatEngine;
-}
-
 namespace VideoDumper {
 class Backend;
 }
 
 namespace VideoCore {
 class CustomTexManager;
-class RendererBase;
+class GPU;
 } // namespace VideoCore
+
+namespace Pica {
+class DebugContext;
+}
 
 namespace Loader {
 class AppLoader;
@@ -69,6 +71,7 @@ class AppLoader;
 
 namespace Core {
 
+class ARM_Interface;
 class TelemetrySession;
 class ExclusiveMonitor;
 class Timing;
@@ -175,6 +178,8 @@ public:
 
     [[nodiscard]] PerfStats::Results GetAndResetPerfStats();
 
+    [[nodiscard]] PerfStats::Results GetLastPerfStats();
+
     /**
      * Gets a reference to the emulated CPU.
      * @returns A reference to the emulated CPU.
@@ -216,7 +221,7 @@ public:
         return *dsp_core;
     }
 
-    [[nodiscard]] VideoCore::RendererBase& Renderer();
+    [[nodiscard]] VideoCore::GPU& GPU();
 
     /**
      * Gets a reference to the service manager.
@@ -383,6 +388,8 @@ private:
     /// Telemetry session for this emulation session
     std::unique_ptr<Core::TelemetrySession> telemetry_session;
 
+    std::unique_ptr<VideoCore::GPU> gpu;
+
     /// Service manager
     std::unique_ptr<Service::SM::ServiceManager> service_manager;
 
@@ -394,7 +401,7 @@ private:
     Core::Movie movie;
 
     /// Cheats manager
-    std::unique_ptr<Cheats::CheatEngine> cheat_engine;
+    Cheats::CheatEngine cheat_engine;
 
     /// Video dumper backend
     std::shared_ptr<VideoDumper::Backend> video_dumper;
@@ -439,6 +446,9 @@ private:
 
     std::function<bool()> mic_permission_func;
     bool mic_permission_granted = false;
+
+    boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
+    boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
 
     friend class boost::serialization::access;
     template <typename Archive>

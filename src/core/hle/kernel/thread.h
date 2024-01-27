@@ -11,9 +11,6 @@
 #include <vector>
 #include <boost/container/flat_set.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/weak_ptr.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
@@ -72,7 +69,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {}
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -121,12 +118,8 @@ public:
      */
     std::span<const std::shared_ptr<Thread>> GetThreadList();
 
-    void SetCPU(ARM_Interface& cpu_) {
+    void SetCPU(Core::ARM_Interface& cpu_) {
         cpu = &cpu_;
-    }
-
-    std::unique_ptr<ARM_Interface::ThreadContext> NewContext() {
-        return cpu->NewContext();
     }
 
 private:
@@ -150,7 +143,7 @@ private:
     void ThreadWakeupCallback(u64 thread_id, s64 cycles_late);
 
     Kernel::KernelSystem& kernel;
-    ARM_Interface* cpu;
+    Core::ARM_Interface* cpu;
 
     std::shared_ptr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
@@ -168,12 +161,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& current_thread;
-        ar& ready_queue;
-        ar& wakeup_callback_table;
-        ar& thread_list;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 class Thread final : public WaitObject {
@@ -238,14 +226,16 @@ public:
     /**
      * Schedules an event to wake up the specified thread after the specified delay
      * @param nanoseconds The time this thread will be allowed to sleep for
+     * @param thread_safe_mode Set to true if called from a different thread than the emulator
+     * thread, such as coroutines.
      */
-    void WakeAfterDelay(s64 nanoseconds);
+    void WakeAfterDelay(s64 nanoseconds, bool thread_safe_mode = false);
 
     /**
      * Sets the result after the thread awakens (from either WaitSynchronization SVC)
      * @param result Value to set to the returned result
      */
-    void SetWaitSynchronizationResult(ResultCode result);
+    void SetWaitSynchronizationResult(Result result);
 
     /**
      * Sets the output parameter value after the thread awakens (from WaitSynchronizationN SVC only)
@@ -269,7 +259,7 @@ public:
      */
     void Stop();
 
-    /*
+    /**
      * Returns the Thread Local Storage address of the current thread
      * @returns VAddr of the thread's TLS
      */
@@ -277,7 +267,7 @@ public:
         return tls_address;
     }
 
-    /*
+    /**
      * Returns the address of the current thread's command buffer, located in the TLS.
      * @returns VAddr of the thread's command buffer.
      */
@@ -292,11 +282,11 @@ public:
         return status == ThreadStatus::WaitSynchAll;
     }
 
-    std::unique_ptr<ARM_Interface::ThreadContext> context;
+    Core::ARM_Interface::ThreadContext context{};
 
     u32 thread_id;
 
-    bool can_schedule;
+    bool can_schedule{true};
     ThreadStatus status;
     VAddr entry_point;
     VAddr stack_top;
@@ -319,16 +309,16 @@ public:
     std::weak_ptr<Process> owner_process{}; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
-    // passed to WaitSynchronization1/N.
+    /// passed to WaitSynchronization1/N.
     std::vector<std::shared_ptr<WaitObject>> wait_objects{};
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
     std::string name{};
 
-    // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
-    // was waiting via WaitSynchronizationN then the object will be the last object that became
-    // available. In case of a timeout, the object will be nullptr.
+    /// Callback that will be invoked when the thread is resumed from a waiting state. If the thread
+    /// was waiting via WaitSynchronizationN then the object will be the last object that became
+    /// available. In case of a timeout, the object will be nullptr.
     std::shared_ptr<WakeupCallback> wakeup_callback{};
 
     const u32 core_id;
@@ -338,7 +328,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -355,17 +345,17 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Thread)
+BOOST_CLASS_EXPORT_KEY(Kernel::WakeupCallback)
 
 namespace boost::serialization {
 
 template <class Archive>
-inline void save_construct_data(Archive& ar, const Kernel::Thread* t,
-                                const unsigned int file_version) {
+void save_construct_data(Archive& ar, const Kernel::Thread* t, const unsigned int) {
     ar << t->core_id;
 }
 
 template <class Archive>
-inline void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int file_version) {
+void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int) {
     u32 core_id;
     ar >> core_id;
     ::new (t) Kernel::Thread(Core::Global<Kernel::KernelSystem>(), core_id);

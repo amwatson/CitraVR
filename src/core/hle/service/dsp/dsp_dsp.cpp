@@ -12,7 +12,7 @@
 #include "core/hle/service/dsp/dsp_dsp.h"
 
 using DspPipe = AudioCore::DspPipe;
-using InterruptType = Service::DSP::DSP_DSP::InterruptType;
+using InterruptType = Service::DSP::InterruptType;
 
 SERIALIZE_EXPORT_IMPL(Service::DSP::DSP_DSP)
 SERVICE_CONSTRUCT_IMPL(Service::DSP::DSP_DSP)
@@ -28,7 +28,7 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     const u32 register_number = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(system.DSP().RecvData(register_number));
 
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
@@ -39,7 +39,7 @@ void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
     const u32 register_number = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(system.DSP().RecvDataIsReady(register_number));
 
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
@@ -52,7 +52,7 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     system.DSP().SetSemaphore(semaphore_value);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_INFO(Service_DSP, "called, semaphore_value={:04X}", semaphore_value);
 }
@@ -62,7 +62,7 @@ void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
     const u32 address = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     // TODO(merry): There is a per-region offset missing in this calculation (that seems to be
     // always zero).
@@ -103,7 +103,7 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
     system.DSP().PipeWrite(pipe, buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_DSP, "channel={}, size=0x{:X}, buffer_size={:X}", channel, size,
               buffer.size());
@@ -125,7 +125,7 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
         UNREACHABLE(); // No more data is in pipe. Hardware hangs in this case; Should never happen.
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(pipe_buffer), 0);
 
     LOG_DEBUG(Service_DSP, "channel={}, peer={}, size=0x{:04X}, pipe_readable_size=0x{:04X}",
@@ -141,7 +141,7 @@ void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
     const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u16>(pipe_readable_size);
 
     LOG_DEBUG(Service_DSP, "channel={}, peer={}, return pipe_readable_size=0x{:04X}", channel, peer,
@@ -163,7 +163,7 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u16>(static_cast<u16>(pipe_buffer.size()));
     rb.PushStaticBuffer(std::move(pipe_buffer), 0);
 
@@ -173,13 +173,13 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 size = rp.Pop<u32>();
-    const u32 prog_mask = rp.Pop<u32>();
-    const u32 data_mask = rp.Pop<u32>();
+    const auto size = rp.Pop<u32>();
+    const auto prog_mask = rp.Pop<u16>();
+    const auto data_mask = rp.Pop<u16>();
     auto& buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(true);
     rb.PushMappedBuffer(buffer);
 
@@ -188,7 +188,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 
     system.DSP().LoadComponent(component_data);
 
-    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:04X}, data_mask=0x{:04X}", size,
              prog_mask, data_mask);
 }
 
@@ -198,9 +198,9 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     system.DSP().UnloadComponent();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
-    LOG_INFO(Service_DSP, "(STUBBED)");
+    LOG_INFO(Service_DSP, "called");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -210,7 +210,7 @@ void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process={}", address, size,
               process->process_id);
@@ -223,7 +223,7 @@ void DSP_DSP::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process={}", address, size,
               process->process_id);
@@ -235,7 +235,8 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
     const u32 channel = rp.Pop<u32>();
     auto event = rp.PopObject<Kernel::Event>();
 
-    ASSERT_MSG(interrupt < NUM_INTERRUPT_TYPE && channel < AudioCore::num_dsp_pipe,
+    ASSERT_MSG(interrupt < static_cast<u32>(InterruptType::Count) &&
+                   channel < AudioCore::num_dsp_pipe,
                "Invalid type or pipe: interrupt = {}, channel = {}", interrupt, channel);
 
     const InterruptType type = static_cast<InterruptType>(interrupt);
@@ -249,8 +250,8 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
                      "Ran out of space to register interrupts (Attempted to register "
                      "interrupt={}, channel={}, event={})",
                      interrupt, channel, event->GetName());
-            rb.Push(ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
-                               ErrorSummary::OutOfResource, ErrorLevel::Status));
+            rb.Push(Result(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
+                           ErrorSummary::OutOfResource, ErrorLevel::Status));
             return;
         } else {
             GetInterruptEvent(type, pipe) = event;
@@ -261,14 +262,14 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
         GetInterruptEvent(type, pipe) = nullptr;
         LOG_INFO(Service_DSP, "Unregistered interrupt={}, channel={}", interrupt, channel);
     }
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(semaphore_event);
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
@@ -279,7 +280,7 @@ void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     preset_semaphore = rp.Pop<u16>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:04X}", preset_semaphore);
 }
@@ -288,7 +289,7 @@ void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false); /// u8, 0 = not inserted, 1 = inserted
 
     LOG_DEBUG(Service_DSP, "called");
@@ -299,7 +300,7 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
     const u8 force = rp.Pop<u8>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_DSP, "(STUBBED) called, force={}", force);
 }
@@ -326,6 +327,9 @@ std::shared_ptr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type, D
         ASSERT(pipe_index < AudioCore::num_dsp_pipe);
         return pipes[pipe_index];
     }
+    case InterruptType::Count:
+    default:
+        break;
     }
     UNREACHABLE_MSG("Invalid interrupt type = {}", type);
 }
@@ -390,6 +394,13 @@ DSP_DSP::DSP_DSP(Core::System& system)
 
     semaphore_event->SetHLENotifier(
         [this]() { this->system.DSP().SetSemaphore(preset_semaphore); });
+
+    system.DSP().SetInterruptHandler([dsp_ref = this, &system](InterruptType type, DspPipe pipe) {
+        std::scoped_lock lock{system.Kernel().GetHLELock()};
+        if (dsp_ref) {
+            dsp_ref->SignalInterrupt(type, pipe);
+        }
+    });
 }
 
 DSP_DSP::~DSP_DSP() {
@@ -401,7 +412,6 @@ void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto dsp = std::make_shared<DSP_DSP>(system);
     dsp->InstallAsService(service_manager);
-    system.DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace Service::DSP

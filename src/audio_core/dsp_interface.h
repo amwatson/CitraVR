@@ -13,8 +13,12 @@
 #include "common/ring_buffer.h"
 #include "core/memory.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::DSP {
-class DSP_DSP;
+enum class InterruptType : u32;
 } // namespace Service::DSP
 
 namespace AudioCore {
@@ -24,7 +28,7 @@ enum class SinkType : u32;
 
 class DspInterface {
 public:
-    DspInterface();
+    DspInterface(Core::System& system_);
     virtual ~DspInterface();
 
     DspInterface(const DspInterface&) = delete;
@@ -85,8 +89,9 @@ public:
     /// Returns a reference to the array backing DSP memory
     virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
 
-    /// Sets the dsp class that we trigger interrupts for
-    virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
+    /// Sets the handler for the interrupts we trigger
+    virtual void SetInterruptHandler(
+        std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) = 0;
 
     /// Loads the DSP program
     virtual void LoadComponent(std::span<const u8> buffer) = 0;
@@ -109,7 +114,10 @@ private:
     void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
 
-    std::atomic<bool> perform_time_stretching = false;
+    Core::System& system;
+
+    std::atomic<bool> enable_time_stretching = false;
+    std::atomic<bool> performing_time_stretching = false;
     std::atomic<bool> flushing_time_stretcher = false;
     Common::RingBuffer<s16, 0x2000, 2> fifo;
     std::array<s16, 2> last_frame{};

@@ -3,9 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <random>
 #include <tuple>
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core_timing.h"
 
 namespace Core {
@@ -19,13 +21,26 @@ bool Timing::Event::operator<(const Timing::Event& right) const {
     return std::tie(time, fifo_order) < std::tie(right.time, right.fifo_order);
 }
 
-Timing::Timing(std::size_t num_cores, u32 cpu_clock_percentage) {
+Timing::Timing(std::size_t num_cores, u32 cpu_clock_percentage, s64 override_base_ticks) {
+    // Generate non-zero base tick count to simulate time the system ran before launching the game.
+    // This accounts for games that rely on the system tick to seed randomness.
+    const auto base_ticks = override_base_ticks >= 0 ? override_base_ticks : GenerateBaseTicks();
+
     timers.resize(num_cores);
     for (std::size_t i = 0; i < num_cores; ++i) {
-        timers[i] = std::make_shared<Timer>();
+        timers[i] = std::make_shared<Timer>(base_ticks);
     }
     UpdateClockSpeed(cpu_clock_percentage);
     current_timer = timers[0].get();
+}
+
+s64 Timing::GenerateBaseTicks() {
+    if (Settings::values.init_ticks_type.GetValue() == Settings::InitTicks::Fixed) {
+        return Settings::values.init_ticks_override.GetValue();
+    }
+    // Bounded to 32 bits to make sure we don't generate too high of a counter and risk overflowing.
+    std::mt19937 random_gen(std::random_device{}());
+    return random_gen();
 }
 
 void Timing::UpdateClockSpeed(u32 cpu_clock_percentage) {
@@ -47,7 +62,7 @@ TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback ca
 }
 
 void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type,
-                           std::uintptr_t user_data, std::size_t core_id) {
+                           std::uintptr_t user_data, std::size_t core_id, bool thread_safe_mode) {
     if (event_queue_locked) {
         return;
     }
@@ -61,18 +76,29 @@ void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_
         timer = timers.at(core_id).get();
     }
 
-    s64 timeout = timer->GetTicks() + cycles_into_future;
-    if (current_timer == timer) {
-        // If this event needs to be scheduled before the next advance(), force one early
-        if (!timer->is_timer_sane)
-            timer->ForceExceptionCheck(cycles_into_future);
+    if (thread_safe_mode) {
+        // Events scheduled in thread safe mode come after blocking operations with
+        // unpredictable timings in the host machine, so there is no need to be cycle accurate.
+        // To prevent the event from scheduling before the next advance(), we set a minimum time
+        // of MAX_SLICE_LENGTH * 2 cycles into the future.
+        cycles_into_future = std::max(static_cast<s64>(MAX_SLICE_LENGTH * 2), cycles_into_future);
 
-        timer->event_queue.emplace_back(
-            Event{timeout, timer->event_fifo_id++, user_data, event_type});
-        std::push_heap(timer->event_queue.begin(), timer->event_queue.end(), std::greater<>());
-    } else {
         timer->ts_queue.Push(Event{static_cast<s64>(timer->GetTicks() + cycles_into_future), 0,
                                    user_data, event_type});
+    } else {
+        s64 timeout = timer->GetTicks() + cycles_into_future;
+        if (current_timer == timer) {
+            // If this event needs to be scheduled before the next advance(), force one early
+            if (!timer->is_timer_sane)
+                timer->ForceExceptionCheck(cycles_into_future);
+
+            timer->event_queue.emplace_back(
+                Event{timeout, timer->event_fifo_id++, user_data, event_type});
+            std::push_heap(timer->event_queue.begin(), timer->event_queue.end(), std::greater<>());
+        } else {
+            timer->ts_queue.Push(Event{static_cast<s64>(timer->GetTicks() + cycles_into_future), 0,
+                                       user_data, event_type});
+        }
     }
 }
 
@@ -135,7 +161,7 @@ std::shared_ptr<Timing::Timer> Timing::GetTimer(std::size_t cpu_id) {
     return timers[cpu_id];
 }
 
-Timing::Timer::Timer() = default;
+Timing::Timer::Timer(s64 base_ticks) : executed_ticks(base_ticks) {}
 
 Timing::Timer::~Timer() {
     MoveEvents();

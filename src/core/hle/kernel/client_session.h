@@ -6,10 +6,7 @@
 
 #include <memory>
 #include <string>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
@@ -42,9 +39,9 @@ public:
     /**
      * Sends an SyncRequest from the current emulated thread.
      * @param thread Thread that initiated the request.
-     * @return ResultCode of the operation.
+     * @return Result of the operation.
      */
-    ResultCode SendSyncRequest(std::shared_ptr<Thread> thread);
+    Result SendSyncRequest(std::shared_ptr<Thread> thread);
 
     std::string name; ///< Name of client port (optional)
 
@@ -54,11 +51,7 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& name;
-        ar& parent;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel

@@ -1,4 +1,6 @@
 
+set(CURRENT_MODULE_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 # This function downloads Qt using aqt. The path of the downloaded content will be added to the CMAKE_PREFIX_PATH.
 # Params:
 #   target: Qt dependency to install. Specify a version number to download Qt, or "tools_(name)" for a specific build tool.
@@ -52,26 +54,36 @@ function(download_qt target)
     get_external_prefix(qt base_path)
     file(MAKE_DIRECTORY "${base_path}")
 
+    set(install_args -c "${CURRENT_MODULE_DIR}/aqt_config.ini")
     if (DOWNLOAD_QT_TOOL)
         set(prefix "${base_path}/Tools")
-        set(install_args install-tool --outputdir ${base_path} ${host} desktop ${target})
+        set(install_args ${install_args} install-tool --outputdir ${base_path} ${host} desktop ${target})
     else()
         set(prefix "${base_path}/${target}/${arch_path}")
         if (host_arch_path)
             set(host_flag "--autodesktop")
             set(host_prefix "${base_path}/${target}/${host_arch_path}")
         endif()
-        set(install_args install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch} ${host_flag}
+        set(install_args ${install_args} install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch} ${host_flag}
                                     -m qtmultimedia --archives qttranslations qttools qtsvg qtbase)
     endif()
 
     if (NOT EXISTS "${prefix}")
         message(STATUS "Downloading binaries for Qt...")
+        set(AQT_PREBUILD_BASE_URL "https://github.com/miurahr/aqtinstall/releases/download/v3.1.9")
         if (WIN32)
             set(aqt_path "${base_path}/aqt.exe")
             file(DOWNLOAD
-                https://github.com/miurahr/aqtinstall/releases/download/v3.1.7/aqt.exe
+                ${AQT_PREBUILD_BASE_URL}/aqt.exe
                 ${aqt_path} SHOW_PROGRESS)
+            execute_process(COMMAND ${aqt_path} ${install_args}
+                    WORKING_DIRECTORY ${base_path})
+        elseif (APPLE)
+            set(aqt_path "${base_path}/aqt-macos")
+            file(DOWNLOAD
+                ${AQT_PREBUILD_BASE_URL}/aqt-macos
+                ${aqt_path} SHOW_PROGRESS)
+            execute_process(COMMAND chmod +x ${aqt_path})
             execute_process(COMMAND ${aqt_path} ${install_args}
                     WORKING_DIRECTORY ${base_path})
         else()
@@ -109,7 +121,7 @@ function(download_moltenvk)
     set(MOLTENVK_TAR "${CMAKE_BINARY_DIR}/externals/MoltenVK.tar")
     if (NOT EXISTS ${MOLTENVK_DIR})
         if (NOT EXISTS ${MOLTENVK_TAR})
-            file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/latest/download/MoltenVK-all.tar
+            file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.7-rc2/MoltenVK-all.tar
                 ${MOLTENVK_TAR} SHOW_PROGRESS)
         endif()
 

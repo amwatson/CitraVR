@@ -82,7 +82,7 @@ enum ConfigBlockID {
     DebugModeBlockID = 0x00130000,
     ClockSequenceBlockID = 0x00150000,
     Unknown_0x00150001 = 0x00150001,
-    NpnsUrlID = 0x00150002, // Maybe? 3dbrew documentation is weirdly written.
+    ServerType = 0x00150002,
     Unknown_0x00160000 = 0x00160000,
     MiiverseAccessKeyBlockID = 0x00170000,
     QtmInfraredLedRelatedBlockID = 0x00180000,
@@ -178,7 +178,7 @@ DECLARE_ENUM_FLAG_OPERATORS(AccessFlag);
 
 class Module final {
 public:
-    Module();
+    Module(Core::System& system_);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -229,6 +229,27 @@ public:
          *      2 : Value loaded from SecureInfo offset 0x101
          */
         void SecureInfoGetByte101(Kernel::HLERequestContext& ctx);
+
+        /**
+         * CFG::SetUUIDClockSequence service function
+         *  Inputs:
+         *      1 : UUID Clock Sequence
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void SetUUIDClockSequence(Kernel::HLERequestContext& ctx);
+
+        /**
+         * CFG::GetUUIDClockSequence service function
+         *  Inputs:
+         *      1 : None
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : UUID Clock Sequence
+         */
+        void GetUUIDClockSequence(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::GetTransferableId service function
@@ -338,6 +359,25 @@ public:
     };
 
 private:
+    // Represents save data that would normally be stored in the MCU
+    // on real hardware. Try to keep this struct backwards compatible
+    // if a new version is needed to prevent data loss.
+    struct MCUData {
+        struct Header {
+            static constexpr u32 MAGIC_VALUE = 0x4455434D;
+            static constexpr u32 VERSION_VALUE = 1;
+            u32 magic = MAGIC_VALUE;
+            u32 version = VERSION_VALUE;
+            u64 reserved = 0;
+        };
+        Header header;
+        u32 clock_sequence = 0;
+
+        [[nodiscard]] bool IsValid() const {
+            return header.magic == Header::MAGIC_VALUE && header.version == Header::VERSION_VALUE;
+        }
+    };
+
     ResultVal<void*> GetConfigBlockPointer(u32 block_id, u32 size, AccessFlag accesss_flag);
 
     /**
@@ -349,9 +389,9 @@ private:
      * @param size The size of the block we want to read
      * @param accesss_flag The requested block must have this access flag set
      * @param output A pointer where we will write the read data
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output);
+    Result GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output);
 
     /**
      * Reads data from input and writes to a block with the specified id and flag
@@ -362,9 +402,9 @@ private:
      * @param size The size of the block we want to write
      * @param accesss_flag The target block must have this access flag set
      * @param input A pointer where we will read data and write to Config savegame buffer
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input);
+    Result SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input);
 
     /**
      * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
@@ -374,38 +414,35 @@ private:
      * @param size The size of the block we want to create
      * @param accesss_flags The access flags of the new block
      * @param data A pointer containing the data we will write to the new block
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode CreateConfigBlock(u32 block_id, u16 size, AccessFlag accesss_flags,
-                                 const void* data);
+    Result CreateConfigBlock(u32 block_id, u16 size, AccessFlag accesss_flags, const void* data);
 
     /**
      * Deletes the config savegame file from the filesystem, the buffer in memory is not affected
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode DeleteConfigNANDSaveFile();
+    Result DeleteConfigNANDSaveFile();
 
     /**
      * Re-creates the config savegame file in memory and the filesystem with the default blocks
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode FormatConfig();
+    Result FormatConfig();
 
     /**
      * Open the config savegame file and load it to the memory buffer
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode LoadConfigNANDSaveFile();
+    Result LoadConfigNANDSaveFile();
+
+    /**
+     * Loads MCU specific data
+     */
+    void LoadMCUConfig();
 
 public:
     u32 GetRegionValue();
-
-    /**
-     * Set the region codes preferred by the game so that CFG will adjust to it when the region
-     * setting is auto.
-     * @param region_codes the preferred region codes to set
-     */
-    void SetPreferredRegionCodes(std::span<const u32> region_codes);
 
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.
@@ -500,7 +537,7 @@ public:
      * @param random_number the random_number to set
      * @param console_id the console id to set
      */
-    ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id);
+    Result SetConsoleUniqueId(u32 random_number, u64 console_id);
 
     /**
      * Gets the console unique id from config savegame.
@@ -534,15 +571,27 @@ public:
 
     /**
      * Writes the config savegame memory buffer to the config savegame file in the filesystem
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode UpdateConfigNANDSavegame();
+    Result UpdateConfigNANDSavegame();
+
+    /**
+     * Saves MCU specific data
+     */
+    void SaveMCUConfig();
 
 private:
+    void UpdatePreferredRegionCode();
+    SystemLanguage GetRawSystemLanguage();
+
+    Core::System& system;
+
     static constexpr u32 CONFIG_SAVEFILE_SIZE = 0x8000;
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code = 0;
+    bool preferred_region_chosen = false;
+    MCUData mcu_data{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -558,4 +607,5 @@ std::string GetConsoleIdHash(Core::System& system);
 
 } // namespace Service::CFG
 
+SERVICE_CONSTRUCT(Service::CFG::Module)
 BOOST_CLASS_EXPORT_KEY(Service::CFG::Module)

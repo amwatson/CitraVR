@@ -155,21 +155,13 @@ bg_red =
 bg_blue =
 bg_green =
 
-# Whether and how Stereoscopic 3D should be rendered
-# 0: Off, 1 (default): Side by Side, 2: Anaglyph, 3: Interlaced, 4: Reverse Interlaced, 5: Cardboard VR
-# render_3d =
-
-# Change 3D Intensity
+# Change stero depth
 # 0 - 100: Intensity. 50 (default)
 # factor_3d =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
 pp_shader_name =
-
-# The name of the shader to apply when render_3d is anaglyph.
-# Loaded from shaders/anaglyph
-anaglyph_shader_name =
 
 # Whether to enable linear filtering or not
 # This is required for some shaders to work correctly
@@ -180,34 +172,6 @@ filter_mode =
 # Layout for the screen inside the render window.
 # 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen, 3: Side by Side
 layout_option =
-
-# Toggle custom layout (using the settings below) on or off.
-# 0 (default): Off, 1: On
-custom_layout =
-
-# Screen placement when using Custom layout option
-# 0x, 0y is the top left corner of the render window.
-custom_top_left =
-custom_top_top =
-custom_top_right =
-custom_top_bottom =
-custom_bottom_left =
-custom_bottom_top =
-custom_bottom_right =
-custom_bottom_bottom =
-
-# Swaps the prominent screen with the other screen.
-# For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
-# 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
-swap_screen =
-
-# Screen placement settings when using Cardboard VR (render3d = 4)
-# 30 - 100: Screen size as a percentage of the viewport. 85 (default)
-cardboard_screen_size =
-# -100 - 100: Screen X-Coordinate shift as a percentage of empty space. 0 (default)
-cardboard_x_shift =
-# -100 - 100: Screen Y-Coordinate shift as a percentage of empty space. 0 (default)
-cardboard_y_shift =
 
 [Utility]
 # Dumps textures as PNG to dump/textures/[Title ID]/.

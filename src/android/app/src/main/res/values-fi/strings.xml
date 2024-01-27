@@ -102,5 +102,5 @@
     <string name="vr_cpu_level">CPU -taso</string>
     <string name="vr_cpu_level_description">Korkeammat tasot voivat parantaa audio/emulointia, mutta tyhjentää akun nopeammin</string>
     <string name="vr_immersive_mode_title">(Kokeellinen): VR180 Impersiivinen tila</string>
-    <string name="vr_immersive_mode_description">Laajentaa yläreunaa sylinterin ympärille VR180-tyylisen pelin (huomautus: Resoluutio on alhainen eikä sitä voida muuttaa)</string>
+    <string name="vr_immersive_mode_description">Laajentaa yläreunaa sylinterin ympärille VR180-tyylisen pelin (varoitus: resoluutio on alhainen)</string>
 </resources>

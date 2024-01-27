@@ -174,5 +174,5 @@
     <string name="vr_cpu_level">Livello CPU</string>
     <string name="vr_cpu_level_description">Livelli più alti possono migliorare le prestazioni audio/emulazione, ma prosciugheranno la batteria più velocemente</string>
     <string name="vr_immersive_mode_title">(Sperimentale): Modalità immersiva VR180</string>
-    <string name="vr_immersive_mode_description">Estende lo schermo superiore attorno a un cilindro per il gameplay in stile VR180 (Nota: la risoluzione è bassa e non può essere modificata)</string>
+    <string name="vr_immersive_mode_description">Estende lo schermo superiore attorno a un cilindro per il gameplay in stile VR180 (ATTENZIONE: la risoluzione sarà bassa)</string>
 </resources>

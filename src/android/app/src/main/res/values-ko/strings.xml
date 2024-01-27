@@ -176,5 +176,5 @@
     <string name="vr_cpu_level">CPU 레벨</string>
     <string name="vr_cpu_level_description">레벨이 높을수록 오디오/에뮬레이션 성능이 향상 될 수 있지만 배터리가 더 빨리 배터리를 배출합니다. </string>
     <string name="vr_immersive_mode_title">(실험) : VR180 몰입 형 모드</string>
-    <string name="vr_immersive_mode_description">VR180 스타일의 게임 플레이의 실린더 주위에 상단 화면을 확장합니다 (참고 : 해상도가 낮고 변경할 수 없습니다)</string>
+    <string name="vr_immersive_mode_description">VR180 스타일의 게임 플레이의 실린더 주위에 상단 화면을 확장합니다 (경고 : 해상도가 낮습니다)</string>
 </resources>

@@ -174,5 +174,5 @@
     <string name="vr_cpu_level">CPU级别</string>
     <string name="vr_cpu_level_description">较高的水平可以改善音频/仿真性能，但会更快地排出电池</string>
     <string name="vr_immersive_mode_title">（实验）：VR180沉浸式模式</string>
-    <string name="vr_immersive_mode_description">将顶部屏幕扩展到VR180风格的游戏玩法周围的顶部屏幕（注意：分辨率很低，无法更改）</string>
+    <string name="vr_immersive_mode_description">扩展围绕VR180风格的游戏玩家的顶部屏幕（警告：分辨率较低）</string>
 </resources>

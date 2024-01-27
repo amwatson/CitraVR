@@ -60,6 +60,7 @@ struct PicaFSConfigState {
         BitField<28, 1, u32> shadow_texture_orthographic;
         BitField<29, 1, u32> use_fragment_shader_interlock;
         BitField<30, 1, u32> use_custom_normal_map;
+        BitField<31, 1, u32> vr_use_immersive_mode;
     };
 
     union {
@@ -215,6 +216,9 @@ struct PicaVSConfigState {
     std::array<u32, 16> output_map;
 
     PicaGSConfigState gs_state;
+
+    bool vr_use_immersive_mode;
+
 };
 
 /**

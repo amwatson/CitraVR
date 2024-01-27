@@ -1681,17 +1681,11 @@ void main() {
     }
 )";
 
-    switch (Settings::values.vr_immersive_mode.GetValue())
+    if (!Settings::values.vr_use_immersive_mode.GetValue())
     {
-        case 0:
-            out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
-            break;
-        case 1:
-            out+= "\ngl_Position = vec4(vtx_pos.x / 5.0, vtx_pos.y / 5.0, -vtx_pos.z, vtx_pos.w);\n";
-            break;
-        case 2:
-            out+= "\ngl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
-            break;
+        out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out+= "\ngl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
     }
 
     if (use_clip_planes) {
@@ -1709,6 +1703,8 @@ void main() {
 
     return out;
 }
+
+
 
 std::string_view MakeLoadPrefix(AttribLoadFlags flag) {
     if (True(flag & AttribLoadFlags::Float)) {
@@ -1811,17 +1807,13 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
         out += "        vtx_pos.z = 0.f;\n";
         out += "    }\n";
 
-        switch (Settings::values.vr_immersive_mode.GetValue())
+        if (!Settings::values.vr_use_immersive_mode.GetValue())
         {
-            case 0:
-                out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
-                break;
-            case 1:
-                out+= "    gl_Position = vec4(vtx_pos.x / 5.0, vtx_pos.y / 5.0, -vtx_pos.z, vtx_pos.w);\n";
-                break;
-            case 2:
-                out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
-                break;
+              out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+        }
+        else
+        {
+              out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
         }
 
         if (config.state.use_clip_planes) {
@@ -1921,17 +1913,10 @@ struct Vertex {
     out += "        vtx_pos.z = 0.f;\n";
     out += "    }\n";
 
-    switch (Settings::values.vr_immersive_mode.GetValue())
-    {
-        case 0:
-            out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
-            break;
-        case 1:
-            out+= "    gl_Position = vec4(vtx_pos.x / 5.0, vtx_pos.y / 5.0, -vtx_pos.z, vtx_pos.w);\n";
-            break;
-        case 2:
-            out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
-            break;
+    if (!Settings::values.vr_use_immersive_mode.GetValue()) {
+        out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
     }
 
     if (state.use_clip_planes) {

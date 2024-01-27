@@ -6,6 +6,7 @@
 #include "common/logging/log.h"
 #include "video_core/shader/generator/shader_gen.h"
 #include "video_core/video_core.h"
+#include "common/settings.h"
 
 namespace Pica::Shader::Generator {
 
@@ -19,6 +20,8 @@ PicaFSConfig::PicaFSConfig(const Pica::Regs& regs, bool has_fragment_shader_inte
     state.alpha_test_func.Assign(regs.framebuffer.output_merger.alpha_test.enable
                                      ? regs.framebuffer.output_merger.alpha_test.func.Value()
                                      : Pica::FramebufferRegs::CompareFunc::Always);
+
+    state.vr_use_immersive_mode.Assign(Settings::values.vr_use_immersive_mode.GetValue());
 
     state.texture0_type.Assign(regs.texturing.texture0.type);
 
@@ -267,6 +270,8 @@ void PicaVSConfigState::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& 
     if (!use_geometry_shader_) {
         gs_state.Init(regs, use_clip_planes_);
     }
+
+    vr_use_immersive_mode = Settings::values.vr_use_immersive_mode.GetValue();
 }
 
 PicaVSConfig::PicaVSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,

@@ -305,20 +305,18 @@ void Config::ReadValues() {
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
             "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
-    VRSettings::values.vr_immersive_mode = sdl2_config->GetInteger(
-        "VR", "vr_immersive_mode", 0);
-    Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;
+    Settings::values.vr_use_immersive_mode = sdl2_config->GetBoolean(
+        "VR", "vr_immersive_mode", false);
 
-    if (VRSettings::values.vr_immersive_mode) {
+    if (Settings::values.vr_use_immersive_mode) {
       LOG_INFO(Config, "VR immersive mode enabled");
-      // Math was done using resolution factor 5, so if resolution is always 5x in
-      // immersive mode, I can avoid generalizing.
-      VRSettings::values.resolution_factor = 5;
       // no point rendering passthrough in immersive mode
       VRSettings::values.vr_environment =
         static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
+      // We originally had two immersive modes, but I cut them down to fit in
+      // the shader map's bitfield.
+      VRSettings::values.vr_immersive_mode = 2;
     }
-
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);

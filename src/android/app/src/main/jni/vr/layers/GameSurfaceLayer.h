@@ -168,7 +168,7 @@ private:
     // performance optimizations to avoid maxing out the GPU, e.g.:
     //   - Multiview (requires a merged Citra/CitraVR renderer)
     //   - Rendering the top-screen and bottom screen separately.
-    const uint32_t useImmersiveMode_;
+    const uint32_t immersiveMode_;
 
     //============================
     // JNI objects

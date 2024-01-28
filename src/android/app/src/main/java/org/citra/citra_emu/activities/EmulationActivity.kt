@@ -296,23 +296,35 @@ open class EmulationActivity : AppCompatActivity() {
                 }
 
                 NativeLibrary.ButtonType.TRIGGER_L -> {
+                    val isAlreadyMappedToActive = isTriggerPressedL
                     isTriggerPressedLMapped = true
-                    isTriggerPressedL = value != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                        isTriggerPressedL = value != 0f
+                    }
                 }
 
                 NativeLibrary.ButtonType.TRIGGER_R -> {
+                    val isAlreadyMappedToActive = isTriggerPressedR
                     isTriggerPressedRMapped = true
-                    isTriggerPressedR = value != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                        isTriggerPressedR = value != 0f
+                    }
                 }
 
                 NativeLibrary.ButtonType.BUTTON_ZL -> {
+                    val isAlreadyMappedToActive = isTriggerPressedZL
                     isTriggerPressedZLMapped = true
-                    isTriggerPressedZL = value != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                        isTriggerPressedZL = value != 0f
+                    }
                 }
 
                 NativeLibrary.ButtonType.BUTTON_ZR -> {
+                    val isAlreadyMappedToActive = isTriggerPressedZR
                     isTriggerPressedZRMapped = true
-                    isTriggerPressedZR = value != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                      isTriggerPressedZR = value != 0f
+                    }
                 }
             }
         }

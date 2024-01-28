@@ -41,8 +41,10 @@ import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.ForegroundService
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import org.citra.citra_emu.vr.VRUtils
 
 open class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -187,7 +189,8 @@ open class EmulationActivity : AppCompatActivity() {
         }
 
         val button =
-            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
+            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), VRUtils.ButtonType.androidToNativeLibrary(event.keyCode) ?: event.keyCode)
+        Log.debug("Keycode ${event.keyCode} has entry ${InputBindingSetting.getInputButtonKey(event.keyCode)} and value ${button}. has user-defined pref: ${preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), 0)}")
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
                 // On some devices, the back gesture / button press is not intercepted by androidx

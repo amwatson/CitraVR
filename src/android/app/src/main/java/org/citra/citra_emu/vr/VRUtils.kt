@@ -1,5 +1,8 @@
 package org.citra.citra_emu.vr
 
+import android.view.KeyEvent
+import org.citra.citra_emu.NativeLibrary
+
 object VRUtils {
     val hMDType: Int
         external get
@@ -14,5 +17,32 @@ object VRUtils {
         QUEST3(3),
         QUESTPRO(4)
 
+    }
+
+    // Not really VR-related, but for some reason, Citra doesn't have default mappings for gamepad
+    enum class ButtonType(val nativeLibrary: Int, val android: Int) {
+        BUTTON_A(NativeLibrary.ButtonType.BUTTON_A, KeyEvent.KEYCODE_BUTTON_A),
+        BUTTON_B(NativeLibrary.ButtonType.BUTTON_B, KeyEvent.KEYCODE_BUTTON_B),
+        BUTTON_X(NativeLibrary.ButtonType.BUTTON_X, KeyEvent.KEYCODE_BUTTON_X),
+        BUTTON_Y(NativeLibrary.ButtonType.BUTTON_Y, KeyEvent.KEYCODE_BUTTON_Y),
+        BUTTON_START(NativeLibrary.ButtonType.BUTTON_START, KeyEvent.KEYCODE_BUTTON_START),
+        BUTTON_SELECT(NativeLibrary.ButtonType.BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_SELECT),
+        BUTTON_HOME(NativeLibrary.ButtonType.BUTTON_HOME, KeyEvent.KEYCODE_HOME),
+        BUTTON_ZL(NativeLibrary.ButtonType.BUTTON_ZL, KeyEvent.KEYCODE_BUTTON_L2),
+        BUTTON_ZR(NativeLibrary.ButtonType.BUTTON_ZR, KeyEvent.KEYCODE_BUTTON_R2),
+        DPAD_UP(NativeLibrary.ButtonType.DPAD_UP, KeyEvent.KEYCODE_DPAD_UP),
+        DPAD_DOWN(NativeLibrary.ButtonType.DPAD_DOWN, KeyEvent.KEYCODE_DPAD_DOWN),
+        DPAD_LEFT(NativeLibrary.ButtonType.DPAD_LEFT, KeyEvent.KEYCODE_DPAD_LEFT),
+        DPAD_RIGHT(NativeLibrary.ButtonType.DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT),
+        TRIGGER_L(NativeLibrary.ButtonType.TRIGGER_L, KeyEvent.KEYCODE_BUTTON_L1),
+        TRIGGER_R(NativeLibrary.ButtonType.TRIGGER_R, KeyEvent.KEYCODE_BUTTON_R1);
+        // This companion object will hold the mapping from Android to Native Library
+        companion object {
+            // Initialize the map once and use it for lookups
+            val androidToNativeLibraryMap: Map<Int, Int> = values().associate { it.android to it.nativeLibrary }
+
+            // Function to get the Native Library value from an Android Key Code
+            inline fun androidToNativeLibrary(androidKeyCode: Int): Int? = androidToNativeLibraryMap[androidKeyCode]
+        }
     }
 }

@@ -26,23 +26,28 @@ const char* sdl2_config_file = R"(
 #      - "direction"(only used for axis): "+" means the button is triggered when the axis value
 #          is greater than the threshold; "-" means the button is triggered when the axis value
 #          is smaller than the threshold
-# button_a=engine:gamepad,code:96
-# button_b=engine:gamepad,code:97
-# button_x=engine:gamepad,code:99
-# button_y=engine:gamepad,code:100
-# button_up=
-# button_down=
-# button_left=
-# button_right=
-# button_l=engine:gamepad,code:102
-# button_r=engine:gamepad,code:103
-# button_start=engine:gamepad,code:109
-# button_select=engine:gamepad,code:108
-# button_debug=engine:gamepad,code:9
-# button_gpio14=engine:gamepad,code:49
-# button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
-# button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
-# button_home=
+# Examples:
+#  - button_a=engine:gamepad,code:96
+#  - button_l=engine:gamepad,code:102
+#  - button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
+#  - button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
+#button_a=
+#button_b=
+#button_x=
+#button_y=
+#button_up=
+#button_down=
+#button_left=
+#button_right=
+#button_l=
+#button_r=
+#button_start=
+#button_select=
+#button_debug=
+#button_gpio14=
+#button_zl=
+#button_zr=
+#button_home=
 
 # for analog input, the following devices are available:
 #  - "analog_from_button" (default) for emulating analog input from direction buttons. Required parameters:
@@ -55,8 +60,8 @@ const char* sdl2_config_file = R"(
 #      - "joystick": the index of the joystick to bind
 #      - "axis_x": the index of the axis to bind as x-axis (default to 0)
 #      - "axis_y": the index of the axis to bind as y-axis (default to 1)
-# circle_pad=
-# c_stick=
+#circle_pad=
+#c_stick=
 
 
 # for motion input, the following devices are available:
@@ -116,8 +121,8 @@ spirv_shader_gen =
 use_hw_shader =
 
 # Whether to use accurate multiplication in hardware shaders
-# 0: Off (Faster, but causes issues in some games) 1: On (Default. Slower, but correct)
-# shaders_accurate_mul =
+# 0: Off (Default. Faster, but causes issues in some games) 1: On (Slower, but correct)
+shaders_accurate_mul =1
 
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
@@ -133,9 +138,9 @@ use_vsync_new =
 use_disk_shader_cache =
 
 # Resolution scale factor
-# 0: Auto (Default. Scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
+# 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution
-# resolution_factor =
+resolution_factor =0
 
 # Whether to enable V-Sync (caps the framerate at 60FPS) or not.
 # 0 (default): Off, 1: On
@@ -155,23 +160,22 @@ bg_red =
 bg_blue =
 bg_green =
 
-# Change stero depth
-# 0 - 100: Intensity. 50 (default)
-# factor_3d =
+# Change 3D Intensity
+# 0 - 100: Intensity. 0 (default)
+# factor_3d =50
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
 pp_shader_name =
 
+# The name of the shader to apply when render_3d is anaglyph.
+# Loaded from shaders/anaglyph
+anaglyph_shader_name =
+
 # Whether to enable linear filtering or not
 # This is required for some shaders to work correctly
 # 0: Nearest, 1 (default): Linear
 filter_mode =
-
-[Layout]
-# Layout for the screen inside the render window.
-# 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen, 3: Side by Side
-layout_option =
 
 [Utility]
 # Dumps textures as PNG to dump/textures/[Title ID]/.
@@ -235,10 +239,6 @@ use_virtual_sd =
 # 0: Old 3DS (default), 1: New 3DS
 is_new_3ds =
 
-# Whether to use LLE system applets, if installed
-# 0 (default): No, 1: Yes
-lle_applets =
-
 # The system region that Citra will use during emulation
 # -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
 region_value =
@@ -256,14 +256,6 @@ init_clock =
 # set to fixed time. Default 2000-01-01 00:00:01
 # Note: 3DS can only handle times later then Jan 1 2000
 init_time =
-
-# The system ticks count to use when citra starts
-# 0: Random (default), 1: Fixed
-init_ticks_type =
-
-# Tick count to use when init_ticks_type is set to Fixed.
-# Defaults to 0.
-init_ticks_override =
 
 # Plugin loader state, if enabled plugins will be loaded from the SD card.
 # You can also set if homebrew apps are allowed to enable the plugin loader

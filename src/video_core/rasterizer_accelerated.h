@@ -103,6 +103,9 @@ protected:
     /// Syncs the clip plane state to match the PICA register
     void SyncClipPlane();
 
+    /// Syncs the VR immersive flag
+    void SyncVRImmersive();
+
 protected:
     /// Structure that keeps tracks of the vertex shader uniform state
     struct VSUniformBlockData {

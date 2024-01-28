@@ -5,7 +5,6 @@
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
-import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ListItemSettingBinding
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
@@ -15,7 +14,7 @@ import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
-import org.citra.citra_emu.vr.VRUtils
+import org.citra.citra_emu.vr.utils.VRUtils
 
 class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {

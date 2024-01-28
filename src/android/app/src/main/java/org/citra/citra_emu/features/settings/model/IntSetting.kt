@@ -4,8 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model
 
-import org.citra.citra_emu.vr.VRUtils
-import org.citra.citra_emu.vr.VRUtils.hMDType
+import org.citra.citra_emu.vr.utils.VRUtils
+import org.citra.citra_emu.vr.utils.VRUtils.hMDType
 
 
 enum class IntSetting(

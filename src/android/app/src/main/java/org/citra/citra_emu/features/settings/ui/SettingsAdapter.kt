@@ -60,9 +60,8 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHolder
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
-import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
-import org.citra.citra_emu.vr.VRUtils
+import org.citra.citra_emu.vr.utils.VRUtils
 import java.lang.IllegalStateException
 import java.lang.NumberFormatException
 import java.text.SimpleDateFormat

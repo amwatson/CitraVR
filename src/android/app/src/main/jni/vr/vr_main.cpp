@@ -895,12 +895,12 @@ extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_ErrorMessageLayer
     gShouldShowErrorMessage = should_show_error;
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_vr_VRUtils_getHMDType(JNIEnv* env,
+extern "C" JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env,
                                                                                   jclass clazz) {
     return static_cast<jint>(VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
 }
 extern "C" JNIEXPORT jint JNICALL
-Java_org_citra_citra_1emu_vr_VRUtils_getDefaultResolutionFactor(JNIEnv* env, jclass clazz) {
+Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(JNIEnv* env, jclass clazz) {
     const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }

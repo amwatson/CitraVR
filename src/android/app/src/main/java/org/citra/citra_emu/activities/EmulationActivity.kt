@@ -44,7 +44,7 @@ import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import org.citra.citra_emu.vr.VRUtils
+import org.citra.citra_emu.vr.utils.VRUtils
 
 open class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences

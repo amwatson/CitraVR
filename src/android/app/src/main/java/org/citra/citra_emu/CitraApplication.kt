@@ -12,10 +12,9 @@ import android.content.Context
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DocumentsTree
-import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
-import org.citra.citra_emu.vr.VRUtils
+import org.citra.citra_emu.vr.utils.VRUtils
 
 class CitraApplication : Application() {
     private fun createNotificationChannel() {

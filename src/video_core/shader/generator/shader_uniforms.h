@@ -89,6 +89,7 @@ struct PicaUniformsData {
 };
 
 struct VSUniformData {
+    bool vr_use_immersive_mode;
     bool enable_clip1;
     alignas(16) Common::Vec4f clip_coef;
 };

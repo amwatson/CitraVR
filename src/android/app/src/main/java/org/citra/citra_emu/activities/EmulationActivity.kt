@@ -257,9 +257,10 @@ open class EmulationActivity : AppCompatActivity() {
             val origValue = event.getAxisValue(axis)
             var value = ControllerMappingHelper.scaleAxis(input, axis, origValue)
             val nextMapping =
-                preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
+                preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), VRUtils.getDefaultAxisMapping(axis))
             val guestOrientation =
-                preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
+                preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), VRUtils.getDefaultOrientationMapping(axis))
+
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped
                 continue
@@ -268,17 +269,30 @@ open class EmulationActivity : AppCompatActivity() {
                 // Skip joystick wobble
                 value = 0f
             }
+            var isCurrentAxisActive = value != 0f
             when (nextMapping) {
                 NativeLibrary.ButtonType.STICK_LEFT -> {
-                    axisValuesCirclePad[guestOrientation] = value
+                    // In case the stick is bound to more than one input
+                    // (which is always the case when the user remaps one of the
+                    // defaults), only replace previous value if the current axis is active.
+                    var isAlreadyMappedToActive = axisValuesCirclePad[guestOrientation] != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                        axisValuesCirclePad[guestOrientation] = value
+                    }
                 }
 
                 NativeLibrary.ButtonType.STICK_C -> {
-                    axisValuesCStick[guestOrientation] = value
+                    var isAlreadyMappedToActive = axisValuesCStick[guestOrientation] != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                        axisValuesCStick[guestOrientation] = value
+                    }
                 }
 
                 NativeLibrary.ButtonType.DPAD -> {
-                    axisValuesDPad[guestOrientation] = value
+                    var isAlreadyMappedToActive = axisValuesDPad[guestOrientation] != 0f
+                    if (isCurrentAxisActive || !isAlreadyMappedToActive) {
+                      axisValuesDPad[guestOrientation] = value
+                    }
                 }
 
                 NativeLibrary.ButtonType.TRIGGER_L -> {

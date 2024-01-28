@@ -27,7 +27,7 @@ object VRUtils {
         BUTTON_Y(NativeLibrary.ButtonType.BUTTON_Y, KeyEvent.KEYCODE_BUTTON_Y),
         BUTTON_START(NativeLibrary.ButtonType.BUTTON_START, KeyEvent.KEYCODE_BUTTON_START),
         BUTTON_SELECT(NativeLibrary.ButtonType.BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_SELECT),
-        BUTTON_HOME(NativeLibrary.ButtonType.BUTTON_HOME, KeyEvent.KEYCODE_HOME),
+        BUTTON_HOME(NativeLibrary.ButtonType.BUTTON_HOME, KeyEvent.KEYCODE_BUTTON_MODE),
         BUTTON_ZL(NativeLibrary.ButtonType.BUTTON_ZL, KeyEvent.KEYCODE_BUTTON_L2),
         BUTTON_ZR(NativeLibrary.ButtonType.BUTTON_ZR, KeyEvent.KEYCODE_BUTTON_R2),
         DPAD_UP(NativeLibrary.ButtonType.DPAD_UP, KeyEvent.KEYCODE_DPAD_UP),
@@ -45,4 +45,26 @@ object VRUtils {
             inline fun androidToNativeLibrary(androidKeyCode: Int): Int? = androidToNativeLibraryMap[androidKeyCode]
         }
     }
+
+  @JvmStatic
+  fun getDefaultAxisMapping(androidAxis: Int): Int {
+    return when (androidAxis) {
+      14 -> NativeLibrary.ButtonType.STICK_C
+      11 -> NativeLibrary.ButtonType.STICK_C
+      1 -> NativeLibrary.ButtonType.STICK_LEFT
+      0 -> NativeLibrary.ButtonType.STICK_LEFT
+      else -> -1
+    }
+  }
+
+  @JvmStatic
+  fun getDefaultOrientationMapping(androidAxis: Int): Int {
+    return when (androidAxis) {
+      14 -> 1
+      11 -> 0
+      1 -> 1
+      0 -> 0
+      else -> -1
+    }
+  }
 }

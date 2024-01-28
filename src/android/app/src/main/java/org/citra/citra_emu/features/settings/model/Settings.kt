@@ -197,7 +197,11 @@ class Settings {
             R.string.emulation_toggle_pause
         )
 
-        const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"
+        // VR-SPECIFIC:
+        // For CitraVR, change the name of the FirstApplicationLaunch param
+        // so setup is still prompted if user switches from mainline Citra to CitraVR
+        // (preferences are reused)
+        const val PREF_FIRST_APP_LAUNCH = "VR_FirstApplicationLaunch"
         const val PREF_MATERIAL_YOU = "MaterialYouTheme"
         const val PREF_THEME_MODE = "ThemeMode"
         const val PREF_BLACK_BACKGROUNDS = "BlackBackgrounds"

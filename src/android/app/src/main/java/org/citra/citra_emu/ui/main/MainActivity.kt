@@ -35,7 +35,6 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationBarView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.R
 import org.citra.citra_emu.activities.EmulationActivity
@@ -56,6 +55,7 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
+import org.citra.citra_emu.vr.VRUtils
 import org.citra.citra_emu.vr.VrActivity
 
 class MainActivity : AppCompatActivity(), ThemeProvider {
@@ -81,6 +81,18 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
+
+        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val releaseVersionPrev : String = preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_PREV, "")!!
+        val releaseVersionCur : String = preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT, "")!!
+        // This means this is a first-time install, an app reinstall wiped app data, or the last app version was below
+        // V0.4.0. In all these cases, we want to wipe the previous config Because the earlier versions may have introduced input issues.
+        if (VRUtils.isReleaseVersion(releaseVersionCur) && VRUtils.hasLowerVersionThan(releaseVersionPrev, VRUtils.createVersionString(0, 4, 0))) {
+            Log.info("New install from prev version \"${releaseVersionPrev}\" needs update. Wiping config.ini")
+            SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)?.delete()
+        }
+        // If this is the first time installing CitraVR s
+        SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)?.delete()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

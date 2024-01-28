@@ -67,4 +67,44 @@ object VRUtils {
       else -> -1
     }
   }
+
+    const val PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT = "VR_ReleaseVersionName_LaunchCurrent"
+    const val PREF_RELEASE_VERSION_NAME_LAUNCH_PREV = "VR_ReleaseVersionName_LaunchPrev"
+
+    // release versions are in the form "v\d+\.\d+\.\d+". All other values are build versions
+    fun isReleaseVersion(version: String): Boolean {
+        return version.startsWith("v")
+    }
+    fun getVersionMajor(version: String): Int {
+        return if (isReleaseVersion(version)) version.split(".")[0].removePrefix("v").toInt() else -1
+    }
+    fun getVersionMinor(version: String): Int {
+        return if (isReleaseVersion(version)) version.split(".")[1].toInt() else -1
+    }
+    fun getVersionPatch(version: String): Int {
+        return if (isReleaseVersion(version)) version.split(".")[2].toInt() else -1
+    }
+
+    fun hasLowerVersionThan(versionOrig: String, versionComp: String): Boolean {
+        val majorOrig = getVersionMajor(versionOrig)
+        val majorComp = getVersionMajor(versionComp)
+        if (majorOrig < majorComp) return true
+        if (majorOrig > majorComp) return false
+
+        val minorOrig = getVersionMinor(versionOrig)
+        val minorComp = getVersionMinor(versionComp)
+        if (minorOrig < minorComp) return true
+        if (minorOrig > minorComp) return false
+
+        val patchOrig = getVersionPatch(versionOrig)
+        val patchComp = getVersionPatch(versionComp)
+        if (patchOrig < patchComp) return true
+        if (patchOrig > patchComp) return false
+
+        return false
+    }
+
+    fun createVersionString(major: Int, minor: Int, patch: Int): String {
+        return "v$major.$minor.$patch"
+    }
 }

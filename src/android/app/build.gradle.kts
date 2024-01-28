@@ -221,24 +221,30 @@ fun getGitVersion(): String {
     var versionName = "0.0"
 
     try {
-        versionName = ProcessBuilder("git", "describe", "--always", "--long")
+        // First, try to get the most recent tag associated with the current commit
+        versionName = ProcessBuilder("git", "describe", "--tags", "--abbrev=0")
             .directory(project.rootDir)
             .redirectOutput(ProcessBuilder.Redirect.PIPE)
             .redirectError(ProcessBuilder.Redirect.PIPE)
             .start().inputStream.bufferedReader().use { it.readText() }
             .trim()
-            .replace(Regex("(-0)?-[^-]+$"), "")
+
+        // If no tags are found, use commit hash
+        if (versionName.isEmpty()) {
+            versionName = ProcessBuilder("git", "describe", "--always", "--long")
+                .directory(project.rootDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start().inputStream.bufferedReader().use { it.readText() }
+                .trim()
+                .replace(Regex("(-0)?-[^-]+$"), "")
+        }
     } catch (e: Exception) {
         logger.error("Cannot find git, defaulting to dummy version number")
     }
-
-    if (System.getenv("GITHUB_ACTIONS") != null) {
-        val gitTag = System.getenv("GIT_TAG_NAME")
-        versionName = gitTag ?: versionName
-    }
-
     return versionName
 }
+
 
 fun getGitHash(): String =
     runGitCommand(ProcessBuilder("git", "rev-parse", "--short", "HEAD")) ?: "dummy-hash"

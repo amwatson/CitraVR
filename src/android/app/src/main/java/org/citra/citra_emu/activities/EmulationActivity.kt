@@ -275,21 +275,21 @@ open class EmulationActivity : AppCompatActivity() {
                     // In case the stick is bound to more than one input
                     // (which is always the case when the user remaps one of the
                     // defaults), only replace previous value if the current axis is active.
-                    var isAlreadyMappedToActive = axisValuesCirclePad[guestOrientation] != 0f
+                    val isAlreadyMappedToActive = axisValuesCirclePad[guestOrientation] != 0f
                     if (isCurrentAxisActive || !isAlreadyMappedToActive) {
                         axisValuesCirclePad[guestOrientation] = value
                     }
                 }
 
                 NativeLibrary.ButtonType.STICK_C -> {
-                    var isAlreadyMappedToActive = axisValuesCStick[guestOrientation] != 0f
+                    val isAlreadyMappedToActive = axisValuesCStick[guestOrientation] != 0f
                     if (isCurrentAxisActive || !isAlreadyMappedToActive) {
                         axisValuesCStick[guestOrientation] = value
                     }
                 }
 
                 NativeLibrary.ButtonType.DPAD -> {
-                    var isAlreadyMappedToActive = axisValuesDPad[guestOrientation] != 0f
+                    val isAlreadyMappedToActive = axisValuesDPad[guestOrientation] != 0f
                     if (isCurrentAxisActive || !isAlreadyMappedToActive) {
                       axisValuesDPad[guestOrientation] = value
                     }

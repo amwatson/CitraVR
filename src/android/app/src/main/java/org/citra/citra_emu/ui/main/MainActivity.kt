@@ -68,6 +68,21 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override var themeId: Int = 0
 
+
+    private fun doVersionUpdates() {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val releaseVersionPrev : VrReleaseVersion = VrReleaseVersion(preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_PREV, "") ?: "")
+        val releaseVersionCur : VrReleaseVersion = VrReleaseVersion(preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT, "") ?: "")
+        // If the previously run build was lower that v0.4.0 (note: all these builds will not have valid release versions), wipe the config. This will
+        // remove previous issues like the dpad
+        // Note: Do the version check whenever the current build has a valid release tag
+        if (releaseVersionCur.isRealVersion() && !releaseVersionCur.hasLowerVersionThan(VrReleaseVersion.RELEASE_VERSION_0_4_0) &&  (!releaseVersionPrev.isRealVersion() || releaseVersionPrev.hasLowerVersionThan(
+                VrReleaseVersion.RELEASE_VERSION_0_4_0))) {
+            Log.info("New install from prev version \"v${releaseVersionCur.getMajor()}.${releaseVersionCur.getMinor()}.${releaseVersionCur.getPatch()}\" needs update. Wiping config.ini")
+            //SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)?.delete()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition {
@@ -82,6 +97,8 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
+
+        doVersionUpdates()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

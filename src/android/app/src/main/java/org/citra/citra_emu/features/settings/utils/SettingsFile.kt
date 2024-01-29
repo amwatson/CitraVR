@@ -276,4 +276,15 @@ object SettingsFile {
             parser.put(header, setting!!.key, setting.valueAsString)
         }
     }
+
+    fun writeBlankSettingsFile(fileName: String) {
+        val ini = getSettingsFile(fileName)
+        try {
+            val context: Context = CitraApplication.appContext
+            val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
+            outputStream!!.close()
+        } catch (e: Exception) {
+            Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
+        }
+    }
 }

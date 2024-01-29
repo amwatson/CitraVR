@@ -13,6 +13,8 @@ namespace VideoCore {
 
 using Pica::f24;
 
+const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
+
 static Common::Vec4f ColorRGBA8(const u32 color) {
     const auto rgba =
         Common::Vec4u{color >> 0 & 0xFF, color >> 8 & 0xFF, color >> 16 & 0xFF, color >> 24 & 0xFF};
@@ -137,7 +139,7 @@ void RasterizerAccelerated::SyncEntireState() {
 
     // Sync uniforms
     SyncClipPlane();
-    SyncVRImmersive();
+    SyncVRData();
     SyncDepthScale();
     SyncDepthOffset();
     SyncAlphaTest();
@@ -862,8 +864,18 @@ void RasterizerAccelerated::SyncClipPlane() {
     }
 }
 
-void RasterizerAccelerated::SyncVRImmersive() {
-    vs_uniform_block_data.data.vr_use_immersive_mode = Settings::values.vr_use_immersive_mode.GetValue();
+void RasterizerAccelerated::SyncVRData() {
+    if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveLevelFactor[Settings::values.vr_immersive_mode.GetValue()])
+    {
+        vs_uniform_block_data.data.vr_immersive_mode_factor = immersiveLevelFactor[Settings::values.vr_immersive_mode.GetValue()];
+        vs_uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerAccelerated::SetVRData(Common::Vec3f position)
+{
+    //Positional Tinkering
+    vs_uniform_block_data.data.vr_position = position;
     vs_uniform_block_data.dirty = true;
 }
 

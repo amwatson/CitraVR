@@ -89,11 +89,14 @@ struct PicaUniformsData {
 };
 
 struct VSUniformData {
-    bool vr_use_immersive_mode;
     bool enable_clip1;
     alignas(16) Common::Vec4f clip_coef;
+
+    //VR data at the end to ensure it doesn't interfere with existing uniforms' alignment
+    alignas(4) float vr_immersive_mode_factor;
+    alignas(16) Common::Vec3f vr_position;
 };
-static_assert(sizeof(VSUniformData) == 32,
+static_assert(sizeof(VSUniformData) == 64,
               "The size of the VSUniformData does not match the structure in the shader");
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");

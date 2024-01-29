@@ -255,7 +255,7 @@ void GameSurfaceLayer::SetSurface() const {
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-                             uint32_t& layerCount) const
+                             uint32_t& layerCount, const bool showLowerPanel) const
 
 {
     const uint32_t panelWidth = swapchain_.Width / 2;
@@ -342,6 +342,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // FIXME we waste rendering time rendering both displays. That said, We also
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
+    if (showLowerPanel)
     {
         const uint32_t cropHoriz = 90 * resolutionFactor_;
         XrCompositionLayerQuad layer = {};

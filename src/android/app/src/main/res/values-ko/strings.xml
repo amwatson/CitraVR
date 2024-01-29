@@ -175,6 +175,8 @@
     <string name="vr_extra_performance_mode">VR 추가 성능 모드</string>
     <string name="vr_cpu_level">CPU 레벨</string>
     <string name="vr_cpu_level_description">레벨이 높을수록 오디오/에뮬레이션 성능이 향상 될 수 있지만 배터리가 더 빨리 배터리를 배출합니다. </string>
-    <string name="vr_immersive_mode_title">(실험) : VR180 몰입 형 모드</string>
-    <string name="vr_immersive_mode_description">VR180 스타일의 게임 플레이의 실린더 주위에 상단 화면을 확장합니다 (경고 : 해상도가 낮습니다)</string>
+    <string name="vr_immersive_mode_title">[경고 : 그래픽 아티팩트] 몰입 모드 (실험)</string>
+    <string name="vr_immersive_mode_description">몰입 형 게임 플레이를 위해 실린더 주위에 상단 화면을 확장합니다. </string>
+    <string name="vr_graphics_warning">위험 : 모든 게임/레벨이 몰입 형 모드에서 좋아 보이는 것은 아닙니다. 이 옵션을 선택할 때 큰 시각적 아티팩트가 일반적입니다. </string>
+    <string name="vr_graphics_warning_short">경고 : 대부분의 콘텐츠에서 시각적 아티팩트가 발생합니다. </string>
 </resources>

@@ -10,6 +10,7 @@ import org.citra.citra_emu.features.settings.ui.SettingsFragmentView;
 public final class CheckBoxSetting extends SettingsItem {
     private boolean mDefaultValue;
     private boolean mShowPerformanceWarning;
+    private boolean mShowGraphicsWarning;
     private SettingsFragmentView mView;
 
     public CheckBoxSetting(String key, String section, int titleId, int descriptionId,
@@ -17,6 +18,7 @@ public final class CheckBoxSetting extends SettingsItem {
         super(key, section, setting, titleId, descriptionId);
         mDefaultValue = defaultValue;
         mShowPerformanceWarning = false;
+        mShowGraphicsWarning = false;
     }
 
     public CheckBoxSetting(String key, String section, int titleId, int descriptionId,
@@ -25,6 +27,15 @@ public final class CheckBoxSetting extends SettingsItem {
         mDefaultValue = defaultValue;
         mView = view;
         mShowPerformanceWarning = show_performance_warning;
+    }
+
+    public CheckBoxSetting(String key, String section, int titleId, int descriptionId,
+        boolean defaultValue, Setting setting, boolean show_performance_warning, boolean show_graphics_warning, SettingsFragmentView view) {
+      super(key, section, setting, titleId, descriptionId);
+      mDefaultValue = defaultValue;
+      mView = view;
+      mShowPerformanceWarning = show_performance_warning;
+      mShowGraphicsWarning = show_graphics_warning;
     }
 
     public boolean isChecked() {
@@ -60,6 +71,9 @@ public final class CheckBoxSetting extends SettingsItem {
         // Show a performance warning if the setting has been disabled
         if (mShowPerformanceWarning && !checked) {
             mView.showToastMessage(CitraApplication.getAppContext().getString(R.string.performance_warning), true);
+        }
+        if (mShowGraphicsWarning && checked) {
+            mView.showToastMessage(CitraApplication.getAppContext().getString(R.string.vr_graphics_warning_short), true);
         }
 
         if (getSetting() == null) {

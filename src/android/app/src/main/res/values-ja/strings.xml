@@ -118,6 +118,8 @@
     <string name="vr_extra_performance_mode">VR追加パフォーマンスモード</string>
     <string name="vr_cpu_level">CPUレベル</string>
     <string name="vr_cpu_level_description">より高いレベルはオーディオ/エミュレーションのパフォーマンスを改善する可能性がありますが、バッテリーをより速く排出します</string>
-    <string name="vr_immersive_mode_title">（実験）：VR180没入モード</string>
-    <string name="vr_immersive_mode_description">VR180スタイルのゲームプレイ用のシリンダーの周りのトップ画面を拡張します（警告：解像度は低くなります）</string>
+    <string name="vr_immersive_mode_title">[警告：グラフィックアーティファクト]没入型モード（実験）</string>
+    <string name="vr_immersive_mode_description">没入型ゲームプレイのために、シリンダーの周りのトップ画面を拡張します</string>
+    <string name="vr_graphics_warning">危険：すべてのゲーム/レベルが没入型モードでよく見えるわけではありません。このオプションが選択されている場合、大きな視覚アーティファクトが一般的です</string>
+    <string name="vr_graphics_warning_short">警告：これは、ほとんどのコンテンツで視覚的なアーティファクトを引き起こします</string>
     </resources>

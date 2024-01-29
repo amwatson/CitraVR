@@ -173,6 +173,8 @@
     <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
     <string name="vr_cpu_level">CPU -nivå</string>
     <string name="vr_cpu_level_description">Høyere nivåer kan forbedre ytelsen til lyd/emulering, men vil tømme batteriet raskere</string>
-    <string name="vr_immersive_mode_title">(Eksperimentell): VR180 oppslukende modus</string>
-    <string name="vr_immersive_mode_description">Utvider toppskjermen rundt en sylinder for VR180-stil gameplay (advarsel: oppløsningen vil være lav)</string>
+    <string name="vr_immersive_mode_title">[ADVARSEL: GRAFICS ARTIFACTS] Immersive Mode (Experimental)</string>
+    <string name="vr_immersive_mode_description">Utvider toppskjermen rundt en sylinder for oppslukende spill</string>
+    <string name="vr_graphics_warning">FARE: Ikke alle spill/nivåer ser bra ut i oppslukende modus. Store visuelle gjenstander er vanlige når dette alternativet er valgt</string>
+    <string name="vr_graphics_warning_short">Advarsel: Dette vil forårsake visuell gjenstand i det meste</string>
 </resources>

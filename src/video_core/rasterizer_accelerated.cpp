@@ -4,6 +4,7 @@
 
 #include <limits>
 #include "common/alignment.h"
+#include "common/settings.h"
 #include "core/memory.h"
 #include "video_core/pica_state.h"
 #include "video_core/rasterizer_accelerated.h"
@@ -136,6 +137,7 @@ void RasterizerAccelerated::SyncEntireState() {
 
     // Sync uniforms
     SyncClipPlane();
+    SyncVRImmersive();
     SyncDepthScale();
     SyncDepthOffset();
     SyncAlphaTest();
@@ -858,6 +860,11 @@ void RasterizerAccelerated::SyncClipPlane() {
         vs_uniform_block_data.data.clip_coef = new_clip_coef;
         vs_uniform_block_data.dirty = true;
     }
+}
+
+void RasterizerAccelerated::SyncVRImmersive() {
+    vs_uniform_block_data.data.vr_use_immersive_mode = Settings::values.vr_use_immersive_mode.GetValue();
+    vs_uniform_block_data.dirty = true;
 }
 
 } // namespace VideoCore

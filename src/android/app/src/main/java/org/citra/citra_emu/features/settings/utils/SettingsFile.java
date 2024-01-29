@@ -136,6 +136,9 @@ public final class SettingsFile {
     public static final String KEY_VR_CPU_LEVEL = "vr_cpu_level";
 
     public static final String KEY_VR_IMMERSIVE_MODE = "vr_immersive_mode";
+
+    public static final String KEY_VR_IMMERSIVE_POSITIONAL_FACTOR = "vr_immersive_positional_factor";
+
     public static final String KEY_LOG_FILTER = "log_filter";
 
     private static BiMap<String, String> sectionsMap = new BiMap<>();

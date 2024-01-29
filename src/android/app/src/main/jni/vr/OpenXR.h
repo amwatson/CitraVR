@@ -44,7 +44,10 @@ public:
     static constexpr XrViewConfigurationType VIEW_CONFIG_TYPE =
         XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
     XrSpace headSpace_ = XR_NULL_HANDLE;
+    XrSpace viewSpace_ = XR_NULL_HANDLE;
     XrSpace forwardDirectionSpace_ = XR_NULL_HANDLE;
+
+    XrSpaceLocation headLocation = {};
 
     XrSpace localSpace_ = XR_NULL_HANDLE;
     XrSpace stageSpace_ = XR_NULL_HANDLE;

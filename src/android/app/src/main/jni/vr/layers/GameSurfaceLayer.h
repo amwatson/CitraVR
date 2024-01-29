@@ -96,11 +96,12 @@ public:
      *
      *  @param space the XrSpace this layer should be positioned with. The
      * center of the layer is placed in the center of the FOV.
+     *  @param headLocation the XrSpaceLocation - the hmd location
      *  @param layers the array of layers to populate
      *  @param layerCount the number of layers in the array
      */
     void Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-               uint32_t& layerCount) const;
+            uint32_t& layerCount, const bool showLowerPanel) const;
 
     /** Given an origin, direction of a ray,
      *  returns the coordinates of where the ray will intersects

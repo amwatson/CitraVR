@@ -224,4 +224,16 @@
         <item>3</item>
         <item>4</item>
     </integer-array>
+
+    <string-array name="vrImmersiveModeNames">
+        <item>Off</item>
+        <item>Large - Low Resolution</item>
+        <item>Higher Resolution</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
 </resources>

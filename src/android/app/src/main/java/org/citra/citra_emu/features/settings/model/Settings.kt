@@ -51,7 +51,11 @@ class Settings {
 
     private fun loadCitraSettings(view: SettingsActivityView?) {
         for ((fileName) in configFileSectionsMap) {
+          try {
             sections.putAll(SettingsFile.readFile(fileName, view))
+          } catch (e: Exception) {
+
+          }
         }
     }
 

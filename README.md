@@ -54,11 +54,9 @@ CitraVR supports the following devices:
 For a full list of games that work well on CitraVR, please visit the [CitraVR Game Compatability List](https://docs.google.com/spreadsheets/d/1viN8_MWO1HW9QXlkT-TdCGQbH1g660mKsIp1ZTARdho/edit?usp=sharing)
 
 ### Controllers/Input 
-CitraVR maps the Quest controllers in a way that makes most games on the platform playable with the default mapping. 
+[Touch Controller Input Bindings Diagram](https://github.com/amwatson/CitraVR/wiki/Touch-Controller-Input-Bindings)
 
 For games that need access to more inputs, or if a player needs to access more inputs faster, CitraVR also supports a multitude of 3rd party wired USB and wireless bluetooth controllers. 
-
-[Touch Controller Input Bindings Diagram](https://github.com/amwatson/CitraVR/wiki/Touch-Controller-Input-Bindings)
 
 ## Releases
 Grab the latest release [here](https://github.com/amwatson/CitraVR/releases)

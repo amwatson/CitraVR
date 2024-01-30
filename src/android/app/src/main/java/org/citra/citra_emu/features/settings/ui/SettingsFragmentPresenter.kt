@@ -629,11 +629,12 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 add(InputBindingSetting(button, Settings.triggerTitles[i]))
             }
 
-            add(HeaderSetting(R.string.controller_hotkeys))
+            // VR-SPECIFIC: just remove hotkeys for this version.
+         /*   add(HeaderSetting(R.string.controller_hotkeys))
             Settings.hotKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
-            }
+            }*/
         }
     }
 

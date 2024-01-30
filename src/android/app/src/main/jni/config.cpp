@@ -304,7 +304,7 @@ void Config::ReadValues() {
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
-            "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
+            "VR", "vr_cpu_level", 3));
     VRSettings::values.vr_immersive_mode = sdl2_config->GetInteger(
             "VR", "vr_immersive_mode", 0);
     Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;

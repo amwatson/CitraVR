@@ -27,7 +27,7 @@
 I originally created this project to a be a proof-of-concept of some techniques XR developers were curious about. 
 Specifically:
 - Building a 2D/3D hybrid app
-- Rendering a 2D interactive window of non-VR content in VR
+- Creating a VR app to render 2D interactive windows without an engine
 - Using VR layers to get sharp, crisp text and visuals.
 
 A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emulator](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
@@ -54,7 +54,7 @@ CitraVR supports the following devices:
 For a full list of games that work well on CitraVR, please visit the [CitraVR Game Compatability List](https://docs.google.com/spreadsheets/d/1viN8_MWO1HW9QXlkT-TdCGQbH1g660mKsIp1ZTARdho/edit?usp=sharing)
 
 ### Controllers/Input 
-CitraVR maps the Quest controllers in a way that makes most games on the platform playable with the default mapping. 
+[Touch Controller Input Bindings Diagram](https://github.com/amwatson/CitraVR/wiki/Touch-Controller-Input-Bindings)
 
 For games that need access to more inputs, or if a player needs to access more inputs faster, CitraVR also supports a multitude of 3rd party wired USB and wireless bluetooth controllers. 
 

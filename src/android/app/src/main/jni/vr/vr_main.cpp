@@ -206,9 +206,14 @@ public:
             const uint32_t defaultResolutionFactor =
                 GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
             const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
-            const uint32_t resolutionFactor = resolutionFactorFromPreferences > 0
+            // add a couple factors to resolution with immersive mode so users
+            // aren't resetting their default settings to get higher res. min
+            // resolution factor for immersive is 3x.
+            const uint32_t immersiveModeOffset = (VRSettings::values.vr_immersive_mode > 0) ? 2 : 0;
+            const uint32_t resolutionFactor = (resolutionFactorFromPreferences > 0
                                                   ? resolutionFactorFromPreferences
-                                                  : defaultResolutionFactor;
+                                                  : defaultResolutionFactor) + immersiveModeOffset;
+
             if (resolutionFactor != defaultResolutionFactor) {
                 ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
                       defaultResolutionFactor);
@@ -324,14 +329,16 @@ private:
             const auto leftStickHand = InputStateFrame::LEFT_CONTROLLER;
             const auto cStickHand = InputStateFrame::RIGHT_CONTROLLER;
 
-            const auto& leftThumbstickClickState =
-                mInputStateFrame.mThumbStickClickState[InputStateFrame::LEFT_CONTROLLER];
-            const auto& rightThumbstickClickState =
-                mInputStateFrame.mThumbStickClickState[InputStateFrame::RIGHT_CONTROLLER];
-            const int dpadHand =
-                leftThumbstickClickState.currentState    ? InputStateFrame::LEFT_CONTROLLER
-                : rightThumbstickClickState.currentState ? InputStateFrame::RIGHT_CONTROLLER
-                                                         : InputStateFrame::NUM_CONTROLLERS;
+            const auto& leftThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
+            const auto& rightThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
+            const int dpadHand = leftThumbrestTouchState.currentState
+                                     ? InputStateFrame::RIGHT_CONTROLLER
+                                 : rightThumbrestTouchState.currentState
+                                     ? InputStateFrame::LEFT_CONTROLLER
+                                     : InputStateFrame::NUM_CONTROLLERS;
+
             {
                 static constexpr float kThumbStickDirectionThreshold = 0.5f;
                 // Doing it this way helps ensure we don't leave the dpad

@@ -173,4 +173,8 @@
     <string name="vr_extra_performance_mode">VR额外的性能模式</string>
     <string name="vr_cpu_level">CPU级别</string>
     <string name="vr_cpu_level_description">较高的水平可以改善音频/仿真性能，但会更快地排出电池</string>
+    <string name="vr_immersive_mode_title">[警告：图形伪像]沉浸式模式（实验）</string>
+    <string name="vr_immersive_mode_description">将顶部屏幕扩展在圆柱体周围以进行沉浸游戏</string>
+    <string name="vr_graphics_warning">危险：并非所有的游戏/水平在沉浸式模式下看起来都不错。当选择此选项时，大型视觉伪像很常见</string>
+    <string name="vr_graphics_warning_short">警告：这将导致大多数内容的视觉文物</string>
 </resources>

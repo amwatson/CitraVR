@@ -554,6 +554,9 @@ struct Values {
     std::string audio_encoder;
     std::string audio_encoder_options;
     u64 audio_bitrate;
+
+    // VR
+    Setting<bool> vr_use_immersive_mode{false, "vr_immersive_mode"};
 };
 
 extern Values values;

@@ -9,6 +9,7 @@
 #include "video_core/shader/generator/glsl_shader_decompiler.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 #include "video_core/shader/generator/shader_gen.h"
+#include "common/settings.h"
 
 using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
 
@@ -123,8 +124,15 @@ void main() {
     normquat = vert_normquat;
     view = vert_view;
     vec4 vtx_pos = SanitizeVertex(vert_position);
-    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
+
+    if (!Settings::values.vr_use_immersive_mode.GetValue())
+    {
+        out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out+= "\ngl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
+    }
+
     if (use_clip_planes) {
         out += R"(
         gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
@@ -140,6 +148,8 @@ void main() {
 
     return out;
 }
+
+
 
 std::string_view MakeLoadPrefix(AttribLoadFlags flag) {
     if (True(flag & AttribLoadFlags::Float)) {
@@ -238,7 +248,14 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
         out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
-        out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+        if (!Settings::values.vr_use_immersive_mode.GetValue())
+        {
+              out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+        }
+        else
+        {
+              out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
+        }
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
             out += "    if (enable_clip1) {\n";
@@ -332,7 +349,12 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
     out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
-    out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    if (!Settings::values.vr_use_immersive_mode.GetValue()) {
+        out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out+= "    gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
+    }
+
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
         out += "    if (enable_clip1) {\n";

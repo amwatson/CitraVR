@@ -101,4 +101,8 @@
     <string name="vr_extra_performance_mode">VR Extra Performance -tila</string>
     <string name="vr_cpu_level">CPU -taso</string>
     <string name="vr_cpu_level_description">Korkeammat tasot voivat parantaa audio/emulointia, mutta tyhjentää akun nopeammin</string>
+    <string name="vr_immersive_mode_title">[VAROITUS: Grafiikkaesineitä] Impersiivinen tila (kokeellinen)</string>
+    <string name="vr_immersive_mode_description">Laajentaa yläreunaa sylinterin ympärille syventävään pelattamiseen</string>
+    <string name="vr_graphics_warning">Vaara: Kaikki pelit/tasot eivät näytä hyvältä syventävässä tilassa. Suuret visuaaliset esineet ovat yleisiä, kun tämä vaihtoehto on valittu</string>
+    <string name="vr_graphics_warning_short">VAROITUS: Tämä aiheuttaa visuaalista esinettä useimmissa sisällöissä</string>
 </resources>

@@ -1100,6 +1100,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.VR_CPU_LEVEL.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.VR_IMMERSIVE_MODE,
+                    R.string.vr_immersive_mode_title,
+                    R.string.vr_immersive_mode_description,
+                    BooleanSetting.VR_IMMERSIVE_MODE.key,
+                    BooleanSetting.VR_IMMERSIVE_MODE.defaultValue
+                )
+            )
         }
     }
 }

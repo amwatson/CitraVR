@@ -524,4 +524,8 @@
     <string name="vr_extra_performance_mode">VR zusätzlicher Leistungsmodus</string>
     <string name="vr_cpu_level">CPU -Ebene</string>
     <string name="vr_cpu_level_description">Höhere Werte können die Audio-/Emulationsleistung verbessern, die Batterie jedoch schneller abtropfen lassen</string>
+    <string name="vr_immersive_mode_title">[Warnung: Grafikartefakte] Immersive Modus (experimentell)</string>
+    <string name="vr_immersive_mode_description">Erweitert den oberen Bildschirm um einen Zylinder für ein immersives Gameplay</string>
+    <string name="vr_graphics_warning">Gefahr: Nicht alle Spiele/Levels sehen im beeindruckenden Modus gut aus. Große visuelle Artefakte sind häufig, wenn diese Option ausgewählt ist</string>
+    <string name="vr_graphics_warning_short">Warnung: Dies führt zu visuellen Artefakten in den meisten Inhalten</string>
 </resources>

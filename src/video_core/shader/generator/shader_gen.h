@@ -58,6 +58,8 @@ struct PicaGSConfigState {
 
     // semantic_maps[semantic name] -> GS output attribute index + component index
     std::array<SemanticMap, 24> semantic_maps;
+
+    bool use_vr_immersive_mode;
 };
 
 /**

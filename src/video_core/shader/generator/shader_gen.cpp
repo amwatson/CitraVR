@@ -5,6 +5,7 @@
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+
 #include "video_core/pica/regs_internal.h"
 #include "video_core/pica/shader_setup.h"
 #include "video_core/shader/generator/shader_gen.h"
@@ -34,6 +35,8 @@ void PicaGSConfigState::Init(const Pica::RegsInternal& regs, bool use_clip_plane
             }
         }
     }
+
+    use_vr_immersive_mode = Settings::values.vr_use_immersive_mode.GetValue();
 }
 
 void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,

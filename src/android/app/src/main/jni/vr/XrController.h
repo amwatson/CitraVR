@@ -50,6 +50,7 @@ public:
     XrAction mHandPoseAction = XR_NULL_HANDLE;
     XrAction mThumbClickAction = XR_NULL_HANDLE;
     XrAction mSqueezeTriggerAction = XR_NULL_HANDLE;
+    XrAction mThumbRestTouchAction = XR_NULL_HANDLE;
 };
 
 struct InputStateFrame {
@@ -64,6 +65,7 @@ struct InputStateFrame {
 
     XrActionStateVector2f mThumbStickState[NUM_CONTROLLERS];
     XrActionStateBoolean mThumbStickClickState[NUM_CONTROLLERS];
+    XrActionStateBoolean mThumbrestTouchState[NUM_CONTROLLERS];
     XrActionStateBoolean mIndexTriggerState[NUM_CONTROLLERS];
     XrActionStateBoolean mSqueezeTriggerState[NUM_CONTROLLERS];
 

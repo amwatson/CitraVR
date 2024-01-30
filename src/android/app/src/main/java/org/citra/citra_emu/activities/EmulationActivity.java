@@ -587,6 +587,17 @@ public class EmulationActivity extends AppCompatActivity {
             default:
                 return false;
         }
+
+        if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_UP) {
+            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, action);
+        } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_DOWN) {
+            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, action);
+        } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_LEFT) {
+            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, action);
+        } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, action);
+        }
+
         InputDevice input = event.getDevice();
 
         if (input == null) {

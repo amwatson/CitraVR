@@ -27,7 +27,7 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
+    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini.vr0";
     std::string ini_buffer;
     FileUtil::ReadFileToString(true, sdl2_config_loc, ini_buffer);
     if (!ini_buffer.empty()) {
@@ -304,7 +304,7 @@ void Config::ReadValues() {
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
-            "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
+           "VR", "vr_cpu_level", 3));
     Settings::values.vr_use_immersive_mode = sdl2_config->GetBoolean(
         "VR", "vr_immersive_mode", false);
 

@@ -27,7 +27,7 @@
 I originally created this project to a be a proof-of-concept of some techniques XR developers were curious about. 
 Specifically:
 - Building a 2D/3D hybrid app
-- Rendering a 2D interactive window of non-VR content in VR without an engine
+- Creating a VR app to render 2D interactive windows without an engine
 - Using VR layers to get sharp, crisp text and visuals.
 
 A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emulator](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.

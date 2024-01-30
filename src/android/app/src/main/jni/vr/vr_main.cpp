@@ -332,14 +332,16 @@ private:
             const auto leftStickHand = InputStateFrame::LEFT_CONTROLLER;
             const auto cStickHand = InputStateFrame::RIGHT_CONTROLLER;
 
-            const auto& leftThumbstickClickState =
-                mInputStateFrame.mThumbStickClickState[InputStateFrame::LEFT_CONTROLLER];
-            const auto& rightThumbstickClickState =
-                mInputStateFrame.mThumbStickClickState[InputStateFrame::RIGHT_CONTROLLER];
-            const int dpadHand =
-                leftThumbstickClickState.currentState    ? InputStateFrame::LEFT_CONTROLLER
-                : rightThumbstickClickState.currentState ? InputStateFrame::RIGHT_CONTROLLER
-                                                         : InputStateFrame::NUM_CONTROLLERS;
+            const auto& leftThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
+            const auto& rightThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
+            const int dpadHand = leftThumbrestTouchState.currentState
+                                     ? InputStateFrame::RIGHT_CONTROLLER
+                                 : rightThumbrestTouchState.currentState
+                                     ? InputStateFrame::LEFT_CONTROLLER
+                                     : InputStateFrame::NUM_CONTROLLERS;
+
             {
                 static constexpr float kThumbStickDirectionThreshold = 0.5f;
                 // Doing it this way helps ensure we don't leave the dpad

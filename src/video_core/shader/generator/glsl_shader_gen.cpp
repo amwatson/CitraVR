@@ -1683,8 +1683,20 @@ void main() {
         vtx_pos.z = 0.f;
     }
 )";
+if (!Settings::values.vr_use_immersive_mode.GetValue())
+    {
+        out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        //out+= "\ngl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
+        out+= "\ngl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+    }
+    if (!Settings::values.vr_use_immersive_mode.GetValue())
+    {
+        out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out+= "\ngl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
 
-    out+= "\ngl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+    }
 
     if (use_clip_planes) {
         out += R"(
@@ -1806,6 +1818,14 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
         out += "    }\n";
 
         out+= "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+        if (!Settings::values.vr_use_immersive_mode.GetValue())
+        {
+              out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+        }
+        else
+        {
+              out+= "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+        }
 
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
@@ -1904,7 +1924,11 @@ struct Vertex {
     out += "        vtx_pos.z = 0.f;\n";
     out += "    }\n";
 
-    out += "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+    if (!Settings::values.vr_use_immersive_mode.GetValue()) {
+        out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    } else {
+        out += "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
+    }
 
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0

@@ -4,7 +4,6 @@
 
 #include <limits>
 #include "common/alignment.h"
-#include "common/settings.h"
 #include "core/memory.h"
 #include "video_core/pica_state.h"
 #include "video_core/rasterizer_accelerated.h"

@@ -27,7 +27,7 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
+    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini.vr0";
     std::string ini_buffer;
     FileUtil::ReadFileToString(true, sdl2_config_loc, ini_buffer);
     if (!ini_buffer.empty()) {

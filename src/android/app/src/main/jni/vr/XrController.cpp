@@ -100,6 +100,9 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
     mThumbClickAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "thumb_click",
                                      nullptr, 2, handSubactionPaths);
 
+    mThumbRestTouchAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "thumbresttouch",
+                                         nullptr, 2, handSubactionPaths);
+
     mSqueezeTriggerAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT,
                                          "squeeze_trigger", nullptr, 2, handSubactionPaths);
 
@@ -141,6 +144,11 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
         bindings.push_back(ActionSuggestedBinding(instance, mThumbClickAction,
                                                   "/user/hand/left/input/thumbstick/click"));
 
+        bindings.push_back(ActionSuggestedBinding(instance, mThumbRestTouchAction,
+                                                  "/user/hand/left/input/thumbrest/touch"));
+        bindings.push_back(ActionSuggestedBinding(instance, mThumbRestTouchAction,
+                                                  "/user/hand/right/input/thumbrest/touch"));
+
         bindings.push_back(ActionSuggestedBinding(instance, mSqueezeTriggerAction,
                                                   "/user/hand/right/input/squeeze/value"));
         bindings.push_back(ActionSuggestedBinding(instance, mSqueezeTriggerAction,
@@ -176,6 +184,7 @@ InputStateStatic::~InputStateStatic() {
     OXR(xrDestroyAction(mHandPoseAction));
     OXR(xrDestroyAction(mThumbStickAction));
     OXR(xrDestroyAction(mThumbClickAction));
+    OXR(xrDestroyAction(mThumbRestTouchAction));
     OXR(xrDestroyAction(mSqueezeTriggerAction));
 
     if (mLeftHandSpace != XR_NULL_HANDLE) {
@@ -247,6 +256,12 @@ void InputStateFrame::SyncButtonsAndThumbSticks(
         session, staticState->mThumbClickAction, staticState->mLeftHandSubactionPath);
     mThumbStickClickState[RIGHT_CONTROLLER] = SyncButtonState(
         session, staticState->mThumbClickAction, staticState->mRightHandSubactionPath);
+
+    // Sync thumbrest touch states
+    mThumbrestTouchState[LEFT_CONTROLLER] = SyncButtonState(
+        session, staticState->mThumbRestTouchAction, staticState->mLeftHandSubactionPath);
+    mThumbrestTouchState[RIGHT_CONTROLLER] = SyncButtonState(
+        session, staticState->mThumbRestTouchAction, staticState->mRightHandSubactionPath);
 
     // Sync index trigger states
     mIndexTriggerState[LEFT_CONTROLLER] = SyncButtonState(

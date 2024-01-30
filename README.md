@@ -58,6 +58,8 @@ CitraVR maps the Quest controllers in a way that makes most games on the platfor
 
 For games that need access to more inputs, or if a player needs to access more inputs faster, CitraVR also supports a multitude of 3rd party wired USB and wireless bluetooth controllers. 
 
+[Touch Controller Input Bindings Diagram](https://github.com/amwatson/CitraVR/wiki/Touch-Controller-Input-Bindings)
+
 ## Releases
 Grab the latest release [here](https://github.com/amwatson/CitraVR/releases)
 

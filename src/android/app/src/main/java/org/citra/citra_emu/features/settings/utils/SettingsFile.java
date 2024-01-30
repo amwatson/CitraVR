@@ -33,7 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * Contains static methods for interacting with .ini files in which settings are stored.
+ * Contains static methods for interacting with .ini.vr files in which settings are stored.
  */
 public final class SettingsFile {
     public static final String FILE_NAME_CONFIG = "config";
@@ -245,7 +245,7 @@ public final class SettingsFile {
             outputStream.flush();
             outputStream.close();
         } catch (IOException e) {
-            Log.error("[SettingsFile] File not found: " + fileName + ".ini: " + e.getMessage());
+            Log.error("[SettingsFile] File not found: " + fileName + ".ini.vr " + e.getMessage());
             if (view != null) {
                 view.showToastMessage(CitraApplication.getAppContext().getString(R.string.error_saving, fileName, e.getMessage()), false);
             }
@@ -288,13 +288,13 @@ public final class SettingsFile {
     public static DocumentFile getSettingsFile(String fileName) {
         DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.getAppContext(), Uri.parse(DirectoryInitialization.getUserDirectory()));
         DocumentFile configDirectory = root.findFile("config");
-        return configDirectory.findFile(fileName + ".ini");
+        return configDirectory.findFile(fileName + ".ini.vr");
     }
 
     private static DocumentFile getCustomGameSettingsFile(String gameId) {
         DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.getAppContext(), Uri.parse(DirectoryInitialization.getUserDirectory()));
         DocumentFile configDirectory = root.findFile("GameSettings");
-        return configDirectory.findFile(gameId + ".ini");
+        return configDirectory.findFile(gameId + ".ini.vr");
     }
 
     private static SettingSection sectionFromLine(String line, boolean isCustomGame) {

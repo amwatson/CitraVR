@@ -30,7 +30,7 @@ import java.util.TreeMap
 
 
 /**
- * Contains static methods for interacting with .ini files in which settings are stored.
+ * Contains static methods for interacting with .ini.vr files in which settings are stored.
  */
 object SettingsFile {
     const val FILE_NAME_CONFIG = "config"
@@ -38,7 +38,7 @@ object SettingsFile {
     private var sectionsMap = BiMap<String?, String?>()
 
     /**
-     * Reads a given .ini file from disk and returns it as a HashMap of Settings, themselves
+     * Reads a given .ini.vr file from disk and returns it as a HashMap of Settings, themselves
      * effectively a HashMap of key/value settings. If unsuccessful, outputs an error telling why it
      * failed.
      *
@@ -96,7 +96,7 @@ object SettingsFile {
     fun readFile(fileName: String): HashMap<String, SettingSection?> = readFile(fileName, null)
 
     /**
-     * Reads a given .ini file from disk and returns it as a HashMap of SettingSections, themselves
+     * Reads a given .ini.vr file from disk and returns it as a HashMap of SettingSections, themselves
      * effectively a HashMap of key/value settings. If unsuccessful, outputs an error telling why it
      * failed.
      *
@@ -111,7 +111,7 @@ object SettingsFile {
     }
 
     /**
-     * Saves a Settings HashMap to a given .ini file on disk. If unsuccessful, outputs an error
+     * Saves a Settings HashMap to a given .ini.vr file on disk. If unsuccessful, outputs an error
      * telling why it failed.
      *
      * @param fileName The target filename without a path or extension.
@@ -139,7 +139,7 @@ object SettingsFile {
             outputStream!!.flush()
             outputStream.close()
         } catch (e: Exception) {
-            Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
+            Log.error("[SettingsFile] File not found: $fileName.ini.vr: ${e.message}")
             view.showToastMessage(
                 CitraApplication.appContext
                     .getString(R.string.error_saving, fileName, e.message), false
@@ -163,7 +163,7 @@ object SettingsFile {
             outputStream!!.flush()
             outputStream.close()
         } catch (e: Exception) {
-            Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
+            Log.error("[SettingsFile] File not found: $fileName.ini.vr: ${e.message}")
         }
     }
 
@@ -184,15 +184,26 @@ object SettingsFile {
     }
 
     fun getSettingsFile(fileName: String): DocumentFile {
+       return getSettingsFile(fileName, "ini.vr")
+    }
+    fun getSettingsFile(fileName: String, ext: String): DocumentFile {
         val root = DocumentFile.fromTreeUri(CitraApplication.appContext, Uri.parse(userDirectory))
-        val configDirectory = root!!.findFile("config")
-        return configDirectory!!.findFile("$fileName.ini")!!
+        val configDirectory = root?.findFile("config")
+
+        // Check if the config directory exists; if not, create it.
+        val actualConfigDirectory = configDirectory ?: root?.createDirectory("config")
+        ?: throw IllegalStateException("Cannot create config directory")
+
+        // Try to find the file, if it doesn't exist, create it.
+        return actualConfigDirectory.findFile("$fileName.$ext")
+            ?: actualConfigDirectory.createFile("text/plain", "$fileName.$ext")
+            ?: throw IllegalStateException("Cannot create file $fileName.$ext")
     }
 
     private fun getCustomGameSettingsFile(gameId: String): DocumentFile {
         val root = DocumentFile.fromTreeUri(CitraApplication.appContext, Uri.parse(userDirectory))
         val configDirectory = root!!.findFile("GameSettings")
-        return configDirectory!!.findFile("$gameId.ini")!!
+        return configDirectory!!.findFile("$gameId.ini.vr")!!
     }
 
     private fun sectionFromLine(line: String, isCustomGame: Boolean): SettingSection {
@@ -284,7 +295,7 @@ object SettingsFile {
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
             outputStream!!.close()
         } catch (e: Exception) {
-            Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
+            Log.error("[SettingsFile] File not found: $fileName.ini.vr: ${e.message}")
         }
     }
 }

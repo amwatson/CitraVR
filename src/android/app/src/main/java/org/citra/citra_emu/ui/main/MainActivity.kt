@@ -78,8 +78,11 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         // Note: Do the version check whenever the current build has a valid release tag
         if (releaseVersionCur.isRealVersion() && !releaseVersionCur.hasLowerVersionThan(VrReleaseVersion.RELEASE_VERSION_0_4_0) &&  (!releaseVersionPrev.isRealVersion() || releaseVersionPrev.hasLowerVersionThan(
                 VrReleaseVersion.RELEASE_VERSION_0_4_0))) {
-            Log.info("New install from prev version \"v${releaseVersionCur.getMajor()}.${releaseVersionCur.getMinor()}.${releaseVersionCur.getPatch()}\" needs update. Wiping config.ini")
-            //SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)?.delete()
+            Log.info("New install from prev version \"v${releaseVersionCur.getMajor()}.${releaseVersionCur.getMinor()}.${releaseVersionCur.getPatch()}\" needs update. Wiping config.ini.vr0")
+            // Delete V0.3.2 settings file if present
+            try {
+                SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG, "ini.vr0")?.delete()
+            } catch (e : Exception) {}
         }
     }
 

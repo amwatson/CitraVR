@@ -1102,6 +1102,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    IntSetting.NEW_3DS,
+                    R.string.new_3ds,
+                    R.string.vr_new_3ds_description,
+                    IntSetting.NEW_3DS.key,
+                    IntSetting.NEW_3DS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.VR_IMMERSIVE_MODE,
                     R.string.vr_immersive_mode_title,
                     R.string.vr_immersive_mode_description,

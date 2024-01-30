@@ -177,4 +177,5 @@
     <string name="vr_immersive_mode_description">Utvider toppskjermen rundt en sylinder for oppslukende spill</string>
     <string name="vr_graphics_warning">FARE: Ikke alle spill/nivåer ser bra ut i oppslukende modus. Store visuelle gjenstander er vanlige når dette alternativet er valgt</string>
     <string name="vr_graphics_warning_short">Advarsel: Dette vil forårsake visuell gjenstand i det meste</string>
+    <string name="vr_new_3ds_description">Skal være aktivert for de fleste titler. Når de er deaktivert, forbedrer ytelsen til spesifikke titler (f. eks.  Star Fox 64 3D)</string>
 </resources>

@@ -670,4 +670,5 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="vr_immersive_mode_description">Extiende la pantalla superior alrededor de un cilindro para un juego inmersivo</string>
     <string name="vr_graphics_warning">Danger: No todos los juegos/niveles se ven bien en modo inmersivo. Los grandes artefactos visuales son comunes cuando se selecciona esta opción</string>
     <string name="vr_graphics_warning_short">ADVERTENCIA: Esto causará artefactos visuales en la mayoría de los contenidos</string>
+    <string name="vr_new_3ds_description">Debe estar habilitado para la mayoría de los títulos. Cuando está deshabilitado, mejora el rendimiento de títulos específicos (por ejemplo, Star Fox 64 3D)</string>
 </resources>

@@ -671,4 +671,5 @@
     <string name="vr_immersive_mode_description">Étend l\'écran supérieur autour d\'un cylindre pour un gameplay immersif</string>
     <string name="vr_graphics_warning">Danger: Tous les jeux / niveaux ne sont pas bons en mode immersif. Les grands artefacts visuels sont courants lorsque cette option est sélectionnée</string>
     <string name="vr_graphics_warning_short">AVERTISSEMENT: Cela provoquera un artefact visuel dans la plupart des contenus</string>
+    <string name="vr_new_3ds_description">Devrait être activé pour la plupart des titres. Lorsqu\'il est handicapé, améliore les performances de titres spécifiques (par exemple Star Fox 64 3D)</string>
 </resources>

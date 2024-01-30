@@ -300,6 +300,7 @@
     <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
     <string name="vr_cpu_level">CPU level</string>
     <string name="vr_cpu_level_description">Higher levels may improve audio/emulation performance, but will drain the battery faster</string>
+    <string name="immersive_mode">Immersive Mode</string>
     <string name="vr_immersive_mode_title">[WARNING: Graphics Artifacts] Immersive Mode (Experimental)</string>
     <string name="vr_immersive_mode_description">Extends the top screen around a cylinder for immersive gameplay</string>
     <string name="vr_immersive_pos_factor_title">Immersive Mode Positional Movement Factor</string>

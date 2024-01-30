@@ -487,28 +487,35 @@ private:
         gOpenXr->headLocation = {XR_TYPE_SPACE_LOCATION};
         OXR(xrLocateSpace(gOpenXr->viewSpace_, gOpenXr->headSpace_, frameState.predictedDisplayTime, &gOpenXr->headLocation));
 
-        bool showLowerPanel = false;
+        bool showLowerPanel = true;
         // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
         if (VideoCore::g_renderer && VideoCore::g_renderer->Rasterizer())
         {
             //I am confused... but GetRollInRadians appears to return pitch
             float pitch = XrMath::Quatf::GetRollInRadians(gOpenXr->headLocation.pose.orientation);
 
-            //Only use position if it is enabled, and the user is not looking at the lower panel
-            if ((VRSettings::values.vr_immersive_positional_factor > 0) && (pitch > -0.35f))
-            {
-                Common::Vec3f position{-gOpenXr->headLocation.pose.position.y,
-                                       gOpenXr->headLocation.pose.position.x,
-                                       0.0f}; //gOpenXr->headLocation.pose.position.z}; - For some reason Z doesn't affect the actual Z position!
-                position *= VRSettings::values.vr_immersive_positional_factor;
-                VideoCore::g_renderer->Rasterizer()->SetVRData(position);
-            }
-            else
+            if ((VRSettings::values.vr_immersive_positional_factor == 0) ||
+                (pitch < -0.35f))
             {
                 //Disable position when looking down at the lower panel
                 Common::Vec3f position = {};
                 VideoCore::g_renderer->Rasterizer()->SetVRData(position);
-                showLowerPanel = true;
+            }
+            else
+            {
+                //Only use position if it is enabled, and the user is not looking at the lower panel
+                Common::Vec3f position{-gOpenXr->headLocation.pose.position.y,
+                                       gOpenXr->headLocation.pose.position.x,
+                                       -gOpenXr->headLocation.pose.position.z};// - For some reason Z doesn't affect the actual Z position!
+
+                ALOGI("gOpenXr->headLocation Position : {}.{}.{}",
+                      position.x,
+                      position.y,
+                      position.z);
+
+                position *= VRSettings::values.vr_immersive_positional_factor;
+                VideoCore::g_renderer->Rasterizer()->SetVRData(position);
+                showLowerPanel = false;
             }
         }
 

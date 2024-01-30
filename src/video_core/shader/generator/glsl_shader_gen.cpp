@@ -1642,6 +1642,28 @@ do {
     return out;
 }
 
+
+static std::string GenerateGLPositionAndGLClipDistanceBlock(bool use_clip_planes)
+{
+    std::string out;
+
+    out+= "\n    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w - vr_position.z);\n";
+
+    if (use_clip_planes)
+    {
+        out += R"(
+            gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
+            if (enable_clip1) {
+                gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
+            } else {
+                gl_ClipDistance[1] = 0.0;
+            }
+        )";
+    }
+
+    return out;
+}
+
 std::string GenerateTrivialVertexShader(bool use_clip_planes, bool separable_shader) {
     std::string out;
     if (separable_shader) {
@@ -1684,25 +1706,12 @@ void main() {
     }
 )";
 
-    out+= "\ngl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
-
-    if (use_clip_planes) {
-        out += R"(
-        gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
-        if (enable_clip1) {
-            gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
-        } else {
-            gl_ClipDistance[1] = 0.0;
-        }
-        )";
-    }
+    out += GenerateGLPositionAndGLClipDistanceBlock(use_clip_planes);
 
     out += "}\n";
 
     return out;
 }
-
-
 
 std::string_view MakeLoadPrefix(AttribLoadFlags flag) {
     if (True(flag & AttribLoadFlags::Float)) {
@@ -1805,16 +1814,7 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
         out += "        vtx_pos.z = 0.f;\n";
         out += "    }\n";
 
-        out+= "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
-
-        if (config.state.use_clip_planes) {
-            out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
-            out += "    if (enable_clip1) {\n";
-            out += "        gl_ClipDistance[1] = dot(clip_coef, vtx_pos);\n";
-            out += "    } else {\n";
-            out += "        gl_ClipDistance[1] = 0.0;\n";
-            out += "    }\n\n";
-        }
+        out += GenerateGLPositionAndGLClipDistanceBlock(config.state.use_clip_planes);
 
         out += "    normquat = GetVertexQuaternion();\n";
         out += "    vec4 vtx_color = vec4(" + semantic(VSOutputAttributes::COLOR_R) + ", " +
@@ -1904,16 +1904,7 @@ struct Vertex {
     out += "        vtx_pos.z = 0.f;\n";
     out += "    }\n";
 
-    out += "    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w);\n";
-
-    if (state.use_clip_planes) {
-        out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
-        out += "    if (enable_clip1) {\n";
-        out += "        gl_ClipDistance[1] = dot(clip_coef, vtx_pos);\n";
-        out += "    } else {\n";
-        out += "        gl_ClipDistance[1] = 0.0;\n";
-        out += "    }\n\n";
-    }
+    out += GenerateGLPositionAndGLClipDistanceBlock(state.use_clip_planes);
 
     out += "    vec4 vtx_quat = GetVertexQuaternion(vtx);\n";
     out += "    normquat = mix(vtx_quat, -vtx_quat, bvec4(quats_opposite));\n\n";

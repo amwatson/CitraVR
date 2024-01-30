@@ -387,7 +387,7 @@ public final class SettingsFragmentPresenter {
         sl.add(new CheckBoxSetting(SettingsFile.KEY_USE_DISK_SHADER_CACHE, Settings.SECTION_RENDERER, R.string.use_disk_shader_cache, R.string.use_disk_shader_cache_description, true, useDiskShaderCache));
 
         sl.add(new HeaderSetting(null, null, R.string.stereoscopy, 0));
-        sl.add(new SliderSetting(SettingsFile.KEY_FACTOR_3D, Settings.SECTION_RENDERER, R.string.factor3d, R.string.factor3d_description, 0, 100, "%", 50, factor3d));
+        sl.add(new SliderSetting(SettingsFile.KEY_FACTOR_3D, Settings.SECTION_RENDERER, R.string.factor3d, R.string.factor3d_description, 0, 200, "%", 50, factor3d));
 
         sl.add(new HeaderSetting(null, null, R.string.utility, 0));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_DUMP_TEXTURES, Settings.SECTION_UTILITY, R.string.dump_textures, R.string.dump_textures_description, false, dumpTextures));
@@ -437,6 +437,7 @@ public final class SettingsFragmentPresenter {
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_ENVIRONMENT, Settings.SECTION_VR, R.string.vr_background, 0, R.array.vrBackgroundNames, R.array.vrBackgroundValues, VRUtils.getHMDType() == VRUtils.HMDType.QUEST3.getValue() ? 1 : 2, vrEnvironment));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_VR_EXTRA_PERFORMANCE_MODE, Settings.SECTION_VR, R.string.vr_extra_performance_mode, R.string.vr_extra_performance_mode_description, false, vrExtraPerformanceMode));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_CPU_LEVEL, Settings.SECTION_VR, R.string.vr_cpu_level, R.string.vr_cpu_level_description, R.array.vrCpuLevelNames, R.array.vrCpuLevelValues, 3, vrCpuLevel));
+        sl.add(new HeaderSetting(null, null, R.string.immersive_mode, 0));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_VR_IMMERSIVE_MODE, Settings.SECTION_VR, R.string.vr_immersive_mode_title, R.string.vr_immersive_mode_description, R.array.vrImmersiveModeNames, R.array.vrImmersiveModeValues, 0, vrImmersiveMode));
         sl.add(new SliderSetting(SettingsFile.KEY_VR_IMMERSIVE_POSITIONAL_FACTOR, Settings.SECTION_VR, R.string.vr_immersive_pos_factor_title, R.string.vr_immersive_pos_factor_description, 0, 40, "X", 0, vrImmersivePositionalFactor));
     }

@@ -56,7 +56,7 @@
     </queries>
 
     <application
-        android:name="org.citra.citra_emu.CitraApplication"
+        android:name="org.citra.citra_emu.vr.VrCitraApplication"
         android:allowBackup="false"
         android:banner="@mipmap/ic_launcher"
         android:icon="@mipmap/ic_launcher"

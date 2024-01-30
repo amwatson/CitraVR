@@ -9,14 +9,12 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import androidx.preference.PreferenceManager
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DocumentsTree
-import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.PermissionsHandler
-import org.citra.citra_emu.vr.utils.VRUtils
 
-class CitraApplication : Application() {
+open class CitraApplication : Application() {
     private fun createNotificationChannel() {
         with(getSystemService(NotificationManager::class.java)) {
             // General notification
@@ -46,21 +44,8 @@ class CitraApplication : Application() {
         }
     }
 
-    private fun updateLaunchVersionPrefs() {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val releaseVersionPrev : String = preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT, "")!!
-        val releaseVersionCur : String = BuildConfig.VERSION_NAME
-        preferences.edit()
-            .putString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_PREV, releaseVersionPrev)
-            .putString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT, releaseVersionCur)
-            .apply()
-        Log.info("Version: \"${preferences.getString(VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_PREV, "")}\" (prev) -> \"${preferences.getString(
-            VRUtils.PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT, "")}\" (current)")
-    }
-
     override fun onCreate() {
         super.onCreate()
-        updateLaunchVersionPrefs()
         application = this
         documentsTree = DocumentsTree()
         if (PermissionsHandler.hasWriteAccess(applicationContext)) {

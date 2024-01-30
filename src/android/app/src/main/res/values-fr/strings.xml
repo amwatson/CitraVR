@@ -173,4 +173,8 @@
     <string name="vr_extra_performance_mode">Mode de performance supplémentaire VR</string>
     <string name="vr_cpu_level">Niveau du processeur</string>
     <string name="vr_cpu_level_description">Des niveaux plus élevés peuvent améliorer les performances audio / émulation, mais draineront la batterie plus rapidement</string>
+    <string name="vr_immersive_mode_title">[AVERTISSEMENT: Artefacts graphiques] Mode immersif (expérimental)</string>
+    <string name="vr_immersive_mode_description">Étend l\'écran supérieur autour d\'un cylindre pour un gameplay immersif</string>
+    <string name="vr_graphics_warning">Danger: Tous les jeux / niveaux ne sont pas bons en mode immersif. Les grands artefacts visuels sont courants lorsque cette option est sélectionnée</string>
+    <string name="vr_graphics_warning_short">AVERTISSEMENT: Cela provoquera un artefact visuel dans la plupart des contenus</string>
 </resources>

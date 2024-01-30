@@ -6,6 +6,7 @@
 #include "common/logging/log.h"
 #include "video_core/shader/generator/shader_gen.h"
 #include "video_core/video_core.h"
+#include "common/settings.h"
 
 namespace Pica::Shader::Generator {
 

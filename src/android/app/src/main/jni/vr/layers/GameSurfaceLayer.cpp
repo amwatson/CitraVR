@@ -14,6 +14,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "GameSurfaceLayer.h"
 
+#include "../vr_settings.h"
+
 #include "../utils/JniUtils.h"
 #include "../utils/LogUtils.h"
 #include "../utils/SyspropUtils.h"
@@ -29,6 +31,9 @@ License     :   Licensed under GPLv3 or any later version.
 namespace {
 
 constexpr float lowerPanelScaleFactor = 0.75f;
+
+const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
+
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
  *
@@ -223,9 +228,16 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
                                    const XrSession& session, const uint32_t resolutionFactor)
     : session_(session), topPanelFromWorld_(CreateTopPanelFromWorld(position)),
       lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)),
-      resolutionFactor_(resolutionFactor), env_(env), activityObject_(activityObject)
+      resolutionFactor_(resolutionFactor), immersiveMode_(VRSettings::values.vr_immersive_mode),
+      env_(env), activityObject_(activityObject)
 
 {
+    assert(immersiveMode_ == 0 || immersiveMode_ == 1);
+    if (immersiveMode_ > 0) {
+        ALOGI("Using VR immersive mode {}", immersiveMode_);
+        topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
+        lowerPanelFromWorld_.position.y = -1.0f - (0.5f * (immersiveMode_ - 1));
+    }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'", initializationStatus);
@@ -252,8 +264,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
-    const int32_t useCylinder = GetCylinderSysprop();
-    if (useCylinder == 1) {
+    const bool useCylinder = (GetCylinderSysprop() != 0) || (immersiveMode_ > 0);
+    if (useCylinder) {
 
         // Create the Top Display Panel (Curved display)
         for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
@@ -284,7 +296,9 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // scale of the texture.
             const float radius = GetRadiusSysprop();
             layer.radius = radius;
-            layer.centralAngle = GetCentralAngleSysprop() * MATH_FLOAT_PI / 180.0f;
+            layer.centralAngle = (!immersiveMode_ ? GetCentralAngleSysprop()
+                                                  : 55.0f * immersiveLevelFactor[immersiveMode_]) *
+                                 MATH_FLOAT_PI / 180.0f;
             layer.aspectRatio = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
         }
@@ -343,10 +357,15 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
-        layer.subImage.imageRect.offset.x = cropHoriz / 2;
-        layer.subImage.imageRect.offset.y = panelHeight + verticalBorderTex;
-        layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
-        layer.subImage.imageRect.extent.height = panelHeight;
+        layer.subImage.imageRect.offset.x =
+            (cropHoriz / 2) / immersiveLevelFactor[immersiveMode_] +
+            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+        layer.subImage.imageRect.offset.y =
+            panelHeight + verticalBorderTex +
+            panelHeight * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+        layer.subImage.imageRect.extent.width =
+            (panelWidth - cropHoriz) / immersiveLevelFactor[immersiveMode_];
+        layer.subImage.imageRect.extent.height = panelHeight / immersiveLevelFactor[immersiveMode_];
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,

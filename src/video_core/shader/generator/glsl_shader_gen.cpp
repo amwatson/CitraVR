@@ -10,6 +10,7 @@
 #include "video_core/shader/generator/glsl_shader_decompiler.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 #include "video_core/shader/generator/shader_uniforms.h"
+#include "common/settings.h"
 
 using Pica::FramebufferRegs;
 using Pica::LightingRegs;
@@ -42,6 +43,7 @@ layout (set = 0, binding = 1, std140) uniform vs_data {
 #else
 layout (binding = 1, std140) uniform vs_data {
 #endif
+    bool vr_use_immersive_mode;
     bool enable_clip1;
     vec4 clip_coef;
 };
@@ -1678,8 +1680,10 @@ void main() {
     if (abs(vtx_pos.z) < EPSILON_Z) {
         vtx_pos.z = 0.f;
     }
-    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
+
+    out+= "\ngl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+
     if (use_clip_planes) {
         out += R"(
         gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
@@ -1695,6 +1699,8 @@ void main() {
 
     return out;
 }
+
+
 
 std::string_view MakeLoadPrefix(AttribLoadFlags flag) {
     if (True(flag & AttribLoadFlags::Float)) {
@@ -1796,7 +1802,9 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
         out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
         out += "        vtx_pos.z = 0.f;\n";
         out += "    }\n";
-        out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+
+        out+= "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
             out += "    if (enable_clip1) {\n";
@@ -1893,7 +1901,13 @@ struct Vertex {
     out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
     out += "        vtx_pos.z = 0.f;\n";
     out += "    }\n";
-    out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+
+    out += "    if (vr_use_immersive_mode) {\n";
+    out += "        gl_Position = vec4(vtx_pos.x / 3.0, vtx_pos.y / 3.0, -vtx_pos.z, vtx_pos.w);\n";
+    out += "    } else {\n";
+    out += "        gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    out += "    }\n\n";
+
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
         out += "    if (enable_clip1) {\n";

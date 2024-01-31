@@ -58,7 +58,7 @@
     <string name="licenses">Licenses</string>
     <string name="support_link">https://discord.gg/FAXfZV9</string>
     <string name="website_link">https://citra-emu.org/</string>
-    <string name="github_link">https://github.com/citra-emu</string>
+    <string name="github_link">https://github.com/amwatson/CitraVR</string>
 
     <!-- Setup strings -->
     <string name="welcome">Welcome!</string>

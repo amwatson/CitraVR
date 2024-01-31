@@ -672,4 +672,7 @@
     <string name="vr_graphics_warning">Danger: Tous les jeux / niveaux ne sont pas bons en mode immersif. Les grands artefacts visuels sont courants lorsque cette option est sélectionnée</string>
     <string name="vr_graphics_warning_short">AVERTISSEMENT: Cela provoquera un artefact visuel dans la plupart des contenus</string>
     <string name="vr_new_3ds_description">Devrait être activé pour la plupart des titres. Lorsqu\'il est handicapé, améliore les performances de titres spécifiques (par exemple Star Fox 64 3D)</string>
+    <string name="release_notes_title">Notes de version</string>
+    <string name="vr_licenses_description">Les projets qui rendent Citra et Citravr possible</string>
+    <string name="game_compat_tooltip">Feuille de compatibilité du jeu</string>
 </resources>

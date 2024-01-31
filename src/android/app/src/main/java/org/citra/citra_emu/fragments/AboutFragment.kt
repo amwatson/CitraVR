@@ -58,9 +58,9 @@ class AboutFragment : Fragment() {
             binding.root.findNavController().popBackStack()
         }
 
-        binding.buttonContributors.setOnClickListener {
+        binding.buttonReleaseNotes.setOnClickListener {
             openLink(
-                getString(R.string.contributors_link)
+                getString(R.string.release_notes_link, BuildConfig.VERSION_NAME)
             )
         }
         binding.buttonLicenses.setOnClickListener {
@@ -86,6 +86,7 @@ class AboutFragment : Fragment() {
 
         binding.buttonDiscord.setOnClickListener { openLink(getString(R.string.support_link)) }
         binding.buttonWebsite.setOnClickListener { openLink(getString(R.string.website_link)) }
+        binding.buttonWebsite.tooltipText = getString(R.string.game_compat_tooltip)
         binding.buttonGithub.setOnClickListener { openLink(getString(R.string.github_link)) }
 
         setInsets()

@@ -260,4 +260,7 @@
     <string name="vr_graphics_warning">Pericolo: non tutti i giochi/livelli hanno un bell\'aspetto in modalità immersiva. I grandi manufatti visivi sono comuni quando viene selezionata questa opzione</string>
     <string name="vr_graphics_warning_short">ATTENZIONE: questo causerà un artefatto visivo nella maggior parte dei contenuti</string>
     <string name="vr_new_3ds_description">Dovrebbe essere abilitato per la maggior parte dei titoli. Se disabilitato, migliora le prestazioni di titoli specifici (ad es.  Star Fox 64 3D)</string>
+    <string name="release_notes_title">Note di rilascio</string>
+    <string name="vr_licenses_description">Progetti che rendono possibili Citra e Citravr</string>
+    <string name="game_compat_tooltip">Foglio di compatibilità del gioco</string>
 </resources>

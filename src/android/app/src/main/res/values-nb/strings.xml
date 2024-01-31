@@ -178,4 +178,7 @@
     <string name="vr_graphics_warning">FARE: Ikke alle spill/nivåer ser bra ut i oppslukende modus. Store visuelle gjenstander er vanlige når dette alternativet er valgt</string>
     <string name="vr_graphics_warning_short">Advarsel: Dette vil forårsake visuell gjenstand i det meste</string>
     <string name="vr_new_3ds_description">Skal være aktivert for de fleste titler. Når de er deaktivert, forbedrer ytelsen til spesifikke titler (f. eks.  Star Fox 64 3D)</string>
+    <string name="release_notes_title">Utgivelsesnotater</string>
+    <string name="vr_licenses_description">Prosjekter som gjør citra og citravr mulig</string>
+    <string name="game_compat_tooltip">Spillkompatibilitetsark</string>
 </resources>

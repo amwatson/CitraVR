@@ -56,8 +56,8 @@
     <string name="licenses_description">Projects that make CitraVR for Android possible</string>
     <string name="build">Build</string>
     <string name="licenses">Licenses</string>
-    <string name="support_link">https://discord.gg/FAXfZV9</string>
-    <string name="website_link">https://citra-emu.org/</string>
+    <string name="support_link">https://flat2vr.com/</string>
+    <string name="website_link">https://docs.google.com/spreadsheets/d/1viN8_MWO1HW9QXlkT-TdCGQbH1g660mKsIp1ZTARdho/</string>
     <string name="github_link">https://github.com/amwatson/CitraVR</string>
 
     <!-- Setup strings -->
@@ -688,4 +688,8 @@
     <string name="vr_graphics_warning">DANGER: not all games/levels look good in immersive mode.  Large visual artifacts are common when this option is selected</string>
     <string name="vr_graphics_warning_short">WARNING: this WILL cause visual artifacting in most content</string>
     <string name="vr_new_3ds_description">Should be enabled for most titles.  When disabled, improves performance of specific titles (e. g.  Star Fox 64 3D)</string>
+    <string name="release_notes_link">https://github.com/amwatson/CitraVR/releases/tag/%1$s</string>
+    <string name="release_notes_title">Release Notes</string>
+    <string name="vr_licenses_description">Projects that make Citra and CitraVR possible</string>
+    <string name="game_compat_tooltip">Game Compatibility Sheet</string>
 </resources>

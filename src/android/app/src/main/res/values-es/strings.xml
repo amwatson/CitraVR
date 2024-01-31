@@ -671,4 +671,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="vr_graphics_warning">Danger: No todos los juegos/niveles se ven bien en modo inmersivo. Los grandes artefactos visuales son comunes cuando se selecciona esta opción</string>
     <string name="vr_graphics_warning_short">ADVERTENCIA: Esto causará artefactos visuales en la mayoría de los contenidos</string>
     <string name="vr_new_3ds_description">Debe estar habilitado para la mayoría de los títulos. Cuando está deshabilitado, mejora el rendimiento de títulos específicos (por ejemplo, Star Fox 64 3D)</string>
+    <string name="release_notes_title">Notas de lanzamiento</string>
+    <string name="vr_licenses_description">Proyectos que hacen posible a Citra y Citravr</string>
+    <string name="game_compat_tooltip">Hoja de compatibilidad del juego</string>
 </resources>

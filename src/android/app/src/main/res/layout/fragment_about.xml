@@ -51,103 +51,6 @@
                 android:layout_marginTop="28dp" />
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="16dp"
-                android:paddingHorizontal="16dp"
-                android:orientation="vertical">
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.TitleMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/about" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.BodyMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:layout_marginTop="6dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/citra_description" />
-
-            </LinearLayout>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp" />
-
-            <LinearLayout
-                android:id="@+id/button_contributors"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="16dp"
-                android:paddingHorizontal="16dp"
-                android:background="?attr/selectableItemBackground"
-                android:orientation="vertical">
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.TitleMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/contributors" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.BodyMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:layout_marginTop="6dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/contributors_description" />
-
-            </LinearLayout>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp" />
-
-            <LinearLayout
-                android:id="@+id/button_licenses"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="16dp"
-                android:paddingHorizontal="16dp"
-                android:background="?attr/selectableItemBackground"
-                android:orientation="vertical">
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.TitleMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/licenses" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/TextAppearance.Material3.BodyMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="24dp"
-                    android:layout_marginTop="6dp"
-                    android:textAlignment="viewStart"
-                    android:text="@string/licenses_description" />
-
-            </LinearLayout>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp" />
-
-            <LinearLayout
                 android:id="@+id/button_build_hash"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -182,6 +85,63 @@
                 android:layout_marginHorizontal="20dp" />
 
             <LinearLayout
+                android:id="@+id/button_release_notes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="16dp"
+                android:paddingHorizontal="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.Material3.TitleMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="24dp"
+                    android:textAlignment="viewStart"
+                    android:text="@string/release_notes_title" />
+
+            </LinearLayout>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" />
+
+            <LinearLayout
+                android:id="@+id/button_licenses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="16dp"
+                android:paddingHorizontal="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.Material3.TitleMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="24dp"
+                    android:textAlignment="viewStart"
+                    android:text="@string/licenses" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="24dp"
+                    android:layout_marginTop="6dp"
+                    android:textAlignment="viewStart"
+                    android:text="@string/vr_licenses_description" />
+
+            </LinearLayout>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" />
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -207,7 +167,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    app:icon="@drawable/ic_website"
+                    app:icon="@drawable/ic_controller"
                     app:iconTint="?attr/colorOnSurface"
                     app:iconSize="24dp"
                     app:iconGravity="textEnd" />

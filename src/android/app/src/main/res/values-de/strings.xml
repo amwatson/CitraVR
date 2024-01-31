@@ -529,4 +529,7 @@
     <string name="vr_graphics_warning">Gefahr: Nicht alle Spiele/Levels sehen im beeindruckenden Modus gut aus. Große visuelle Artefakte sind häufig, wenn diese Option ausgewählt ist</string>
     <string name="vr_graphics_warning_short">Warnung: Dies führt zu visuellen Artefakten in den meisten Inhalten</string>
     <string name="vr_new_3ds_description">Sollte für die meisten Titel aktiviert werden. Verbessert bei Behinderungen die Leistung spezifischer Titel (z.  B.  Star Fox 64 3D)</string>
+    <string name="release_notes_title">Versionshinweise</string>
+    <string name="vr_licenses_description">Projekte, die Citra und Citravr ermöglichen</string>
+    <string name="game_compat_tooltip">Spielkompatibilitätsblatt</string>
 </resources>

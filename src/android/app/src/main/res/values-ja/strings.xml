@@ -123,4 +123,7 @@
     <string name="vr_graphics_warning">危険：すべてのゲーム/レベルが没入型モードでよく見えるわけではありません。このオプションが選択されている場合、大きな視覚アーティファクトが一般的です</string>
     <string name="vr_graphics_warning_short">警告：これは、ほとんどのコンテンツで視覚的なアーティファクトを引き起こします</string>
     <string name="vr_new_3ds_description">ほとんどのタイトルで有効にする必要があります。無効になったら、特定のタイトルのパフォーマンスを向上させます（例：Star Fox 64 3D）</string>
+    <string name="release_notes_title">リリースノート</string>
+    <string name="vr_licenses_description">CitraとCitravrを可能にするプロジェクト</string>
+    <string name="game_compat_tooltip">ゲーム互換シート</string>
     </resources>

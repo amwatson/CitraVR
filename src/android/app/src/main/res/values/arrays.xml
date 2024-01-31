@@ -186,7 +186,8 @@
         <item>@string/theme_mode_dark</item>
     </string-array>
     <integer-array name="themeModeValues">
-        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
         <item>2</item>
     </integer-array>
 

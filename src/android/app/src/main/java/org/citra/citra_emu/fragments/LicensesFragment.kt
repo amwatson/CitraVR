@@ -163,6 +163,13 @@ class LicensesFragment : Fragment() {
                 R.string.license_zstd_link,
                 R.string.license_zstd_copyright,
                 R.string.license_zstd_text
+            ),
+            License(
+                R.string.license_openxr,
+                R.string.license_openxr_description,
+                R.string.license_openxr_link,
+                R.string.license_openxr_copyright,
+                R.string.license_openxr
             )
         )
 

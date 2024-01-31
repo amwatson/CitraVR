@@ -17,6 +17,7 @@ import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.Log
+import kotlin.system.exitProcess
 
 
 class VrActivity : EmulationActivity() {
@@ -56,8 +57,10 @@ class VrActivity : EmulationActivity() {
         currentActivity = null
         if (mHandle != 0L) {
             nativeOnDestroy(mHandle)
+            mHandle = 0L
         }
         super.onDestroy()
+        exitProcess(0)
     }
 
     public override fun onStart() {

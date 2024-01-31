@@ -171,27 +171,42 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
 }
 
 InputStateStatic::~InputStateStatic() {
-    if (mActionSet != XR_NULL_HANDLE) {
-        OXR(xrDestroyActionSet(mActionSet));
-    }
     OXR(xrDestroyAction(mLeftHandIndexTriggerAction));
+    mLeftHandIndexTriggerAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mRightHandIndexTriggerAction));
+    mRightHandIndexTriggerAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mLeftMenuButtonAction));
+    mLeftMenuButtonAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mAButtonAction));
+    mAButtonAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mBButtonAction));
+    mBButtonAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mXButtonAction));
+    mXButtonAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mYButtonAction));
+    mYButtonAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mHandPoseAction));
+    mHandPoseAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mThumbStickAction));
+    mThumbStickAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mThumbClickAction));
+    mThumbClickAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mThumbRestTouchAction));
+    mThumbRestTouchAction = XR_NULL_HANDLE;
     OXR(xrDestroyAction(mSqueezeTriggerAction));
+    mSqueezeTriggerAction = XR_NULL_HANDLE;
 
     if (mLeftHandSpace != XR_NULL_HANDLE) {
         OXR(xrDestroySpace(mLeftHandSpace));
+        mLeftHandSpace = XR_NULL_HANDLE;
     }
     if (mRightHandSpace != XR_NULL_HANDLE) {
         OXR(xrDestroySpace(mRightHandSpace));
+        mRightHandSpace = XR_NULL_HANDLE;
+    }
+    if (mActionSet != XR_NULL_HANDLE) {
+        OXR(xrDestroyActionSet(mActionSet));
+        mActionSet = XR_NULL_HANDLE;
     }
 }
 

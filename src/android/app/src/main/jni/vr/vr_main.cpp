@@ -151,8 +151,14 @@ public:
 
     ~VRApp() {
         assert(mVm != nullptr);
-        mIsStopRequested = false;
-        mThread.join();
+        // Note: this is in most cases already going to be true by the time the
+        // destructor is called, because it is set to true in onStop()
+        mIsStopRequested = true;
+        ALOGI("Waiting for VRApp thread to join");
+        if (mThread.joinable()) {
+            mThread.join();
+        }
+        ALOGI("VRApp thread joined");
         JNIEnv* jni;
         if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
             // on most of the android systems, calling exit() isn't like the end
@@ -210,9 +216,10 @@ public:
             // aren't resetting their default settings to get higher res. min
             // resolution factor for immersive is 3x.
             const uint32_t immersiveModeOffset = (VRSettings::values.vr_immersive_mode > 0) ? 2 : 0;
-            const uint32_t resolutionFactor = (resolutionFactorFromPreferences > 0
-                                                  ? resolutionFactorFromPreferences
-                                                  : defaultResolutionFactor) + immersiveModeOffset;
+            const uint32_t resolutionFactor =
+                (resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences
+                                                     : defaultResolutionFactor) +
+                immersiveModeOffset;
 
             if (resolutionFactor != defaultResolutionFactor) {
                 ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
@@ -275,6 +282,8 @@ public:
             Frame(jni);
         }
 
+        ALOGI("::MainLoop() exiting");
+
         mVm->DetachCurrentThread();
     }
 
@@ -333,11 +342,10 @@ private:
                 mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
             const auto& rightThumbrestTouchState =
                 mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
-            const int dpadHand = leftThumbrestTouchState.currentState
-                                     ? InputStateFrame::RIGHT_CONTROLLER
-                                 : rightThumbrestTouchState.currentState
-                                     ? InputStateFrame::LEFT_CONTROLLER
-                                     : InputStateFrame::NUM_CONTROLLERS;
+            const int dpadHand =
+                leftThumbrestTouchState.currentState    ? InputStateFrame::RIGHT_CONTROLLER
+                : rightThumbrestTouchState.currentState ? InputStateFrame::LEFT_CONTROLLER
+                                                        : InputStateFrame::NUM_CONTROLLERS;
 
             {
                 static constexpr float kThumbStickDirectionThreshold = 0.5f;
@@ -879,17 +887,19 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
 
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
-    return VRAppHandle(new VRApp(jvm, env->NewGlobalRef(thiz))).l;
+    auto ret = VRAppHandle(new VRApp(jvm, env->NewGlobalRef(thiz))).l;
+    ALOGI("amwatson nativeOnCreate {}", ret);
+    return ret;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jlong handle) {
+Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
 
-    ALOGI("nativeOnDestroy");
-    exit(0);
+    ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) {
         delete VRAppHandle(handle).p;
     }
+
     // Even though OpenXR is created on a different thread, this
     // should be ok because thread exit is a fence, and the delete waits to join.
     if (gOpenXr != nullptr) {
@@ -902,8 +912,8 @@ extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_ErrorMessageLayer
     gShouldShowErrorMessage = should_show_error;
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env,
-                                                                                  jclass clazz) {
+extern "C" JNIEXPORT jint JNICALL
+Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env, jclass clazz) {
     return static_cast<jint>(VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
 }
 extern "C" JNIEXPORT jint JNICALL

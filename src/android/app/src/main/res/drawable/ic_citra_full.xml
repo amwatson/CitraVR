@@ -25,13 +25,13 @@
                 android:gradientRadius="193.81"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="0.67" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -50,10 +50,10 @@
                 android:gradientRadius="141.88"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -72,10 +72,10 @@
                 android:gradientRadius="112.58"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -94,10 +94,10 @@
                 android:gradientRadius="126.13"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -116,13 +116,13 @@
                 android:gradientRadius="311.77"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0.5" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -141,10 +141,10 @@
                 android:gradientRadius="141.11"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -163,15 +163,14 @@
                 android:gradientRadius="210.17"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
     </path>
-    <!-- too dark -->
     <path
         android:fillType="nonZero"
         android:pathData="M214.54,105.16C208.5,107.05 203.13,110.26 197.7,113.38C175.34,126.18 154.58,141.13 136.79,159.92C128.54,168.64 129.85,174.36 141.29,177.63C162.55,183.7 184.15,188.4 206.38,188.95C218.08,189.24 223.98,183.77 226.07,172.36C228.2,160.7 228.65,148.97 228.34,133.48C228,128.78 229.54,120.25 227.29,111.97C225.84,106.66 223.42,104.28 219.43,104.28C218.01,104.28 216.38,104.58 214.54,105.16"
@@ -186,13 +185,13 @@
                 android:gradientRadius="193.81"
                 android:type="radial">
                 <item
-                    android:color="#ADFF2F"
+                    android:color="#9aefaf"
                     android:offset="0" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="0.67" />
                 <item
-                    android:color="#60d860"
+                    android:color="#5bd790"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -210,9 +209,9 @@
                 android:centerY="340"
                 android:gradientRadius="160"
                 android:type="radial">
-                <item android:color="#ADFF2F" android:offset="0.25" />
-                <item android:color="#60d860" android:offset="0.55" />
-                <item android:color="#228B22" android:offset="1" />
+                <item android:color="#9aefaf" android:offset="0.25" />
+                <item android:color="#5bd790" android:offset="0.55" />
+                <item android:color="#3ea06d" android:offset="1" />
             </gradient>
         </aapt:attr>
     </path>
@@ -232,9 +231,9 @@
                     android:endX="716.14"
                     android:endY="-34.42"
                     android:type="linear">
-                    <item android:color="#004C00" android:offset="0"/>
-                    <item android:color="#228B22" android:offset="0.5"/>
-                    <item android:color="#60d860" android:offset="1"/>
+                    <item android:color="#1c6650" android:offset="0"/>
+                    <item android:color="#3ea06d" android:offset="0.5"/>
+                    <item android:color="#5bd790" android:offset="1"/>
                 </gradient>
             </aapt:attr>
         </path>
@@ -261,13 +260,13 @@
                 android:gradientRadius="272.36"
                 android:type="radial">
                 <item
-                    android:color="#00320000"
+                    android:color="#002e1e00"
                     android:offset="0" />
                 <item
-                    android:color="#00320000"
+                    android:color="#002e1e00"
                     android:offset="0.69" />
                 <item
-                    android:color="#004C00"
+                    android:color="#1c6650"
                     android:offset="1" />
             </gradient>
         </aapt:attr>

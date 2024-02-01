@@ -32,4 +32,6 @@
     <color name="citra_outlineVariant">#C6C5D0</color>
     <color name="citra_scrim">#000000</color>
 
+    <color name="vr_citra_logo_color">#5bd790</color>
+
 </resources>

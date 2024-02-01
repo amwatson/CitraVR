@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:layout_gravity="center_horizontal">
+    android:layout_gravity="center_horizontal"
+    >
     <ImageView
         android:id="@+id/image_logo"
         android:layout_width="104dp"
@@ -24,6 +25,7 @@
         android:gravity="center"
         android:text="Citra"
         android:textSize="64sp"
+        android:textColor="@color/vr_citra_logo_color"
         app:layout_constraintBottom_toBottomOf="@+id/image_logo"
         app:layout_constraintStart_toEndOf="@+id/image_logo"
         app:layout_constraintTop_toTopOf="@+id/image_logo" />
@@ -34,7 +36,7 @@
         android:layout_gravity="center"
         android:fontFamily="@font/dancing_script_bold"
         android:text="VR"
-        android:textColor="#60d860"
+        android:textColor="#FF0000"
         android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/materialTextView"
         app:layout_constraintStart_toEndOf="@+id/materialTextView"

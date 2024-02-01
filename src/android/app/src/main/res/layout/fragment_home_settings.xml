@@ -16,13 +16,11 @@
         android:orientation="vertical"
         android:background="?attr/colorSurface">
 
-        <ImageView
-            android:id="@+id/logo_image"
-            android:layout_width="104dp"
-            android:layout_height="104dp"
-            android:layout_margin="32dp"
-            android:layout_gravity="center_horizontal"
-            android:src="@drawable/ic_citra_full" />
+        <include layout="@layout/vr_logo"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/home_settings_list"

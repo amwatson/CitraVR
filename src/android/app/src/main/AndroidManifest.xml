@@ -161,6 +161,10 @@
             android:exported="false"
             android:theme="@style/Theme.Citra.Main"
             android:label="@string/cheats"/>
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

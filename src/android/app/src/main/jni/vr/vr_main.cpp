@@ -888,7 +888,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     auto ret = VRAppHandle(new VRApp(jvm, env->NewGlobalRef(thiz))).l;
-    ALOGI("amwatson nativeOnCreate {}", ret);
     return ret;
 }
 

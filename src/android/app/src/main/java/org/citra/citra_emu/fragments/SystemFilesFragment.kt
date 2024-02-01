@@ -38,6 +38,7 @@ import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 import org.citra.citra_emu.viewmodel.SystemFilesViewModel
+import org.citra.citra_emu.vr.VrActivity
 
 class SystemFilesFragment : Fragment() {
     private var _binding: FragmentSystemFilesBinding? = null
@@ -206,8 +207,9 @@ class SystemFilesFragment : Fragment() {
                 path = menuPath,
                 filename = ""
             )
-            val action = HomeNavigationDirections.actionGlobalEmulationActivity(menu)
-            binding.root.findNavController().navigate(action)
+          //  val action = HomeNavigationDirections.actionGlobalEmulationActivity(menu)
+         //   binding.root.findNavController().navigate(action)
+            VrActivity.launch(CitraApplication.appContext, menu.path, menu.title)
         }
     }
 

@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
+  <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="500"></a>
   <br>
   <b>(Beta)</b>
   <br>

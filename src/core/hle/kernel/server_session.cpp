@@ -19,7 +19,7 @@ SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
 namespace Kernel {
 
 template <class Archive>
-void ServerSession::serialize(Archive& ar, const unsigned int file_version) {
+void ServerSession::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<WaitObject>(*this);
     ar& name;
     ar& parent;
@@ -77,7 +77,7 @@ void ServerSession::Acquire(Thread* thread) {
     pending_requesting_threads.pop_back();
 }
 
-ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
+Result ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
     // The ServerSession received a sync request, this means that there's new data available
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or
     // similar.
@@ -136,7 +136,7 @@ ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
     // If this ServerSession does not have an HLE implementation, just wake up the threads waiting
     // on it.
     WakeupAllWaitingThreads();
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 KernelSystem::SessionPair KernelSystem::CreateSessionPair(const std::string& name,

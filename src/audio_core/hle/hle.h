@@ -14,6 +14,10 @@
 #include "core/hle/service/dsp/dsp_dsp.h"
 #include "core/memory.h"
 
+namespace Core {
+class Timing;
+}
+
 namespace Memory {
 class MemorySystem;
 }
@@ -22,7 +26,8 @@ namespace AudioCore {
 
 class DspHle final : public DspInterface {
 public:
-    explicit DspHle(Memory::MemorySystem& memory, Core::Timing& timing);
+    explicit DspHle(Core::System& system);
+    explicit DspHle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing);
     ~DspHle();
 
     u16 RecvData(u32 register_number) override;
@@ -34,7 +39,8 @@ public:
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
 
-    void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
+    void SetInterruptHandler(
+        std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) override;
 
     void LoadComponent(std::span<const u8> buffer) override;
     void UnloadComponent() override;
@@ -44,13 +50,9 @@ private:
     friend struct Impl;
     std::unique_ptr<Impl> impl;
 
-    DspHle();
-
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 } // namespace AudioCore
-
-BOOST_CLASS_EXPORT_KEY(AudioCore::DspHle)

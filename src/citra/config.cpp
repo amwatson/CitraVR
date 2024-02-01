@@ -6,8 +6,8 @@
 #include <memory>
 #include <sstream>
 #include <type_traits>
+#include <INIReader.h>
 #include <SDL.h>
-#include <inih/cpp/INIReader.h>
 #include "citra/config.h"
 #include "citra/default_ini.h"
 #include "common/file_util.h"
@@ -146,6 +146,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.frame_limit);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
     ReadSetting("Renderer", Settings::values.texture_filter);
+    ReadSetting("Renderer", Settings::values.texture_sampling);
 
     ReadSetting("Renderer", Settings::values.mono_render_option);
     ReadSetting("Renderer", Settings::values.render_3d);
@@ -202,6 +203,7 @@ void Config::ReadValues() {
 
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
+    ReadSetting("System", Settings::values.lle_applets);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
@@ -224,6 +226,8 @@ void Config::ReadValues() {
                 std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
                 .count();
     }
+    ReadSetting("System", Settings::values.init_ticks_type);
+    ReadSetting("System", Settings::values.init_ticks_override);
     ReadSetting("System", Settings::values.plugin_loader_enabled);
     ReadSetting("System", Settings::values.allow_plugin_loader);
 
@@ -233,7 +237,7 @@ void Config::ReadValues() {
         std::string offset_string =
             sdl2_config->GetString("System", "init_time_offset", default_init_time_offset);
 
-        size_t sep_index = offset_string.find(' ');
+        std::size_t sep_index = offset_string.find(' ');
 
         if (sep_index == std::string::npos) {
             LOG_ERROR(Config, "Failed to parse init_time_offset. Using 0 00:00:00");

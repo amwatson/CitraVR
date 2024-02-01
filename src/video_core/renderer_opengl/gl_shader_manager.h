@@ -12,11 +12,12 @@ class EmuWindow;
 }
 
 namespace Pica {
-struct Regs;
-}
+struct RegsInternal;
+struct ShaderSetup;
+} // namespace Pica
 
 namespace Pica::Shader {
-struct ShaderSetup;
+union UserConfig;
 }
 
 namespace OpenGL {
@@ -39,15 +40,15 @@ public:
     void LoadDiskCache(const std::atomic_bool& stop_loading,
                        const VideoCore::DiskResourceLoadCallback& callback);
 
-    bool UseProgrammableVertexShader(const Pica::Regs& config, Pica::Shader::ShaderSetup& setup);
+    bool UseProgrammableVertexShader(const Pica::RegsInternal& config, Pica::ShaderSetup& setup);
 
     void UseTrivialVertexShader();
 
-    void UseFixedGeometryShader(const Pica::Regs& regs);
+    void UseFixedGeometryShader(const Pica::RegsInternal& regs);
 
     void UseTrivialGeometryShader();
 
-    void UseFragmentShader(const Pica::Regs& config, bool use_normal);
+    void UseFragmentShader(const Pica::RegsInternal& config, const Pica::Shader::UserConfig& user);
 
     void ApplyTo(OpenGLState& state);
 

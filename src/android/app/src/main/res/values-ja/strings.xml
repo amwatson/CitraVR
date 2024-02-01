@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_disclaimer">このソフトではニンテンドー3DS用ゲームをプレイできますが、ゲーム自体は含まれていません。\n\n実行前に、3DSゲームファイルを端末のストレージに保存しておいてください。</string>
-    <string name="app_notification_channel_description">Citra 3DS 通知</string>
-    <string name="app_notification_running">Citraを実行中</string>
+    <string name="app_notification_channel_description">CitraVR 3DS 通知</string>
+    <string name="app_notification_running">CitraVRを実行中</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">スライドパッド</string>
@@ -97,7 +97,7 @@
     <string name="write_permission_needed">動作させるためには外部ストレージへのアクセスを許可する必要があります。</string>
     <string name="load_settings">設定を読込中...</string>
 
-    <string name="external_storage_not_mounted">Citraを利用するには外部ストレージが必要です。</string>
+    <string name="external_storage_not_mounted">CitraVRを利用するには外部ストレージが必要です。</string>
 
     <string name="select_dir">このフォルダを選択</string>
     <string name="empty_gamelist">ゲームファイルのあるフォルダが選択されていません</string>
@@ -122,4 +122,8 @@
     <string name="vr_immersive_mode_description">没入型ゲームプレイのために、シリンダーの周りのトップ画面を拡張します</string>
     <string name="vr_graphics_warning">危険：すべてのゲーム/レベルが没入型モードでよく見えるわけではありません。このオプションが選択されている場合、大きな視覚アーティファクトが一般的です</string>
     <string name="vr_graphics_warning_short">警告：これは、ほとんどのコンテンツで視覚的なアーティファクトを引き起こします</string>
+    <string name="vr_new_3ds_description">ほとんどのタイトルで有効にする必要があります。無効になったら、特定のタイトルのパフォーマンスを向上させます（例：Star Fox 64 3D）</string>
+    <string name="release_notes_title">リリースノート</string>
+    <string name="vr_licenses_description">CitraとCitravrを可能にするプロジェクト</string>
+    <string name="game_compat_tooltip">ゲーム互換シート</string>
     </resources>

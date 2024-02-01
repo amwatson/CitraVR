@@ -46,14 +46,25 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
         return "Anime4K";
     case TextureFilter::Bicubic:
         return "Bicubic";
-    case TextureFilter::NearestNeighbor:
-        return "NearestNeighbor";
     case TextureFilter::ScaleForce:
         return "ScaleForce";
     case TextureFilter::xBRZ:
         return "xBRZ";
     case TextureFilter::MMPX:
         return "MMPX";
+    default:
+        return "Invalid";
+    }
+}
+
+std::string_view GetTextureSamplingName(TextureSampling sampling) {
+    switch (sampling) {
+    case TextureSampling::GameControlled:
+        return "GameControlled";
+    case TextureSampling::NearestNeighbor:
+        return "NearestNeighbor";
+    case TextureSampling::Linear:
+        return "Linear";
     default:
         return "Invalid";
     }
@@ -87,6 +98,8 @@ void LogSettings() {
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
+    log_setting("Renderer_TextureSampling",
+                GetTextureSamplingName(values.texture_sampling.GetValue()));
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
     log_setting("Stereoscopy_MonoRenderOption", values.mono_render_option.GetValue());
@@ -125,9 +138,11 @@ void LogSettings() {
         log_setting("DataStorage_NandDir", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     }
     log_setting("System_IsNew3ds", values.is_new_3ds.GetValue());
+    log_setting("System_LLEApplets", values.lle_applets.GetValue());
     log_setting("System_RegionValue", values.region_value.GetValue());
     log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
     log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
+    log_setting("Debugging_DelayStartForLLEModules", values.delay_start_for_lle_modules.GetValue());
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
 }
@@ -161,6 +176,7 @@ void RestoreGlobalState(bool is_powered_on) {
     // Core
     values.cpu_clock_percentage.SetGlobal(true);
     values.is_new_3ds.SetGlobal(true);
+    values.lle_applets.SetGlobal(true);
 
     // Renderer
     values.graphics_api.SetGlobal(true);
@@ -175,6 +191,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.resolution_factor.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
+    values.texture_sampling.SetGlobal(true);
     values.layout_option.SetGlobal(true);
     values.swap_screen.SetGlobal(true);
     values.upright_screen.SetGlobal(true);

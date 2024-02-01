@@ -2,15 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <vector>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "core/core.h"
-#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Mutex)
@@ -27,18 +29,23 @@ void ReleaseThreadMutexes(Thread* thread) {
 }
 
 Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
-Mutex::~Mutex() {}
+
+Mutex::~Mutex() {
+    if (resource_limit) {
+        resource_limit->Release(ResourceLimitType::Mutex, 1);
+    }
+}
 
 std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
-    auto mutex{std::make_shared<Mutex>(*this)};
-
+    auto mutex = std::make_shared<Mutex>(*this);
     mutex->lock_count = 0;
     mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
 
     // Acquire mutex with current thread if initialized as locked
-    if (initial_locked)
-        mutex->Acquire(thread_managers[current_cpu->GetID()]->GetCurrentThread());
+    if (initial_locked) {
+        mutex->Acquire(GetCurrentThreadManager().GetCurrentThread());
+    }
 
     return mutex;
 }
@@ -62,7 +69,7 @@ void Mutex::Acquire(Thread* thread) {
     lock_count++;
 }
 
-ResultCode Mutex::Release(Thread* thread) {
+Result Mutex::Release(Thread* thread) {
     // We can only release the mutex if it's held by the calling thread.
     if (thread != holding_thread.get()) {
         if (holding_thread) {
@@ -71,15 +78,15 @@ ResultCode Mutex::Release(Thread* thread) {
                 "Tried to release a mutex (owned by thread id {}) from a different thread id {}",
                 holding_thread->thread_id, thread->thread_id);
         }
-        return ResultCode(ErrCodes::WrongLockingThread, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return Result(ErrCodes::WrongLockingThread, ErrorModule::Kernel,
+                      ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
     // Note: It should not be possible for the situation where the mutex has a holding thread with a
     // zero lock count to occur. The real kernel still checks for this, so we do too.
     if (lock_count <= 0)
-        return ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::Kernel,
-                          ErrorSummary::InvalidState, ErrorLevel::Permanent);
+        return Result(ErrorDescription::InvalidResultValue, ErrorModule::Kernel,
+                      ErrorSummary::InvalidState, ErrorLevel::Permanent);
 
     lock_count--;
 
@@ -92,7 +99,7 @@ ResultCode Mutex::Release(Thread* thread) {
         kernel.PrepareReschedule();
     }
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 void Mutex::AddWaitingThread(std::shared_ptr<Thread> thread) {
@@ -122,5 +129,16 @@ void Mutex::UpdatePriority() {
         holding_thread->UpdatePriority();
     }
 }
+
+template <class Archive>
+void Mutex::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<WaitObject>(*this);
+    ar& lock_count;
+    ar& priority;
+    ar& name;
+    ar& holding_thread;
+    ar& resource_limit;
+}
+SERIALIZE_IMPL(Mutex)
 
 } // namespace Kernel

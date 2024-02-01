@@ -14,9 +14,10 @@
 #include "common/settings.h"
 #include "core/memory.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/pica/regs_external.h"
+#include "video_core/pica/regs_internal.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
 #include "video_core/rasterizer_cache/surface_base.h"
-#include "video_core/regs.h"
 #include "video_core/renderer_base.h"
 #include "video_core/texture/texture_decode.h"
 
@@ -34,7 +35,7 @@ constexpr auto RangeFromInterval(const auto& map, const auto& interval) {
 template <class T>
 RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
                                     CustomTexManager& custom_tex_manager_, Runtime& runtime_,
-                                    Pica::Regs& regs_, RendererBase& renderer_)
+                                    Pica::RegsInternal& regs_, RendererBase& renderer_)
     : memory{memory_}, custom_tex_manager{custom_tex_manager_}, runtime{runtime_}, regs{regs_},
       renderer{renderer_}, resolution_scale_factor{renderer.GetResolutionScaleFactor()},
       filter{Settings::values.texture_filter.GetValue()},
@@ -66,6 +67,16 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
                                            .wrap_s = TextureConfig::WrapMode::ClampToBorder,
                                            .wrap_t = TextureConfig::WrapMode::ClampToBorder,
                                        }));
+
+    auto& null_surface = slot_surfaces[NULL_SURFACE_ID];
+    runtime.ClearTexture(null_surface, {
+                                           .texture_level = 0,
+                                           .texture_rect = null_surface.GetScaledRect(),
+                                           .value =
+                                               {
+                                                   .color = {0.f, 0.f, 0.f, 0.f},
+                                               },
+                                       });
 }
 
 template <class T>
@@ -151,7 +162,7 @@ void RasterizerCache<T>::RemoveTextureCubeFace(SurfaceId surface_id) {
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateTextureCopy ({})", config.DebugName()};
 
@@ -249,7 +260,7 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferC
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerCache<T>::AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateDisplayTransfer ({})", config.DebugName()};
 
@@ -274,10 +285,9 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
 
     // Using flip_vertically alongside crop_input_lines produces skewed output on hardware.
     // We have to emulate this because some games rely on this behaviour to render correctly.
-    if (config.flip_vertically && config.crop_input_lines &&
-        config.input_width > config.output_width) {
+    if (config.flip_vertically && config.crop_input_lines) {
         dst_params.addr += (config.input_width - config.output_width) * (config.output_height - 1) *
-                           GPU::Regs::BytesPerPixel(config.output_format);
+                           Pica::BytesPerPixel(config.output_format);
     }
 
     auto [src_surface_id, src_rect] = GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
@@ -320,7 +330,7 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+bool RasterizerCache<T>::AccelerateFill(const Pica::MemoryFillConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{1.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateFill ({})", config.DebugName()};
 
@@ -361,10 +371,25 @@ typename T::Sampler& RasterizerCache<T>::GetSampler(SamplerId sampler_id) {
 template <class T>
 typename T::Sampler& RasterizerCache<T>::GetSampler(
     const Pica::TexturingRegs::TextureConfig& config) {
+    using TextureFilter = Pica::TexturingRegs::TextureConfig::TextureFilter;
+
+    const auto get_filter = [](TextureFilter filter) {
+        switch (Settings::values.texture_sampling.GetValue()) {
+        case Settings::TextureSampling::GameControlled:
+            return filter;
+        case Settings::TextureSampling::NearestNeighbor:
+            return TextureFilter::Nearest;
+        case Settings::TextureSampling::Linear:
+            return TextureFilter::Linear;
+        default:
+            return filter;
+        }
+    };
+
     const SamplerParams params = {
-        .mag_filter = config.mag_filter,
-        .min_filter = config.min_filter,
-        .mip_filter = config.mip_filter,
+        .mag_filter = get_filter(config.mag_filter),
+        .min_filter = get_filter(config.min_filter),
+        .mip_filter = get_filter(config.mip_filter),
         .wrap_s = config.wrap_s,
         .wrap_t = config.wrap_t,
         .border_color = config.border_color.raw,
@@ -653,7 +678,6 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         static_cast<u32>(std::clamp(viewport_rect.bottom, 0, framebuffer_height)),
     };
 
-    // get color and depth surfaces
     SurfaceParams color_params;
     color_params.is_tiled = true;
     color_params.res_scale = resolution_scale_factor;
@@ -671,14 +695,6 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     auto color_vp_interval = color_params.GetSubRectInterval(viewport_clamped);
     auto depth_vp_interval = depth_params.GetSubRectInterval(viewport_clamped);
-
-    // Make sure that framebuffers don't overlap if both color and depth are being used
-    if (using_color_fb && using_depth_fb &&
-        boost::icl::length(color_vp_interval & depth_vp_interval)) {
-        LOG_CRITICAL(HW_GPU, "Color and depth framebuffer memory regions overlap; "
-                             "overlapping framebuffers not supported!");
-        using_depth_fb = false;
-    }
 
     Common::Rectangle<u32> color_rect{};
     SurfaceId color_id{};
@@ -713,11 +729,13 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     if (color_id) {
         color_level = color_surface->LevelOf(color_params.addr);
+        color_surface->flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(color_id, boost::icl::first(color_vp_interval),
                         boost::icl::length(color_vp_interval));
     }
     if (depth_id) {
         depth_level = depth_surface->LevelOf(depth_params.addr);
+        depth_surface->flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(depth_id, boost::icl::first(depth_vp_interval),
                         boost::icl::length(depth_vp_interval));
     }
@@ -769,7 +787,7 @@ typename RasterizerCache<T>::SurfaceRect_Tuple RasterizerCache<T>::GetTexCopySur
 
 template <class T>
 template <typename Func>
-void RasterizerCache<T>::ForEachSurfaceInRegion(PAddr addr, size_t size, Func&& func) {
+void RasterizerCache<T>::ForEachSurfaceInRegion(PAddr addr, std::size_t size, Func&& func) {
     using FuncReturn = typename std::invoke_result<Func, SurfaceId, Surface&>::type;
     static constexpr bool BOOL_BREAK = std::is_same_v<FuncReturn, bool>;
     boost::container::small_vector<SurfaceId, 8> surfaces;
@@ -991,7 +1009,9 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
     DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, staging.mapped,
                   runtime.NeedsConversion(surface.pixel_format));
 
-    if (dump_textures && False(surface.flags & SurfaceFlagBits::Custom)) {
+    const bool should_dump = False(surface.flags & SurfaceFlagBits::Custom) &&
+                             False(surface.flags & SurfaceFlagBits::RenderTarget);
+    if (dump_textures && should_dump) {
         const u64 hash = ComputeHash(load_info, upload_data);
         const u32 level = surface.LevelOf(load_info.addr);
         custom_tex_manager.DumpTexture(load_info, level, upload_data, hash);

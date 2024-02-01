@@ -7,14 +7,12 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <future>
 #include <memory>
 #include <string>
 #include <vector>
 #include <boost/container/small_vector.hpp>
-#include <boost/serialization/assume_abstract.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/serialization/boost_small_vector.hpp"
 #include "common/swap.h"
@@ -76,7 +74,20 @@ public:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {}
+        void serialize(Archive& ar, const unsigned int);
+        friend class boost::serialization::access;
+    };
+
+    struct SessionInfo {
+        SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
+
+        std::shared_ptr<ServerSession> session;
+        std::unique_ptr<SessionDataBase> data;
+
+    private:
+        SessionInfo() = default;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int);
         friend class boost::serialization::access;
     };
 
@@ -95,30 +106,13 @@ protected:
         return static_cast<T*>(itr->data.get());
     }
 
-    struct SessionInfo {
-        SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
-
-        std::shared_ptr<ServerSession> session;
-        std::unique_ptr<SessionDataBase> data;
-
-    private:
-        SessionInfo() = default;
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {
-            ar& session;
-            ar& data;
-        }
-        friend class boost::serialization::access;
-    };
     /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
     /// is an HLE implementation is kept alive by this list for the duration of the connection.
     std::vector<SessionInfo> connected_sessions;
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& connected_sessions;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -220,6 +214,13 @@ public:
         return session;
     }
 
+    /**
+     * Returns the client thread that made the service request.
+     */
+    std::shared_ptr<Thread> ClientThread() const {
+        return thread;
+    }
+
     class WakeupCallback {
     public:
         virtual ~WakeupCallback() = default;
@@ -246,6 +247,76 @@ public:
     std::shared_ptr<Event> SleepClientThread(const std::string& reason,
                                              std::chrono::nanoseconds timeout,
                                              std::shared_ptr<WakeupCallback> callback);
+
+private:
+    template <typename ResultFunctor>
+    class AsyncWakeUpCallback : public WakeupCallback {
+    public:
+        explicit AsyncWakeUpCallback(ResultFunctor res_functor, std::future<void> fut)
+            : functor(res_functor) {
+            future = std::move(fut);
+        }
+
+        void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+                    Kernel::ThreadWakeupReason reason) {
+            functor(ctx);
+        }
+
+    private:
+        ResultFunctor functor;
+        std::future<void> future;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            if (!Archive::is_loading::value && future.valid()) {
+                future.wait();
+            }
+            ar& functor;
+        }
+        friend class boost::serialization::access;
+    };
+
+public:
+    /**
+     * Puts the game thread to sleep and calls the specified async_section asynchronously.
+     * Once the execution of the async section finishes, result_function is called. Use this
+     * mechanism to run blocking IO operations, so that other game threads are allowed to run
+     * while the one performing the blocking operation waits.
+     * @param async_section Callable that takes Kernel::HLERequestContext& as argument
+     * and returns the amount of nanoseconds to wait before calling result_function.
+     * This callable is ran asynchronously.
+     * @param result_function Callable that takes Kernel::HLERequestContext& as argument
+     * and doesn't return anything. This callable is ran from the emulator thread
+     * and can be used to set the IPC result.
+     * @param really_async If set to false, it will call both async_section and result_function
+     * from the emulator thread.
+     */
+    template <typename AsyncFunctor, typename ResultFunctor>
+    void RunAsync(AsyncFunctor async_section, ResultFunctor result_function,
+                  bool really_async = true) {
+
+        if (really_async) {
+            this->SleepClientThread(
+                "RunAsync", std::chrono::nanoseconds(-1),
+                std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
+                    result_function,
+                    std::move(std::async(std::launch::async, [this, async_section] {
+                        s64 sleep_for = async_section(*this);
+                        this->thread->WakeAfterDelay(sleep_for, true);
+                    }))));
+
+        } else {
+            s64 sleep_for = async_section(*this);
+            if (sleep_for > 0) {
+                auto parallel_wakeup = std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
+                    result_function, std::move(std::future<void>()));
+                this->SleepClientThread("RunAsync", std::chrono::nanoseconds(sleep_for),
+                                        parallel_wakeup);
+            } else {
+                result_function(*this);
+            }
+        }
+    }
 
     /**
      * Resolves a object id from the request command buffer into a pointer to an object. See the
@@ -285,10 +356,10 @@ public:
     MappedBuffer& GetMappedBuffer(u32 id_from_cmdbuf);
 
     /// Populates this context with data from the requesting process/thread.
-    ResultCode PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
-                                                 std::shared_ptr<Process> src_process);
+    Result PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
+                                             std::shared_ptr<Process> src_process);
     /// Writes data from this context back to the requesting process/thread.
-    ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process) const;
+    Result WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process) const;
 
     /// Reports an unimplemented function.
     void ReportUnimplemented() const;
@@ -310,17 +381,14 @@ private:
 
     HLERequestContext();
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& cmd_buf;
-        ar& session;
-        ar& thread;
-        ar& request_handles;
-        ar& static_buffers;
-        ar& request_mapped_buffers;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 } // namespace Kernel
 
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler)
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionDataBase)
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionInfo)
+BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext)
 BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext::ThreadCallback)

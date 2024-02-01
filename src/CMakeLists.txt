@@ -51,6 +51,10 @@ if (MSVC)
         /Zc:throwingNew
         /GT
 
+        # Some flags for more deterministic builds, to aid caching.
+        /experimental:deterministic
+        /d1trimfile:"${CMAKE_SOURCE_DIR}"
+
         # External headers diagnostics
         /experimental:external  # Enables the external headers options. This option isn't required in Visual Studio 2019 version 16.10 and later
         /external:anglebrackets # Treats all headers included by #include <header>, where the header file is enclosed in angle brackets (< >), as external headers
@@ -87,7 +91,8 @@ if (MSVC)
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
     # when using ccache or other caching tools
-    if (CITRA_USE_CCACHE OR CITRA_USE_PRECOMPILED_HEADERS)
+    if (CMAKE_C_COMPILER_LAUNCHER STREQUAL "ccache" OR CMAKE_CXX_COMPILER_LAUNCHER STREQUAL "ccache"
+            OR CITRA_USE_PRECOMPILED_HEADERS)
         # Precompiled headers are deleted if not using /Z7. See https://github.com/nanoant/CMakePCHCompiler/issues/21
         add_compile_options(/Z7)
     else()
@@ -98,12 +103,22 @@ if (MSVC)
     add_compile_options("$<$<CONFIG:Release>:/GS->")
 
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "/DEBUG /MANIFEST:NO" CACHE STRING "" FORCE)
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /MANIFEST:NO /INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /MANIFEST:NO /INCREMENTAL:NO /OPT:REF,ICF /PDBALTPATH:%_PDB%" CACHE STRING "" FORCE)
 else()
     add_compile_options(
         -Wall
-        -Wno-attributes
+        # In case a flag isn't supported on e.g. a certain architecture, don't error.
+        -Wno-unused-command-line-argument
+        # Build fortification options
+        -Wp,-D_GLIBCXX_ASSERTIONS
+        -fstack-protector-strong
+        -fstack-clash-protection
     )
+
+    if (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
+        # _FORTIFY_SOURCE can't be used without optimizations.
+        add_compile_options(-Wp,-D_FORTIFY_SOURCE=2)
+    endif()
 
     if (CITRA_WARNINGS_AS_ERRORS)
         add_compile_options(-Werror)
@@ -111,6 +126,13 @@ else()
 
     if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
         add_compile_options("-stdlib=libc++")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        # GCC may warn when it ignores attributes like maybe_unused,
+        # which is a problem for older versions (e.g. GCC 11).
+        add_compile_options("-Wno-attributes")
+        add_compile_options("-Wno-interference-size")
     endif()
 
     if (MINGW)
@@ -135,6 +157,16 @@ else()
         set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qcTP <TARGET> <LINK_FLAGS> <OBJECTS>")
         set(CMAKE_CXX_ARCHIVE_APPEND "<CMAKE_AR> qTP  <TARGET> <LINK_FLAGS> <OBJECTS>")
     endif()
+endif()
+
+if(ENABLE_SOFTWARE_RENDERER)
+    add_compile_definitions(ENABLE_SOFTWARE_RENDERER)
+endif()
+if(ENABLE_OPENGL)
+    add_compile_definitions(ENABLE_OPENGL)
+endif()
+if(ENABLE_VULKAN)
+    add_compile_definitions(ENABLE_VULKAN)
 endif()
 
 add_subdirectory(common)

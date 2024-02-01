@@ -6,7 +6,7 @@
 #include <memory>
 #include <sstream>
 #include <unordered_map>
-#include <inih/cpp/INIReader.h>
+#include <INIReader.h>
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -27,7 +27,7 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini.vr0";
+    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini.vr";
     std::string ini_buffer;
     FileUtil::ReadFileToString(true, sdl2_config_loc, ini_buffer);
     if (!ini_buffer.empty()) {
@@ -76,13 +76,6 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
     InputManager::N3DS_CIRCLEPAD,
     InputManager::N3DS_STICK_C,
 }};
-
-void Config::UpdateCFG() {
-    std::shared_ptr<Service::CFG::Module> cfg = std::make_shared<Service::CFG::Module>();
-    cfg->SetSystemLanguage(static_cast<Service::CFG::SystemLanguage>(
-        sdl2_config->GetInteger("System", "language", Service::CFG::SystemLanguage::LANGUAGE_EN)));
-    cfg->UpdateConfigNANDSavegame();
-}
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
@@ -145,9 +138,6 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.use_cpu_jit);
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
-    // Premium
-    ReadSetting("Premium", Settings::values.texture_filter);
-
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);
     Settings::values.shaders_accurate_mul =
@@ -175,6 +165,8 @@ void Config::ReadValues() {
 
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
+    ReadSetting("Renderer", Settings::values.texture_filter);
+    ReadSetting("Renderer", Settings::values.texture_sampling);
 
     // Work around to map Android setting for enabling the frame limiter to the format Citra expects
     if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {
@@ -241,28 +233,18 @@ void Config::ReadValues() {
 
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
+    ReadSetting("System", Settings::values.lle_applets);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
-        std::tm t;
-        t.tm_sec = 1;
-        t.tm_min = 0;
-        t.tm_hour = 0;
-        t.tm_mday = 1;
-        t.tm_mon = 0;
-        t.tm_year = 100;
-        t.tm_isdst = 0;
-        std::istringstream string_stream(
-            sdl2_config->GetString("System", "init_time", "2000-01-01 00:00:01"));
-        string_stream >> std::get_time(&t, "%Y-%m-%d %H:%M:%S");
-        if (string_stream.fail()) {
-            LOG_ERROR(Config, "Failed To parse init_time. Using 2000-01-01 00:00:01");
+        std::string time = sdl2_config->GetString("System", "init_time", "946681277");
+        try {
+            Settings::values.init_time = std::stoll(time);
+        } catch (...) {
         }
-        Settings::values.init_time =
-            std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
-                .count();
     }
+    ReadSetting("System", Settings::values.init_ticks_type);
+    ReadSetting("System", Settings::values.init_ticks_override);
     ReadSetting("System", Settings::values.plugin_loader_enabled);
     ReadSetting("System", Settings::values.allow_plugin_loader);
 
@@ -349,9 +331,6 @@ void Config::ReadValues() {
         sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
     NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
     NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
-
-    // Update CFG file based on settings
-    UpdateCFG();
 }
 
 void Config::Reload() {

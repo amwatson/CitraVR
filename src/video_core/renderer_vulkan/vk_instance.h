@@ -6,9 +6,13 @@
 
 #include <span>
 
+#include "video_core/pica/regs_pipeline.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
-#include "video_core/regs_pipeline.h"
 #include "video_core/renderer_vulkan/vk_platform.h"
+
+namespace Core {
+class TelemetrySession;
+}
 
 namespace Frontend {
 class EmuWindow;
@@ -37,7 +41,8 @@ struct FormatTraits {
 class Instance {
 public:
     explicit Instance(bool validation = false, bool dump_command_buffers = false);
-    explicit Instance(Frontend::EmuWindow& window, u32 physical_device_index);
+    explicit Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& window,
+                      u32 physical_device_index);
     ~Instance();
 
     /// Returns the FormatTraits struct for the provided pixel format
@@ -47,6 +52,9 @@ public:
     /// Returns the FormatTraits struct for the provided attribute format and count
     const FormatTraits& GetTraits(Pica::PipelineRegs::VertexAttributeFormat format,
                                   u32 count) const;
+
+    /// Returns a formatted string for the driver version
+    std::string GetDriverVersionName();
 
     /// Returns the Vulkan instance
     vk::Instance GetInstance() const {
@@ -160,6 +168,16 @@ public:
         return shader_stencil_export;
     }
 
+    /// Returns true when VK_EXT_external_memory_host is supported
+    bool IsExternalMemoryHostSupported() const {
+        return external_memory_host;
+    }
+
+    /// Returns true when VK_KHR_fragment_shader_barycentric is supported
+    bool IsFragmentShaderBarycentricSupported() const {
+        return fragment_shader_barycentric;
+    }
+
     /// Returns the vendor ID of the physical device
     u32 GetVendorID() const {
         return properties.vendorID;
@@ -235,6 +253,11 @@ public:
         return min_vertex_stride_alignment;
     }
 
+    /// Returns the minimum imported host pointer alignment
+    u64 GetMinImportedHostPointerAlignment() const {
+        return min_imported_host_pointer_alignment;
+    }
+
     /// Returns true if commands should be flushed at the end of each major renderpass
     bool ShouldFlush() const {
         return driver_id == vk::DriverIdKHR::eArmProprietary ||
@@ -263,11 +286,8 @@ private:
     void CreateAllocator();
 
     /// Collects telemetry information from the device.
-    void CollectTelemetryParameters();
+    void CollectTelemetryParameters(Core::TelemetrySession& telemetry);
     void CollectToolingInfo();
-
-    /// Sets MoltenVK configuration to the desired state.
-    bool SetMoltenVkConfig();
 
 private:
     std::shared_ptr<Common::DynamicLibrary> library;
@@ -299,7 +319,10 @@ private:
     bool fragment_shader_interlock{};
     bool image_format_list{};
     bool pipeline_creation_cache_control{};
+    bool fragment_shader_barycentric{};
     bool shader_stencil_export{};
+    bool external_memory_host{};
+    u64 min_imported_host_pointer_alignment{};
     bool tooling_info{};
     bool debug_utils_supported{};
     bool has_nsight_graphics{};

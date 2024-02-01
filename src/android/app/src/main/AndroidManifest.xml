@@ -37,6 +37,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- (1/2) These two sections allow us to avoid pulling Oculus SDK's libopenxr_loader into our app and use the Apache-licensed OpenXR loader instead.
@@ -55,7 +56,7 @@
     </queries>
 
     <application
-        android:name="org.citra.citra_emu.CitraApplication"
+        android:name="org.citra.citra_emu.vr.VrCitraApplication"
         android:allowBackup="false"
         android:banner="@mipmap/ic_launcher"
         android:icon="@mipmap/ic_launcher"
@@ -108,9 +109,22 @@
         <activity
             android:name="org.citra.citra_emu.activities.EmulationActivity"
             android:exported="true"
-            android:launchMode="singleTop"
-            android:resizeableActivity="false"
-            android:theme="@style/Theme.Citra.Main" />
+            android:theme="@style/Theme.Citra.Main"
+            android:launchMode="singleTop">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:mimeType="application/octet-stream"
+                    android:scheme="content" />
+            </intent-filter>
+
+        </activity>
+
+        <service android:name="org.citra.citra_emu.utils.ForegroundService" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keep emulation running in background"/>
+        </service>
 
         <activity
             android:name="org.citra.citra_emu.vr.VrActivity"
@@ -127,7 +141,6 @@
             </intent-filter>
         </activity>
 
-
         <activity
             android:name="org.citra.citra_emu.vr.VrKeyboardActivity"
             android:exported="true"
@@ -143,21 +156,15 @@
             </intent-filter>
         </activity>
 
-
-        <service android:name="org.citra.citra_emu.utils.ForegroundService" />
-
         <activity
             android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
             android:exported="false"
-            android:label="@string/cheats"
-            android:theme="@style/Theme.Citra.Main" />
+            android:theme="@style/Theme.Citra.Main"
+            android:label="@string/cheats"/>
 
-
-        <provider
-            android:name="org.citra.citra_emu.model.GameProvider"
-            android:authorities="${applicationId}.provider"
-            android:enabled="true"
-            android:exported="false"></provider>
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

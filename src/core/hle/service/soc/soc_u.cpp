@@ -65,6 +65,10 @@
 
 SERIALIZE_EXPORT_IMPL(Service::SOC::SOC_U)
 
+// Change according the debugging needs
+#define LOG_SEND_RECV LOG_TRACE
+#define LOG_POLL LOG_TRACE
+
 namespace Service::SOC {
 
 const s32 SOCKET_ERROR_VALUE = -1;
@@ -226,9 +230,16 @@ static const std::unordered_map<int, int> error_map = {{
 #endif
     {ENOSYS, 55},
     {ERRNO(ENOTCONN), 56},
+#ifdef _WIN32
+    {WSAESHUTDOWN, 56},
+#endif
     {ENOTDIR, 57},
     {ERRNO(ENOTEMPTY), 58},
+#ifdef _WIN32
+    {ERRNO(ENOTSOCK), 8},
+#else
     {ERRNO(ENOTSOCK), 59},
+#endif
     {ENOTSUP, 60},
     {ENOTTY, 61},
     {ENXIO, 62},
@@ -411,6 +422,42 @@ u32 SOC_U::SetSocketBlocking(SocketHolder& socket_holder, bool blocking) {
     return posix_ret;
 }
 
+std::optional<std::reference_wrapper<SocketHolder>> SOC_U::GetSocketHolder(u32 ctr_socket_fd,
+                                                                           u32 process_id,
+                                                                           IPC::RequestParser& rp) {
+    if (initialized_processes.find(process_id) == initialized_processes.end()) {
+        LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", process_id);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNotInitialized);
+        return std::nullopt;
+    }
+    auto fd_info = created_sockets.find(ctr_socket_fd);
+    if (fd_info == created_sockets.end()) {
+        LOG_DEBUG(Service_SOC, "Invalid socket: pid={}, fd={}", process_id, ctr_socket_fd);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultInvalidSocketDescriptor);
+        return std::nullopt;
+    }
+    if (fd_info->second.ownerProcess != process_id && !fd_info->second.isGlobal) {
+        LOG_DEBUG(Service_SOC, "Invalid process owner: pid={}, fd={}, owner_pid={}", process_id,
+                  ctr_socket_fd, fd_info->second.ownerProcess);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultWrongProcess);
+        return std::nullopt;
+    }
+    return std::ref(fd_info->second);
+}
+
+void SOC_U::CloseAndDeleteAllSockets(s32 process_id) {
+    std::erase_if(created_sockets, [process_id](const auto& entry) {
+        if (process_id == -1 || entry.second.ownerProcess == static_cast<u32>(process_id)) {
+            closesocket(entry.second.socket_fd);
+            return true;
+        }
+        return false;
+    });
+}
+
 static u32 SendRecvFlagsToPlatform(u32 flags) {
     u32 ret = 0;
     if (flags & 1) {
@@ -523,7 +570,7 @@ struct CTRPollFD {
         CTRPollFD result;
         result.events.hex = Events::TranslateTo3DS(fd.events, has_libctru_bug).hex;
         result.revents.hex = Events::TranslateTo3DS(fd.revents, has_libctru_bug).hex;
-        for (const auto& socket : socu.open_sockets) {
+        for (const auto& socket : socu.created_sockets) {
             if (socket.second.socket_fd == fd.fd) {
                 result.fd = socket.first;
                 break;
@@ -538,11 +585,9 @@ struct CTRPollFD {
         u8 unused = 0;
         result.events = Events::TranslateToPlatform(fd.events, false, haslibctrbug);
         result.revents = Events::TranslateToPlatform(fd.revents, true, unused);
-        auto iter = socu.open_sockets.find(fd.fd);
-        result.fd = (iter != socu.open_sockets.end()) ? iter->second.socket_fd : 0;
-        if (iter == socu.open_sockets.end()) {
-            LOG_ERROR(Service_SOC, "Invalid socket handle: {}", fd.fd);
-        }
+        auto iter = socu.created_sockets.find(fd.fd);
+        ASSERT(iter != socu.created_sockets.end());
+        result.fd = iter->second.socket_fd;
         return result;
     }
 };
@@ -684,6 +729,19 @@ struct CTRAddrInfo {
     }
 };
 
+struct HostByNameData {
+    static constexpr u32 max_entries = 24;
+
+    u16_le addr_type;
+    u16_le addr_len;
+    u16_le addr_count;
+    u16_le alias_count;
+    std::array<char, 256> h_name;
+    std::array<std::array<char, 256>, max_entries> aliases;
+    std::array<std::array<u8, 16>, max_entries> addresses;
+};
+static_assert(sizeof(HostByNameData) == 0x1A88, "Invalid HostByNameData size");
+
 static u32 NameInfoFlagsToPlatform(u32 flags) {
     u32 ret = 0;
     if (flags & 1) {
@@ -706,31 +764,12 @@ static u32 NameInfoFlagsToPlatform(u32 flags) {
 
 static_assert(sizeof(CTRAddrInfo) == 0x130, "Size of CTRAddrInfo is not correct");
 
-void SOC_U::PreTimerAdjust() {
-    adjust_value_last = std::chrono::steady_clock::now();
-}
-
-void SOC_U::PostTimerAdjust(Kernel::HLERequestContext& ctx, const std::string& caller_method) {
-    std::chrono::time_point<std::chrono::steady_clock> new_timer = std::chrono::steady_clock::now();
-    ASSERT(new_timer >= adjust_value_last);
-    ctx.SleepClientThread(
-        fmt::format("soc_u::{}", caller_method),
-        std::chrono::duration_cast<std::chrono::nanoseconds>(new_timer - adjust_value_last),
-        nullptr);
-}
-
-void SOC_U::CleanupSockets() {
-    for (const auto& sock : open_sockets)
-        closesocket(sock.second.socket_fd);
-    open_sockets.clear();
-}
-
 void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 domain = SocketDomainToPlatform(rp.Pop<u32>()); // Address family
-    u32 type = SocketTypeToPlatform(rp.Pop<u32>());
-    u32 protocol = SocketProtocolToPlatform(rp.Pop<u32>());
-    rp.PopPID();
+    const u32 domain = SocketDomainToPlatform(rp.Pop<u32>()); // Address family
+    const u32 type = SocketTypeToPlatform(rp.Pop<u32>());
+    const u32 protocol = SocketProtocolToPlatform(rp.Pop<u32>());
+    const u32 pid = rp.PopPID();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -757,7 +796,13 @@ void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
     u32 socketHandle = GetNextSocketID();
 
     if ((s64)ret != SOCKET_ERROR_VALUE) {
-        open_sockets[socketHandle] = {static_cast<decltype(SocketHolder::socket_fd)>(ret), true};
+        created_sockets[socketHandle] = {
+            .socket_fd = static_cast<decltype(SocketHolder::socket_fd)>(ret),
+            .blocking = true,
+            .isGlobal = false,
+            .shutdown_rd = false,
+            .ownerProcess = pid,
+        };
 #if _WIN32
         // Disable UDP connection reset
         int new_behavior = 0;
@@ -767,69 +812,78 @@ void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
 #endif
     }
 
-    if ((s64)ret == SOCKET_ERROR_VALUE)
+    if ((s64)ret == SOCKET_ERROR_VALUE) {
         ret = TranslateError(GET_ERRNO);
+    } else {
+        ret = socketHandle;
+    }
 
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(socketHandle);
+    LOG_DEBUG(Service_SOC, "called, pid={}, ret={}", pid, static_cast<s32>(ret));
+
+    rb.Push(ResultSuccess);
+    rb.Push(static_cast<s32>(ret));
 }
 
 void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
-    u32 len = rp.Pop<u32>();
-    rp.PopPID();
+    const u32 socket_handle = rp.Pop<u32>();
+    const u32 len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
     auto sock_addr_buf = rp.PopStaticBuffer();
 
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
     CTRSockAddr ctr_sock_addr;
-    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), len);
+    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), std::min<size_t>(len, sizeof(ctr_sock_addr)));
 
     sockaddr sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
 
-    s32 ret = ::bind(fd_info->second.socket_fd, &sock_addr, sizeof(sock_addr));
+    s32 ret = ::bind(holder.socket_fd, &sock_addr, sizeof(sock_addr));
 
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
 void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const u32 socket_handle = rp.Pop<u32>();
+    const u32 ctr_cmd = rp.Pop<u32>();
+    const u32 ctr_arg = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    u32 ctr_cmd = rp.Pop<u32>();
-    u32 ctr_arg = rp.Pop<u32>();
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
     u32 posix_ret = 0; // TODO: Check what hardware returns for F_SETFL (unspecified by POSIX)
     SCOPE_EXIT({
+        LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+                  static_cast<s32>(posix_ret));
+
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(posix_ret);
     });
 
     if (ctr_cmd == 3) { // F_GETFL
         posix_ret = 0;
-        if (GetSocketBlocking(fd_info->second) == false)
+        if (GetSocketBlocking(holder) == false)
             posix_ret |= 4;    // O_NONBLOCK
     } else if (ctr_cmd == 4) { // F_SETFL
-        posix_ret = SetSocketBlocking(fd_info->second, !(ctr_arg & 4));
+        posix_ret = SetSocketBlocking(holder, !(ctr_arg & 4));
     } else {
         LOG_ERROR(Service_SOC, "Unsupported command ({}) in fcntl call", ctr_cmd);
         posix_ret = TranslateError(EINVAL); // TODO: Find the correct error
@@ -839,69 +893,144 @@ void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
 
 void SOC_U::Listen(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const u32 socket_handle = rp.Pop<u32>();
+    const u32 backlog = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    u32 backlog = rp.Pop<u32>();
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
-    s32 ret = ::listen(fd_info->second.socket_fd, backlog);
+    s32 ret = ::listen(holder.socket_fd, backlog);
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
 void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always
-    // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const auto max_addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    const auto max_addr_len = rp.Pop<u32>();
-    rp.PopPID();
-    sockaddr addr;
-    socklen_t addr_len = sizeof(addr);
-    u32 ret = static_cast<u32>(::accept(fd_info->second.socket_fd, &addr, &addr_len));
+    SocketHolder& holder = socket_holder_optional->get();
 
-    if (static_cast<s32>(ret) != SOCKET_ERROR_VALUE) {
-        u32 socketID = GetNextSocketID();
-        open_sockets[socketID] = {static_cast<decltype(SocketHolder::socket_fd)>(ret), true};
-        ret = socketID;
+    struct AsyncData {
+        // Input
+        u32 max_addr_len{};
+        SocketHolder* fd_info;
+        u32 pid;
+        u32 socket_handle;
+
+        // Output
+        s32 ret{};
+        int accept_error;
+        sockaddr addr;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->max_addr_len = max_addr_len;
+    async_data->fd_info = &holder;
+    async_data->pid = pid;
+    async_data->socket_handle = socket_handle;
+
+    ctx.RunAsync(
+        [async_data](Kernel::HLERequestContext& ctx) {
+            socklen_t addr_len = sizeof(async_data->addr);
+            async_data->ret = static_cast<u32>(
+                ::accept(async_data->fd_info->socket_fd, &async_data->addr, &addr_len));
+            async_data->accept_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            if (static_cast<s32>(async_data->ret) != SOCKET_ERROR_VALUE) {
+                u32 socketID = GetNextSocketID();
+                created_sockets[socketID] = {
+                    .socket_fd = static_cast<decltype(SocketHolder::socket_fd)>(async_data->ret),
+                    .blocking = true,
+                    .isGlobal = false,
+                    .shutdown_rd = false,
+                    .ownerProcess = async_data->pid,
+                };
+                async_data->ret = socketID;
+            }
+
+            CTRSockAddr ctr_addr;
+            std::vector<u8> ctr_addr_buf(sizeof(ctr_addr));
+            if (static_cast<s32>(async_data->ret) == SOCKET_ERROR_VALUE) {
+                async_data->ret = TranslateError(async_data->accept_error);
+            } else {
+                ctr_addr = CTRSockAddr::FromPlatform(async_data->addr);
+                std::memcpy(ctr_addr_buf.data(), &ctr_addr, sizeof(ctr_addr));
+            }
+
+            if (ctr_addr_buf.size() > async_data->max_addr_len) {
+                LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
+                ctr_addr_buf.resize(async_data->max_addr_len);
+            }
+
+            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->socket_handle,
+                      static_cast<s32>(async_data->ret));
+
+            IPC::RequestBuilder rb(ctx, 0x04, 2, 2);
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->ret);
+            rb.PushStaticBuffer(std::move(ctr_addr_buf), 0);
+        });
+}
+
+void SOC_U::SockAtMark(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto socket_handle = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
     }
+    [[maybe_unused]] SocketHolder& holder = socket_holder_optional->get();
 
-    CTRSockAddr ctr_addr;
-    std::vector<u8> ctr_addr_buf(sizeof(ctr_addr));
-    if (static_cast<s32>(ret) == SOCKET_ERROR_VALUE) {
+    bool is_at_mark = false;
+    int func_res = 0;
+#ifdef _WIN32
+    u_long atMark = 0;
+    func_res = ::ioctlsocket(holder.socket_fd, SIOCATMARK, &atMark);
+    is_at_mark = atMark != 0;
+#else
+#ifdef ANDROID
+    func_res = 0;
+    LOG_WARNING(Service_SOC, "(STUBBED) called");
+#else
+    func_res = ::sockatmark(holder.socket_fd);
+#endif
+    is_at_mark = func_res > 0;
+#endif // _WIN32
+
+    u32 ret;
+    if (func_res == SOCKET_ERROR_VALUE) {
         ret = TranslateError(GET_ERRNO);
     } else {
-        ctr_addr = CTRSockAddr::FromPlatform(addr);
-        std::memcpy(ctr_addr_buf.data(), &ctr_addr, sizeof(ctr_addr));
+        ret = is_at_mark ? 1 : 0;
     }
 
-    if (ctr_addr_buf.size() > max_addr_len) {
-        LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
-        ctr_addr_buf.resize(max_addr_len);
-    }
+    LOG_POLL(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+             static_cast<s32>(ret));
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
-    rb.PushStaticBuffer(std::move(ctr_addr_buf), 0);
 }
 
 void SOC_U::GetHostId(Kernel::HLERequestContext& ctx) {
@@ -914,79 +1043,78 @@ void SOC_U::GetHostId(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(host_id);
 }
 
 void SOC_U::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const u32 socket_handle = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
     s32 ret = 0;
+    ret = closesocket(holder.socket_fd);
 
-    ret = closesocket(fd_info->second.socket_fd);
-
-    open_sockets.erase(socket_handle);
-
-    if (ret != 0)
+    if (ret != 0) {
         ret = TranslateError(GET_ERRNO);
+    }
+
+    LOG_DEBUG(Service_SOC, "pid={}, fd={}, ret={}", pid, socket_handle, static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
 void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 socket_handle = rp.Pop<u32>();
-    const auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
     const u32 len = rp.Pop<u32>();
     u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    const u32 addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+    const auto dest_addr_buffer = rp.PopStaticBuffer();
+    auto input_mapped_buff = rp.PopMappedBuffer();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
     bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
     flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
 #ifdef _WIN32
-    bool was_blocking = GetSocketBlocking(fd_info->second);
+    bool was_blocking = GetSocketBlocking(holder);
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, false);
+        SetSocketBlocking(holder, false);
     }
 #else
     if (dont_wait) {
         flags |= MSG_DONTWAIT;
     }
 #endif // _WIN32
-    const u32 addr_len = rp.Pop<u32>();
-    rp.PopPID();
-    const auto dest_addr_buffer = rp.PopStaticBuffer();
-
-    auto input_mapped_buff = rp.PopMappedBuffer();
     std::vector<u8> input_buff(len);
     input_mapped_buff.Read(input_buff.data(), 0,
-                           std::min(input_mapped_buff.GetSize(), static_cast<size_t>(len)));
+                           std::min(input_mapped_buff.GetSize(), static_cast<std::size_t>(len)));
 
     s32 ret = -1;
     if (addr_len > 0) {
         CTRSockAddr ctr_dest_addr;
-        std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(), sizeof(ctr_dest_addr));
+        std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(),
+                    std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+        ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
                                         flags, &dest_addr, sizeof(dest_addr)));
     } else {
-        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+        ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
                                         flags, nullptr, 0));
     }
@@ -995,7 +1123,7 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
 
 #ifdef _WIN32
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, true);
+        SetSocketBlocking(holder, true);
     }
 #endif
 
@@ -1003,50 +1131,40 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
         ret = TranslateError(send_error);
     }
 
+    LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
-void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
-    u32 len = rp.Pop<u32>();
-    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
+                      const std::vector<u8>& input_buff, const u8* dest_addr_buff) {
+
     bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
     flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
 #ifdef _WIN32
-    bool was_blocking = GetSocketBlocking(fd_info->second);
+    bool was_blocking = GetSocketBlocking(holder);
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, false);
+        SetSocketBlocking(holder, false);
     }
 #else
     if (dont_wait) {
         flags |= MSG_DONTWAIT;
     }
 #endif // _WIN32
-    u32 addr_len = rp.Pop<u32>();
-    rp.PopPID();
-    auto input_buff = rp.PopStaticBuffer();
-    auto dest_addr_buff = rp.PopStaticBuffer();
 
     s32 ret = -1;
     if (addr_len > 0) {
         CTRSockAddr ctr_dest_addr;
-        std::memcpy(&ctr_dest_addr, dest_addr_buff.data(), sizeof(ctr_dest_addr));
+        std::memcpy(&ctr_dest_addr, dest_addr_buff,
+                    std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+        ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
                                         flags, &dest_addr, sizeof(dest_addr)));
     } else {
-        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+        ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
                                         flags, nullptr, 0));
     }
@@ -1055,238 +1173,394 @@ void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
 
 #ifdef _WIN32
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, true);
+        SetSocketBlocking(holder, true);
     }
 #endif
 
     if (ret == SOCKET_ERROR_VALUE)
         ret = TranslateError(send_error);
 
+    return ret;
+}
+
+void SOC_U::SendToSingle(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 socket_handle = rp.Pop<u32>();
+    u32 len = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    u32 addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+    auto input_buff = rp.PopStaticBuffer();
+    auto dest_addr_buff = rp.PopStaticBuffer();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
+    s32 ret = SendToImpl(holder, len, flags, addr_len, input_buff, dest_addr_buff.data());
+
+    LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
+}
+
+// A poll busy loop has to be used when recieving from a blocking socket
+// because calling shutdown on a socket that's currently in a blocking
+// recv call does not make it return, which causes some games to hang.
+void SOC_U::RecvBusyWaitForEvent(SocketHolder& holder) {
+    constexpr int timeout_ms = 100;
+
+    while (true) {
+        pollfd poll_fd{};
+        poll_fd.fd = holder.socket_fd;
+        poll_fd.events = POLLIN; // Check for available data.
+        int res = ::poll(&poll_fd, 1, timeout_ms);
+        // Break if there is any event, error or socket RD shutdown.
+        if (res != 0 || holder.shutdown_rd) {
+            break;
+        }
+    }
 }
 
 void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
+    const u32 socket_handle = rp.Pop<u32>();
     u32 len = rp.Pop<u32>();
     u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    u32 addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+    Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
     bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
     flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
 #ifdef _WIN32
-    bool was_blocking = GetSocketBlocking(fd_info->second);
+    bool was_blocking = GetSocketBlocking(holder);
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, false);
+        SetSocketBlocking(holder, false);
     }
 #else
     if (dont_wait) {
         flags |= MSG_DONTWAIT;
     }
 #endif // _WIN32
-    u32 addr_len = rp.Pop<u32>();
-    rp.PopPID();
-    auto& buffer = rp.PopMappedBuffer();
 
-    CTRSockAddr ctr_src_addr;
-    std::vector<u8> output_buff(len);
-    std::vector<u8> addr_buff(addr_len);
-    sockaddr src_addr;
-    socklen_t src_addr_len = sizeof(src_addr);
-
-    s32 ret = -1;
-    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
-        PreTimerAdjust();
-    }
-
-    if (addr_len > 0) {
-        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
-                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
-                                          &src_addr, &src_addr_len));
-        if (ret >= 0 && src_addr_len > 0) {
-            ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-            std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
-        }
-    } else {
-        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
-                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
-                                          NULL, 0));
-        addr_buff.resize(0);
-    }
-    int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
-    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
-        PostTimerAdjust(ctx, "RecvFromOther");
-    }
+    bool needs_async = GetSocketBlocking(holder) && !dont_wait;
+    struct AsyncData {
+        // Input
+        u32 len{};
+        u32 flags{};
+        u32 addr_len{};
+        SocketHolder* fd_info;
+        u32 socket_handle;
 #ifdef _WIN32
-    if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, true);
-    }
+        bool dont_wait;
+        bool was_blocking;
 #endif
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(recv_error);
-    } else {
-        buffer.Write(output_buff.data(), 0, ret);
-    }
+        bool is_blocking;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(ret);
-    rb.PushStaticBuffer(std::move(addr_buff), 0);
-    rb.PushMappedBuffer(buffer);
+        // Output
+        s32 ret{};
+        int recv_error;
+        Kernel::MappedBuffer* buffer;
+        std::vector<u8> output_buff;
+        std::vector<u8> addr_buff;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->buffer = &buffer;
+    async_data->ret = -1;
+    async_data->len = len;
+    async_data->flags = flags;
+    async_data->addr_len = addr_len;
+    async_data->output_buff.resize(len);
+    async_data->addr_buff.resize(addr_len);
+    async_data->fd_info = &holder;
+    async_data->socket_handle = socket_handle;
+#ifdef _WIN32
+    async_data->dont_wait = dont_wait;
+    async_data->was_blocking = was_blocking;
+#endif
+    async_data->is_blocking = needs_async;
+
+    ctx.RunAsync(
+        [async_data](Kernel::HLERequestContext& ctx) {
+            sockaddr src_addr;
+            socklen_t src_addr_len = sizeof(src_addr);
+            CTRSockAddr ctr_src_addr;
+            // Windows, why do you have to be so special...
+            if (async_data->is_blocking) {
+                RecvBusyWaitForEvent(*async_data->fd_info);
+            }
+            if (async_data->addr_len > 0) {
+                async_data->ret = static_cast<s32>(
+                    ::recvfrom(async_data->fd_info->socket_fd,
+                               reinterpret_cast<char*>(async_data->output_buff.data()),
+                               async_data->len, async_data->flags, &src_addr, &src_addr_len));
+                if (async_data->ret >= 0 && src_addr_len > 0) {
+                    ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
+                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
+                                std::min<size_t>(async_data->addr_len, sizeof(ctr_src_addr)));
+                }
+            } else {
+                async_data->ret = static_cast<s32>(
+                    ::recvfrom(async_data->fd_info->socket_fd,
+                               reinterpret_cast<char*>(async_data->output_buff.data()),
+                               async_data->len, async_data->flags, NULL, 0));
+                async_data->addr_buff.resize(0);
+            }
+            async_data->recv_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->ret == SOCKET_ERROR_VALUE) {
+                async_data->ret = TranslateError(async_data->recv_error);
+            } else {
+                async_data->buffer->Write(async_data->output_buff.data(), 0, async_data->ret);
+            }
+#ifdef _WIN32
+            if (async_data->dont_wait && async_data->was_blocking) {
+                SetSocketBlocking(*async_data->fd_info, true);
+            }
+#else
+            (void)this;
+#endif
+            LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", async_data->socket_handle,
+                          static_cast<s32>(async_data->ret));
+
+            IPC::RequestBuilder rb(ctx, 0x07, 2, 4);
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->ret);
+            rb.PushStaticBuffer(std::move(async_data->addr_buff), 0);
+            rb.PushMappedBuffer(*async_data->buffer);
+        },
+        needs_async);
 }
 
 void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always
-    // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
+    const u32 socket_handle = rp.Pop<u32>();
     u32 len = rp.Pop<u32>();
     u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    u32 addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
     bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
     flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
 #ifdef _WIN32
-    bool was_blocking = GetSocketBlocking(fd_info->second);
+    bool was_blocking = GetSocketBlocking(holder);
     if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, false);
+        SetSocketBlocking(holder, false);
     }
 #else
     if (dont_wait) {
         flags |= MSG_DONTWAIT;
     }
 #endif // _WIN32
-    u32 addr_len = rp.Pop<u32>();
-    rp.PopPID();
 
-    CTRSockAddr ctr_src_addr;
-    std::vector<u8> output_buff(len);
-    std::vector<u8> addr_buff(addr_len);
-    sockaddr src_addr;
-    socklen_t src_addr_len = sizeof(src_addr);
-
-    s32 ret = -1;
-    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
-        PreTimerAdjust();
-    }
-    if (addr_len > 0) {
-        // Only get src adr if input adr available
-        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
-                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
-                                          &src_addr, &src_addr_len));
-        if (ret >= 0 && src_addr_len > 0) {
-            ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-            std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
-        }
-    } else {
-        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
-                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
-                                          NULL, 0));
-        addr_buff.resize(0);
-    }
-    int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
-    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
-        PostTimerAdjust(ctx, "RecvFrom");
-    }
+    bool needs_async = GetSocketBlocking(holder) && !dont_wait;
+    struct AsyncData {
+        // Input
+        u32 len{};
+        u32 flags{};
+        u32 addr_len{};
+        SocketHolder* fd_info;
+        u32 socket_handle;
 #ifdef _WIN32
-    if (dont_wait && was_blocking) {
-        SetSocketBlocking(fd_info->second, true);
-    }
+        bool dont_wait;
+        bool was_blocking;
 #endif
-    s32 total_received = ret;
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(recv_error);
-        total_received = 0;
-    }
+        bool is_blocking;
 
-    // Write only the data we received to avoid overwriting parts of the buffer with zeros
-    output_buff.resize(total_received);
+        // Output
+        s32 ret{};
+        int recv_error;
+        std::vector<u8> output_buff;
+        std::vector<u8> addr_buff;
+    };
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(3, 4);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(ret);
-    rb.Push(total_received);
-    rb.PushStaticBuffer(std::move(output_buff), 0);
-    rb.PushStaticBuffer(std::move(addr_buff), 1);
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->ret = -1;
+    async_data->len = len;
+    async_data->flags = flags;
+    async_data->addr_len = addr_len;
+    async_data->output_buff.resize(len);
+    async_data->addr_buff.resize(addr_len);
+    async_data->fd_info = &holder;
+    async_data->socket_handle = socket_handle;
+#ifdef _WIN32
+    async_data->dont_wait = dont_wait;
+    async_data->was_blocking = was_blocking;
+#endif
+    async_data->is_blocking = needs_async;
+
+    ctx.RunAsync(
+        [async_data](Kernel::HLERequestContext& ctx) {
+            sockaddr src_addr;
+            socklen_t src_addr_len = sizeof(src_addr);
+            CTRSockAddr ctr_src_addr;
+            if (async_data->is_blocking) {
+                RecvBusyWaitForEvent(*async_data->fd_info);
+            }
+            if (async_data->addr_len > 0) {
+                // Only get src adr if input adr available
+                async_data->ret = static_cast<s32>(
+                    ::recvfrom(async_data->fd_info->socket_fd,
+                               reinterpret_cast<char*>(async_data->output_buff.data()),
+                               async_data->len, async_data->flags, &src_addr, &src_addr_len));
+                if (async_data->ret >= 0 && src_addr_len > 0) {
+                    ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
+                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
+                                std::min<size_t>(async_data->addr_len, sizeof(ctr_src_addr)));
+                }
+            } else {
+                async_data->ret = static_cast<s32>(
+                    ::recvfrom(async_data->fd_info->socket_fd,
+                               reinterpret_cast<char*>(async_data->output_buff.data()),
+                               async_data->len, async_data->flags, NULL, 0));
+                async_data->addr_buff.resize(0);
+            }
+            async_data->recv_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+
+#ifdef _WIN32
+            if (async_data->dont_wait && async_data->was_blocking) {
+                SetSocketBlocking(*async_data->fd_info, true);
+            }
+#else
+            (void)this;
+#endif
+            s32 total_received = async_data->ret;
+            if (async_data->ret == SOCKET_ERROR_VALUE) {
+                async_data->ret = TranslateError(async_data->recv_error);
+                total_received = 0;
+            }
+
+            // Write only the data we received to avoid overwriting parts of the buffer with zeros
+            async_data->output_buff.resize(total_received);
+
+            LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", async_data->socket_handle,
+                          static_cast<s32>(async_data->ret));
+
+            IPC::RequestBuilder rb(ctx, 0x08, 3, 4);
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->ret);
+            rb.Push(total_received);
+            rb.PushStaticBuffer(std::move(async_data->output_buff), 0);
+            rb.PushStaticBuffer(std::move(async_data->addr_buff), 1);
+        },
+        needs_async);
 }
 
 void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 nfds = rp.Pop<u32>();
     s32 timeout = rp.Pop<s32>();
-    rp.PopPID();
+    const u32 pid = rp.PopPID();
     auto input_fds = rp.PopStaticBuffer();
 
-    std::vector<CTRPollFD> ctr_fds(nfds);
-    std::memcpy(ctr_fds.data(), input_fds.data(), nfds * sizeof(CTRPollFD));
+    struct AsyncData {
+        // Input
+        s32 timeout;
+        u32 nfds;
+
+        // Input/Output
+        std::vector<pollfd> platform_pollfd;
+        std::vector<u8> has_libctru_bug;
+        std::vector<CTRPollFD> ctr_fds;
+
+        // Output
+        s32 ret;
+        int poll_error;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->timeout = timeout;
+    async_data->nfds = nfds;
+
+    async_data->ctr_fds.resize(nfds);
+    std::memcpy(async_data->ctr_fds.data(), input_fds.data(), nfds * sizeof(CTRPollFD));
 
     // The 3ds_pollfd and the pollfd structures may be different (Windows/Linux have different
     // sizes)
     // so we have to copy the data in order
-    std::vector<pollfd> platform_pollfd(nfds);
-    std::vector<u8> has_libctru_bug(nfds, false);
+    async_data->platform_pollfd.resize(nfds);
+    async_data->has_libctru_bug.resize(nfds, false);
     for (u32 i = 0; i < nfds; i++) {
-        platform_pollfd[i] = CTRPollFD::ToPlatform(*this, ctr_fds[i], has_libctru_bug[i]);
+        if (!GetSocketHolder(async_data->ctr_fds[i].fd, pid, rp)) {
+            return;
+        }
+        async_data->platform_pollfd[i] =
+            CTRPollFD::ToPlatform(*this, async_data->ctr_fds[i], async_data->has_libctru_bug[i]);
     }
 
-    if (timeout) {
-        PreTimerAdjust();
-    }
-    s32 ret = ::poll(platform_pollfd.data(), nfds, timeout);
-    if (timeout) {
-        PostTimerAdjust(ctx, "Poll");
-    }
+    ctx.RunAsync(
+        [async_data](Kernel::HLERequestContext& ctx) {
+            async_data->ret =
+                ::poll(async_data->platform_pollfd.data(), async_data->nfds, async_data->timeout);
+            if (async_data->ret == SOCKET_ERROR_VALUE) {
+                async_data->poll_error = GET_ERRNO;
+            }
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            // Now update the output 3ds_pollfd structure
+            for (u32 i = 0; i < async_data->nfds; i++) {
+                async_data->ctr_fds[i] = CTRPollFD::FromPlatform(
+                    *this, async_data->platform_pollfd[i], async_data->has_libctru_bug[i]);
+            }
 
-    // Now update the output 3ds_pollfd structure
-    for (u32 i = 0; i < nfds; i++) {
-        ctr_fds[i] = CTRPollFD::FromPlatform(*this, platform_pollfd[i], has_libctru_bug[i]);
-    }
+            std::vector<u8> output_fds(async_data->nfds * sizeof(CTRPollFD));
+            std::memcpy(output_fds.data(), async_data->ctr_fds.data(),
+                        async_data->nfds * sizeof(CTRPollFD));
 
-    std::vector<u8> output_fds(nfds * sizeof(CTRPollFD));
-    std::memcpy(output_fds.data(), ctr_fds.data(), nfds * sizeof(CTRPollFD));
+            if (async_data->ret == SOCKET_ERROR_VALUE) {
+                async_data->ret = TranslateError(async_data->poll_error);
+            }
 
-    if (ret == SOCKET_ERROR_VALUE) {
-        int err = GET_ERRNO;
-        LOG_ERROR(Service_SOC, "Socket error: {}", err);
+            IPC::RequestBuilder rb(ctx, static_cast<u16>(ctx.CommandHeader().command_id.Value()), 2,
+                                   2);
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->ret);
+            rb.PushStaticBuffer(std::move(output_fds), 0);
 
-        ret = TranslateError(GET_ERRNO);
-    }
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(ret);
-    rb.PushStaticBuffer(std::move(output_fds), 0);
+            LOG_POLL(Service_SOC, "called, fd_count={}, ret={}", async_data->nfds,
+                     static_cast<s32>(async_data->ret));
+        },
+        timeout != 0);
 }
 
 void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const auto max_addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    const auto max_addr_len = rp.Pop<u32>();
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
     sockaddr dest_addr;
     socklen_t dest_addr_len = sizeof(dest_addr);
-    s32 ret = ::getsockname(fd_info->second.socket_fd, &dest_addr, &dest_addr_len);
+    s32 ret = ::getsockname(holder.socket_fd, &dest_addr, &dest_addr_len);
 
     CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
@@ -1296,35 +1570,99 @@ void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
         ret = TranslateError(GET_ERRNO);
 
     if (dest_addr_buff.size() > max_addr_len) {
-        LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
+        LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
         dest_addr_buff.resize(max_addr_len);
     }
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.PushStaticBuffer(std::move(dest_addr_buff), 0);
 }
 
 void SOC_U::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const u32 socket_handle = rp.Pop<u32>();
+    s32 how = ShutdownHowToPlatform(rp.Pop<s32>());
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    s32 how = ShutdownHowToPlatform(rp.Pop<s32>());
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
-    s32 ret = ::shutdown(fd_info->second.socket_fd, how);
-    if (ret != 0)
+    s32 ret = ::shutdown(holder.socket_fd, how);
+    if (ret != 0) {
         ret = TranslateError(GET_ERRNO);
+    } else {
+        if (how == SHUT_RD || how == SHUT_RDWR) {
+            holder.shutdown_rd = true;
+        }
+    }
+
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(ret));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
+}
+
+static std::vector<u8> HostEntToHostByNameData(struct hostent* result) {
+    std::vector<u8> hbn_data_out(sizeof(HostByNameData));
+    HostByNameData& hbn_data = *reinterpret_cast<HostByNameData*>(hbn_data_out.data());
+
+    hbn_data.addr_type = result->h_addrtype;
+    hbn_data.addr_len = result->h_length;
+    std::strncpy(hbn_data.h_name.data(), result->h_name, 255);
+    u16 count;
+    for (count = 0; count < HostByNameData::max_entries; count++) {
+        char* curr = result->h_aliases[count];
+        if (!curr) {
+            break;
+        }
+        std::strncpy(hbn_data.aliases[count].data(), curr, 255);
+    }
+    hbn_data.alias_count = count;
+    for (count = 0; count < HostByNameData::max_entries; count++) {
+        char* curr = result->h_addr_list[count];
+        if (!curr) {
+            break;
+        }
+        std::memcpy(hbn_data.addresses[count].data(), curr, result->h_length);
+    }
+    hbn_data.addr_count = count;
+
+    return hbn_data_out;
+}
+
+void SOC_U::GetHostByAddr(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    [[maybe_unused]] int addr_len = static_cast<int>(rp.Pop<u32>());
+    int type = static_cast<int>(SocketDomainToPlatform(rp.Pop<u32>()));
+    [[maybe_unused]] u32 out_buf_len = rp.Pop<u32>();
+    auto addr = rp.PopStaticBuffer();
+
+    sockaddr platform_addr = CTRSockAddr::ToPlatform(*reinterpret_cast<CTRSockAddr*>(addr.data()));
+
+    struct hostent* result =
+        ::gethostbyaddr(reinterpret_cast<char*>(&platform_addr), sizeof(platform_addr), type);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(ResultSuccess);
+    s32 ret;
+    if (!result) {
+        rb.Push(ret = TranslateError(GET_ERRNO));
+    } else {
+        rb.Push(ret = 0);
+        rb.PushStaticBuffer(HostEntToHostByNameData(result), 0);
+    }
+
+    LOG_DEBUG(Service_SOC, "called, ret={}", static_cast<s32>(ret));
 }
 
 void SOC_U::GetHostByName(Kernel::HLERequestContext& ctx) {
@@ -1335,57 +1673,34 @@ void SOC_U::GetHostByName(Kernel::HLERequestContext& ctx) {
 
     struct hostent* result = ::gethostbyname(reinterpret_cast<char*>(host_name.data()));
 
-    std::vector<u8> hbn_data_out(sizeof(HostByNameData));
-    HostByNameData& hbn_data = *reinterpret_cast<HostByNameData*>(hbn_data_out.data());
-    int ret = 0;
-
-    if (result) {
-        hbn_data.addr_type = result->h_addrtype;
-        hbn_data.addr_len = result->h_length;
-        std::strncpy(hbn_data.h_name.data(), result->h_name, 255);
-        u16 count;
-        for (count = 0; count < HostByNameData::max_entries; count++) {
-            char* curr = result->h_aliases[count];
-            if (!curr) {
-                break;
-            }
-            std::strncpy(hbn_data.aliases[count].data(), curr, 255);
-        }
-        hbn_data.alias_count = count;
-        for (count = 0; count < HostByNameData::max_entries; count++) {
-            char* curr = result->h_addr_list[count];
-            if (!curr) {
-                break;
-            }
-            std::memcpy(hbn_data.addresses[count].data(), curr, result->h_length);
-        }
-        hbn_data.addr_count = count;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(ResultSuccess);
+    s32 ret;
+    if (!result) {
+        rb.Push(ret = TranslateError(GET_ERRNO));
     } else {
-        ret = -1;
+        rb.Push(ret = 0);
+        rb.PushStaticBuffer(HostEntToHostByNameData(result), 0);
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(ret);
-    rb.PushStaticBuffer(std::move(hbn_data_out), 0);
+    LOG_DEBUG(Service_SOC, "called, ret={}", static_cast<s32>(ret));
 }
 
 void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
+    const auto max_addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
         return;
     }
-    const auto max_addr_len = rp.Pop<u32>();
-    rp.PopPID();
+    SocketHolder& holder = socket_holder_optional->get();
 
     sockaddr dest_addr;
     socklen_t dest_addr_len = sizeof(dest_addr);
-    const int ret = ::getpeername(fd_info->second.socket_fd, &dest_addr, &dest_addr_len);
+    const int ret = ::getpeername(holder.socket_fd, &dest_addr, &dest_addr_len);
 
     CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
@@ -1397,86 +1712,131 @@ void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
     }
 
     if (dest_addr_buff.size() > max_addr_len) {
-        LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
+        LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
         dest_addr_buff.resize(max_addr_len);
     }
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(result));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(result);
     rb.PushStaticBuffer(std::move(dest_addr_buff), 0);
 }
 
 void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always
-    // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
-    [[maybe_unused]] const auto input_addr_len = rp.Pop<u32>();
-    rp.PopPID();
+    const auto input_addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
     auto input_addr_buf = rp.PopStaticBuffer();
 
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
+    struct AsyncData {
+        // Input
+        SocketHolder* fd_info;
+        sockaddr input_addr;
+        u32 socket_handle;
+        u32 pid;
+
+        // Output
+        s32 ret{};
+        int connect_error;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->fd_info = &holder;
+    async_data->pid = pid;
+
     CTRSockAddr ctr_input_addr;
-    std::memcpy(&ctr_input_addr, input_addr_buf.data(), sizeof(ctr_input_addr));
+    std::memcpy(&ctr_input_addr, input_addr_buf.data(),
+                std::min<size_t>(input_addr_len, sizeof(ctr_input_addr)));
 
-    sockaddr input_addr = CTRSockAddr::ToPlatform(ctr_input_addr);
-    if (GetSocketBlocking(fd_info->second)) {
-        PreTimerAdjust();
-    }
-    s32 ret = ::connect(fd_info->second.socket_fd, &input_addr, sizeof(input_addr));
-    if (GetSocketBlocking(fd_info->second)) {
-        PostTimerAdjust(ctx, "Connect");
-    }
-    if (ret != 0)
-        ret = TranslateError(GET_ERRNO);
+    async_data->input_addr = CTRSockAddr::ToPlatform(ctr_input_addr);
+    async_data->socket_handle = socket_handle;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(ret);
+    ctx.RunAsync(
+        [async_data](Kernel::HLERequestContext& ctx) {
+            async_data->ret = ::connect(async_data->fd_info->socket_fd, &async_data->input_addr,
+                                        sizeof(async_data->input_addr));
+            async_data->connect_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->ret != 0) {
+                async_data->ret = TranslateError(async_data->connect_error);
+            }
+
+            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->pid,
+                      async_data->socket_handle, static_cast<s32>(async_data->ret));
+
+            IPC::RequestBuilder rb(ctx, 0x06, 2, 0);
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->ret);
+        });
 }
 
 void SOC_U::InitializeSockets(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Implement
     IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto memory_block_size = rp.Pop<u32>();
-    rp.PopPID();
-    rp.PopObject<Kernel::SharedMemory>();
+    const u32 pid = rp.PopPID();
+    [[maybe_unused]] auto shared_memory = rp.PopObject<Kernel::SharedMemory>();
+
+    Result res = ResultSuccess;
+    if (initialized_processes.find(pid) == initialized_processes.end()) {
+        initialized_processes.insert(pid);
+    } else {
+        res = ResultAlreadyInitialized;
+    }
+
+    LOG_DEBUG(Service_SOC, "called, pid={}, res={:#08X}", pid, res.raw);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(res);
 }
 
 void SOC_U::ShutdownSockets(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Implement
     IPC::RequestParser rp(ctx);
-    CleanupSockets();
+
+    // This service call does not provide a PID like the others,
+    // instead SOC seems to fetch the PID from the current session.
+    const u32 pid = ctx.ClientThread()->owner_process.lock()->process_id;
+
+    if (initialized_processes.find(pid) == initialized_processes.end()) {
+        LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", pid);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNotInitialized);
+        return;
+    }
+
+    CloseAndDeleteAllSockets(pid);
+    initialized_processes.erase(pid);
+
+    LOG_DEBUG(Service_SOC, "called, pid={}", pid);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
+    const u32 socket_handle = rp.Pop<u32>();
     const u32 level = rp.Pop<u32>();
     const s32 optname = rp.Pop<s32>();
     u32 optlen = rp.Pop<u32>();
-    rp.PopPID();
+    const u32 pid = rp.PopPID();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
 
     s32 err = 0;
 
@@ -1493,19 +1853,22 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
         std::vector<u8> platform_data(
             TranslateSockOptSizeToPlatform(level_opt.first, level_opt.second));
         socklen_t platform_data_size = static_cast<socklen_t>(platform_data.size());
-        err = ::getsockopt(fd_info->second.socket_fd, level_opt.first, level_opt.second,
+        err = ::getsockopt(holder.socket_fd, level_opt.first, level_opt.second,
                            reinterpret_cast<char*>(platform_data.data()), &platform_data_size);
         if (err == SOCKET_ERROR_VALUE) {
             err = TranslateError(GET_ERRNO);
         } else {
-            platform_data.resize(static_cast<size_t>(platform_data_size));
+            platform_data.resize(static_cast<std::size_t>(platform_data_size));
             TranslateSockOptDataFromPlatform(optval, platform_data, level_opt.first,
                                              level_opt.second);
         }
     }
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(err));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
     rb.Push(static_cast<u32>(optval.size()));
     rb.PushStaticBuffer(std::move(optval), 0);
@@ -1514,18 +1877,18 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
 void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    auto fd_info = open_sockets.find(socket_handle);
-    if (fd_info == open_sockets.end()) {
-        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_HANDLE);
-        return;
-    }
     const auto level = rp.Pop<u32>();
     const auto optname = rp.Pop<s32>();
     const auto optlen = rp.Pop<u32>();
-    rp.PopPID();
+    const u32 pid = rp.PopPID();
     auto optval = rp.PopStaticBuffer();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
     optval.resize(optlen);
 
     s32 err = 0;
@@ -1540,8 +1903,7 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
         std::vector<u8> platform_data;
         const auto levelopt = TranslateSockOpt(level, optname);
         TranslateSockOptDataToPlatform(platform_data, optval, levelopt.first, levelopt.second);
-        err = static_cast<u32>(::setsockopt(fd_info->second.socket_fd, levelopt.first,
-                                            levelopt.second,
+        err = static_cast<u32>(::setsockopt(holder.socket_fd, levelopt.first, levelopt.second,
                                             reinterpret_cast<char*>(platform_data.data()),
                                             static_cast<socklen_t>(platform_data.size())));
         if (err == SOCKET_ERROR_VALUE) {
@@ -1549,8 +1911,11 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
         }
     }
 
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", pid, socket_handle,
+              static_cast<s32>(err));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
 }
 
@@ -1603,7 +1968,7 @@ void SOC_U::GetNetworkOpt(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
     rb.Push(static_cast<u32>(opt_len));
     rb.PushStaticBuffer(std::move(opt_data), 0);
@@ -1666,7 +2031,7 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.Push(count);
     rb.PushStaticBuffer(std::move(out_buff), 0);
@@ -1695,13 +2060,88 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.PushStaticBuffer(std::move(host), 0);
     rb.PushStaticBuffer(std::move(serv), 1);
 }
 
-SOC_U::SOC_U() : ServiceFramework("soc:U") {
+void SOC_U::SendToMultiple(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 socket_handle = rp.Pop<u32>();
+    u32 len = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    u32 addr_len = rp.Pop<u32>();
+    u32 total_addr_len = rp.Pop<u32>();
+    const u32 pid = rp.PopPID();
+    auto input_buff = rp.PopStaticBuffer();
+    auto dest_addr_buff = rp.PopStaticBuffer();
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
+    u32 count = total_addr_len / addr_len;
+    s32 ret = 0;
+    u32 i = 0;
+    do {
+        ret = SendToImpl(holder, len, flags, addr_len, input_buff,
+                         dest_addr_buff.data() + (i * addr_len));
+        i++;
+    } while (i < count && ret >= 0);
+
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd_count={}, ret={}", pid, count,
+              static_cast<s32>(ret));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(ret);
+}
+
+void SOC_U::CloseSockets(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 pid = rp.PopPID();
+
+    if (initialized_processes.find(pid) == initialized_processes.end()) {
+        LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", pid);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNotInitialized);
+        return;
+    }
+
+    CloseAndDeleteAllSockets(pid);
+
+    LOG_DEBUG(Service_SOC, "called, pid={}", pid);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void SOC_U::AddGlobalSocket(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto socket_handle = rp.Pop<u32>();
+
+    // This service call does not provide a PID like the others,
+    // instead SOC seems to fetch the PID from the current session.
+    const u32 pid = ctx.ClientThread()->owner_process.lock()->process_id;
+
+    auto socket_holder_optional = GetSocketHolder(socket_handle, pid, rp);
+    if (!socket_holder_optional) {
+        return;
+    }
+    SocketHolder& holder = socket_holder_optional->get();
+
+    holder.isGlobal = true;
+
+    LOG_DEBUG(Service_SOC, "called, pid={}, fd={}", pid, socket_handle);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+SOC_U::SOC_U() : ServiceFramework("soc:U", 18) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &SOC_U::InitializeSockets, "InitializeSockets"},
@@ -1713,18 +2153,18 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
         {0x0007, &SOC_U::RecvFromOther, "recvfrom_other"},
         {0x0008, &SOC_U::RecvFrom, "RecvFrom"},
         {0x0009, &SOC_U::SendToOther, "SendToOther"},
-        {0x000A, &SOC_U::SendTo, "SendTo"},
+        {0x000A, &SOC_U::SendToSingle, "SendToSingle"},
         {0x000B, &SOC_U::Close, "Close"},
         {0x000C, &SOC_U::Shutdown, "Shutdown"},
         {0x000D, &SOC_U::GetHostByName, "GetHostByName"},
-        {0x000E, nullptr, "GetHostByAddr"},
+        {0x000E, &SOC_U::GetHostByAddr, "GetHostByAddr"},
         {0x000F, &SOC_U::GetAddrInfoImpl, "GetAddrInfo"},
         {0x0010, &SOC_U::GetNameInfoImpl, "GetNameInfo"},
         {0x0011, &SOC_U::GetSockOpt, "GetSockOpt"},
         {0x0012, &SOC_U::SetSockOpt, "SetSockOpt"},
         {0x0013, &SOC_U::Fcntl, "Fcntl"},
         {0x0014, &SOC_U::Poll, "Poll"},
-        {0x0015, nullptr, "SockAtMark"},
+        {0x0015, &SOC_U::SockAtMark, "SockAtMark"},
         {0x0016, &SOC_U::GetHostId, "GetHostId"},
         {0x0017, &SOC_U::GetSockName, "GetSockName"},
         {0x0018, &SOC_U::GetPeerName, "GetPeerName"},
@@ -1735,8 +2175,9 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
         {0x001D, nullptr, "ICMPCancel"},
         {0x001E, nullptr, "ICMPClose"},
         {0x001F, nullptr, "GetResolverInfo"},
-        {0x0021, nullptr, "CloseSockets"},
-        {0x0023, nullptr, "AddGlobalSocket"},
+        {0x0020, &SOC_U::SendToMultiple, "SendToMultiple"},
+        {0x0021, &SOC_U::CloseSockets, "CloseSockets"},
+        {0x0023, &SOC_U::AddGlobalSocket, "AddGlobalSocket"},
         // clang-format on
     };
 
@@ -1749,7 +2190,7 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
 }
 
 SOC_U::~SOC_U() {
-    CleanupSockets();
+    CloseAndDeleteAllSockets();
 #ifdef _WIN32
     WSACleanup();
 #endif
@@ -1878,7 +2319,7 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
 }
 
 std::shared_ptr<SOC_U> GetService(Core::System& system) {
-    return system.ServiceManager().GetService<SOC_U>("cfg:u");
+    return system.ServiceManager().GetService<SOC_U>("soc:U");
 }
 
 void InstallInterfaces(Core::System& system) {

@@ -11,10 +11,7 @@
 #include <string>
 #include <vector>
 #include <boost/container/static_vector.hpp>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/handle_table.h"
@@ -33,12 +30,7 @@ struct AddressMapping {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& address;
-        ar& size;
-        ar& read_only;
-        ar& unk_flag;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 union ProcessFlags {
@@ -77,11 +69,7 @@ public:
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {
-            ar& offset;
-            ar& addr;
-            ar& size;
-        }
+        void serialize(Archive& ar, const unsigned int);
     };
 
     std::string GetTypeName() const override {
@@ -133,14 +121,7 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& memory;
-        ar& segments;
-        ar& entrypoint;
-        ar& name;
-        ar& program_id;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 class Process final : public Object {
@@ -231,20 +212,19 @@ public:
     VAddr GetLinearHeapBase() const;
     VAddr GetLinearHeapLimit() const;
 
-    ResultVal<VAddr> HeapAllocate(VAddr target, u32 size, VMAPermission perms,
-                                  MemoryState memory_state = MemoryState::Private,
-                                  bool skip_range_check = false);
-    ResultCode HeapFree(VAddr target, u32 size);
+    Result HeapAllocate(VAddr* out_addr, VAddr target, u32 size, VMAPermission perms,
+                        MemoryState memory_state = MemoryState::Private,
+                        bool skip_range_check = false);
+    Result HeapFree(VAddr target, u32 size);
 
-    ResultVal<VAddr> LinearAllocate(VAddr target, u32 size, VMAPermission perms);
-    ResultCode LinearFree(VAddr target, u32 size);
+    Result LinearAllocate(VAddr* out_addr, VAddr target, u32 size, VMAPermission perms);
+    Result LinearFree(VAddr target, u32 size);
 
     ResultVal<VAddr> AllocateThreadLocalStorage();
 
-    ResultCode Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
-                   bool privileged = false);
-    ResultCode Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
-                     bool privileged = false);
+    Result Map(VAddr target, VAddr source, u32 size, VMAPermission perms, bool privileged = false);
+    Result Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
+                 bool privileged = false);
 
 private:
     void FreeAllMemory();
@@ -255,9 +235,12 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);
 };
+
 } // namespace Kernel
 
+BOOST_CLASS_EXPORT_KEY(Kernel::AddressMapping)
 BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet)
+BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet::Segment)
 BOOST_CLASS_EXPORT_KEY(Kernel::Process)
 CONSTRUCT_KERNEL_OBJECT(Kernel::CodeSet)
 CONSTRUCT_KERNEL_OBJECT(Kernel::Process)

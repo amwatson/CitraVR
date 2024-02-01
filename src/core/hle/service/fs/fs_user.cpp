@@ -43,7 +43,7 @@ void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
     slot->program_id = system.Kernel().GetProcessById(pid)->codeset->program_id;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
@@ -334,6 +334,24 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::ControlArchive(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto action = rp.Pop<u32>();
+    const auto input_size = rp.Pop<u32>();
+    const auto output_size = rp.Pop<u32>();
+    [[maybe_unused]] const auto input = rp.PopMappedBuffer();
+    [[maybe_unused]] const auto output = rp.PopMappedBuffer();
+
+    LOG_WARNING(Service_FS,
+                "(STUBBED) called, archive_handle={:016X}, action={:08X}, input_size={:08X}, "
+                "output_size={:08X}",
+                archive_handle, action, input_size, output_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
 void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -345,14 +363,14 @@ void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
 void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(Settings::values.use_virtual_sd.GetValue());
 }
 
 void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     // If the SD isn't enabled, it can't be writeable...else, stubbed true
     rb.Push(Settings::values.use_virtual_sd.GetValue());
     LOG_DEBUG(Service_FS, " (STUBBED)");
@@ -380,7 +398,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (archive_id != FS::ArchiveIdCode::SaveData) {
         LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, {}", archive_id);
-        rb.Push(FileSys::ERROR_INVALID_PATH);
+        rb.Push(FileSys::ResultInvalidPath);
         return;
     }
 
@@ -453,7 +471,7 @@ void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -470,7 +488,7 @@ void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -526,7 +544,7 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
     LOG_WARNING(Service_FS, "(STUBBED) called");
 }
@@ -596,7 +614,7 @@ void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x{:08X}", version);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
@@ -605,7 +623,7 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
     priority = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_FS, "called priority=0x{:X}", priority);
 }
@@ -618,7 +636,7 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(priority);
 
     LOG_DEBUG(Service_FS, "called priority=0x{:X}", priority);
@@ -638,7 +656,7 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -670,6 +688,26 @@ void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
     rb.Push<bool>(format_info->duplicate_data != 0);
 }
 
+void FS_USER::GetProductInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    u32 process_id = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_FS, "called, process_id={}", process_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
+
+    const auto product_info = GetProductInfo(process_id);
+    if (!product_info.has_value()) {
+        rb.Push(Result(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
+                       ErrorSummary::NotFound, ErrorLevel::Status));
+        return;
+    }
+
+    rb.Push(ResultSuccess);
+    rb.PushRaw<ProductInfo>(product_info.value());
+}
+
 void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto process_id = rp.Pop<u32>();
@@ -687,8 +725,20 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    rb.Push(RESULT_SUCCESS);
-    rb.PushRaw(program_info_result.Unwrap());
+    ProgramInfo program_info = program_info_result.Unwrap();
+
+    // Always report the launched program mediatype is SD if the friends module is requesting this
+    // information and the media type is game card. Otherwise, friends will append a "romid" field
+    // to the NASC request with a cartridge unique identifier. Using a dump of a game card and the
+    // game card itself at the same time online is known to have caused issues in the past.
+    auto process = ctx.ClientThread()->owner_process.lock();
+    if (process && process->codeset->name == "friends" &&
+        program_info.media_type == MediaType::GameCard) {
+        program_info.media_type = MediaType::SDMC;
+    }
+
+    rb.Push(ResultSuccess);
+    rb.PushRaw<ProgramInfo>(program_info);
 }
 
 void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
@@ -751,7 +801,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 
     if (index.Succeeded()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(index.Unwrap());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -762,7 +812,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(FileSys::GetSeedCount());
 }
 
@@ -772,15 +822,15 @@ void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
     FileSys::AddSeed({title_id, seed, {}});
     IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
-void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u64 value = rp.Pop<u64>();
-    u32 secure_value_slot = rp.Pop<u32>();
-    u32 unique_id = rp.Pop<u32>();
-    u8 title_variation = rp.Pop<u8>();
+    const u64 value = rp.Pop<u64>();
+    const u32 secure_value_slot = rp.Pop<u32>();
+    const u32 unique_id = rp.Pop<u32>();
+    const u8 title_variation = rp.Pop<u8>();
 
     // TODO: Generate and Save the Secure Value
 
@@ -791,15 +841,14 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
-void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+void FS_USER::ObsoletedGetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-
-    u32 secure_value_slot = rp.Pop<u32>();
-    u32 unique_id = rp.Pop<u32>();
-    u8 title_variation = rp.Pop<u8>();
+    const u32 secure_value_slot = rp.Pop<u32>();
+    const u32 unique_id = rp.Pop<u32>();
+    const u8 title_variation = rp.Pop<u8>();
 
     LOG_WARNING(
         Service_FS,
@@ -808,7 +857,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     // TODO: Implement Secure Value Lookup & Generation
 
@@ -816,7 +865,77 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     rb.Push<u64>(0);      // the secure value
 }
 
-void FS_USER::Register(u32 process_id, u64 program_id, const std::string& filepath) {
+void FS_USER::SetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 secure_value_slot = rp.Pop<u32>();
+    const u64 value = rp.Pop<u64>();
+
+    // TODO: Generate and Save the Secure Value
+
+    LOG_WARNING(Service_FS, "(STUBBED) called, value=0x{:016x} secure_value_slot=0x{:08X}", value,
+                secure_value_slot);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    rb.Push(ResultSuccess);
+}
+
+void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 secure_value_slot = rp.Pop<u32>();
+
+    LOG_WARNING(Service_FS, "(STUBBED) called secure_value_slot=0x{:08X}", secure_value_slot);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+
+    rb.Push(ResultSuccess);
+
+    // TODO: Implement Secure Value Lookup & Generation
+
+    rb.Push<bool>(false); // indicates that the secure value doesn't exist
+    rb.Push<bool>(true);  // indicates the requesting process is a gamecard, overriding the check
+    rb.Push<u64>(0);      // the secure value
+}
+
+void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const u32 secure_value_slot = rp.Pop<u32>();
+    const u64 value = rp.Pop<u64>();
+    const bool flush = rp.Pop<bool>();
+
+    // TODO: Generate and Save the Secure Value
+
+    LOG_WARNING(Service_FS,
+                "(STUBBED) called, value=0x{:016x} secure_value_slot=0x{:04X} "
+                "archive_handle=0x{:08X} flush={}",
+                value, secure_value_slot, archive_handle, flush);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    rb.Push(ResultSuccess);
+}
+
+void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const u32 secure_value_slot = rp.Pop<u32>();
+
+    LOG_WARNING(Service_FS, "(STUBBED) called secure_value_slot=0x{:08X} archive_handle=0x{:08X}",
+                secure_value_slot, archive_handle);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+
+    rb.Push(ResultSuccess);
+
+    // TODO: Implement Secure Value Lookup & Generation
+
+    rb.Push<bool>(false); // indicates that the secure value doesn't exist
+    rb.Push<bool>(true);  // indicates the requesting process is a gamecard, overriding the check
+    rb.Push<u64>(0);      // the secure value
+}
+
+void FS_USER::RegisterProgramInfo(u32 process_id, u64 program_id, const std::string& filepath) {
     const MediaType media_type = GetMediaTypeFromPath(filepath);
     program_info_map.insert_or_assign(process_id, ProgramInfo{program_id, media_type});
     if (media_type == MediaType::GameCard) {
@@ -828,13 +947,26 @@ std::string FS_USER::GetCurrentGamecardPath() const {
     return current_gamecard_path;
 }
 
+void FS_USER::RegisterProductInfo(u32 process_id, const ProductInfo& product_info) {
+    product_info_map.insert_or_assign(process_id, product_info);
+}
+
+std::optional<FS_USER::ProductInfo> FS_USER::GetProductInfo(u32 process_id) {
+    auto it = product_info_map.find(process_id);
+    if (it != product_info_map.end()) {
+        return it->second;
+    } else {
+        return {};
+    }
+}
+
 ResultVal<u16> FS_USER::GetSpecialContentIndexFromGameCard(u64 title_id, SpecialContentType type) {
     // TODO(B3N30) check if on real 3DS NCSD is checked if partition exists
 
     if (type > SpecialContentType::DLPChild) {
         // Maybe type 4 is New 3DS update/partition 6 but this needs more research
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     switch (type) {
@@ -853,7 +985,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
                                                       SpecialContentType type) {
     if (type > SpecialContentType::DLPChild) {
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     std::string tmd_path = AM::GetTitleMetadataPath(media_type, title_id);
@@ -861,7 +993,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) != Loader::ResultStatus::Success || type == SpecialContentType::Update) {
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     // TODO(B3N30): Does real 3DS check if content exists in TMD?
@@ -875,7 +1007,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
         ASSERT(false);
     }
 
-    return ResultCode(-1);
+    return ResultUnknown;
 }
 
 FS_USER::FS_USER(Core::System& system)
@@ -896,7 +1028,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x080A, &FS_USER::RenameDirectory, "RenameDirectory"},
         {0x080B, &FS_USER::OpenDirectory, "OpenDirectory"},
         {0x080C, &FS_USER::OpenArchive, "OpenArchive"},
-        {0x080D, nullptr, "ControlArchive"},
+        {0x080D, &FS_USER::ControlArchive, "ControlArchive"},
         {0x080E, &FS_USER::CloseArchive, "CloseArchive"},
         {0x080F, &FS_USER::FormatThisUserSaveData, "FormatThisUserSaveData"},
         {0x0810, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
@@ -929,7 +1061,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x082B, nullptr, "CardNorDirectRead_4xIO"},
         {0x082C, nullptr, "CardNorDirectCpuWriteWithoutVerify"},
         {0x082D, nullptr, "CardNorDirectSectorEraseWithoutVerify"},
-        {0x082E, nullptr, "GetProductInfo"},
+        {0x082E, &FS_USER::GetProductInfo, "GetProductInfo"},
         {0x082F, &FS_USER::GetProgramLaunchInfo, "GetProgramLaunchInfo"},
         {0x0830, &FS_USER::ObsoletedCreateExtSaveData, "Obsoleted_3_0_CreateExtSaveData"},
         {0x0831, nullptr, "CreateSharedExtSaveData"},
@@ -984,12 +1116,16 @@ FS_USER::FS_USER(Core::System& system)
         {0x0862, &FS_USER::SetPriority, "SetPriority"},
         {0x0863, &FS_USER::GetPriority, "GetPriority"},
         {0x0864, nullptr, "GetNandInfo"},
-        {0x0865, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue"},
-        {0x0866, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue"},
+        {0x0865, &FS_USER::ObsoletedSetSaveDataSecureValue, "SetSaveDataSecureValue"},
+        {0x0866, &FS_USER::ObsoletedGetSaveDataSecureValue, "GetSaveDataSecureValue"},
         {0x0867, nullptr, "ControlSecureSave"},
         {0x0868, nullptr, "GetMediaType"},
         {0x0869, nullptr, "GetNandEraseCount"},
         {0x086A, nullptr, "ReadNandReport"},
+        {0x086E, &FS_USER::SetThisSaveDataSecureValue, "SetThisSaveDataSecureValue" },
+        {0x086F, &FS_USER::GetThisSaveDataSecureValue, "GetThisSaveDataSecureValue" },
+        {0x0875, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue" },
+        {0x0876, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue" },
         {0x087A, &FS_USER::AddSeed, "AddSeed"},
         {0x087D, &FS_USER::GetNumSeeds, "GetNumSeeds"},
         {0x0886, nullptr, "CheckUpdatedDat"},

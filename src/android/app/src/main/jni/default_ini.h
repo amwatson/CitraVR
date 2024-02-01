@@ -26,23 +26,28 @@ const char* sdl2_config_file = R"(
 #      - "direction"(only used for axis): "+" means the button is triggered when the axis value
 #          is greater than the threshold; "-" means the button is triggered when the axis value
 #          is smaller than the threshold
-button_a=engine:gamepad,code:96
-button_b=engine:gamepad,code:97
-button_x=engine:gamepad,code:99
-button_y=engine:gamepad,code:100
-button_up=
-button_down=
-button_left=
-button_right=
-button_l=engine:gamepad,code:102
-button_r=engine:gamepad,code:103
-button_start=engine:gamepad,code:109
-button_select=engine:gamepad,code:108
-button_debug=engine:gamepad,code:9
-button_gpio14=engine:gamepad,code:49
-button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
-button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
-button_home=
+# Examples:
+#  - button_a=engine:gamepad,code:96
+#  - button_l=engine:gamepad,code:102
+#  - button_zl=engine:gamepad,joystick:0,axis:17,threshold:0.5,direction:+
+#  - button_zr=engine:gamepad,joystick:0,axis:18,threshold:0.5,direction:+
+#button_a=
+#button_b=
+#button_x=
+#button_y=
+#button_up=
+#button_down=
+#button_left=
+#button_right=
+#button_l=
+#button_r=
+#button_start=
+#button_select=
+#button_debug=
+#button_gpio14=
+#button_zl=
+#button_zr=
+#button_home=
 
 # for analog input, the following devices are available:
 #  - "analog_from_button" (default) for emulating analog input from direction buttons. Required parameters:
@@ -55,8 +60,8 @@ button_home=
 #      - "joystick": the index of the joystick to bind
 #      - "axis_x": the index of the axis to bind as x-axis (default to 0)
 #      - "axis_y": the index of the axis to bind as y-axis (default to 1)
-circle_pad=
-c_stick=
+#circle_pad=
+#c_stick=
 
 
 # for motion input, the following devices are available:
@@ -155,13 +160,9 @@ bg_red =
 bg_blue =
 bg_green =
 
-# Whether and how Stereoscopic 3D should be rendered
-# 0 (default): Off, 1: Side by Side, 2: Anaglyph, 3: Interlaced, 4: Reverse Interlaced, 5: Cardboard VR
-render_3d =1
-
 # Change 3D Intensity
 # 0 - 100: Intensity. 0 (default)
-factor_3d =50
+# factor_3d =50
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
@@ -175,39 +176,6 @@ anaglyph_shader_name =
 # This is required for some shaders to work correctly
 # 0: Nearest, 1 (default): Linear
 filter_mode =
-
-[Layout]
-# Layout for the screen inside the render window.
-# 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen, 3: Side by Side
-layout_option =
-
-# Toggle custom layout (using the settings below) on or off.
-# 0 (default): Off, 1: On
-custom_layout =
-
-# Screen placement when using Custom layout option
-# 0x, 0y is the top left corner of the render window.
-custom_top_left =
-custom_top_top =
-custom_top_right =
-custom_top_bottom =
-custom_bottom_left =
-custom_bottom_top =
-custom_bottom_right =
-custom_bottom_bottom =
-
-# Swaps the prominent screen with the other screen.
-# For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
-# 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
-swap_screen =
-
-# Screen placement settings when using Cardboard VR (render3d = 4)
-# 30 - 100: Screen size as a percentage of the viewport. 85 (default)
-cardboard_screen_size =
-# -100 - 100: Screen X-Coordinate shift as a percentage of empty space. 0 (default)
-cardboard_x_shift =
-# -100 - 100: Screen Y-Coordinate shift as a percentage of empty space. 0 (default)
-cardboard_y_shift =
 
 [Utility]
 # Dumps textures as PNG to dump/textures/[Title ID]/.

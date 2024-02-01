@@ -294,6 +294,10 @@ nand_directory =
 # 0: Old 3DS, 1: New 3DS (default)
 is_new_3ds =
 
+# Whether to use LLE system applets, if installed
+# 0 (default): No, 1: Yes
+lle_applets =
+
 # The system region that Citra will use during emulation
 # -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
 region_value =
@@ -306,6 +310,14 @@ init_clock =
 # set to fixed time. Default 2000-01-01 00:00:01
 # Note: 3DS can only handle times later then Jan 1 2000
 init_time =
+
+# The system ticks count to use when citra starts
+# 0: Random (default), 1: Fixed
+init_ticks_type =
+
+# Tick count to use when init_ticks_type is set to Fixed.
+# Defaults to 0.
+init_ticks_override =
 
 [Camera]
 # Which camera engine to use for the right outer camera

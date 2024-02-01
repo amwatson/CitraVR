@@ -33,7 +33,7 @@ constexpr std::array<float, 8> DEFAULT_STEREO_CAMERA_SETTINGS = {
     10.0f, 5.0f,   55.58000183105469f, 21.56999969482422f,
 };
 constexpr New3dsBacklightControls DEFAULT_NEW_3DS_BACKLIGHT_CONTROLS{{0, 0, 0, 0}, 0, {0, 0, 0}};
-constexpr u8 DEFAULT_SOUND_OUTPUT_MODE = SOUND_SURROUND;
+constexpr u8 DEFAULT_SOUND_OUTPUT_MODE = SOUND_STEREO;
 // NOTE: These two are placeholders. They are randomly generated elsewhere, rather than using fixed
 // constants.
 constexpr u64_le DEFAULT_CONSOLE_ID = 0;
@@ -57,6 +57,8 @@ constexpr ConsoleModelInfo DEFAULT_CONSOLE_MODEL{NEW_NINTENDO_3DS_XL, {0, 0, 0}}
 constexpr std::array<u8, 0x28> DEFAULT_X_DEVICE_TOKEN = {};
 constexpr u32_le DEFAULT_SYSTEM_SETUP_REQUIRED_FLAG = 1;
 constexpr u32_le DEFAULT_DEBUG_MODE_FLAG = 0;
+constexpr u32_le DEFAULT_CLOCK_SEQUENCE = 0;
+constexpr const char DEFAULT_SERVER_TYPE[4] = {'L', '1', '\0', '\0'};
 constexpr u32_le DEFAULT_0x00160000_DATA = 0;
 constexpr u32_le DEFAULT_MIIVERSE_ACCESS_KEY = 0;
 
@@ -108,6 +110,9 @@ static const std::unordered_map<ConfigBlockID, ConfigBlockDefaults> DEFAULT_CONF
       sizeof(DEFAULT_SYSTEM_SETUP_REQUIRED_FLAG)}},
     {DebugModeBlockID,
      {AccessFlag::Global, &DEFAULT_DEBUG_MODE_FLAG, sizeof(DEFAULT_DEBUG_MODE_FLAG)}},
+    {ClockSequenceBlockID,
+     {AccessFlag::System, &DEFAULT_CLOCK_SEQUENCE, sizeof(DEFAULT_CLOCK_SEQUENCE)}},
+    {ServerType, {AccessFlag::Global, DEFAULT_SERVER_TYPE, sizeof(DEFAULT_SERVER_TYPE)}},
     {Unknown_0x00160000,
      {AccessFlag::Global, &DEFAULT_0x00160000_DATA, sizeof(DEFAULT_0x00160000_DATA)}},
     {MiiverseAccessKeyBlockID,

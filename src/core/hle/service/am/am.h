@@ -11,7 +11,6 @@
 #include <vector>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "common/swap.h"
@@ -32,6 +31,10 @@ class IOFile;
 
 namespace Service::FS {
 enum class MediaType : u32;
+}
+
+namespace Kernel {
+class Mutex;
 }
 
 namespace Service::AM {
@@ -68,18 +71,20 @@ enum class InstallStatus : u32 {
 // Title ID valid length
 constexpr std::size_t TITLE_ID_VALID_LENGTH = 16;
 
+constexpr u64 TWL_TITLE_ID_FLAG = 0x0000800000000000ULL;
+
 // Progress callback for InstallCIA, receives bytes written and total bytes
 using ProgressCallback = void(std::size_t, std::size_t);
 
 // A file handled returned for CIAs to be written into and subsequently installed.
 class CIAFile final : public FileSys::FileBackend {
 public:
-    explicit CIAFile(Service::FS::MediaType media_type);
+    explicit CIAFile(Core::System& system_, Service::FS::MediaType media_type);
     ~CIAFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    ResultCode WriteTicket();
-    ResultCode WriteTitleMetadata();
+    Result WriteTicket();
+    Result WriteTitleMetadata();
     ResultVal<std::size_t> WriteContentData(u64 offset, std::size_t length, const u8* buffer);
     ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
                                  const u8* buffer) override;
@@ -89,6 +94,8 @@ public:
     void Flush() const override;
 
 private:
+    Core::System& system;
+
     // Whether it's installing an update, and what step of installation it is at
     bool is_update = false;
     CIAInstallState install_state = CIAInstallState::InstallStarted;
@@ -105,6 +112,25 @@ private:
 
     class DecryptionState;
     std::unique_ptr<DecryptionState> decryption_state;
+};
+
+// A file handled returned for Tickets to be written into and subsequently installed.
+class TicketFile final : public FileSys::FileBackend {
+public:
+    explicit TicketFile();
+    ~TicketFile();
+
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() const override;
+    void Flush() const override;
+
+private:
+    u64 written = 0;
+    std::vector<u8> data;
 };
 
 /**
@@ -171,6 +197,14 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
  * @returns string path to the folder
  */
 std::string GetMediaTitlePath(Service::FS::MediaType media_type);
+
+/**
+ * Uninstalls the specified title.
+ * @param media_type the storage medium the title is installed to
+ * @param title_id the title ID to uninstall
+ * @return result of the uninstall operation
+ */
+Result UninstallProgram(const FS::MediaType media_type, const u64 title_id);
 
 class Module final {
 public:
@@ -261,6 +295,18 @@ public:
          *      1 : Result, 0 on success, otherwise error code
          */
         void GetProgramInfos(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetProgramInfosIgnorePlatform service function
+         *  Inputs:
+         *      1 : u8 Mediatype
+         *      2 : Total titles
+         *      4 : TitleIDList pointer
+         *      6 : TitleList pointer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void GetProgramInfosIgnorePlatform(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::DeleteUserProgram service function
@@ -380,6 +426,15 @@ public:
         void NeedsCleanup(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::DoCleanup service function
+         *  Inputs:
+         *      1 : Media Type
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void DoCleanup(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::QueryAvailableTitleDatabase service function
          *  Inputs:
          *      1 : Media Type
@@ -388,6 +443,42 @@ public:
          *      2 : Boolean, database availability
          */
         void QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetPersonalizedTicketInfoList service function
+         *  Inputs:
+         *      1 : Count
+         *      2-3 : Buffer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Out count
+         */
+        void GetPersonalizedTicketInfoList(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetNumImportTitleContextsFiltered service function
+         *  Inputs:
+         *      1 : Count
+         *      2 : Filter
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Num import titles
+         */
+        void GetNumImportTitleContextsFiltered(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetImportTitleContextListFiltered service function
+         *  Inputs:
+         *      1 : Count
+         *      2 : Media type
+         *      3 : filter
+         *      4-5 : Buffer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Out count
+         *      3-4 : Out buffer
+         */
+        void GetImportTitleContextListFiltered(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::CheckContentRights service function
@@ -592,13 +683,30 @@ public:
          */
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
 
+        /**
+         * AM::BeginImportTicket service function
+         *  Inputs:
+         *      1 : Media type to install title to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2-3 : TicketHandle handle for application to write to
+         */
+        void BeginImportTicket(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::EndImportTicket service function
+         *  Inputs:
+         *      1-2 : TicketHandle handle application wrote to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void EndImportTicket(Kernel::HLERequestContext& ctx);
+
     protected:
         std::shared_ptr<Module> am;
     };
 
 private:
-    explicit Module(Kernel::KernelSystem& kernel);
-
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
@@ -610,27 +718,13 @@ private:
      */
     void ScanForAllTitles();
 
-    Kernel::KernelSystem& kernel;
+    Core::System& system;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& cia_installing;
-        ar& am_title_list;
-        ar& system_updater_mutex;
-    }
-
-    template <class Archive>
-    static void load_construct(Archive& ar, Module* t, const unsigned int file_version) {
-        ::new (t) Module(Core::Global<Kernel::KernelSystem>());
-    }
-
-    template <class Archive>
-    void save_construct(Archive& ar, const unsigned int file_version) const {}
-
-    friend class ::construct_access;
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -638,4 +732,5 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
 
-BOOST_SERIALIZATION_CONSTRUCT(Service::AM::Module);
+BOOST_CLASS_EXPORT_KEY(Service::AM::Module)
+SERVICE_CONSTRUCT(Service::AM::Module)

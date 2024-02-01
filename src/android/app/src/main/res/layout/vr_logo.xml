@@ -24,11 +24,10 @@
         android:fontFamily="@font/lato_bold"
         android:gravity="center"
         android:text="Citra"
-        android:textSize="64sp"
         android:textColor="@color/vr_citra_logo_color"
+        android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/image_logo"
-        app:layout_constraintStart_toEndOf="@+id/image_logo"
-        app:layout_constraintTop_toTopOf="@+id/image_logo" />
+        app:layout_constraintStart_toEndOf="@+id/image_logo" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -39,7 +38,6 @@
         android:textColor="@color/vr_citra_logo_color"
         android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/materialTextView"
-        app:layout_constraintStart_toEndOf="@+id/materialTextView"
-        app:layout_constraintTop_toTopOf="@+id/materialTextView" />
+        app:layout_constraintStart_toEndOf="@+id/materialTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

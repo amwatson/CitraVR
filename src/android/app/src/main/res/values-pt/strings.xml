@@ -322,7 +322,6 @@
     <string name="vr_background">Ambiente VR</string>
     <string name="vr_error_two_instances_title">Erro: detectado duas instâncias de CitraVR</string>
     <string name="vr_error_two_instances_message">Detectou um bug de lançamento fatal com CitraVR. Este é um problema conhecido. \n\nO problema agora está resolvido. Por favor, tente lançar o jogo novamente. </string>
-    <string name="vr_extra_performance_mode_description">Substitui o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. Nota: Quando essa configuração é ativada, os valores do usuário para as seguintes configurações são ignorados: o ambiente VR (sempre seleciona "void"), todo o áudio (desativado)</string>
     <string name="vr_extra_performance_mode">VR Modo de desempenho extra</string>
     <string name="vr_cpu_level">Nível da CPU</string>
     <string name="vr_cpu_level_description">Níveis mais altos podem melhorar o desempenho de áudio/emulação, mas drenará a bateria mais rapidamente</string>
@@ -334,4 +333,5 @@
     <string name="release_notes_title">Notas de liberação</string>
     <string name="vr_licenses_description">Projetos que tornam possível o Citra e Citravr</string>
     <string name="game_compat_tooltip">Folha de compatibilidade de jogos</string>
+    <string name="vr_extra_performance_mode_description">Substitui o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. Nota: Quando essa configuração é ativada, os valores do usuário para as seguintes configurações são ignorados: ambiente VR (sempre seleciona o vazio), alongamento de áudio (desativado)</string>
 </resources>

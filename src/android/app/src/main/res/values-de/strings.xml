@@ -520,7 +520,6 @@
     <string name="vr_background">VR -Umgebung</string>
     <string name="vr_error_two_instances_title">Fehler: Erkennete zwei CitraVR -Instanzen</string>
     <string name="vr_error_two_instances_message">Erkannte einen tödlichen Startfehler mit CitraVR. Dies ist ein bekanntes Problem. \n\nDas Problem ist jetzt gelöst. Bitte versuchen Sie, das Spiel erneut zu starten. </string>
-    <string name="vr_extra_performance_mode_description">Überschreibt den Wert anderer Einstellungen, um den Overhead zu minimieren und die Leistung zu maximieren. Hinweis: Wenn diese Einstellung aktiviert ist, werden die Werte des Benutzers für die folgenden Einstellungen ignoriert: VR -Umgebung (wählt immer "void"), alle Audio (deaktiviert). </string>
     <string name="vr_extra_performance_mode">VR zusätzlicher Leistungsmodus</string>
     <string name="vr_cpu_level">CPU -Ebene</string>
     <string name="vr_cpu_level_description">Höhere Werte können die Audio-/Emulationsleistung verbessern, die Batterie jedoch schneller abtropfen lassen</string>
@@ -532,4 +531,5 @@
     <string name="release_notes_title">Versionshinweise</string>
     <string name="vr_licenses_description">Projekte, die Citra und Citravr ermöglichen</string>
     <string name="game_compat_tooltip">Spielkompatibilitätsblatt</string>
+    <string name="vr_extra_performance_mode_description">Überschreibt den Wert anderer Einstellungen, um den Overhead zu minimieren und die Leistung zu maximieren. HINWEIS: Wenn diese Einstellung aktiviert ist, werden die Werte des Benutzers für die folgenden Einstellungen ignoriert: VR -Umgebung (wählt immer void), Audio -Dehnung (deaktiviert). </string>
 </resources>

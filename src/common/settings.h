@@ -521,7 +521,7 @@ struct Values {
     // Audio
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
+    SwitchableSetting<bool> enable_audio_stretching{false, "enable_audio_stretching"};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
     Setting<std::string> output_device{"auto", "output_device"};

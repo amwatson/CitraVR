@@ -662,7 +662,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="vr_background">Entorno de realidad virtual</string>
     <string name="vr_error_two_instances_title">Error: detectó dos instancias CitraVR</string>
     <string name="vr_error_two_instances_message">Detectó un error de lanzamiento fatal con CitraVR. Este es un problema conocido. \n\nEl problema ahora se resuelve. Intente volver a lanzar el juego. </string>
-    <string name="vr_extra_performance_mode_description">Anula el valor de otras configuraciones para minimizar los gastos generales y maxmimizar el rendimiento. Nota: Cuando esta configuración está habilitada, se ignoran los valores del usuario para la siguiente configuración: entorno VR (siempre selecciona "nulo"), todo audio (deshabilitado)</string>
     <string name="vr_extra_performance_mode">Modo de rendimiento adicional VR</string>
     <string name="vr_cpu_level">Nivel de la CPU</string>
     <string name="vr_cpu_level_description">Los niveles más altos pueden mejorar el rendimiento de audio/emulación, pero drenarán la batería más rápido</string>
@@ -674,4 +673,5 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="release_notes_title">Notas de lanzamiento</string>
     <string name="vr_licenses_description">Proyectos que hacen posible a Citra y Citravr</string>
     <string name="game_compat_tooltip">Hoja de compatibilidad del juego</string>
+    <string name="vr_extra_performance_mode_description">Anula el valor de otras configuraciones para minimizar los gastos generales y maxmimizar el rendimiento. Nota: Cuando esta configuración está habilitada, se ignoran los valores del usuario para la siguiente configuración: entorno VR (siempre selecciona void), estiramiento de audio (deshabilitado)</string>
 </resources>

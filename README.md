@@ -2,7 +2,7 @@
   <br>
   <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
   <br>
-  <b>CitraVR (Beta)</b>
+  <b>(Beta)</b>
   <br>
 </h1>
 

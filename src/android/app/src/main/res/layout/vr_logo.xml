@@ -36,7 +36,7 @@
         android:layout_gravity="center"
         android:fontFamily="@font/dancing_script_bold"
         android:text="VR"
-        android:textColor="#FF0000"
+        android:textColor="@color/vr_citra_logo_color"
         android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/materialTextView"
         app:layout_constraintStart_toEndOf="@+id/materialTextView"

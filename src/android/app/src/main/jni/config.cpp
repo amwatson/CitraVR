@@ -294,12 +294,14 @@ void Config::ReadValues() {
       LOG_INFO(Config, "VR immersive mode enabled");
 
       // no point rendering passthrough in immersive mode
-      VRSettings::values.vr_environment =
-        static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
+      // JLD: disagree. disabling this override.
+      // VRSettings::values.vr_environment =
+      //  static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
       // We originally had two immersive modes, but I cut them down to fit in
       // the shader map's bitfield.
-      VRSettings::values.vr_immersive_mode = 2;
+      VRSettings::values.vr_immersive_mode = 1;
       // When immersive mode is enabled, only OpenGL is supported.
+      // FOR NOW :)
       Settings::values.graphics_api = Settings::GraphicsAPI::OpenGL;
     }
 

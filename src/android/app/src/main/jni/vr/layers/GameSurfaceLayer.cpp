@@ -30,7 +30,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float lowerPanelScaleFactor = 0.75f;
+constexpr float defaultLowerPanelScaleFactor = 0.75f;
+float lowerPanelScaleFactor = defaultLowerPanelScaleFactor;
 
 const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
 
@@ -258,6 +259,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
                              uint32_t& layerCount) const
 
 {
+    bool showLowerPanel = true;
     const uint32_t panelWidth = swapchain_.Width / 2;
     const uint32_t panelHeight = swapchain_.Height / 2;
     const double aspectRatio =
@@ -333,6 +335,34 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.size.height = scale.y;
 
             layers[layerCount++].mQuad = layer;
+        }
+    }
+    /*
+     * This bit is entirely optional, rather than having the panel appear/disappear it emerge in
+     * smoothly, however to achieve it I had to make the scale factor mutable, which I appreciate
+     * might not be following the intention of this class.
+     * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
+     * variable directly.
+     */
+    const auto panelZoomSpeed = 0.15f;
+    if (showLowerPanel && lowerPanelScaleFactor < defaultLowerPanelScaleFactor)
+    {
+        if (lowerPanelScaleFactor == 0.0f)
+        {
+            lowerPanelScaleFactor = panelZoomSpeed;
+        }
+        else
+        {
+            lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
+            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, defaultLowerPanelScaleFactor);
+        }
+    }
+    else if (!showLowerPanel && lowerPanelScaleFactor > 0.0f)
+    {
+        lowerPanelScaleFactor /= 1.0f + panelZoomSpeed;
+        if (lowerPanelScaleFactor < panelZoomSpeed)
+        {
+            lowerPanelScaleFactor = 0.0f;
         }
     }
     // Create the Lower Display Panel (flat touchscreen)

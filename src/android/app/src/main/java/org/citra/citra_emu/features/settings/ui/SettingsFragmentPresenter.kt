@@ -758,7 +758,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.factor3d,
                     R.string.factor3d_description,
                     0,
-                    100,
+                    300,
                     "%",
                     IntSetting.STEREOSCOPIC_3D_DEPTH.key,
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()

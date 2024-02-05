@@ -128,7 +128,6 @@ float GetCentralAngleSysprop() {
 
 //-----------------------------------------------------------------------------
 // Panel math
-
 /** Create the pose for the lower panel.
  *    - Below the center
  *    - Rotated 45 degrees away from viewer
@@ -138,6 +137,14 @@ XrPosef CreateLowerPanelFromWorld(const XrPosef& topPanelFromWorld) {
 
     constexpr float kLowerPanelYOffset = -0.75f;
     XrPosef lowerPanelFromWorld = topPanelFromWorld;
+
+    // If rotated, make lower panel the same surface with the upper one
+    if (VRSettings::values.rotation_anticlockwise_enabled) {
+        constexpr float kLowerPanelRotatedXOffset = 1.0f;
+        lowerPanelFromWorld.position.x += kLowerPanelRotatedXOffset;
+        return lowerPanelFromWorld;
+    }
+
     // Pitch the lower panel away from the viewer 45 degrees
     lowerPanelFromWorld.orientation = XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f);
     lowerPanelFromWorld.position.y += kLowerPanelYOffset;
@@ -219,7 +226,18 @@ XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeigh
 }
 
 XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
-    return XrPosef{XrMath::Quatf::Identity(), position};
+    XrPosef pose{XrMath::Quatf::Identity(), position};
+
+    // If rotated, move to left a little and get closer to viewer
+    if (VRSettings::values.rotation_anticlockwise_enabled) {
+        constexpr float kUpperPanelRotatedXOffset = -0.5f;
+        constexpr float kUpperPanelRotatedZOffset = 0.25f;
+        pose.orientation = CalculatePanelRotation(pose.position, {0, 0, 0}, {-1, 0, 0});
+
+        pose.position.x += kUpperPanelRotatedXOffset;
+        pose.position.z += kUpperPanelRotatedZOffset;
+    }
+    return pose;
 }
 
 } // anonymous namespace
@@ -264,6 +282,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
+    const bool useLeftRenderRight = VRSettings::values.render_right_with_left_enabled;
     const bool useCylinder = (GetCylinderSysprop() != 0) || (immersiveMode_ > 0);
     if (useCylinder) {
 
@@ -282,7 +301,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
-            layer.subImage.imageRect.offset.x = eye == 0 ? 0 : panelWidth;
+            layer.subImage.imageRect.offset.x = (eye == 0 || useLeftRenderRight) ? 0 : panelWidth;
             layer.subImage.imageRect.offset.y = 0;
             layer.subImage.imageRect.extent.width = panelWidth;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
@@ -319,7 +338,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
-            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + cropHoriz / 2;
+            layer.subImage.imageRect.offset.x = ((eye == 0 || useLeftRenderRight) ? 0 : panelWidth) + cropHoriz / 2;
             layer.subImage.imageRect.offset.y = 0;
             layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
@@ -404,8 +423,13 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     static const XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
     const float sphereRadius = XrMath::Vector3f::Length(
         topPanelFromWorld_.position - viewerPosition); // Set the initial distance of the
+        // window from the viewer
 
-    // window from the viewer
+    // lock top panel if it's rotated
+    if (VRSettings::values.rotation_anticlockwise_enabled) {
+        return;
+    }
+
     const XrVector3f windowUpDirection{0, 1, 0}; // Y is up
 
     const XrVector3f windowPosition =

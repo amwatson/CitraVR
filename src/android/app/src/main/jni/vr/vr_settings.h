@@ -43,6 +43,8 @@ struct Values {
     int32_t vr_environment = 0;
     int32_t vr_immersive_mode = 0;
     bool extra_performance_mode_enabled = false;
+    bool rotation_anticlockwise_enabled = false;
+    bool render_right_with_left_enabled = false;
 } extern values;
 
 } // namespace VRSettings

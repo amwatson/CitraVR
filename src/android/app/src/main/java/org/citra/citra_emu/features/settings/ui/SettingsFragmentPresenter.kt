@@ -1119,6 +1119,24 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.VR_IMMERSIVE_MODE.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.VR_ROTATE_ANTICLOCKWISE,
+                    R.string.vr_rotate_anticlockwise,
+                    R.string.vr_rotate_anticlockwise_description,
+                    BooleanSetting.VR_ROTATE_ANTICLOCKWISE.key,
+                    BooleanSetting.VR_ROTATE_ANTICLOCKWISE.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.VR_RENDER_RIGHT_WITH_LEFT,
+                    R.string.vr_render_right_with_left,
+                    R.string.vr_render_right_with_left_description,
+                    BooleanSetting.VR_RENDER_RIGHT_WITH_LEFT.key,
+                    BooleanSetting.VR_RENDER_RIGHT_WITH_LEFT.defaultValue
+                )
+            )
         }
     }
 }

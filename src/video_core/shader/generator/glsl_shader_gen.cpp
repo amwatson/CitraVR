@@ -312,6 +312,11 @@ void main() {
         std::string out = GetVertexInterfaceDeclaration(true, state.use_clip_planes, separable_shader);
         out += VSUniformBlockDef;
 
+        // Declare your variables here
+        out += "uniform float vr_immersive_mode_factor;\n";
+        out += "uniform mat4 projection;\n";
+        out += "uniform vec3 vr_position;\n";
+
         out += '\n';
         for (u32 i = 0; i < state.vs_output_attributes; ++i) {
             if (separable_shader) {

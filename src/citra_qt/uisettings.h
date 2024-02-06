@@ -117,6 +117,8 @@ struct Values {
     QVector<UISettings::GameDir> game_dirs;
     QStringList recent_files;
     QString last_artic_base_addr;
+    QVector<u64> favorited_ids;
+
     QString language;
 
     QString theme;

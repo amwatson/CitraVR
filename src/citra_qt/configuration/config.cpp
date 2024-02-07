@@ -813,6 +813,7 @@ void Config::ReadUIGameListValues() {
     ReadBasicSetting(UISettings::values.show_region_column);
     ReadBasicSetting(UISettings::values.show_type_column);
     ReadBasicSetting(UISettings::values.show_size_column);
+    ReadBasicSetting(UISettings::values.show_play_time_column);
 
     const int favorites_size = qt_config->beginReadArray(QStringLiteral("favorites"));
     for (int i = 0; i < favorites_size; i++) {
@@ -1311,6 +1312,7 @@ void Config::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.show_region_column);
     WriteBasicSetting(UISettings::values.show_type_column);
     WriteBasicSetting(UISettings::values.show_size_column);
+    WriteBasicSetting(UISettings::values.show_play_time_column);
 
     qt_config->beginWriteArray(QStringLiteral("favorites"));
     for (int i = 0; i < UISettings::values.favorited_ids.size(); i++) {

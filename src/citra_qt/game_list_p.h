@@ -18,6 +18,7 @@
 #include <QStandardItem>
 #include <QString>
 #include <QWidget>
+#include "citra_qt/play_time_manager.h"
 #include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
 #include "common/file_util.h"
@@ -359,6 +360,31 @@ public:
      */
     bool operator<(const QStandardItem& other) const override {
         return data(SizeRole).toULongLong() < other.data(SizeRole).toULongLong();
+    }
+};
+
+/**
+ * GameListItem for Play Time values.
+ * This object stores the play time of a game in seconds, and its readable
+ * representation in minutes/hours
+ */
+class GameListItemPlayTime : public GameListItem {
+public:
+    static constexpr int PlayTimeRole = SortRole;
+
+    GameListItemPlayTime() = default;
+    explicit GameListItemPlayTime(const qulonglong time_seconds) {
+        setData(time_seconds, PlayTimeRole);
+    }
+
+    void setData(const QVariant& value, int role) override {
+        qulonglong time_seconds = value.toULongLong();
+        GameListItem::setData(PlayTime::ReadablePlayTime(time_seconds), Qt::DisplayRole);
+        GameListItem::setData(value, PlayTimeRole);
+    }
+
+    bool operator<(const QStandardItem& other) const override {
+        return data(PlayTimeRole).toULongLong() < other.data(PlayTimeRole).toULongLong();
     }
 };
 

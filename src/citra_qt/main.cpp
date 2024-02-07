@@ -60,6 +60,7 @@
 #include "citra_qt/movie/movie_play_dialog.h"
 #include "citra_qt/movie/movie_record_dialog.h"
 #include "citra_qt/multiplayer/state.h"
+#include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
@@ -187,6 +188,8 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
     discord_rpc->Update();
+
+    play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
 
     Network::Init();
 
@@ -339,7 +342,7 @@ void GMainWindow::InitializeWidgets() {
     secondary_window->hide();
     secondary_window->setParent(nullptr);
 
-    game_list = new GameList(this);
+    game_list = new GameList(*play_time_manager, this);
     ui->horizontalLayout->addWidget(game_list);
 
     game_list_placeholder = new GameListPlaceholder(this);
@@ -830,6 +833,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
     connect(game_list, &GameList::OpenDirectory, this, &GMainWindow::OnGameListOpenDirectory);
     connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
+    connect(game_list, &GameList::RemovePlayTimeRequested, this,
+            &GMainWindow::OnGameListRemovePlayTimeData);
     connect(game_list, &GameList::NavigateToGamedbEntryRequested, this,
             &GMainWindow::OnGameListNavigateToGamedbEntry);
     connect(game_list, &GameList::CreateShortcut, this, &GMainWindow::OnGameListCreateShortcut);
@@ -1238,7 +1243,11 @@ bool GMainWindow::LoadROM(const QString& filename) {
     game_title = QString::fromStdString(title);
     UpdateWindowTitle();
 
+    u64 title_id;
+    system.GetAppLoader().ReadProgramId(title_id);
+
     game_path = filename;
+    game_title_id = title_id;
 
     return true;
 }
@@ -1484,6 +1493,7 @@ void GMainWindow::ShutdownGame() {
     UpdateWindowTitle();
 
     game_path.clear();
+    game_title_id = 0;
 
     // Update the GUI
     UpdateMenuState();
@@ -1669,6 +1679,17 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     LOG_INFO(Frontend, "Opening {} path for data_id={:016x}", open_target, data_id);
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
+}
+
+void GMainWindow::OnGameListRemovePlayTimeData(u64 program_id) {
+    if (QMessageBox::question(this, tr("Remove Play Time Data"), tr("Reset play time?"),
+                              QMessageBox::Yes | QMessageBox::No,
+                              QMessageBox::No) != QMessageBox::Yes) {
+        return;
+    }
+
+    play_time_manager->ResetProgramPlayTime(program_id);
+    game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
 void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
@@ -2214,6 +2235,9 @@ void GMainWindow::OnStartGame() {
 
     UpdateMenuState();
 
+    play_time_manager->SetProgramId(game_title_id);
+    play_time_manager->Start();
+
     discord_rpc->Update();
 
 #ifdef __unix__
@@ -2236,6 +2260,8 @@ void GMainWindow::OnPauseGame() {
     emu_thread->SetRunning(false);
     qt_cameras->PauseCameras();
 
+    play_time_manager->Stop();
+
     UpdateMenuState();
     AllowOSSleep();
 
@@ -2255,6 +2281,10 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
+    play_time_manager->Stop();
+    // Update game list to show new play time
+    game_list->PopulateAsync(UISettings::values.game_dirs);
+
     ShutdownGame();
     graphics_api_button->setEnabled(true);
     Settings::RestoreGlobalState(false);

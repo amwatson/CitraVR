@@ -24,7 +24,7 @@
         android:fontFamily="@font/lato_bold"
         android:gravity="center"
         android:text="Citra"
-        android:textColor="@color/vr_citra_logo_color"
+        android:textColor="@color/citra_primary"
         android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/image_logo"
         app:layout_constraintStart_toEndOf="@+id/image_logo" />
@@ -36,7 +36,7 @@
         android:layout_gravity="center"
         android:fontFamily="@font/dancing_script_bold"
         android:text="VR"
-        android:textColor="@color/vr_citra_logo_color"
+        android:textColor="@color/citra_primary"
         android:textSize="64sp"
         app:layout_constraintBottom_toBottomOf="@+id/materialTextView"
         app:layout_constraintStart_toEndOf="@+id/materialTextView" />

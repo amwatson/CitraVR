@@ -161,7 +161,7 @@ bg_blue =
 bg_green =
 
 # Change 3D Intensity
-# 0 - 100: Intensity. 0 (default)
+# 0 - 300: Intensity. 50 (default)
 # factor_3d =50
 
 # The name of the post processing shader to apply.

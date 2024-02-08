@@ -103,8 +103,8 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<Type, range
 
 void Config::ReadValues() {
     // VR::extra performance mode (configured first because it overrides other values)
-    VRSettings::values.extra_performance_mode_enabled = sdl2_config->GetInteger(
-        "VR", "vr_extra_performance_mode", 0) != 0;
+    VRSettings::values.extra_performance_mode_enabled = sdl2_config->GetBoolean(
+        "VR", "vr_extra_performance_mode", false);
 
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {

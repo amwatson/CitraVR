@@ -214,14 +214,13 @@ void Config::ReadValues() {
 
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);
+    ReadSetting("Audio", Settings::values.volume);
+    ReadSetting("Audio", Settings::values.output_type);
+
     if (!VRSettings::values.extra_performance_mode_enabled) {
       ReadSetting("Audio", Settings::values.enable_audio_stretching);
-      ReadSetting("Audio", Settings::values.volume);
-      ReadSetting("Audio", Settings::values.output_type);
     } else {
       Settings::values.enable_audio_stretching = 0;
-      Settings::values.volume = 0;
-      Settings::values.output_type = AudioCore::SinkType::Null /* No audio output */;
     }
 
     ReadSetting("Audio", Settings::values.output_device);

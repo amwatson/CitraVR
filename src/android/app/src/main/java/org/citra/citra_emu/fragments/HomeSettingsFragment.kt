@@ -126,12 +126,6 @@ class HomeSettingsFragment : Fragment() {
                 details = homeViewModel.gamesDir
             ),
             HomeSetting(
-                R.string.preferences_theme,
-                R.string.theme_and_color_description,
-                R.drawable.ic_palette,
-                { SettingsActivity.launch(requireContext(), Settings.SECTION_THEME, "") }
-            ),
-            HomeSetting(
                 R.string.about,
                 R.string.about_description,
                 R.drawable.ic_info_outline,

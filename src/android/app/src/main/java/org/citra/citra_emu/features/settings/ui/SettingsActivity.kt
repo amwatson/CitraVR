@@ -6,8 +6,10 @@ package org.citra.citra_emu.features.settings.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.Html
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.Toast
@@ -175,11 +177,11 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     }
 
     override fun showToastMessage(message: String, isLong: Boolean) {
-        Toast.makeText(
-            this,
-            message,
-            if (isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
-        ).show()
+        // VR-SPECIFIC: 2D containers seem to mess up theming in some cases. This hack is necessary to ensure toasts
+        // show up with a white background and black text.
+        val toast : Toast =
+            Toast.makeText(this, Html.fromHtml("<font color='#000000' ><b>" + message+ "</b></font>"), Toast.LENGTH_LONG);
+        toast.show()
     }
 
     override fun onSettingChanged() {

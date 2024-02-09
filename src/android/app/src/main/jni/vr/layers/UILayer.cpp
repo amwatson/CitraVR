@@ -28,7 +28,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <stdlib.h>
 
-namespace {
+namespace
+{
 
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
@@ -38,34 +39,37 @@ namespace {
  * corresponding coordinates on the window, it will be as if the user touched
  * the game surface.
  */
-class AndroidWindowBounds {
+class AndroidWindowBounds
+{
 public:
     AndroidWindowBounds() = default;
     AndroidWindowBounds(const float widthInDp, const float heightInDp)
-        : mLeftInDp(0.0f), mRightInDp(widthInDp), mTopInDp(0.0f), mBottomInDp(heightInDp) {}
+        : mLeftInDp(0.0f)
+        , mRightInDp(widthInDp)
+        , mTopInDp(0.0f)
+        , mBottomInDp(heightInDp)
+    {
+    }
 
-    float Width() const {
-        return mRightInDp - mLeftInDp;
-    }
-    float Height() const {
-        return mBottomInDp - mTopInDp;
-    }
+    float Width() const { return mRightInDp - mLeftInDp; }
+    float Height() const { return mBottomInDp - mTopInDp; }
 
     // "DP" refers to display pixels, which are the same as Android's
     // "density-independent pixels" (dp).
     // Note
-    float mLeftInDp = 0;
-    float mRightInDp = 0;
-    float mTopInDp = 0;
+    float mLeftInDp   = 0;
+    float mRightInDp  = 0;
+    float mTopInDp    = 0;
     float mBottomInDp = 0;
 
     // given a 2D point in worldspace 'point2d', returns the transformed
     // coordinate in DP, written to 'result'
-    void Transform(const XrVector2f& point2d, XrVector2f& result) const {
+    void Transform(const XrVector2f& point2d, XrVector2f& result) const
+    {
         const float left = mLeftInDp;
-        const float top = mTopInDp;
+        const float top  = mTopInDp;
 
-        const float width = Width();
+        const float width  = Width();
         const float height = Height();
 
         result.x = (point2d.x * width) + left + (width / 2.0);
@@ -74,13 +78,21 @@ public:
     }
 };
 
-struct BoundsHandle {
-    BoundsHandle(AndroidWindowBounds* _p) : p(_p) {}
-    BoundsHandle(jlong _l) : l(_l) {}
+struct BoundsHandle
+{
+    BoundsHandle(AndroidWindowBounds* _p)
+        : p(_p)
+    {
+    }
+    BoundsHandle(jlong _l)
+        : l(_l)
+    {
+    }
 
-    union {
+    union
+    {
         AndroidWindowBounds* p = nullptr;
-        jlong l;
+        jlong                l;
     };
 };
 
@@ -90,14 +102,17 @@ struct BoundsHandle {
 static constexpr std::chrono::milliseconds kMinTimeBetweenChecks(500);
 
 // Get density on an interval
-float GetDensitySysprop() {
-    const float kDefaultDensity = 1200;
-    static float lastDensity = kDefaultDensity;
+float GetDensitySysprop()
+{
+    const float  kDefaultDensity = 1200;
+    static float lastDensity     = kDefaultDensity;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks) {
-        lastTime = std::chrono::steady_clock::now();
-        lastDensity = SyspropUtils::GetSysPropAsFloat("debug.citra.density", kDefaultDensity);
+    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
+    {
+        lastTime    = std::chrono::steady_clock::now();
+        lastDensity = SyspropUtils::GetSysPropAsFloat("debug.citra.density",
+                                                      kDefaultDensity);
     }
     return lastDensity;
 }
@@ -105,24 +120,28 @@ float GetDensitySysprop() {
 //-----------------------------------------------------------------------------
 // Panel math
 
-bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t panelWidth,
-                                 const uint32_t panelHeight, const XrVector2f& scaleFactor,
+bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
+                                 const uint32_t    panelWidth,
+                                 const uint32_t    panelHeight,
+                                 const XrVector2f& scaleFactor,
                                  const XrVector3f& start, const XrVector3f& end,
                                  XrVector2f& result2d, XrPosef& result3d)
 
 {
-    const XrPosef worldFromPanel = XrMath::Posef::Inverted(panelFromWorld);
-    const XrVector3f localStart = XrMath::Posef::Transform(worldFromPanel, start);
+    const XrPosef    worldFromPanel = XrMath::Posef::Inverted(panelFromWorld);
+    const XrVector3f localStart =
+        XrMath::Posef::Transform(worldFromPanel, start);
     const XrVector3f localEnd = XrMath::Posef::Transform(worldFromPanel, end);
     // Note: assumes layer lies in the XZ plane
     const float tan = localStart.z / (localStart.z - localEnd.z);
 
     // Check for backwards controller
-    if (tan < 0) {
+    if (tan < 0)
+    {
         ALOGD("Backwards controller");
         return false;
     }
-    result3d.position = start + (end - start) * tan;
+    result3d.position    = start + (end - start) * tan;
     result3d.orientation = panelFromWorld.orientation;
 
     const XrVector2f result2dNDC = {
@@ -131,56 +150,62 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
 
     const AndroidWindowBounds viewBounds(panelWidth, panelHeight);
     viewBounds.Transform(result2dNDC, result2d);
-    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 && result2d.x < viewBounds.Width() &&
+    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 &&
+                            result2d.x < viewBounds.Width() &&
                             result2d.y < viewBounds.Height();
     result2d.y += viewBounds.Height();
 
-    if (!isInBounds) {
-        return false;
-    }
+    if (!isInBounds) { return false; }
 
     return true;
 }
 
 // Uses a density for scaling and sets aspect ratio
-XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeight,
-                                  const float scaleFactor) {
+XrVector2f GetDensityScaleForSize(const int32_t texWidth,
+                                  const int32_t texHeight,
+                                  const float   scaleFactor)
+{
     const float density = GetDensitySysprop();
     return XrVector2f{2.0f * static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
            scaleFactor;
 }
 
-XrPosef CreatePanelFromWorld(const XrVector3f& position) {
+XrPosef CreatePanelFromWorld(const XrVector3f& position)
+{
     return XrPosef{XrMath::Quatf::Identity(), position};
 }
 
 } // anonymous namespace
 
-UILayer::UILayer(const std::string& className, const XrVector3f&& position, JNIEnv* env,
-                 jobject activityObject, const XrSession& session)
-    : mSession(session), mPanelFromWorld(CreatePanelFromWorld(position)), mEnv(env),
-      mActivityObject(activityObject)
+UILayer::UILayer(const std::string& className, const XrVector3f&& position,
+                 JNIEnv* env, jobject activityObject, const XrSession& session)
+    : mSession(session)
+    , mPanelFromWorld(CreatePanelFromWorld(position))
+    , mEnv(env)
+    , mActivityObject(activityObject)
 
 {
-    const int32_t initializationStatus = Init(className, activityObject, position, session);
-    if (initializationStatus < 0) {
-        FAIL("Could not initialize UILayer -- error '%d'", initializationStatus);
+    const int32_t initializationStatus =
+        Init(className, activityObject, position, session);
+    if (initializationStatus < 0)
+    {
+        FAIL("Could not initialize UILayer -- error '%d'",
+             initializationStatus);
     }
 }
 
-UILayer::~UILayer() {
-    Shutdown();
-}
+UILayer::~UILayer() { Shutdown(); }
 
-void UILayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-                    uint32_t& layerCount) const
+void UILayer::Frame(const XrSpace&                   space,
+                    std::vector<XrCompositionLayer>& layers,
+                    uint32_t&                        layerCount) const
 
 {
 
     XrCompositionLayerQuad layer = {};
 
-    layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
+    layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
     layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
@@ -190,60 +215,77 @@ void UILayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layer
 
     layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
     memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-    layer.subImage.swapchain = mSwapchain.Handle;
-    layer.subImage.imageRect.offset.x = 0;
-    layer.subImage.imageRect.offset.y = 0;
-    layer.subImage.imageRect.extent.width = mSwapchain.Width;
+    layer.subImage.swapchain               = mSwapchain.Handle;
+    layer.subImage.imageRect.offset.x      = 0;
+    layer.subImage.imageRect.offset.y      = 0;
+    layer.subImage.imageRect.extent.width  = mSwapchain.Width;
     layer.subImage.imageRect.extent.height = mSwapchain.Height;
-    layer.subImage.imageArrayIndex = 0;
-    layer.pose = mPanelFromWorld;
-    const auto scale = GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
-    layer.size.width = scale.x;
-    layer.size.height = scale.y;
+    layer.subImage.imageArrayIndex         = 0;
+    layer.pose                             = mPanelFromWorld;
+    const auto scale =
+        GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
+    layer.size.width           = scale.x;
+    layer.size.height          = scale.y;
     layers[layerCount++].mQuad = layer;
 }
 
-bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
-                                          XrVector2f& result2d, XrPosef& result3d) const {
-    const XrVector2f scale = GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
-    return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.Width, mSwapchain.Height,
-                                         scale, start, end, result2d, result3d);
+bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
+                                          const XrVector3f& end,
+                                          XrVector2f&       result2d,
+                                          XrPosef&          result3d) const
+{
+    const XrVector2f scale =
+        GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
+    return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.Width,
+                                         mSwapchain.Height, scale, start, end,
+                                         result2d, result3d);
 }
 
 // Next error code: -5
-int32_t UILayer::Init(const std::string& className, const jobject activityObject,
-                      const XrVector3f& position, const XrSession& session) {
-    mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject, className.c_str());
+int32_t UILayer::Init(const std::string& className,
+                      const jobject activityObject, const XrVector3f& position,
+                      const XrSession& session)
+{
+    mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject,
+                                                        className.c_str());
     BAIL_ON_COND(mVrUILayerClass == nullptr, "No java UI Layer class", -1);
 
-    jmethodID vrUILayerConstructor =
-        mEnv->GetMethodID(mVrUILayerClass, "<init>", "(Lorg/citra/citra_emu/vr/VrActivity;)V");
-    BAIL_ON_COND(vrUILayerConstructor == nullptr, "no java window constructor", -2);
+    jmethodID vrUILayerConstructor = mEnv->GetMethodID(
+        mVrUILayerClass, "<init>", "(Lorg/citra/citra_emu/vr/VrActivity;)V");
+    BAIL_ON_COND(vrUILayerConstructor == nullptr, "no java window constructor",
+                 -2);
 
-    mVrUILayerObject = mEnv->NewObject(mVrUILayerClass, vrUILayerConstructor, activityObject);
-    BAIL_ON_COND(mVrUILayerObject == nullptr, "Could not construct java window", -3);
+    mVrUILayerObject =
+        mEnv->NewObject(mVrUILayerClass, vrUILayerConstructor, activityObject);
+    BAIL_ON_COND(mVrUILayerObject == nullptr, "Could not construct java window",
+                 -3);
 
-    mGetBoundsMethodID = mEnv->GetMethodID(mVrUILayerClass, "getBoundsForView", "(J)I");
-    BAIL_ON_COND(mGetBoundsMethodID == nullptr, "could not find getBoundsForView()", -4);
+    mGetBoundsMethodID =
+        mEnv->GetMethodID(mVrUILayerClass, "getBoundsForView", "(J)I");
+    BAIL_ON_COND(mGetBoundsMethodID == nullptr,
+                 "could not find getBoundsForView()", -4);
 
     TryCreateSwapchain();
     return 0;
 }
 
-void UILayer::Shutdown() {
+void UILayer::Shutdown()
+{
     xrDestroySwapchain(mSwapchain.Handle);
     // This currently causes a memory exception
     //    mEnv->DeleteGlobalRef(mVrUILayerClass);
 }
 
-void UILayer::TryCreateSwapchain() {
+void UILayer::TryCreateSwapchain()
+{
     assert(!mIsSwapchainCreated);
 
     AndroidWindowBounds viewBounds;
     {
-        const jint ret =
-            mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
-        if (ret < 0) {
+        const jint ret = mEnv->CallIntMethod(
+            mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
+        if (ret < 0)
+        {
             ALOGD("getBoundsForView() returned error %d", ret);
             return;
         }
@@ -255,42 +297,49 @@ void UILayer::TryCreateSwapchain() {
         swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
         swapchainCreateInfo.next = nullptr;
         swapchainCreateInfo.usageFlags =
-            XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchainCreateInfo.format = 0;
+            XR_SWAPCHAIN_USAGE_SAMPLED_BIT |
+            XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchainCreateInfo.format      = 0;
         swapchainCreateInfo.sampleCount = 0;
-        swapchainCreateInfo.width = viewBounds.Width();
-        swapchainCreateInfo.height = viewBounds.Height();
-        swapchainCreateInfo.faceCount = 0;
-        swapchainCreateInfo.arraySize = 0;
-        swapchainCreateInfo.mipCount = 0;
+        swapchainCreateInfo.width       = viewBounds.Width();
+        swapchainCreateInfo.height      = viewBounds.Height();
+        swapchainCreateInfo.faceCount   = 0;
+        swapchainCreateInfo.arraySize   = 0;
+        swapchainCreateInfo.mipCount    = 0;
 
-        PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
+        PFN_xrCreateSwapchainAndroidSurfaceKHR
+            pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
         assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
-        XrResult xrResult =
-            xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
-                                  (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
-        if (xrResult != XR_SUCCESS || pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
+        XrResult xrResult = xrGetInstanceProcAddr(
+            OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
+            (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
+        if (xrResult != XR_SUCCESS ||
+            pfnCreateSwapchainAndroidSurfaceKHR == nullptr)
+        {
             FAIL("xrGetInstanceProcAddr failed for "
                  "xrCreateSwapchainAndroidSurfaceKHR");
         }
 
-        OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &swapchainCreateInfo, &mSwapchain.Handle,
-                                                &mSurface));
-        mSwapchain.Width = viewBounds.Width();
+        OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &swapchainCreateInfo,
+                                                &mSwapchain.Handle, &mSurface));
+        mSwapchain.Width  = viewBounds.Width();
         mSwapchain.Height = viewBounds.Height();
 
-        jmethodID setSurfaceMethodId =
-            mEnv->GetMethodID(mVrUILayerClass, "setSurface", "(Landroid/view/Surface;II)I");
-        if (setSurfaceMethodId == nullptr) {
+        jmethodID setSurfaceMethodId = mEnv->GetMethodID(
+            mVrUILayerClass, "setSurface", "(Landroid/view/Surface;II)I");
+        if (setSurfaceMethodId == nullptr)
+        {
             FAIL("Couldn't find setSurface()");
         }
-        mEnv->CallIntMethod(mVrUILayerObject, setSurfaceMethodId, mSurface, (int)viewBounds.Width(),
-                            (int)viewBounds.Height());
+        mEnv->CallIntMethod(mVrUILayerObject, setSurfaceMethodId, mSurface,
+                            (int)viewBounds.Width(), (int)viewBounds.Height());
     }
 
     mIsSwapchainCreated = true;
 }
 
-void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
-    mEnv->CallIntMethod(mVrUILayerObject, mSendClickToWindowMethodID, pos2d.x, pos2d.y, type);
+void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type)
+{
+    mEnv->CallIntMethod(mVrUILayerObject, mSendClickToWindowMethodID, pos2d.x,
+                        pos2d.y, type);
 }

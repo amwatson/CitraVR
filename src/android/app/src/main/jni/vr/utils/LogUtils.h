@@ -27,8 +27,8 @@ License     :   Licensed under GPLv3 or any later version.
 #define ALOGV(...) LOG_TRACE(VR, __VA_ARGS__)
 #define ALOGD(...) LOG_DEBUG(VR, __VA_ARGS__)
 
-#define FAIL(...)                                                                                  \
-    do {                                                                                           \
-        __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);                              \
-        abort();                                                                                   \
+#define FAIL(...)                                                              \
+    do {                                                                       \
+        __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);          \
+        abort();                                                               \
     } while (0)

@@ -69,11 +69,12 @@ License     :   Licensed under GPLv3 or any later version.
 
 ================================================================================
 */
-class GameSurfaceLayer {
+class GameSurfaceLayer
+{
 
 public:
-    static constexpr float DEFAULT_QUAD_DENSITY = 240;
-    static constexpr float DEFAULT_CYLINDER_RADIUS = 2.0f;
+    static constexpr float DEFAULT_QUAD_DENSITY                   = 240;
+    static constexpr float DEFAULT_CYLINDER_RADIUS                = 2.0f;
     static constexpr float DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES = 55.0f;
 
     /** Constructor.
@@ -82,8 +83,9 @@ public:
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
      */
-    GameSurfaceLayer(const XrVector3f&& position, JNIEnv* jni, jobject activityObject,
-                     const XrSession& session, const uint32_t resolutionFactor);
+    GameSurfaceLayer(const XrVector3f&& position, JNIEnv* jni,
+                     jobject activityObject, const XrSession& session,
+                     const uint32_t resolutionFactor);
     ~GameSurfaceLayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -121,16 +123,21 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
-                                     XrVector2f& result2d, XrPosef& result3d) const;
-    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start, const XrVector3f& end,
-                                             XrVector2f& result2d, XrPosef& result3d) const;
+    bool GetRayIntersectionWithPanel(const XrVector3f& start,
+                                     const XrVector3f& end,
+                                     XrVector2f&       result2d,
+                                     XrPosef&          result3d) const;
+    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
+                                             const XrVector3f& end,
+                                             XrVector2f&       result2d,
+                                             XrPosef&          result3d) const;
     void SetTopPanelFromController(const XrVector3f& controllerPosition);
 
     void SetTopPanelFromThumbstick(const float thumbstickY);
 
 private:
-    int Init(const jobject activityObject, const XrVector3f& position, const XrSession& session);
+    int  Init(const jobject activityObject, const XrVector3f& position,
+              const XrSession& session);
     void Shutdown();
 
     /** Creates the swapchain.
@@ -138,18 +145,21 @@ private:
     void CreateSwapchain();
 
     static constexpr uint32_t SURFACE_WIDTH_UNSCALED =
-        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth)) - 300;
+        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth)) -
+        300;
     static constexpr uint32_t SURFACE_HEIGHT_UNSCALED =
         (Core::kScreenTopHeight + Core::kScreenBottomHeight);
 
     // Width and height should both be even numbers, as the swapchain will
     // be split twice: once (horizontally) for stereo views, and once
     // (vertically) for the upper/lower screen.
-    static_assert((SURFACE_WIDTH_UNSCALED % 2) == 0, "Swapchain width must be a multiple of 2");
-    static_assert((SURFACE_HEIGHT_UNSCALED % 2) == 0, "Swapchain height must be a multiple of 2");
+    static_assert((SURFACE_WIDTH_UNSCALED % 2) == 0,
+                  "Swapchain width must be a multiple of 2");
+    static_assert((SURFACE_HEIGHT_UNSCALED % 2) == 0,
+                  "Swapchain height must be a multiple of 2");
 
     const XrSession mSession;
-    Swapchain mSwapchain;
+    Swapchain       mSwapchain;
 
     XrPosef mTopPanelFromWorld;
     XrPosef mLowerPanelFromWorld;
@@ -172,8 +182,8 @@ private:
 
     //============================
     // JNI objects
-    JNIEnv* mEnv = nullptr;
-    jobject mActivityObject = nullptr;
-    jclass mVrGameSurfaceClass = nullptr;
-    jobject mSurface = nullptr;
+    JNIEnv* mEnv                = nullptr;
+    jobject mActivityObject     = nullptr;
+    jclass  mVrGameSurfaceClass = nullptr;
+    jobject mSurface            = nullptr;
 };

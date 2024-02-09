@@ -4,7 +4,8 @@
 
 #include <string>
 
-class UILayer {
+class UILayer
+{
 
 public:
     /** Constructor.
@@ -13,8 +14,8 @@ public:
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
      */
-    UILayer(const std::string& className, const XrVector3f&& position, JNIEnv* jni,
-            jobject activityObject, const XrSession& session);
+    UILayer(const std::string& className, const XrVector3f&& position,
+            JNIEnv* jni, jobject activityObject, const XrSession& session);
     ~UILayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -52,14 +53,14 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
-                                     XrVector2f& result2d, XrPosef& result3d) const;
+    bool GetRayIntersectionWithPanel(const XrVector3f& start,
+                                     const XrVector3f& end,
+                                     XrVector2f&       result2d,
+                                     XrPosef&          result3d) const;
 
     /** Returns whether the swapchain is created
      */
-    bool IsSwapchainCreated() const {
-        return mIsSwapchainCreated;
-    }
+    bool IsSwapchainCreated() const { return mIsSwapchainCreated; }
 
     /** Creates the swapchain.
      */
@@ -68,12 +69,12 @@ public:
     void SendClickToUI(const XrVector2f& pos2d, const int type);
 
 private:
-    int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
-             const XrSession& session);
+    int  Init(const std::string& className, const jobject activityObject,
+              const XrVector3f& position, const XrSession& session);
     void Shutdown();
 
     const XrSession mSession;
-    Swapchain mSwapchain;
+    Swapchain       mSwapchain;
 
     XrPosef mPanelFromWorld;
 
@@ -81,19 +82,19 @@ private:
 
     //============================
     // JNI objects
-    JNIEnv* mEnv = nullptr;
-    jobject mActivityObject = nullptr;
-    jclass mVrUILayerClass = nullptr;
+    JNIEnv* mEnv             = nullptr;
+    jobject mActivityObject  = nullptr;
+    jclass  mVrUILayerClass  = nullptr;
     jobject mVrUILayerObject = nullptr;
-    jobject mSurface = nullptr;
+    jobject mSurface         = nullptr;
 
     //============================
     // JNI methods
 
     // Note: if we're using a view within a window as the layer (as opposed to
-    // the decorView representing an entire window, it's important to accont for the
-    // x, y offset of the view within the window, in case there are things like
-    // window decorations or status bars.
-    jmethodID mGetBoundsMethodID = nullptr;
+    // the decorView representing an entire window, it's important to accont for
+    // the x, y offset of the view within the window, in case there are things
+    // like window decorations or status bars.
+    jmethodID mGetBoundsMethodID         = nullptr;
     jmethodID mSendClickToWindowMethodID = nullptr;
 };

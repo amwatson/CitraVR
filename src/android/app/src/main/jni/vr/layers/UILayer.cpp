@@ -237,7 +237,7 @@ void UILayer::Frame(const XrSpace&                   space,
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mPanelFromWorld;
     const auto scale =
-        GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
+        GetDensityScaleForSize(mSwapchain.mWidth, -mSwapchain.mHeight, 1.0f);
     layer.size.width           = scale.x;
     layer.size.height          = scale.y;
     layers[layerCount++].mQuad = layer;

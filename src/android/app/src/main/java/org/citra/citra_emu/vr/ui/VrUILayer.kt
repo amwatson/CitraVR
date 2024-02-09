@@ -17,7 +17,6 @@ import android.view.Surface
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.vr.VrActivity
 import java.io.File
@@ -34,8 +33,8 @@ import kotlin.math.roundToInt
 **/
 abstract class VrUILayer(
     val activity: VrActivity,
-    densityDpi: Int = DEFAULT_DENSITY.toInt(),
-    private val layoutId: Int = R.layout.vr_keyboard
+    private val layoutId: Int,
+    densityDpi: Int = DEFAULT_DENSITY.toInt()
 ) {
     private val requestedDensity: Float = densityDpi.toFloat()
     private var virtualDisplay: VirtualDisplay? = null
@@ -46,31 +45,61 @@ abstract class VrUILayer(
 
     /// Called from JNI ////
     fun getBoundsForView(handle: Long): Int {
-        val inflater = activity.getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE
-        ) as LayoutInflater
-        val contentView = inflater.inflate(layoutId, null, false)
+        val contentView = LayoutInflater.from(activity).inflate(layoutId, null, false)
         if (contentView == null) {
-            Log.error( "Failed to inflate content view")
+            Log.warning("contentView is null")
             return -1
         }
+        val (widthPx, heightPx) = calculateDynamicDimensions(activity, 1.0f, 1.0f)
 
         contentView.measure(
-            View.MeasureSpec.UNSPECIFIED,
-            View.MeasureSpec.UNSPECIFIED
+            View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY)
         )
 
+        val measuredWidthPx = contentView.measuredWidth
+        val measuredHeightPx = contentView.measuredHeight
+
         val displayMetrics = activity.resources.displayMetrics
-        val widthDp = contentView.measuredWidth.toFloat() / displayMetrics.density /
-                (DEFAULT_DENSITY / requestedDensity)
-        val heightDp = contentView.measuredHeight.toFloat() / displayMetrics.density /
-                (DEFAULT_DENSITY / requestedDensity)
-        // roundToInt() matching the rounding Android uses to convert view dimensions to display units
-        nativeSetBounds(
-            handle, 0, 0, widthDp.roundToInt(),
-            heightDp.roundToInt()
-        )
+        val measuredWidthDp = measuredWidthPx / displayMetrics.density
+        val measuredHeightDp = measuredHeightPx / displayMetrics.density
+
+        // Call native method with measured dimensions
+        nativeSetBounds(handle, 0, 0, measuredWidthDp.roundToInt(), measuredHeightDp.roundToInt())
         return 0
+    }
+
+
+    fun sendClickToUI(x: Float, y: Float, motionType: Int): Int {
+        val action = when (motionType) {
+            0 -> MotionEvent.ACTION_UP
+            1 -> MotionEvent.ACTION_DOWN
+            2 -> MotionEvent.ACTION_MOVE
+            else -> MotionEvent.ACTION_HOVER_ENTER
+        }
+        activity.runOnUiThread { dispatchTouchEvent(x, y, action) }
+        return 0
+    }
+
+    fun setSurface(
+        surface: Surface, widthDp: Int,
+        heightDp: Int
+    ): Int {
+        activity.runOnUiThread { setSurface_(surface, widthDp, heightDp) }
+        return 0
+    }
+
+    protected open fun onSurfaceCreated() {}
+
+    private fun calculateDynamicDimensions(context: Context, widthPercentage: Float, heightPercentage: Float): Pair<Int, Int> {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidthPx = displayMetrics.widthPixels
+        val screenHeightPx = displayMetrics.heightPixels
+
+        val desiredWidthPx = (screenWidthPx * widthPercentage).toInt()
+        val desiredHeightPx = (screenHeightPx * heightPercentage).toInt()
+
+        return Pair(desiredWidthPx, desiredHeightPx)
     }
 
     private fun dispatchTouchEvent(x: Float, y: Float, action: Int) {
@@ -100,25 +129,6 @@ abstract class VrUILayer(
         }
     }
 
-    fun sendClickToUI(x: Float, y: Float, motionType: Int): Int {
-        val action = when (motionType) {
-            0 -> MotionEvent.ACTION_UP
-            1 -> MotionEvent.ACTION_DOWN
-            2 -> MotionEvent.ACTION_MOVE
-            else -> MotionEvent.ACTION_HOVER_ENTER
-        }
-        activity.runOnUiThread { dispatchTouchEvent(x, y, action) }
-        return 0
-    }
-
-    fun setSurface(
-        surface: Surface, widthDp: Int,
-        heightDp: Int
-    ): Int {
-        activity.runOnUiThread { setSurface_(surface, widthDp, heightDp) }
-        return 0
-    }
-
     private fun setSurface_(
         surface: Surface, widthDp: Int,
         heightDp: Int
@@ -139,8 +149,6 @@ abstract class VrUILayer(
         }
         onSurfaceCreated()
     }
-
-    protected fun onSurfaceCreated() {}
 
     fun writeBitmapToDisk(bmp: Bitmap, outName: String?) {
         val sdCard = activity.externalCacheDir

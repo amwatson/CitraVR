@@ -99,7 +99,7 @@ struct BoundsHandle
 //-----------------------------------------------------------------------------
 // JNI functions
 extern "C" JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_vr_ui_UILayer_00024Companion_nativeSetBounds(
+Java_org_citra_citra_1emu_vr_ui_VrUILayer_00024Companion_nativeSetBounds(
     JNIEnv* env, jobject thiz, jlong handle, jint left, jint top, jint right,
     jint bottom)
 {
@@ -255,7 +255,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          result2d, result3d);
 }
 
-// Next error code: -5
+// Next error code: -6
 int32_t UILayer::Init(const std::string& className,
                       const jobject activityObject, const XrVector3f& position,
                       const XrSession& session)
@@ -279,7 +279,10 @@ int32_t UILayer::Init(const std::string& className,
     BAIL_ON_COND(mGetBoundsMethodID == nullptr,
                  "could not find getBoundsForView()", -4);
 
-    TryCreateSwapchain();
+    mSetSurfaceMethodId = mEnv->GetMethodID(mVrUILayerClass, "setSurface",
+                                            "(Landroid/view/Surface;II)I");
+    BAIL_ON_COND(mSetSurfaceMethodId == nullptr, "could not find setSurface()",
+                 -5);
     return 0;
 }
 
@@ -296,11 +299,24 @@ void UILayer::TryCreateSwapchain()
 
     AndroidWindowBounds viewBounds;
     {
+        if (mEnv->ExceptionCheck()) { mEnv->ExceptionClear(); }
         const jint ret = mEnv->CallIntMethod(
             mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
+        // Check for exceptions (and log them).
+        if (mEnv->ExceptionCheck())
+        {
+            mEnv->ExceptionDescribe();
+            mEnv->ExceptionClear();
+        }
         if (ret < 0)
         {
-            ALOGD("getBoundsForView() returned error %d", ret);
+            ALOGE("{}() returned error {}", __FUNCTION__, ret);
+            return;
+        }
+        if (viewBounds.Width() == 0 || viewBounds.Height() == 0)
+        {
+            ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__,
+                  viewBounds.Width(), viewBounds.Height());
             return;
         }
     }
@@ -338,18 +354,19 @@ void UILayer::TryCreateSwapchain()
             mSession, &swapchainCreateInfo, &mSwapchain.mHandle, &mSurface));
         mSwapchain.mWidth  = viewBounds.Width();
         mSwapchain.mHeight = viewBounds.Height();
+        ALOGD("UILayer: created swapchain {}x{}", mSwapchain.mWidth,
+              mSwapchain.mHeight);
 
-        jmethodID setSurfaceMethodId = mEnv->GetMethodID(
-            mVrUILayerClass, "setSurface", "(Landroid/view/Surface;II)I");
-        if (setSurfaceMethodId == nullptr)
-        {
-            FAIL("Couldn't find setSurface()");
-        }
-        mEnv->CallIntMethod(mVrUILayerObject, setSurfaceMethodId, mSurface,
+        mIsSwapchainCreated = true;
+
+        mEnv->CallIntMethod(mVrUILayerObject, mSetSurfaceMethodId, mSurface,
                             (int)viewBounds.Width(), (int)viewBounds.Height());
+        if (mEnv->ExceptionCheck())
+        {
+            mEnv->ExceptionDescribe();
+            mEnv->ExceptionClear();
+        }
     }
-
-    mIsSwapchainCreated = true;
 }
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type)

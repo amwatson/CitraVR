@@ -97,4 +97,5 @@ private:
     // like window decorations or status bars.
     jmethodID mGetBoundsMethodID         = nullptr;
     jmethodID mSendClickToWindowMethodID = nullptr;
+    jmethodID mSetSurfaceMethodId        = nullptr;
 };

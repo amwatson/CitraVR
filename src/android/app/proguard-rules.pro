@@ -26,3 +26,5 @@
 -keep class org.citra.citra_emu.vr.GameSurfaceLayer { *; }
 -keep class org.citra.citra_emu.vr.VrActivity { *; }
 -keep class org.citra.citra_emu.vr.ui.VrUILayer { *; }
+-keep class org.citra.citra_emu.vr.ui.VrKeyboardLayer { *; }
+-keepattributes SourceFile,LineNumberTable

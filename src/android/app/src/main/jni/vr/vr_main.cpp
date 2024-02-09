@@ -278,10 +278,10 @@ public:
             jni, mActivityObject, gOpenXr->mSession);
 #endif
 
-
         mUILayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrUILayer",
-            XrVector3f{0, 0.0f, -1.5f}, jni, mActivityObject, gOpenXr->mSession);
+            "org/citra/citra_emu/vr/ui/VrKeyboardLayer",
+            XrVector3f{0, 0.0f, -1.5f}, jni, mActivityObject,
+            gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -522,6 +522,8 @@ private:
                 }
             }
         }
+
+        if (!mUILayer->IsSwapchainCreated()) { mUILayer->TryCreateSwapchain(); }
 
         ////////////////////////////////
         // XrWaitFrame()

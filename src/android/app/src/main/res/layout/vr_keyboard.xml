@@ -13,8 +13,8 @@ app's packagename and returns information for the wrong window.-->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/vr_keyboard"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_width="1200dp"
+    android:layout_height="800dp"
     android:layout_gravity="center"
     android:layout_marginHorizontal="30dp"
     android:gravity="center"

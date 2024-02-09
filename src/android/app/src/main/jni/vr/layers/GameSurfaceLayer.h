@@ -148,15 +148,15 @@ private:
     static_assert((SURFACE_WIDTH_UNSCALED % 2) == 0, "Swapchain width must be a multiple of 2");
     static_assert((SURFACE_HEIGHT_UNSCALED % 2) == 0, "Swapchain height must be a multiple of 2");
 
-    const XrSession session_;
-    Swapchain swapchain_;
+    const XrSession mSession;
+    Swapchain mSwapchain;
 
-    XrPosef topPanelFromWorld_;
-    XrPosef lowerPanelFromWorld_;
+    XrPosef mTopPanelFromWorld;
+    XrPosef mLowerPanelFromWorld;
 
     // Density scale for surface. Citra's auto-scale sets this as the internal
     // resolution.
-    const uint32_t resolutionFactor_;
+    const uint32_t mResolutionFactor;
 
     // EXPERIMENTAL: When true, the top screen + its extents
     // (previously-unseen parts of the scene) are projected onto a 275-degree
@@ -168,12 +168,12 @@ private:
     // performance optimizations to avoid maxing out the GPU, e.g.:
     //   - Multiview (requires a merged Citra/CitraVR renderer)
     //   - Rendering the top-screen and bottom screen separately.
-    const uint32_t immersiveMode_;
+    const uint32_t mImmersiveMode;
 
     //============================
     // JNI objects
-    JNIEnv* env_ = nullptr;
-    jobject activityObject_ = nullptr;
-    jclass vrGameSurfaceClass_ = nullptr;
-    jobject surface_ = nullptr;
+    JNIEnv* mEnv = nullptr;
+    jobject mActivityObject = nullptr;
+    jclass mVrGameSurfaceClass = nullptr;
+    jobject mSurface = nullptr;
 };

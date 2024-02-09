@@ -74,8 +74,6 @@ public:
     }
 };
 
-
-
 struct BoundsHandle {
     BoundsHandle(AndroidWindowBounds* _p) : p(_p) {}
     BoundsHandle(jlong _l) : l(_l) {}
@@ -133,8 +131,8 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
 
     const AndroidWindowBounds viewBounds(panelWidth, panelHeight);
     viewBounds.Transform(result2dNDC, result2d);
-    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 &&
-                            result2d.x < viewBounds.Width() && result2d.y < viewBounds.Height();
+    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 && result2d.x < viewBounds.Width() &&
+                            result2d.y < viewBounds.Height();
     result2d.y += viewBounds.Height();
 
     if (!isInBounds) {
@@ -243,8 +241,8 @@ void UILayer::TryCreateSwapchain() {
 
     AndroidWindowBounds viewBounds;
     {
-        const jint ret = env_->CallIntMethod(vrUILayerObject_, getBoundsMethodID_,
-                                             BoundsHandle(&viewBounds).l);
+        const jint ret =
+            env_->CallIntMethod(vrUILayerObject_, getBoundsMethodID_, BoundsHandle(&viewBounds).l);
         if (ret < 0) {
             ALOGD("getBoundsForView() returned error %d", ret);
             return;
@@ -286,8 +284,8 @@ void UILayer::TryCreateSwapchain() {
         if (setSurfaceMethodId == nullptr) {
             FAIL("Couldn't find setSurface()");
         }
-        env_->CallIntMethod(vrUILayerObject_, setSurfaceMethodId, surface_,
-                            (int)viewBounds.Width(), (int)viewBounds.Height());
+        env_->CallIntMethod(vrUILayerObject_, setSurfaceMethodId, surface_, (int)viewBounds.Width(),
+                            (int)viewBounds.Height());
     }
 
     isSwapchainCreated_ = true;

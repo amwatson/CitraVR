@@ -45,18 +45,18 @@ const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
 class AndroidWindowSpace {
 public:
     AndroidWindowSpace(const float widthInDp, const float heightInDp)
-        : widthInDp_(widthInDp), heightInDp_(heightInDp) {}
+        : mWidthInDp(widthInDp), mHeightInDp(heightInDp) {}
     float Width() const {
-        return widthInDp_;
+        return mWidthInDp;
     }
     float Height() const {
-        return heightInDp_;
+        return mHeightInDp;
     }
 
     // "DP" refers to display pixels, which are the same as Android's
     // "density-independent pixels" (dp).
-    const float widthInDp_ = 0;
-    const float heightInDp_ = 0;
+    const float mWidthInDp = 0;
+    const float mHeightInDp = 0;
 
     // given a 2D point in worldspace 'point2d', returns the transformed
     // coordinate in DP, written to 'result'
@@ -226,17 +226,17 @@ XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
 
 GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, jobject activityObject,
                                    const XrSession& session, const uint32_t resolutionFactor)
-    : session_(session), topPanelFromWorld_(CreateTopPanelFromWorld(position)),
-      lowerPanelFromWorld_(CreateLowerPanelFromWorld(topPanelFromWorld_)),
-      resolutionFactor_(resolutionFactor), immersiveMode_(VRSettings::values.vr_immersive_mode),
-      env_(env), activityObject_(activityObject)
+    : mSession(session), mTopPanelFromWorld(CreateTopPanelFromWorld(position)),
+      mLowerPanelFromWorld(CreateLowerPanelFromWorld(mTopPanelFromWorld)),
+      mResolutionFactor(resolutionFactor), mImmersiveMode(VRSettings::values.vr_immersive_mode),
+      mEnv(env), mActivityObject(activityObject)
 
 {
-    assert(immersiveMode_ == 0 || immersiveMode_ == 1);
-    if (immersiveMode_ > 0) {
-        ALOGI("Using VR immersive mode {}", immersiveMode_);
-        topPanelFromWorld_.position.z = lowerPanelFromWorld_.position.z;
-        lowerPanelFromWorld_.position.y = -1.0f - (0.5f * (immersiveMode_ - 1));
+    assert(mImmersiveMode == 0 || mImmersiveMode == 1);
+    if (mImmersiveMode > 0) {
+        ALOGI("Using VR immersive mode {}", mImmersiveMode);
+        mTopPanelFromWorld.position.z = mLowerPanelFromWorld.position.z;
+        mLowerPanelFromWorld.position.y = -1.0f - (0.5f * (mImmersiveMode - 1));
     }
     const int32_t initializationStatus = Init(activityObject, position, session);
     if (initializationStatus < 0) {
@@ -249,28 +249,28 @@ GameSurfaceLayer::~GameSurfaceLayer() {
 }
 
 void GameSurfaceLayer::SetSurface() const {
-    assert(vrGameSurfaceClass_ != nullptr);
+    assert(mVrGameSurfaceClass != nullptr);
 
     const jmethodID setSurfaceMethodID =
-        env_->GetStaticMethodID(vrGameSurfaceClass_, "setSurface",
+        mEnv->GetStaticMethodID(mVrGameSurfaceClass, "setSurface",
                                 "(Lorg/citra/citra_emu/vr/VrActivity;Landroid/view/Surface;)V");
     if (setSurfaceMethodID == nullptr) {
         FAIL("Couldn't find setSurface()");
     }
-    env_->CallStaticVoidMethod(vrGameSurfaceClass_, setSurfaceMethodID, activityObject_, surface_);
+    mEnv->CallStaticVoidMethod(mVrGameSurfaceClass, setSurfaceMethodID, mActivityObject, mSurface);
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
                              uint32_t& layerCount) const
 
 {
-    const uint32_t panelWidth = swapchain_.Width / 2;
-    const uint32_t panelHeight = swapchain_.Height / 2;
+    const uint32_t panelWidth = mSwapchain.Width / 2;
+    const uint32_t panelHeight = mSwapchain.Height / 2;
     const double aspectRatio =
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
-    const bool useCylinder = (GetCylinderSysprop() != 0) || (immersiveMode_ > 0);
+    const bool useCylinder = (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
     if (useCylinder) {
 
         // Create the Top Display Panel (Curved display)
@@ -287,13 +287,13 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-            layer.subImage.swapchain = swapchain_.Handle;
+            layer.subImage.swapchain = mSwapchain.Handle;
             layer.subImage.imageRect.offset.x = eye == 0 ? 0 : panelWidth;
             layer.subImage.imageRect.offset.y = 0;
             layer.subImage.imageRect.extent.width = panelWidth;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex = 0;
-            layer.pose = topPanelFromWorld_;
+            layer.pose = mTopPanelFromWorld;
             layer.pose.position.z += GetRadiusSysprop();
 
             // Radius effectively controls the width of the cylinder shape.
@@ -302,8 +302,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // scale of the texture.
             const float radius = GetRadiusSysprop();
             layer.radius = radius;
-            layer.centralAngle = (!immersiveMode_ ? GetCentralAngleSysprop()
-                                                  : 55.0f * immersiveLevelFactor[immersiveMode_]) *
+            layer.centralAngle = (!mImmersiveMode ? GetCentralAngleSysprop()
+                                                  : 55.0f * immersiveLevelFactor[mImmersiveMode]) *
                                  MATH_FLOAT_PI / 180.0f;
             layer.aspectRatio = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
@@ -311,7 +311,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     } else {
         // Create the Top Display Panel (Flat display)
         for (uint32_t eye = 0; eye < 2; eye++) {
-            const uint32_t cropHoriz = 50 * resolutionFactor_;
+            const uint32_t cropHoriz = 50 * mResolutionFactor;
             XrCompositionLayerQuad layer = {};
 
             layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
@@ -324,17 +324,17 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-            layer.subImage.swapchain = swapchain_.Handle;
+            layer.subImage.swapchain = mSwapchain.Handle;
             layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : panelWidth) + cropHoriz / 2;
             layer.subImage.imageRect.offset.y = 0;
             layer.subImage.imageRect.extent.width = panelWidth - cropHoriz;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex = 0;
-            layer.pose = topPanelFromWorld_;
+            layer.pose = mTopPanelFromWorld;
             // Scale to get the desired density within the visible area (if we
             // want).
             const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight, 1.0f,
-                                                      resolutionFactor_);
+                                                      mResolutionFactor);
             layer.size.width = scale.x;
             layer.size.height = scale.y;
 
@@ -349,7 +349,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
     {
-        const uint32_t cropHoriz = 90 * resolutionFactor_;
+        const uint32_t cropHoriz = 90 * mResolutionFactor;
         XrCompositionLayerQuad layer = {};
 
         layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
@@ -362,20 +362,20 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-        layer.subImage.swapchain = swapchain_.Handle;
+        layer.subImage.swapchain = mSwapchain.Handle;
         layer.subImage.imageRect.offset.x =
-            (cropHoriz / 2) / immersiveLevelFactor[immersiveMode_] +
-            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+            (cropHoriz / 2) / immersiveLevelFactor[mImmersiveMode] +
+            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[mImmersiveMode]));
         layer.subImage.imageRect.offset.y =
             panelHeight + verticalBorderTex +
-            panelHeight * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+            panelHeight * (0.5f - (0.5f / immersiveLevelFactor[mImmersiveMode]));
         layer.subImage.imageRect.extent.width =
-            (panelWidth - cropHoriz) / immersiveLevelFactor[immersiveMode_];
-        layer.subImage.imageRect.extent.height = panelHeight / immersiveLevelFactor[immersiveMode_];
+            (panelWidth - cropHoriz) / immersiveLevelFactor[mImmersiveMode];
+        layer.subImage.imageRect.extent.height = panelHeight / immersiveLevelFactor[mImmersiveMode];
         layer.subImage.imageArrayIndex = 0;
-        layer.pose = lowerPanelFromWorld_;
+        layer.pose = mLowerPanelFromWorld;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
-                                                  lowerPanelScaleFactor, resolutionFactor_);
+                                                  lowerPanelScaleFactor, mResolutionFactor);
         layer.size.width = scale.x;
         layer.size.height = scale.y;
         layers[layerCount++].mQuad = layer;
@@ -388,20 +388,20 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(const XrVector3f& sta
                                                            XrPosef& result3d) const
 
 {
-    const uint32_t panelWidth = swapchain_.Width / 2;
-    const uint32_t panelHeight = swapchain_.Height / 2;
-    const auto scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f, resolutionFactor_);
-    return ::GetRayIntersectionWithPanel(topPanelFromWorld_, panelWidth, panelHeight, scale, start,
+    const uint32_t panelWidth = mSwapchain.Width / 2;
+    const uint32_t panelHeight = mSwapchain.Height / 2;
+    const auto scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f, mResolutionFactor);
+    return ::GetRayIntersectionWithPanel(mTopPanelFromWorld, panelWidth, panelHeight, scale, start,
                                          end, result2d, result3d);
 }
 
 bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
                                                    XrVector2f& result2d, XrPosef& result3d) const {
-    const uint32_t panelWidth = swapchain_.Width / 2;
-    const uint32_t panelHeight = swapchain_.Height / 2;
+    const uint32_t panelWidth = mSwapchain.Width / 2;
+    const uint32_t panelHeight = mSwapchain.Height / 2;
     const XrVector2f scale =
-        GetDensityScaleForSize(panelWidth, panelHeight, lowerPanelScaleFactor, resolutionFactor_);
-    return ::GetRayIntersectionWithPanel(lowerPanelFromWorld_, panelWidth, panelHeight, scale,
+        GetDensityScaleForSize(panelWidth, panelHeight, lowerPanelScaleFactor, mResolutionFactor);
+    return ::GetRayIntersectionWithPanel(mLowerPanelFromWorld, panelWidth, panelHeight, scale,
                                          start, end, result2d, result3d);
 }
 
@@ -409,7 +409,7 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
 
     static const XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
     const float sphereRadius = XrMath::Vector3f::Length(
-        topPanelFromWorld_.position - viewerPosition); // Set the initial distance of the
+        mTopPanelFromWorld.position - viewerPosition); // Set the initial distance of the
 
     // window from the viewer
     const XrVector3f windowUpDirection{0, 1, 0}; // Y is up
@@ -425,7 +425,7 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
         return;
     }
 
-    topPanelFromWorld_ = XrPosef{windowRotation, windowPosition};
+    mTopPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
 // based on thumbstick, modify the depth of the top panel
@@ -433,19 +433,19 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
     static constexpr float kDepthSpeed = 0.05f;
     static constexpr float kMaxDepth = -10.0f;
 
-    topPanelFromWorld_.position.z -= (thumbstickY * kDepthSpeed);
-    topPanelFromWorld_.position.z =
-        std::min(topPanelFromWorld_.position.z, lowerPanelFromWorld_.position.z);
-    topPanelFromWorld_.position.z = std::max(topPanelFromWorld_.position.z, kMaxDepth);
+    mTopPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
+    mTopPanelFromWorld.position.z =
+        std::min(mTopPanelFromWorld.position.z, mLowerPanelFromWorld.position.z);
+    mTopPanelFromWorld.position.z = std::max(mTopPanelFromWorld.position.z, kMaxDepth);
 }
 
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const jobject activityObject, const XrVector3f& position,
                                const XrSession& session) {
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
-    vrGameSurfaceClass_ =
-        JniUtils::GetGlobalClassReference(env_, activityObject, gameSurfaceClassName.c_str());
-    BAIL_ON_COND(vrGameSurfaceClass_ == nullptr, "No java Game Surface Layer class", -1);
+    mVrGameSurfaceClass =
+        JniUtils::GetGlobalClassReference(mEnv, activityObject, gameSurfaceClassName.c_str());
+    BAIL_ON_COND(mVrGameSurfaceClass == nullptr, "No java Game Surface Layer class", -1);
     CreateSwapchain();
     SetSurface();
 
@@ -453,9 +453,9 @@ int32_t GameSurfaceLayer::Init(const jobject activityObject, const XrVector3f& p
 }
 
 void GameSurfaceLayer::Shutdown() {
-    xrDestroySwapchain(swapchain_.Handle);
+    xrDestroySwapchain(mSwapchain.Handle);
     // This currently causes a memory exception
-    //    env_->DeleteGlobalRef(vrGameSurfaceClass_);
+    //    mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
 }
 
 void GameSurfaceLayer::CreateSwapchain() {
@@ -468,8 +468,8 @@ void GameSurfaceLayer::CreateSwapchain() {
     xsci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
     xsci.format = 0;
     xsci.sampleCount = 0;
-    xsci.width = SURFACE_WIDTH_UNSCALED * resolutionFactor_;
-    xsci.height = SURFACE_HEIGHT_UNSCALED * resolutionFactor_;
+    xsci.width = SURFACE_WIDTH_UNSCALED * mResolutionFactor;
+    xsci.height = SURFACE_HEIGHT_UNSCALED * mResolutionFactor;
 
     xsci.faceCount = 0;
     xsci.arraySize = 0;
@@ -480,7 +480,7 @@ void GameSurfaceLayer::CreateSwapchain() {
 
     ALOGI("GameSurfaceLayer: Creating swapchain of size {}x{} ({}x{} with resolution factor {}x)",
           xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED,
-          resolutionFactor_);
+          mResolutionFactor);
 
     PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
     assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
@@ -492,7 +492,7 @@ void GameSurfaceLayer::CreateSwapchain() {
              "xrCreateSwapchainAndroidSurfaceKHR");
     }
 
-    OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &xsci, &swapchain_.Handle, &surface_));
-    swapchain_.Width = xsci.width;
-    swapchain_.Height = xsci.height;
+    OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &xsci, &mSwapchain.Handle, &mSurface));
+    mSwapchain.Width = xsci.width;
+    mSwapchain.Height = xsci.height;
 }

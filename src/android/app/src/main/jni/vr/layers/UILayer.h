@@ -7,15 +7,14 @@
 class UILayer {
 
 public:
-
     /** Constructor.
      * @param position: position of the layer, in world space
      * @param activity object: reference to the current activity. Used to get
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
      */
-    UILayer(const std::string& className, const XrVector3f&& position, JNIEnv* jni, jobject activityObject,
-                     const XrSession& session);
+    UILayer(const std::string& className, const XrVector3f&& position, JNIEnv* jni,
+            jobject activityObject, const XrSession& session);
     ~UILayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -58,16 +57,19 @@ public:
 
     /** Returns whether the swapchain is created
      */
-    bool IsSwapchainCreated() const { return isSwapchainCreated_; }
+    bool IsSwapchainCreated() const {
+        return isSwapchainCreated_;
+    }
 
     /** Creates the swapchain.
      */
     void TryCreateSwapchain();
 
-
     void SendClickToUI(const XrVector2f& pos2d, const int type);
+
 private:
-    int Init(const std::string& className, const jobject activityObject, const XrVector3f& position, const XrSession& session);
+    int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
+             const XrSession& session);
     void Shutdown();
 
     const XrSession session_;
@@ -92,6 +94,6 @@ private:
     // the decorView representing an entire window, it's important to accont for the
     // x, y offset of the view within the window, in case there are things like
     // window decorations or status bars.
-    jmethodID getBoundsMethodID_         = nullptr;
+    jmethodID getBoundsMethodID_ = nullptr;
     jmethodID sendClickToWindowMethodID_ = nullptr;
 };

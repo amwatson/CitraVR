@@ -613,11 +613,11 @@ private:
             layers[layerCount++].Quad = quadLayer;
         }
 #endif
-        if (mUILayer->IsSwapchainCreated()) {
+        if (mUILayer->IsSwapchainCreated())
+        {
 
-          mUILayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+            mUILayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
         }
-
 
         {
             {
@@ -663,26 +663,16 @@ private:
                                 .mHandPositions[mInputStateFrame.mPreferredHand]
                                 .pose,
                             XrVector3f{0, 0, -3.5f});
-                        if (gShouldShowErrorMessage)
+                        if (true)
                         {
-#if defined(UI_LAYER)
                             shouldRenderCursor =
-                                mErrorMessageLayer->GetRayIntersectionWithPanel(
-                                    start, end, cursorPos2d, pos3d);
-                            position = pos3d;
-                            // ALOGI("Cursor 3D pos: {} {} {}",
-                            //                                        cursorPos3d.x,
-                            //                                        cursorPos3d.y,
-                            //                                        cursorPos3d.z);
-
-                            //  ALOGI("Cursor 2D coords: {} {}", cursorPos2d.x,
-                            //    cursorPos2d.y);
+                                mUILayer->GetRayIntersectionWithPanel(
+                                    start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync)
                             {
-                                mErrorMessageLayer->SendClickToWindow(
+                                mUILayer->SendClickToUI(
                                     cursorPos2d, triggerState.currentState);
                             }
-#endif
                         }
                         else
                         {

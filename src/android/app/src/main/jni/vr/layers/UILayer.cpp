@@ -255,7 +255,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          result2d, result3d);
 }
 
-// Next error code: -6
+// Next error code: -7
 int32_t UILayer::Init(const std::string& className,
                       const jobject activityObject, const XrVector3f& position,
                       const XrSession& session)
@@ -283,6 +283,13 @@ int32_t UILayer::Init(const std::string& className,
                                             "(Landroid/view/Surface;II)I");
     BAIL_ON_COND(mSetSurfaceMethodId == nullptr, "could not find setSurface()",
                  -5);
+
+    mSendClickToUIMethodID =
+        mEnv->GetMethodID(mVrUILayerClass, "sendClickToUI", "(FFI)I");
+
+    BAIL_ON_COND(mSendClickToUIMethodID == nullptr,
+                 "could not find sendClickToUI()", -6);
+
     return 0;
 }
 
@@ -373,6 +380,6 @@ void UILayer::TryCreateSwapchain()
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type)
 {
-    mEnv->CallIntMethod(mVrUILayerObject, mSendClickToWindowMethodID, pos2d.x,
+    mEnv->CallIntMethod(mVrUILayerObject, mSendClickToUIMethodID, pos2d.x,
                         pos2d.y, type);
 }

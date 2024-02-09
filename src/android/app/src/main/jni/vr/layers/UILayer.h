@@ -96,6 +96,6 @@ private:
     // the x, y offset of the view within the window, in case there are things
     // like window decorations or status bars.
     jmethodID mGetBoundsMethodID         = nullptr;
-    jmethodID mSendClickToWindowMethodID = nullptr;
+    jmethodID mSendClickToUIMethodID = nullptr;
     jmethodID mSetSurfaceMethodId        = nullptr;
 };

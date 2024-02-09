@@ -17,6 +17,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "layers/CursorLayer.h"
 #include "layers/GameSurfaceLayer.h"
 #include "layers/PassthroughLayer.h"
+#include "layers/UILayer.h"
 #include "vr_settings.h"
 
 #include "utils/Common.h"
@@ -276,6 +277,11 @@ public:
             "org/citra/citra_emu/vr/ErrorMessageLayer", XrVector3f{0, 0, -0.7},
             jni, mActivityObject, gOpenXr->mSession);
 #endif
+
+
+        mUILayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrUILayer",
+            XrVector3f{0, 0.0f, -1.5f}, jni, mActivityObject, gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -1036,6 +1042,7 @@ private:
 #endif
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
+    std::unique_ptr<UILayer>          mUILayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame                   mInputStateFrame;

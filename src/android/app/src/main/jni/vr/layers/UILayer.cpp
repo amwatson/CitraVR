@@ -97,6 +97,20 @@ struct BoundsHandle
 };
 
 //-----------------------------------------------------------------------------
+// JNI functions
+extern "C" JNIEXPORT void JNICALL
+Java_org_citra_citra_1emu_vr_ui_UILayer_00024Companion_nativeSetBounds(
+    JNIEnv* env, jobject thiz, jlong handle, jint left, jint top, jint right,
+    jint bottom)
+{
+    AndroidWindowBounds* b = BoundsHandle(handle).p;
+    b->mLeftInDp           = left;
+    b->mTopInDp            = top;
+    b->mRightInDp          = right;
+    b->mBottomInDp         = bottom;
+}
+
+//-----------------------------------------------------------------------------
 // Local sysprops
 
 static constexpr std::chrono::milliseconds kMinTimeBetweenChecks(500);

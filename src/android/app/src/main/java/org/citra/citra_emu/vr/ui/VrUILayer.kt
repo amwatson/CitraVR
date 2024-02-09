@@ -137,7 +137,7 @@ abstract class VrUILayer(
             setContentView(layoutId)
             // Sets the background to transparent. Remove to set background to black
             // (useful for catching overrendering)
-        //    window?.setBackgroundDrawable(ColorDrawable(0))
+            window?.setBackgroundDrawable(ColorDrawable(0))
             show()
         }
         onSurfaceCreated()

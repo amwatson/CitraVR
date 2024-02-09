@@ -11,7 +11,7 @@ This bug prevents me from pulling up the Quest system keyboard.
 Why it happens: Quest's window manager is performing a single check based on the
 app's packagename and returns information for the wrong window.-->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.citra.citra_emu.vr.ui.VrKeyboardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/vr_keyboard"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -76,4 +76,4 @@ app's packagename and returns information for the wrong window.-->
             android:visibility="gone" />
     </LinearLayout>
 
-</LinearLayout>
+</org.citra.citra_emu.vr.ui.VrKeyboardView>

@@ -50,15 +50,14 @@ abstract class VrUILayer(
             Log.warning("contentView is null")
             return -1
         }
-        val (widthPx, heightPx) = calculateDynamicDimensions(activity, 1.0f, 1.0f)
-
         contentView.measure(
-            View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY)
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
+        contentView.layout(0, 0, contentView.measuredWidth, contentView.measuredHeight);
 
-        val measuredWidthPx = contentView.measuredWidth
-        val measuredHeightPx = contentView.measuredHeight
+        val measuredWidthPx = contentView.width
+        val measuredHeightPx = contentView.height
 
         val displayMetrics = activity.resources.displayMetrics
         val measuredWidthDp = (measuredWidthPx / displayMetrics.density) / (DEFAULT_DENSITY / requestedDensity);
@@ -68,7 +67,6 @@ abstract class VrUILayer(
         nativeSetBounds(handle, 0, 0, measuredWidthDp.roundToInt(), measuredHeightDp.roundToInt())
         return 0
     }
-
 
     fun sendClickToUI(x: Float, y: Float, motionType: Int): Int {
         val action = when (motionType) {
@@ -90,17 +88,6 @@ abstract class VrUILayer(
     }
 
     protected open fun onSurfaceCreated() {}
-
-    private fun calculateDynamicDimensions(context: Context, widthPercentage: Float, heightPercentage: Float): Pair<Int, Int> {
-        val displayMetrics = context.resources.displayMetrics
-        val screenWidthPx = displayMetrics.widthPixels
-        val screenHeightPx = displayMetrics.heightPixels
-
-        val desiredWidthPx = (screenWidthPx * widthPercentage).toInt()
-        val desiredHeightPx = (screenHeightPx * heightPercentage).toInt()
-
-        return Pair(desiredWidthPx, desiredHeightPx)
-    }
 
     private fun dispatchTouchEvent(x: Float, y: Float, action: Int) {
         val eventTime = SystemClock.uptimeMillis()

@@ -54,14 +54,14 @@ abstract class VrUILayer(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
-        contentView.layout(0, 0, contentView.measuredWidth, contentView.measuredHeight);
+        contentView.layout(0, 0, contentView.measuredWidth, contentView.measuredHeight)
 
         val measuredWidthPx = contentView.width
         val measuredHeightPx = contentView.height
 
         val displayMetrics = activity.resources.displayMetrics
-        val measuredWidthDp = (measuredWidthPx / displayMetrics.density) / (DEFAULT_DENSITY / requestedDensity);
-        val measuredHeightDp = measuredHeightPx / displayMetrics.density / (DEFAULT_DENSITY / requestedDensity);
+        val measuredWidthDp = (measuredWidthPx / displayMetrics.density) / (DEFAULT_DENSITY / requestedDensity)
+        val measuredHeightDp = measuredHeightPx / displayMetrics.density / (DEFAULT_DENSITY / requestedDensity)
 
         // Call native method with measured dimensions
         nativeSetBounds(handle, 0, 0, measuredWidthDp.roundToInt(), measuredHeightDp.roundToInt())
@@ -91,7 +91,8 @@ abstract class VrUILayer(
 
     private fun dispatchTouchEvent(x: Float, y: Float, action: Int) {
         val eventTime = SystemClock.uptimeMillis()
-        MotionEvent.obtain(
+
+        val event = MotionEvent.obtain(
             eventTime, // Use the same timestamp for both downTime and eventTime
             eventTime,
             action,
@@ -111,8 +112,13 @@ abstract class VrUILayer(
             0, 0, // Device ID and Edge Flags
             InputDevice.SOURCE_TOUCHSCREEN,
             0 // Flags
-        ).apply {
-            presentation?.window?.decorView?.dispatchTouchEvent(this)
+        )
+        try {
+            // Dispatch the MotionEvent to the view
+            presentation?.window?.decorView?.dispatchTouchEvent(event)
+        } finally {
+            // Ensure the MotionEvent is recycled after use
+            event.recycle()
         }
     }
 

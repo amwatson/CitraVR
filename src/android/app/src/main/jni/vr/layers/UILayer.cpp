@@ -180,7 +180,7 @@ XrVector2f GetDensityScaleForSize(const int32_t texWidth,
                                   const float   scaleFactor)
 {
     const float density = GetDensitySysprop();
-    return XrVector2f{2.0f * static_cast<float>(texWidth) / density,
+    return XrVector2f{static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
            scaleFactor;
 }

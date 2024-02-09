@@ -613,6 +613,11 @@ private:
             layers[layerCount++].Quad = quadLayer;
         }
 #endif
+        if (mUILayer->IsSwapchainCreated()) {
+
+          mUILayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+        }
+
 
         {
             {

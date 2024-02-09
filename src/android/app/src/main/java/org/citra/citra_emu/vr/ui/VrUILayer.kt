@@ -61,8 +61,8 @@ abstract class VrUILayer(
         val measuredHeightPx = contentView.measuredHeight
 
         val displayMetrics = activity.resources.displayMetrics
-        val measuredWidthDp = measuredWidthPx / displayMetrics.density
-        val measuredHeightDp = measuredHeightPx / displayMetrics.density
+        val measuredWidthDp = (measuredWidthPx / displayMetrics.density) / (DEFAULT_DENSITY / requestedDensity);
+        val measuredHeightDp = measuredHeightPx / displayMetrics.density / (DEFAULT_DENSITY / requestedDensity);
 
         // Call native method with measured dimensions
         nativeSetBounds(handle, 0, 0, measuredWidthDp.roundToInt(), measuredHeightDp.roundToInt())

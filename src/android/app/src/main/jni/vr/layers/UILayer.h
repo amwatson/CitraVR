@@ -58,7 +58,7 @@ public:
     /** Returns whether the swapchain is created
      */
     bool IsSwapchainCreated() const {
-        return isSwapchainCreated_;
+        return mIsSwapchainCreated;
     }
 
     /** Creates the swapchain.
@@ -72,20 +72,20 @@ private:
              const XrSession& session);
     void Shutdown();
 
-    const XrSession session_;
-    Swapchain swapchain_;
+    const XrSession mSession;
+    Swapchain mSwapchain;
 
-    XrPosef panelFromWorld_;
+    XrPosef mPanelFromWorld;
 
-    bool isSwapchainCreated_ = false;
+    bool mIsSwapchainCreated = false;
 
     //============================
     // JNI objects
-    JNIEnv* env_ = nullptr;
-    jobject activityObject_ = nullptr;
-    jclass vrUILayerClass_ = nullptr;
-    jobject vrUILayerObject_ = nullptr;
-    jobject surface_ = nullptr;
+    JNIEnv* mEnv = nullptr;
+    jobject mActivityObject = nullptr;
+    jclass mVrUILayerClass = nullptr;
+    jobject mVrUILayerObject = nullptr;
+    jobject mSurface = nullptr;
 
     //============================
     // JNI methods
@@ -94,6 +94,6 @@ private:
     // the decorView representing an entire window, it's important to accont for the
     // x, y offset of the view within the window, in case there are things like
     // window decorations or status bars.
-    jmethodID getBoundsMethodID_ = nullptr;
-    jmethodID sendClickToWindowMethodID_ = nullptr;
+    jmethodID mGetBoundsMethodID = nullptr;
+    jmethodID mSendClickToWindowMethodID = nullptr;
 };

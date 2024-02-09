@@ -42,28 +42,28 @@ class AndroidWindowBounds {
 public:
     AndroidWindowBounds() = default;
     AndroidWindowBounds(const float widthInDp, const float heightInDp)
-        : leftInDp_(0.0f), rightInDp_(widthInDp), topInDp_(0.0f), bottomInDp_(heightInDp) {}
+        : mLeftInDp(0.0f), mRightInDp(widthInDp), mTopInDp(0.0f), mBottomInDp(heightInDp) {}
 
     float Width() const {
-        return rightInDp_ - leftInDp_;
+        return mRightInDp - mLeftInDp;
     }
     float Height() const {
-        return bottomInDp_ - topInDp_;
+        return mBottomInDp - mTopInDp;
     }
 
     // "DP" refers to display pixels, which are the same as Android's
     // "density-independent pixels" (dp).
     // Note
-    float leftInDp_ = 0;
-    float rightInDp_ = 0;
-    float topInDp_ = 0;
-    float bottomInDp_ = 0;
+    float mLeftInDp = 0;
+    float mRightInDp = 0;
+    float mTopInDp = 0;
+    float mBottomInDp = 0;
 
     // given a 2D point in worldspace 'point2d', returns the transformed
     // coordinate in DP, written to 'result'
     void Transform(const XrVector2f& point2d, XrVector2f& result) const {
-        const float left = leftInDp_;
-        const float top = topInDp_;
+        const float left = mLeftInDp;
+        const float top = mTopInDp;
 
         const float width = Width();
         const float height = Height();
@@ -159,8 +159,8 @@ XrPosef CreatePanelFromWorld(const XrVector3f& position) {
 
 UILayer::UILayer(const std::string& className, const XrVector3f&& position, JNIEnv* env,
                  jobject activityObject, const XrSession& session)
-    : session_(session), panelFromWorld_(CreatePanelFromWorld(position)), env_(env),
-      activityObject_(activityObject)
+    : mSession(session), mPanelFromWorld(CreatePanelFromWorld(position)), mEnv(env),
+      mActivityObject(activityObject)
 
 {
     const int32_t initializationStatus = Init(className, activityObject, position, session);
@@ -190,14 +190,14 @@ void UILayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layer
 
     layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
     memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-    layer.subImage.swapchain = swapchain_.Handle;
+    layer.subImage.swapchain = mSwapchain.Handle;
     layer.subImage.imageRect.offset.x = 0;
     layer.subImage.imageRect.offset.y = 0;
-    layer.subImage.imageRect.extent.width = swapchain_.Width;
-    layer.subImage.imageRect.extent.height = swapchain_.Height;
+    layer.subImage.imageRect.extent.width = mSwapchain.Width;
+    layer.subImage.imageRect.extent.height = mSwapchain.Height;
     layer.subImage.imageArrayIndex = 0;
-    layer.pose = panelFromWorld_;
-    const auto scale = GetDensityScaleForSize(swapchain_.Width, swapchain_.Height, 1.0f);
+    layer.pose = mPanelFromWorld;
+    const auto scale = GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
     layer.size.width = scale.x;
     layer.size.height = scale.y;
     layers[layerCount++].mQuad = layer;
@@ -205,44 +205,44 @@ void UILayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layer
 
 bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
                                           XrVector2f& result2d, XrPosef& result3d) const {
-    const XrVector2f scale = GetDensityScaleForSize(swapchain_.Width, swapchain_.Height, 1.0f);
-    return ::GetRayIntersectionWithPanel(panelFromWorld_, swapchain_.Width, swapchain_.Height,
+    const XrVector2f scale = GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
+    return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.Width, mSwapchain.Height,
                                          scale, start, end, result2d, result3d);
 }
 
 // Next error code: -5
 int32_t UILayer::Init(const std::string& className, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
-    vrUILayerClass_ = JniUtils::GetGlobalClassReference(env_, activityObject, className.c_str());
-    BAIL_ON_COND(vrUILayerClass_ == nullptr, "No java UI Layer class", -1);
+    mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject, className.c_str());
+    BAIL_ON_COND(mVrUILayerClass == nullptr, "No java UI Layer class", -1);
 
     jmethodID vrUILayerConstructor =
-        env_->GetMethodID(vrUILayerClass_, "<init>", "(Lorg/citra/citra_emu/vr/VrActivity;)V");
+        mEnv->GetMethodID(mVrUILayerClass, "<init>", "(Lorg/citra/citra_emu/vr/VrActivity;)V");
     BAIL_ON_COND(vrUILayerConstructor == nullptr, "no java window constructor", -2);
 
-    vrUILayerObject_ = env_->NewObject(vrUILayerClass_, vrUILayerConstructor, activityObject);
-    BAIL_ON_COND(vrUILayerObject_ == nullptr, "Could not construct java window", -3);
+    mVrUILayerObject = mEnv->NewObject(mVrUILayerClass, vrUILayerConstructor, activityObject);
+    BAIL_ON_COND(mVrUILayerObject == nullptr, "Could not construct java window", -3);
 
-    getBoundsMethodID_ = env_->GetMethodID(vrUILayerClass_, "getBoundsForView", "(J)I");
-    BAIL_ON_COND(getBoundsMethodID_ == nullptr, "could not find getBoundsForView()", -4);
+    mGetBoundsMethodID = mEnv->GetMethodID(mVrUILayerClass, "getBoundsForView", "(J)I");
+    BAIL_ON_COND(mGetBoundsMethodID == nullptr, "could not find getBoundsForView()", -4);
 
     TryCreateSwapchain();
     return 0;
 }
 
 void UILayer::Shutdown() {
-    xrDestroySwapchain(swapchain_.Handle);
+    xrDestroySwapchain(mSwapchain.Handle);
     // This currently causes a memory exception
-    //    env_->DeleteGlobalRef(vrUILayerClass_);
+    //    mEnv->DeleteGlobalRef(mVrUILayerClass);
 }
 
 void UILayer::TryCreateSwapchain() {
-    assert(!isSwapchainCreated_);
+    assert(!mIsSwapchainCreated);
 
     AndroidWindowBounds viewBounds;
     {
         const jint ret =
-            env_->CallIntMethod(vrUILayerObject_, getBoundsMethodID_, BoundsHandle(&viewBounds).l);
+            mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
         if (ret < 0) {
             ALOGD("getBoundsForView() returned error %d", ret);
             return;
@@ -274,23 +274,23 @@ void UILayer::TryCreateSwapchain() {
                  "xrCreateSwapchainAndroidSurfaceKHR");
         }
 
-        OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &swapchainCreateInfo, &swapchain_.Handle,
-                                                &surface_));
-        swapchain_.Width = viewBounds.Width();
-        swapchain_.Height = viewBounds.Height();
+        OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &swapchainCreateInfo, &mSwapchain.Handle,
+                                                &mSurface));
+        mSwapchain.Width = viewBounds.Width();
+        mSwapchain.Height = viewBounds.Height();
 
         jmethodID setSurfaceMethodId =
-            env_->GetMethodID(vrUILayerClass_, "setSurface", "(Landroid/view/Surface;II)I");
+            mEnv->GetMethodID(mVrUILayerClass, "setSurface", "(Landroid/view/Surface;II)I");
         if (setSurfaceMethodId == nullptr) {
             FAIL("Couldn't find setSurface()");
         }
-        env_->CallIntMethod(vrUILayerObject_, setSurfaceMethodId, surface_, (int)viewBounds.Width(),
+        mEnv->CallIntMethod(mVrUILayerObject, setSurfaceMethodId, mSurface, (int)viewBounds.Width(),
                             (int)viewBounds.Height());
     }
 
-    isSwapchainCreated_ = true;
+    mIsSwapchainCreated = true;
 }
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
-    env_->CallIntMethod(vrUILayerObject_, sendClickToWindowMethodID_, pos2d.x, pos2d.y, type);
+    mEnv->CallIntMethod(mVrUILayerObject, mSendClickToWindowMethodID, pos2d.x, pos2d.y, type);
 }

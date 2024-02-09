@@ -673,6 +673,22 @@ private:
                                 mUILayer->SendClickToUI(
                                     cursorPos2d, triggerState.currentState);
                             }
+                            if (triggerState.currentState == 0 &&
+                                triggerState.changedSinceLastSync)
+                            {
+                                mUILayer->SendClickToUI(cursorPos2d, 0);
+                            }
+                            else if (triggerState.changedSinceLastSync &&
+                                     triggerState.currentState == 1)
+                            {
+                                mUILayer->SendClickToUI(cursorPos2d, 1);
+                            }
+                            else if (triggerState.currentState == 1 &&
+                                     !triggerState.changedSinceLastSync)
+                            {
+
+                                mUILayer->SendClickToUI(cursorPos2d, 2);
+                            }
                         }
                         else
                         {

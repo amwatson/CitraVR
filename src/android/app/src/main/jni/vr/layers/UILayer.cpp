@@ -167,8 +167,6 @@ bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
     const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 &&
                             result2d.x < viewBounds.Width() &&
                             result2d.y < viewBounds.Height();
-    result2d.y += viewBounds.Height();
-
     if (!isInBounds) { return false; }
 
     return true;

@@ -250,8 +250,14 @@ GameSurfaceLayer::~GameSurfaceLayer() {
 
 void GameSurfaceLayer::SetSurface() const {
     assert(vrGameSurfaceClass_ != nullptr);
-    assert(setSurfaceMethodID_ != nullptr);
-    env_->CallStaticVoidMethod(vrGameSurfaceClass_, setSurfaceMethodID_, activityObject_, surface_);
+
+    const jmethodID setSurfaceMethodID =
+        env_->GetStaticMethodID(vrGameSurfaceClass_, "setSurface",
+                                "(Lorg/citra/citra_emu/vr/VrActivity;Landroid/view/Surface;)V");
+    if (setSurfaceMethodID == nullptr) {
+        FAIL("Couldn't find setSurface()");
+    }
+    env_->CallStaticVoidMethod(vrGameSurfaceClass_, setSurfaceMethodID, activityObject_, surface_);
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
@@ -454,48 +460,39 @@ void GameSurfaceLayer::Shutdown() {
 
 void GameSurfaceLayer::CreateSwapchain() {
     // Initialize swapchain
-    {
-        XrSwapchainCreateInfo xsci;
-        memset(&xsci, 0, sizeof(xsci));
-        xsci.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
-        xsci.next = nullptr;
-        xsci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-        xsci.format = 0;
-        xsci.sampleCount = 0;
-        xsci.width = SURFACE_WIDTH_UNSCALED * resolutionFactor_;
-        xsci.height = SURFACE_HEIGHT_UNSCALED * resolutionFactor_;
 
-        xsci.faceCount = 0;
-        xsci.arraySize = 0;
-        // Note: you can't have mips when you render directly to a
-        // surface-backed swapchain. You just have to scale everything
-        // so that you do not need them.
-        xsci.mipCount = 0;
+    XrSwapchainCreateInfo xsci;
+    memset(&xsci, 0, sizeof(xsci));
+    xsci.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
+    xsci.next = nullptr;
+    xsci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+    xsci.format = 0;
+    xsci.sampleCount = 0;
+    xsci.width = SURFACE_WIDTH_UNSCALED * resolutionFactor_;
+    xsci.height = SURFACE_HEIGHT_UNSCALED * resolutionFactor_;
 
-        ALOGI(
-            "GameSurfaceLayer: Creating swapchain of size {}x{} ({}x{} with resolution factor {}x)",
-            xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED,
-            resolutionFactor_);
+    xsci.faceCount = 0;
+    xsci.arraySize = 0;
+    // Note: you can't have mips when you render directly to a
+    // surface-backed swapchain. You just have to scale everything
+    // so that you do not need them.
+    xsci.mipCount = 0;
 
-        PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
-        assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
-        XrResult xrResult =
-            xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
-                                  (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
-        if (xrResult != XR_SUCCESS || pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
-            FAIL("xrGetInstanceProcAddr failed for "
-                 "xrCreateSwapchainAndroidSurfaceKHR");
-        }
+    ALOGI("GameSurfaceLayer: Creating swapchain of size {}x{} ({}x{} with resolution factor {}x)",
+          xsci.width, xsci.height, SURFACE_WIDTH_UNSCALED, SURFACE_HEIGHT_UNSCALED,
+          resolutionFactor_);
 
-        OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &xsci, &swapchain_.Handle, &surface_));
-        swapchain_.Width = xsci.width;
-        swapchain_.Height = xsci.height;
+    PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
+    assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
+    XrResult xrResult =
+        xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
+                              (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
+    if (xrResult != XR_SUCCESS || pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
+        FAIL("xrGetInstanceProcAddr failed for "
+             "xrCreateSwapchainAndroidSurfaceKHR");
     }
 
-    setSurfaceMethodID_ =
-        env_->GetStaticMethodID(vrGameSurfaceClass_, "setSurface",
-                                "(Lorg/citra/citra_emu/vr/VrActivity;Landroid/view/Surface;)V");
-    if (setSurfaceMethodID_ == nullptr) {
-        FAIL("Couldn't find setSurface()");
-    }
+    OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &xsci, &swapchain_.Handle, &surface_));
+    swapchain_.Width = xsci.width;
+    swapchain_.Height = xsci.height;
 }

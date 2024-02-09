@@ -176,8 +176,4 @@ private:
     jobject activityObject_ = nullptr;
     jclass vrGameSurfaceClass_ = nullptr;
     jobject surface_ = nullptr;
-
-    //============================
-    // JNI methods
-    jmethodID setSurfaceMethodID_ = nullptr;
 };

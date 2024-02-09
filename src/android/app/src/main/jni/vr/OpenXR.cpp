@@ -185,7 +185,7 @@ XrInstance XrInstanceCreate() {
     XrInstance instanceLocal;
     OXR(initResult = xrCreateInstance(&ici, &instanceLocal));
     if (initResult != XR_SUCCESS) {
-        ALOGE("ERROR({}()): Failed to create XR instance_: {}.", __FUNCTION__, initResult);
+        ALOGE("ERROR({}()): Failed to create XR mInstance: {}.", __FUNCTION__, initResult);
         return XR_NULL_HANDLE;
     }
     // Log runtime instance info
@@ -290,7 +290,7 @@ XrInstance& OpenXr::GetInstance() {
 
 int32_t OpenXr::Init(JavaVM* const jvm, const jobject activityObject) {
     for (int eye = 0; eye < 2; eye++) {
-        viewConfigurationViews_[eye] = {};
+        mViewConfigurationViews[eye] = {};
     }
     BAIL_ON_ERR(OpenXRInit(jvm, activityObject), -1);
     BAIL_ON_ERR(XrViewConfigInit(), -2);
@@ -303,11 +303,11 @@ int32_t OpenXr::Init(JavaVM* const jvm, const jobject activityObject) {
 int32_t OpenXr::XrViewConfigInit() {
     // Enumerate the viewport configurations.
     uint32_t viewportConfigTypeCount = 0;
-    OXR(xrEnumerateViewConfigurations(instance_, systemId_, 0, &viewportConfigTypeCount, NULL));
+    OXR(xrEnumerateViewConfigurations(mInstance, mSystemId, 0, &viewportConfigTypeCount, NULL));
 
     auto viewportConfigurationTypes = std::vector<XrViewConfigurationType>(viewportConfigTypeCount);
 
-    OXR(xrEnumerateViewConfigurations(instance_, systemId_, viewportConfigTypeCount,
+    OXR(xrEnumerateViewConfigurations(mInstance, mSystemId, viewportConfigTypeCount,
                                       &viewportConfigTypeCount, viewportConfigurationTypes.data()));
 
     ALOGV("Available Viewport Configuration Types: {}", viewportConfigTypeCount);
@@ -321,13 +321,13 @@ int32_t OpenXr::XrViewConfigInit() {
 
         XrViewConfigurationProperties viewportConfig;
         viewportConfig.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
-        OXR(xrGetViewConfigurationProperties(instance_, systemId_, viewportConfigType,
+        OXR(xrGetViewConfigurationProperties(mInstance, mSystemId, viewportConfigType,
                                              &viewportConfig));
         ALOGV("FovMutable={} ConfigurationType {}", viewportConfig.fovMutable ? "true" : "false",
               viewportConfig.viewConfigurationType);
 
         uint32_t viewCount;
-        OXR(xrEnumerateViewConfigurationViews(instance_, systemId_, viewportConfigType, 0,
+        OXR(xrEnumerateViewConfigurationViews(mInstance, mSystemId, viewportConfigType, 0,
                                               &viewCount, NULL));
 
         if (viewCount > 0) {
@@ -338,7 +338,7 @@ int32_t OpenXr::XrViewConfigInit() {
                 elements[e].next = NULL;
             }
 
-            OXR(xrEnumerateViewConfigurationViews(instance_, systemId_, viewportConfigType,
+            OXR(xrEnumerateViewConfigurationViews(mInstance, mSystemId, viewportConfigType,
                                                   viewCount, &viewCount, elements.data()));
 
             // Log the view config info for each view type for debugging
@@ -362,7 +362,7 @@ int32_t OpenXr::XrViewConfigInit() {
                 foundSupportedViewport = true;
                 assert(viewCount == NUM_EYES);
                 for (uint32_t e = 0; e < viewCount; e++) {
-                    viewConfigurationViews_[e] = elements[e];
+                    mViewConfigurationViews[e] = elements[e];
                 }
             }
         } else {
@@ -376,9 +376,9 @@ int32_t OpenXr::XrViewConfigInit() {
 
     // Get the viewport configuration info for the chosen viewport configuration
     // type.
-    viewportConfig_.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
+    mViewportConfig.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
 
-    OXR(xrGetViewConfigurationProperties(instance_, systemId_, VIEW_CONFIG_TYPE, &viewportConfig_));
+    OXR(xrGetViewConfigurationProperties(mInstance, mSystemId, VIEW_CONFIG_TYPE, &mViewportConfig));
     return 0;
 }
 
@@ -386,11 +386,11 @@ int32_t OpenXr::XrSpaceInit() {
     bool stageSupported = false;
 
     uint32_t numOutputSpaces = 0;
-    OXR(xrEnumerateReferenceSpaces(session_, 0, &numOutputSpaces, NULL));
+    OXR(xrEnumerateReferenceSpaces(mSession, 0, &numOutputSpaces, NULL));
 
     auto referenceSpaces = std::vector<XrReferenceSpaceType>(numOutputSpaces);
 
-    OXR(xrEnumerateReferenceSpaces(session_, numOutputSpaces, &numOutputSpaces,
+    OXR(xrEnumerateReferenceSpaces(mSession, numOutputSpaces, &numOutputSpaces,
                                    referenceSpaces.data()));
 
     for (uint32_t i = 0; i < numOutputSpaces; i++) {
@@ -406,10 +406,10 @@ int32_t OpenXr::XrSpaceInit() {
         spaceCreateInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
         spaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
         spaceCreateInfo.poseInReferenceSpace.orientation.w = 1.0f;
-        OXR(xrCreateReferenceSpace(session_, &spaceCreateInfo, &headSpace_));
+        OXR(xrCreateReferenceSpace(mSession, &spaceCreateInfo, &mHeadSpace));
 
         spaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
-        OXR(xrCreateReferenceSpace(session_, &spaceCreateInfo, &localSpace_));
+        OXR(xrCreateReferenceSpace(mSession, &spaceCreateInfo, &mLocalSpace));
     }
 
     if (stageSupported) {
@@ -417,24 +417,24 @@ int32_t OpenXr::XrSpaceInit() {
 
         spaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
         spaceCreateInfo.poseInReferenceSpace.orientation.w = 1.0f;
-        OXR(xrCreateReferenceSpace(session_, &spaceCreateInfo, &stageSpace_));
+        OXR(xrCreateReferenceSpace(mSession, &spaceCreateInfo, &mStageSpace));
     }
 
     return 0;
 }
 
 void OpenXr::XrSpaceDestroy() {
-    if (headSpace_ != XR_NULL_HANDLE) {
-        OXR(xrDestroySpace(headSpace_));
-        headSpace_ = XR_NULL_HANDLE;
+    if (mHeadSpace != XR_NULL_HANDLE) {
+        OXR(xrDestroySpace(mHeadSpace));
+        mHeadSpace = XR_NULL_HANDLE;
     }
-    if (localSpace_ != XR_NULL_HANDLE) {
-        OXR(xrDestroySpace(localSpace_));
-        localSpace_ = XR_NULL_HANDLE;
+    if (mLocalSpace != XR_NULL_HANDLE) {
+        OXR(xrDestroySpace(mLocalSpace));
+        mLocalSpace = XR_NULL_HANDLE;
     }
-    if (stageSpace_ != XR_NULL_HANDLE) {
-        OXR(xrDestroySpace(stageSpace_));
-        stageSpace_ = XR_NULL_HANDLE;
+    if (mStageSpace != XR_NULL_HANDLE) {
+        OXR(xrDestroySpace(mStageSpace));
+        mStageSpace = XR_NULL_HANDLE;
     }
 }
 
@@ -449,21 +449,21 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
     /////////////////////////////////////
     // Create the OpenXR instance.
     /////////////////////////////////////
-    instance_ = XrInstanceCreate();
-    if (instance_ == XR_NULL_HANDLE) {
+    mInstance = XrInstanceCreate();
+    if (mInstance == XR_NULL_HANDLE) {
         ALOGE("Failed to create XR instance");
         return -2;
     }
     // Set the global used in macros
-    instance = instance_;
+    instance = mInstance;
 
-    systemId_ = XrGetSystemId(instance_);
-    if (systemId_ == XR_NULL_SYSTEM_ID) {
+    mSystemId = XrGetSystemId(mInstance);
+    if (mSystemId == XR_NULL_SYSTEM_ID) {
         ALOGE("Failed to retrieve XR system ID");
         return -3;
     }
 
-    maxLayerCount_ = GetMaxLayerCount(instance_, systemId_);
+    mMaxLayerCount = GetMaxLayerCount(mInstance, mSystemId);
 
     ////////////////////////////////
     // Init EGL
@@ -471,16 +471,16 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
     {
         // Get the graphics requirements.
         PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = NULL;
-        OXR(xrGetInstanceProcAddr(instance_, "xrGetOpenGLESGraphicsRequirementsKHR",
+        OXR(xrGetInstanceProcAddr(mInstance, "xrGetOpenGLESGraphicsRequirementsKHR",
                                   (PFN_xrVoidFunction*)(&pfnGetOpenGLESGraphicsRequirementsKHR)));
 
         XrGraphicsRequirementsOpenGLESKHR graphicsRequirements = {};
         graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
-        OXR(pfnGetOpenGLESGraphicsRequirementsKHR(instance_, systemId_, &graphicsRequirements));
+        OXR(pfnGetOpenGLESGraphicsRequirementsKHR(mInstance, mSystemId, &graphicsRequirements));
 
         {
             // Create the EGL Context
-            eglContext_ = std::make_unique<EglContext>();
+            mEglContext = std::make_unique<EglContext>();
 
             // Check the graphics requirements.
             int32_t eglMajor = 0;
@@ -499,8 +499,8 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
     ///////////////////////////////
     // Create the OpenXR Session.
     //////////////////////////////
-    session_ = XrSessionCreate(instance, systemId_, eglContext_);
-    if (session_ == XR_NULL_HANDLE) {
+    mSession = XrSessionCreate(instance, mSystemId, mEglContext);
+    if (mSession == XR_NULL_HANDLE) {
         ALOGE("Failed to create XR session");
         return -6;
     }
@@ -510,13 +510,13 @@ int OpenXr::OpenXRInit(JavaVM* const jvm, const jobject activityObject) {
 void OpenXr::Shutdown() {
     XrSpaceDestroy();
 
-    if (session_ != XR_NULL_HANDLE) {
-        OXR(xrDestroySession(session_));
-        session_ = XR_NULL_HANDLE;
+    if (mSession != XR_NULL_HANDLE) {
+        OXR(xrDestroySession(mSession));
+        mSession = XR_NULL_HANDLE;
     }
 
-    if (instance_ != XR_NULL_HANDLE) {
-        OXR(xrDestroyInstance(instance_));
-        instance_ = XR_NULL_HANDLE;
+    if (mInstance != XR_NULL_HANDLE) {
+        OXR(xrDestroyInstance(mInstance));
+        mInstance = XR_NULL_HANDLE;
     }
 }

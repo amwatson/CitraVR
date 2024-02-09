@@ -188,9 +188,9 @@ public:
                 FAIL("OpenXR::Init() failed: error code %d", ret);
             }
         }
-        vr::gSession = gOpenXr->session_;
+        vr::gSession = gOpenXr->mSession;
         mInputStateStatic =
-            std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->session_);
+            std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Create the layers
@@ -204,7 +204,7 @@ public:
         // If user set "Void" in settings, don't render passthrough
         if (VRSettings::values.vr_environment !=
             static_cast<int32_t>(VRSettings::VREnvironmentType::VOID)) {
-            mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->session_);
+            mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->mSession);
         }
 
         // Create the game surface layer.
@@ -226,16 +226,16 @@ public:
                       defaultResolutionFactor);
             }
             mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(
-                XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->session_, resolutionFactor);
+                XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->mSession, resolutionFactor);
         }
 
         // Create the cursor layer.
-        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->session_);
+        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
 
 #if defined(UI_LAYER)
         mErrorMessageLayer = std::make_unique<UILayer>("org/citra/citra_emu/vr/ErrorMessageLayer",
                                                        XrVector3f{0, 0, -0.7}, jni, mActivityObject,
-                                                       gOpenXr->session_);
+                                                       gOpenXr->mSession);
 #endif
 
         //////////////////////////////////////////////////
@@ -311,7 +311,7 @@ private:
                       .count());
         }
 
-        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->session_, mInputStateStatic);
+        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
 
         //////////////////////////////////////////////////
         // Forward VR input to Android gamepad emulation
@@ -435,7 +435,7 @@ private:
 
         {
             XrFrameWaitInfo wfi = {XR_TYPE_FRAME_WAIT_INFO, nullptr};
-            OXR(xrWaitFrame(gOpenXr->session_, &wfi, &frameState));
+            OXR(xrWaitFrame(gOpenXr->mSession, &wfi, &frameState));
         }
 
         ////////////////////////////////
@@ -444,7 +444,7 @@ private:
 
         {
             XrFrameBeginInfo bfd = {XR_TYPE_FRAME_BEGIN_INFO, nullptr};
-            OXR(xrBeginFrame(gOpenXr->session_, &bfd));
+            OXR(xrBeginFrame(gOpenXr->mSession, &bfd));
         }
 
         ///////////////////////////////////////////////////
@@ -461,13 +461,13 @@ private:
                 const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
                                                         nullptr, XR_REFERENCE_SPACE_TYPE_LOCAL,
                                                         XrMath::Posef::Identity()};
-                OXR(xrCreateReferenceSpace(gOpenXr->session_, &sci,
-                                           &gOpenXr->forwardDirectionSpace_));
+                OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
+                                           &gOpenXr->mForwardDirectionSpace));
             }
 
             // Get the pose of the local space.
             XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
-            OXR(xrLocateSpace(gOpenXr->forwardDirectionSpace_, gOpenXr->localSpace_,
+            OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
                               frameState.predictedDisplayTime, &lsl));
 
             // Set the forward direction of the new space.
@@ -478,10 +478,10 @@ private:
             const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
                                                     XR_REFERENCE_SPACE_TYPE_LOCAL,
                                                     forwardDirectionPose};
-            OXR(xrCreateReferenceSpace(gOpenXr->session_, &sci, &gOpenXr->headSpace_));
+            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
         }
 
-        mInputStateFrame.SyncHandPoses(gOpenXr->session_, mInputStateStatic, gOpenXr->localSpace_,
+        mInputStateFrame.SyncHandPoses(gOpenXr->mSession, mInputStateStatic, gOpenXr->mLocalSpace,
                                        frameState.predictedDisplayTime);
 
         //////////////////////////////////////////////////
@@ -489,7 +489,7 @@ private:
         //////////////////////////////////////////////////
 
         uint32_t layerCount = 0;
-        std::vector<XrCompositionLayer> layers(gOpenXr->maxLayerCount_, XrCompositionLayer{});
+        std::vector<XrCompositionLayer> layers(gOpenXr->mMaxLayerCount, XrCompositionLayer{});
 
         // First, add the passthrough layer
         if (mPassthroughLayer != nullptr) {
@@ -499,11 +499,11 @@ private:
             layers[layerCount++].Passthrough = passthroughLayer;
         }
 
-        mGameSurfaceLayer->Frame(gOpenXr->localSpace_, layers, layerCount);
+        mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
 #if defined(UI_LAYER)
         if (gShouldShowErrorMessage) {
             XrCompositionLayerQuad quadLayer = {};
-            mErrorMessageLayer->Frame(gOpenXr->localSpace_, quadLayer);
+            mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, quadLayer);
             layers[layerCount++].Quad = quadLayer;
         }
 #endif
@@ -641,7 +641,7 @@ private:
 
                 if (shouldRenderCursor) {
                     XrCompositionLayerQuad quadLayer = {};
-                    mCursorLayer->Frame(gOpenXr->localSpace_, quadLayer, cursorPose3d, scaleFactor,
+                    mCursorLayer->Frame(gOpenXr->mLocalSpace, quadLayer, cursorPose3d, scaleFactor,
                                         cursorType);
                     layers[layerCount++].mQuad = quadLayer;
                 }
@@ -680,7 +680,7 @@ private:
         const XrFrameEndInfo endFrameInfo = {
             XR_TYPE_FRAME_END_INFO,           nullptr,    frameState.predictedDisplayTime,
             XR_ENVIRONMENT_BLEND_MODE_OPAQUE, layerCount, layerHeaders.data()};
-        OXR(xrEndFrame(gOpenXr->session_, &endFrameInfo));
+        OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
     }
 
     void HandleSessionStateChanges(const XrSessionState state) {
@@ -690,10 +690,10 @@ private:
             XrSessionBeginInfo sbi = {};
             sbi.type = XR_TYPE_SESSION_BEGIN_INFO;
             sbi.next = nullptr;
-            sbi.primaryViewConfigurationType = gOpenXr->viewportConfig_.viewConfigurationType;
+            sbi.primaryViewConfigurationType = gOpenXr->mViewportConfig.viewConfigurationType;
 
             XrResult result;
-            OXR(result = xrBeginSession(gOpenXr->session_, &sbi));
+            OXR(result = xrBeginSession(gOpenXr->mSession, &sbi));
 
             mIsXrSessionActive = (result == XR_SUCCESS);
 
@@ -703,32 +703,32 @@ private:
                 PFN_xrPerfSettingsSetPerformanceLevelEXT pfnPerfSettingsSetPerformanceLevelEXT =
                     NULL;
                 OXR(xrGetInstanceProcAddr(
-                    gOpenXr->instance_, "xrPerfSettingsSetPerformanceLevelEXT",
+                    gOpenXr->mInstance, "xrPerfSettingsSetPerformanceLevelEXT",
                     (PFN_xrVoidFunction*)(&pfnPerfSettingsSetPerformanceLevelEXT)));
 
-                OXR(pfnPerfSettingsSetPerformanceLevelEXT(gOpenXr->session_,
+                OXR(pfnPerfSettingsSetPerformanceLevelEXT(gOpenXr->mSession,
                                                           XR_PERF_SETTINGS_DOMAIN_CPU_EXT,
                                                           VRSettings::values.cpu_level));
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
-                    gOpenXr->session_, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
+                    gOpenXr->mSession, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
                 ALOGI("{}(): Set clock levels to CPU:{}, GPU:{}", __FUNCTION__,
                       VRSettings::values.cpu_level, kGpuPerfLevel);
 
                 PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
                 OXR(xrGetInstanceProcAddr(
-                    gOpenXr->instance_, "xrSetAndroidApplicationThreadKHR",
+                    gOpenXr->mInstance, "xrSetAndroidApplicationThreadKHR",
                     (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
 
                 if (vr::gPriorityTid > 0) {
                     ALOGD("Setting prio tid from main {}", vr::gPriorityTid);
-                    OXR(pfnSetAndroidApplicationThreadKHR(gOpenXr->session_,
+                    OXR(pfnSetAndroidApplicationThreadKHR(gOpenXr->mSession,
                                                           XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR,
                                                           vr::gPriorityTid));
                 } else {
                     ALOGD("Not setting prio tid from main");
                 }
                 OXR(pfnSetAndroidApplicationThreadKHR(
-                    gOpenXr->session_, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
+                    gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
                     mGameSurfaceLayer->SetSurface();
@@ -736,7 +736,7 @@ private:
             }
         } else if (state == XR_SESSION_STATE_STOPPING) {
             assert(mIsXrSessionActive);
-            OXR(xrEndSession(gOpenXr->session_));
+            OXR(xrEndSession(gOpenXr->mSession));
             mIsXrSessionActive = false;
         }
     }
@@ -786,7 +786,7 @@ private:
             baseEventHeader->type = XR_TYPE_EVENT_DATA_BUFFER;
             baseEventHeader->next = NULL;
             XrResult r;
-            OXR(r = xrPollEvent(gOpenXr->instance_, &eventDataBuffer));
+            OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
             if (r != XR_SUCCESS) {
                 break;
             }

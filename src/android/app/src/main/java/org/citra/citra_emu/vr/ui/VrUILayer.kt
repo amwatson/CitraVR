@@ -50,6 +50,7 @@ abstract class VrUILayer(
             Log.warning("contentView is null")
             return -1
         }
+        // NOTE: this method will only work when the root layout is sized with wrap_content
         contentView.measure(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -126,16 +127,16 @@ abstract class VrUILayer(
         surface: Surface, widthDp: Int,
         heightDp: Int
     ) {
-        val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
+        // Create a virtual display based on the exact dimensions needed for the view
         val displayManager = activity.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         virtualDisplay = displayManager.createVirtualDisplay(
             "CitraVR", widthDp, heightDp, requestedDensity.toInt(), surface,
-            flags
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
         )
         presentation = Presentation(activity.applicationContext, virtualDisplay!!.display).apply {
             window?.setType(WindowManager.LayoutParams.TYPE_PRIVATE_PRESENTATION)
             setContentView(layoutId)
-            // Sets the background to transparent. Remove to set background to black
+            // Sets the background to transparent. Remove to set background to white
             // (useful for catching overrendering)
             window?.setBackgroundDrawable(ColorDrawable(0))
             show()

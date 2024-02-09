@@ -307,6 +307,7 @@ void UILayer::TryCreateSwapchain()
         {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();
+            FAIL("Exception in getBoundsForView()");
         }
         if (ret < 0)
         {
@@ -365,6 +366,7 @@ void UILayer::TryCreateSwapchain()
         {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();
+            FAIL("Exception in setSurface()");
         }
     }
 }

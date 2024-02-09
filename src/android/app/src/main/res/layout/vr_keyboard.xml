@@ -15,6 +15,7 @@ app's packagename and returns information for the wrong window.-->
     android:id="@+id/vr_keyboard"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="@color/citra_surface"
     android:layout_gravity="center"
     android:layout_marginHorizontal="30dp"
     android:gravity="center"

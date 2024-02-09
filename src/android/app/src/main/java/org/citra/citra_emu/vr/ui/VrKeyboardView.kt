@@ -1,8 +1,6 @@
 package org.citra.citra_emu.vr.ui
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.text.InputFilter
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -12,12 +10,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import org.citra.citra_emu.R
 import org.citra.citra_emu.applets.SoftwareKeyboard
 import org.citra.citra_emu.utils.Log
-import org.citra.citra_emu.vr.VrKeyboardActivity
 import java.util.Locale
 
 class VrKeyboardView : LinearLayout {
@@ -31,7 +26,8 @@ class VrKeyboardView : LinearLayout {
     private var mEditText: EditText? = null
     private var mIsShifted = false
     private var mKeyboardTypeCur = KeyboardType.None
-    private var layoutInflater : LayoutInflater? = null
+    private var mLayoutInflator : LayoutInflater? = null
+    private var mConfig : SoftwareKeyboard.KeyboardConfig? = null
 
     constructor(context: Context) : super(context) {
         init(null, 0)
@@ -43,58 +39,55 @@ class VrKeyboardView : LinearLayout {
     }
 
     private fun init(attrs: AttributeSet?, defStyle: Int) {
-        layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        mLayoutInflator = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
 
     }
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        /* val extras = intent.extras
- var config: SoftwareKeyboard.KeyboardConfig? = SoftwareKeyboard.KeyboardConfig()
- if (extras != null) {
-     config = extras.getSerializable(
-         VrKeyboardActivity.EXTRA_KEYBOARD_INPUT_CONFIG
-     ) as SoftwareKeyboard.KeyboardConfig?
- }
- */
         mEditText = findViewById(R.id.vrKeyboardText)
-        /*     mEditText!!.apply {
-                 setHint(config!!.hintText)
-                 setSingleLine(!config.multilineMode)
-                 setFilters(
-                     arrayOf(
-                         SoftwareKeyboard.Filter(),
-                         InputFilter.LengthFilter(config.maxTextLength)
-                     )
-                 )
-                 // Needed to show cursor onscreen.
-                 requestFocus()
-                 WindowCompat.getInsetsController(window, this)
-                     .show(WindowInsetsCompat.Type.ime())
-             }*/
-
-        //  setupResultButtons(config)
         showKeyboardType(KeyboardType.Abc)
+    }
+
+    // Call from UI thread
+    fun setConfig(config: SoftwareKeyboard.KeyboardConfig) {
+        val editText: EditText = findViewById(R.id.vrKeyboardText)
+        assert(editText != null)
+        editText!!.apply {
+            setHint(config!!.hintText)
+            setSingleLine(!config.multilineMode)
+            setFilters(
+                arrayOf(
+                    SoftwareKeyboard.Filter(),
+                    InputFilter.LengthFilter(config.maxTextLength)
+                )
+            )
+            // Needed to show cursor onscreen.
+            requestFocus()
+            // Note: unlike 2D citra, don't need to worry about
+            // window insets as this view is surfaced in its own separate window
+        }
+        setupResultButtons(config)
     }
 
     private fun setupResultButtons(config: SoftwareKeyboard.KeyboardConfig?) {
         // Configure the result buttons
         findViewById<View>(R.id.keyPositive).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-
+                SoftwareKeyboard.onFinishVrKeyboardPositive(mEditText!!.text.toString(), mConfig)
             }
             false
         }
         findViewById<View>(R.id.keyNeutral).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-
+                SoftwareKeyboard.onFinishVrKeyboardNeutral()
             }
             false
         }
         findViewById<View>(R.id.keyNegative).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-
+                SoftwareKeyboard.onFinishVrKeyboardNegative()
             }
             false
         }
@@ -130,12 +123,12 @@ class VrKeyboardView : LinearLayout {
         keyboard.removeAllViews()
         when (keyboardType) {
             KeyboardType.Abc -> {
-                layoutInflater!!.inflate(R.layout.vr_keyboard_abc, keyboard)
+                mLayoutInflator!!.inflate(R.layout.vr_keyboard_abc, keyboard)
                 addLetterKeyHandlersForViewGroup(keyboard, mIsShifted)
             }
 
             KeyboardType.Num -> {
-                layoutInflater!!.inflate(R.layout.vr_keyboard_123, keyboard)
+                mLayoutInflator!!.inflate(R.layout.vr_keyboard_123, keyboard)
                 addLetterKeyHandlersForViewGroup(keyboard, false)
             }
 
@@ -257,10 +250,6 @@ class VrKeyboardView : LinearLayout {
     }
 
     companion object {
-        private const val EXTRA_KEYBOARD_INPUT_CONFIG =
-            "org.citra.citra_emu.vr.KEYBOARD_INPUT_CONFIG"
-        private const val EXTRA_KEYBOARD_RESULT = "org.citra.citra_emu.vr.KEYBOARD_RESULT"
-
         private fun setKeyCaseForViewGroup(viewGroup: ViewGroup, isShifted: Boolean) {
             for (i in 0 until viewGroup.childCount) {
                 val child = viewGroup.getChildAt(i)

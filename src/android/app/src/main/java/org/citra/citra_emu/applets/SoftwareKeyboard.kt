@@ -163,9 +163,9 @@ object SoftwareKeyboard {
             }
         }
     }
-    fun onFinishVrKeyboardPositive(text: String?, config: KeyboardConfig) {
+    fun onFinishVrKeyboardPositive(text: String?, config: KeyboardConfig?) {
         Log.debug("[SoftwareKeyboard] button positive: \"$text\"")
-        data = KeyboardData(config.buttonConfig, text!!)
+        data = KeyboardData(config!!.buttonConfig, text!!)
         val error = ValidateInput(data.text)
         if (error != ValidationError.None) {
             HandleValidationError(config, error)

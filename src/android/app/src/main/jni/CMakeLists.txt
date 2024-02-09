@@ -37,6 +37,7 @@ add_library(citra-android SHARED
     vr/layers/CursorLayer.cpp
     vr/layers/GameSurfaceLayer.cpp
     vr/layers/PassthroughLayer.cpp
+    vr/layers/UILayer.cpp
     vr/utils/JniUtils.cpp
 
 )

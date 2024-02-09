@@ -56,19 +56,26 @@ public:
     bool GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
                                      XrVector2f& result2d, XrPosef& result3d) const;
 
+    /** Returns whether the swapchain is created
+     */
+    bool IsSwapchainCreated() const { return isSwapchainCreated_; }
+
+    /** Creates the swapchain.
+     */
+    void TryCreateSwapchain();
+
+
     void SendClickToUI(const XrVector2f& pos2d, const int type);
 private:
     int Init(const std::string& className, const jobject activityObject, const XrVector3f& position, const XrSession& session);
     void Shutdown();
 
-    /** Creates the swapchain.
-     */
-    void CreateSwapchain();
-
     const XrSession session_;
     Swapchain swapchain_;
 
     XrPosef panelFromWorld_;
+
+    bool isSwapchainCreated_ = false;
 
     //============================
     // JNI objects
@@ -80,6 +87,11 @@ private:
 
     //============================
     // JNI methods
+
+    // Note: if we're using a view within a window as the layer (as opposed to
+    // the decorView representing an entire window, it's important to accont for the
+    // x, y offset of the view within the window, in case there are things like
+    // window decorations or status bars.
     jmethodID getBoundsMethodID_         = nullptr;
     jmethodID sendClickToWindowMethodID_ = nullptr;
 };

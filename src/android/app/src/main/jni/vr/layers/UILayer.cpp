@@ -38,9 +38,10 @@ namespace {
  * corresponding coordinates on the window, it will be as if the user touched
  * the game surface.
  */
-class AndroidWindowSpace {
+class AndroidWindowBounds {
 public:
-    AndroidWindowSpace(const float widthInDp, const float heightInDp)
+    AndroidWindowBounds() = default;
+    AndroidWindowBounds(const float widthInDp, const float heightInDp)
         : leftInDp_(0.0f), rightInDp_(widthInDp), topInDp_(0.0f), bottomInDp_(heightInDp) {}
 
     float Width() const {
@@ -52,6 +53,7 @@ public:
 
     // "DP" refers to display pixels, which are the same as Android's
     // "density-independent pixels" (dp).
+    // Note
     float leftInDp_ = 0;
     float rightInDp_ = 0;
     float topInDp_ = 0;
@@ -70,6 +72,18 @@ public:
         // Android has a flipped vertical axis from OpenXR
         result.y = ((1.0 - point2d.y) * height) + top - (height / 2.0);
     }
+};
+
+
+
+struct BoundsHandle {
+    BoundsHandle(AndroidWindowBounds* _p) : p(_p) {}
+    BoundsHandle(jlong _l) : l(_l) {}
+
+    union {
+        AndroidWindowBounds* p = nullptr;
+        jlong l;
+    };
 };
 
 //-----------------------------------------------------------------------------
@@ -117,11 +131,11 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
         (localStart.x + (localEnd.x - localStart.x) * tan) / (scaleFactor.x),
         (localStart.y + (localEnd.y - localStart.y) * tan) / (scaleFactor.y)};
 
-    const AndroidWindowSpace androidSpace(panelWidth, panelHeight);
-    androidSpace.Transform(result2dNDC, result2d);
+    const AndroidWindowBounds viewBounds(panelWidth, panelHeight);
+    viewBounds.Transform(result2dNDC, result2d);
     const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 &&
-                            result2d.x < androidSpace.Width() && result2d.y < androidSpace.Height();
-    result2d.y += androidSpace.Height();
+                            result2d.x < viewBounds.Width() && result2d.y < viewBounds.Height();
+    result2d.y += viewBounds.Height();
 
     if (!isInBounds) {
         return false;
@@ -198,7 +212,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start, const XrVecto
                                          scale, start, end, result2d, result3d);
 }
 
-// Next error code: -4
+// Next error code: -5
 int32_t UILayer::Init(const std::string& className, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
     vrUILayerClass_ = JniUtils::GetGlobalClassReference(env_, activityObject, className.c_str());
@@ -211,7 +225,10 @@ int32_t UILayer::Init(const std::string& className, const jobject activityObject
     vrUILayerObject_ = env_->NewObject(vrUILayerClass_, vrUILayerConstructor, activityObject);
     BAIL_ON_COND(vrUILayerObject_ == nullptr, "Could not construct java window", -3);
 
-    CreateSwapchain();
+    getBoundsMethodID_ = env_->GetMethodID(vrUILayerClass_, "getBoundsForView", "(J)I");
+    BAIL_ON_COND(getBoundsMethodID_ == nullptr, "could not find getBoundsForView()", -4);
+
+    TryCreateSwapchain();
     return 0;
 }
 
@@ -221,45 +238,61 @@ void UILayer::Shutdown() {
     //    env_->DeleteGlobalRef(vrUILayerClass_);
 }
 
-void UILayer::CreateSwapchain() {
-    // Initialize swapchain
+void UILayer::TryCreateSwapchain() {
+    assert(!isSwapchainCreated_);
 
-    XrSwapchainCreateInfo xsci;
-    memset(&xsci, 0, sizeof(xsci));
-    xsci.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
-    xsci.next = nullptr;
-    xsci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-    xsci.format = 0;
-    xsci.sampleCount = 0;
-    xsci.width = 500;
-    xsci.height = 500;
+    AndroidWindowBounds viewBounds;
+    {
+        const jint ret = env_->CallIntMethod(vrUILayerObject_, getBoundsMethodID_,
+                                             BoundsHandle(&viewBounds).l);
+        if (ret < 0) {
+            ALOGD("getBoundsForView() returned error %d", ret);
+            return;
+        }
+    }
+    // Initialize swapchain.
+    {
+        XrSwapchainCreateInfo swapchainCreateInfo;
+        memset(&swapchainCreateInfo, 0, sizeof(swapchainCreateInfo));
+        swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
+        swapchainCreateInfo.next = nullptr;
+        swapchainCreateInfo.usageFlags =
+            XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchainCreateInfo.format = 0;
+        swapchainCreateInfo.sampleCount = 0;
+        swapchainCreateInfo.width = viewBounds.Width();
+        swapchainCreateInfo.height = viewBounds.Height();
+        swapchainCreateInfo.faceCount = 0;
+        swapchainCreateInfo.arraySize = 0;
+        swapchainCreateInfo.mipCount = 0;
 
-    xsci.faceCount = 0;
-    xsci.arraySize = 0;
-    // Note: you can't have mips when you render directly to a
-    // surface-backed swapchain. You just have to scale everything
-    // so that you do not need them.
-    xsci.mipCount = 0;
+        PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
+        assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
+        XrResult xrResult =
+            xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
+                                  (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
+        if (xrResult != XR_SUCCESS || pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
+            FAIL("xrGetInstanceProcAddr failed for "
+                 "xrCreateSwapchainAndroidSurfaceKHR");
+        }
 
-    ALOGI("UILayer: Creating swapchain of size {}x{}", xsci.width, xsci.height);
+        OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &swapchainCreateInfo, &swapchain_.Handle,
+                                                &surface_));
+        swapchain_.Width = viewBounds.Width();
+        swapchain_.Height = viewBounds.Height();
 
-    PFN_xrCreateSwapchainAndroidSurfaceKHR pfnCreateSwapchainAndroidSurfaceKHR = nullptr;
-    assert(OpenXr::GetInstance() != XR_NULL_HANDLE);
-    XrResult xrResult =
-        xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
-                              (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
-    if (xrResult != XR_SUCCESS || pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
-        FAIL("xrGetInstanceProcAddr failed for "
-             "xrCreateSwapchainAndroidSurfaceKHR");
+        jmethodID setSurfaceMethodId =
+            env_->GetMethodID(vrUILayerClass_, "setSurface", "(Landroid/view/Surface;II)I");
+        if (setSurfaceMethodId == nullptr) {
+            FAIL("Couldn't find setSurface()");
+        }
+        env_->CallIntMethod(vrUILayerObject_, setSurfaceMethodId, surface_,
+                            (int)viewBounds.Width(), (int)viewBounds.Height());
     }
 
-    OXR(pfnCreateSwapchainAndroidSurfaceKHR(session_, &xsci, &swapchain_.Handle, &surface_));
-    swapchain_.Width = xsci.width;
-    swapchain_.Height = xsci.height;
+    isSwapchainCreated_ = true;
 }
 
-void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type)
-{
-    env_->CallIntMethod(vrUILayerObject_, sendClickToWindowMethodID_, pos2d.x,
-                        pos2d.y, type);
+void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
+    env_->CallIntMethod(vrUILayerObject_, sendClickToWindowMethodID_, pos2d.x, pos2d.y, type);
 }

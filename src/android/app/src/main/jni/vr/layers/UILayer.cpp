@@ -215,15 +215,15 @@ void UILayer::Frame(const XrSpace&                   space,
 
     layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
     memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-    layer.subImage.swapchain               = mSwapchain.Handle;
+    layer.subImage.swapchain               = mSwapchain.mHandle;
     layer.subImage.imageRect.offset.x      = 0;
     layer.subImage.imageRect.offset.y      = 0;
-    layer.subImage.imageRect.extent.width  = mSwapchain.Width;
-    layer.subImage.imageRect.extent.height = mSwapchain.Height;
+    layer.subImage.imageRect.extent.width  = mSwapchain.mWidth;
+    layer.subImage.imageRect.extent.height = mSwapchain.mHeight;
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mPanelFromWorld;
     const auto scale =
-        GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
+        GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
     layer.size.width           = scale.x;
     layer.size.height          = scale.y;
     layers[layerCount++].mQuad = layer;
@@ -235,9 +235,9 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                           XrPosef&          result3d) const
 {
     const XrVector2f scale =
-        GetDensityScaleForSize(mSwapchain.Width, mSwapchain.Height, 1.0f);
-    return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.Width,
-                                         mSwapchain.Height, scale, start, end,
+        GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
+    return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.mWidth,
+                                         mSwapchain.mHeight, scale, start, end,
                                          result2d, result3d);
 }
 
@@ -271,7 +271,7 @@ int32_t UILayer::Init(const std::string& className,
 
 void UILayer::Shutdown()
 {
-    xrDestroySwapchain(mSwapchain.Handle);
+    xrDestroySwapchain(mSwapchain.mHandle);
     // This currently causes a memory exception
     //    mEnv->DeleteGlobalRef(mVrUILayerClass);
 }
@@ -320,10 +320,10 @@ void UILayer::TryCreateSwapchain()
                  "xrCreateSwapchainAndroidSurfaceKHR");
         }
 
-        OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &swapchainCreateInfo,
-                                                &mSwapchain.Handle, &mSurface));
-        mSwapchain.Width  = viewBounds.Width();
-        mSwapchain.Height = viewBounds.Height();
+        OXR(pfnCreateSwapchainAndroidSurfaceKHR(
+            mSession, &swapchainCreateInfo, &mSwapchain.mHandle, &mSurface));
+        mSwapchain.mWidth  = viewBounds.Width();
+        mSwapchain.mHeight = viewBounds.Height();
 
         jmethodID setSurfaceMethodId = mEnv->GetMethodID(
             mVrUILayerClass, "setSurface", "(Landroid/view/Surface;II)I");

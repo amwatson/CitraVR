@@ -58,11 +58,11 @@ Swapchain CreateSwapchain(const XrSession& session)
     swapChainCreateInfo.arraySize   = 1;
     swapChainCreateInfo.mipCount    = 1;
 
-    swapchain.Width  = swapChainCreateInfo.width;
-    swapchain.Height = swapChainCreateInfo.height;
+    swapchain.mWidth  = swapChainCreateInfo.width;
+    swapchain.mHeight = swapChainCreateInfo.height;
 
     // Create the swapchain.
-    OXR(xrCreateSwapchain(session, &swapChainCreateInfo, &swapchain.Handle));
+    OXR(xrCreateSwapchain(session, &swapChainCreateInfo, &swapchain.mHandle));
     return swapchain;
 }
 
@@ -205,16 +205,16 @@ CursorLayer::CursorImage::CursorImage(const XrSession& session,
                                       const uint8_t    colorRGB[3])
 {
     mSwapchain       = CreateSwapchain(session);
-    mSwapchainImages = CreateSwapchainImages(session, mSwapchain.Handle);
+    mSwapchainImages = CreateSwapchainImages(session, mSwapchain.mHandle);
 
-    GenerateCursorImage(mSwapchain.Handle, mSwapchainImages, colorRGB);
+    GenerateCursorImage(mSwapchain.mHandle, mSwapchainImages, colorRGB);
 }
 
 CursorLayer::CursorImage::~CursorImage()
 {
-    if (mSwapchain.Handle != XR_NULL_HANDLE)
+    if (mSwapchain.mHandle != XR_NULL_HANDLE)
     {
-        xrDestroySwapchain(mSwapchain.Handle);
+        xrDestroySwapchain(mSwapchain.mHandle);
     }
     // destroy images.
     for (size_t i = 0; i < mSwapchainImages.size(); i++)
@@ -244,13 +244,13 @@ void CursorLayer::Frame(const XrSpace& space, XrCompositionLayerQuad& layer,
 
     const auto& swapchain =
         mCursorImages.at(static_cast<size_t>(cursorType)).GetSwapchain();
-    layer.subImage.swapchain               = swapchain.Handle;
+    layer.subImage.swapchain               = swapchain.mHandle;
     layer.subImage.imageRect.offset.x      = 0;
     layer.subImage.imageRect.offset.y      = 0;
-    layer.subImage.imageRect.extent.width  = swapchain.Width;
-    layer.subImage.imageRect.extent.height = swapchain.Height;
+    layer.subImage.imageRect.extent.width  = swapchain.mWidth;
+    layer.subImage.imageRect.extent.height = swapchain.mHeight;
     layer.size.width                       = scaleFactor;
-    layer.size.height = layer.size.width * swapchain.Height / swapchain.Width;
+    layer.size.height = layer.size.width * swapchain.mHeight / swapchain.mWidth;
     layer.subImage.imageArrayIndex = 0;
     layer.pose                     = cursorPose;
 }

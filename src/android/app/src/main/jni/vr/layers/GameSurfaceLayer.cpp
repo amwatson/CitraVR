@@ -299,8 +299,8 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
                              uint32_t&                        layerCount) const
 
 {
-    const uint32_t panelWidth  = mSwapchain.Width / 2;
-    const uint32_t panelHeight = mSwapchain.Height / 2;
+    const uint32_t panelWidth  = mSwapchain.mWidth / 2;
+    const uint32_t panelHeight = mSwapchain.mHeight / 2;
     const double   aspectRatio =
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
     // Prevent a seam between the top and bottom view
@@ -328,7 +328,7 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
             layer.eyeVisibility =
                 eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-            layer.subImage.swapchain              = mSwapchain.Handle;
+            layer.subImage.swapchain              = mSwapchain.mHandle;
             layer.subImage.imageRect.offset.x     = eye == 0 ? 0 : panelWidth;
             layer.subImage.imageRect.offset.y     = 0;
             layer.subImage.imageRect.extent.width = panelWidth;
@@ -374,7 +374,7 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
             layer.eyeVisibility =
                 eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-            layer.subImage.swapchain = mSwapchain.Handle;
+            layer.subImage.swapchain = mSwapchain.mHandle;
             layer.subImage.imageRect.offset.x =
                 (eye == 0 ? 0 : panelWidth) + cropHoriz / 2;
             layer.subImage.imageRect.offset.y     = 0;
@@ -415,7 +415,7 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
 
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-        layer.subImage.swapchain = mSwapchain.Handle;
+        layer.subImage.swapchain = mSwapchain.mHandle;
         layer.subImage.imageRect.offset.x =
             (cropHoriz / 2) / immersiveLevelFactor[mImmersiveMode] +
             panelWidth * (0.5f - (0.5f / immersiveLevelFactor[mImmersiveMode]));
@@ -445,8 +445,8 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(
     XrPosef&          result3d) const
 
 {
-    const uint32_t panelWidth  = mSwapchain.Width / 2;
-    const uint32_t panelHeight = mSwapchain.Height / 2;
+    const uint32_t panelWidth  = mSwapchain.mWidth / 2;
+    const uint32_t panelHeight = mSwapchain.mHeight / 2;
     const auto     scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f,
                                                   mResolutionFactor);
     return ::GetRayIntersectionWithPanel(mTopPanelFromWorld, panelWidth,
@@ -459,8 +459,8 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                                    XrVector2f&       result2d,
                                                    XrPosef& result3d) const
 {
-    const uint32_t   panelWidth  = mSwapchain.Width / 2;
-    const uint32_t   panelHeight = mSwapchain.Height / 2;
+    const uint32_t   panelWidth  = mSwapchain.mWidth / 2;
+    const uint32_t   panelHeight = mSwapchain.mHeight / 2;
     const XrVector2f scale       = GetDensityScaleForSize(
               panelWidth, panelHeight, lowerPanelScaleFactor, mResolutionFactor);
     return ::GetRayIntersectionWithPanel(mLowerPanelFromWorld, panelWidth,
@@ -525,7 +525,7 @@ int32_t GameSurfaceLayer::Init(const jobject     activityObject,
 
 void GameSurfaceLayer::Shutdown()
 {
-    xrDestroySwapchain(mSwapchain.Handle);
+    xrDestroySwapchain(mSwapchain.mHandle);
     // This currently causes a memory exception
     //    mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
 }
@@ -570,8 +570,8 @@ void GameSurfaceLayer::CreateSwapchain()
              "xrCreateSwapchainAndroidSurfaceKHR");
     }
 
-    OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &xsci, &mSwapchain.Handle,
-                                            &mSurface));
-    mSwapchain.Width  = xsci.width;
-    mSwapchain.Height = xsci.height;
+    OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &xsci,
+                                            &mSwapchain.mHandle, &mSurface));
+    mSwapchain.mWidth  = xsci.width;
+    mSwapchain.mHeight = xsci.height;
 }

@@ -39,7 +39,7 @@ add_library(citra-android SHARED
     vr/layers/PassthroughLayer.cpp
     vr/layers/UILayer.cpp
     vr/utils/JniUtils.cpp
-
+    vr/utils/MessageQueue.cpp
 )
 
 target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network)

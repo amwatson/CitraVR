@@ -95,7 +95,7 @@ private:
     // the decorView representing an entire window, it's important to accont for
     // the x, y offset of the view within the window, in case there are things
     // like window decorations or status bars.
-    jmethodID mGetBoundsMethodID         = nullptr;
+    jmethodID mGetBoundsMethodID     = nullptr;
     jmethodID mSendClickToUIMethodID = nullptr;
-    jmethodID mSetSurfaceMethodId        = nullptr;
+    jmethodID mSetSurfaceMethodId    = nullptr;
 };

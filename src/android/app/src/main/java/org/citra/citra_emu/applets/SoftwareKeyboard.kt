@@ -13,6 +13,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.fragments.KeyboardDialogFragment
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.utils.VrMessageQueue
 import java.io.Serializable
 
 
@@ -63,9 +64,8 @@ object SoftwareKeyboard {
 
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         if (emulationActivity is VrActivity) {
-            Log.debug("Starting keyboard: VR")
-            data = KeyboardData(0, "")
-            emulationActivity.mVrKeyboardLauncher.launch(config)
+            // Show keyboard
+          VrMessageQueue.post(VrMessageQueue.MessageType.SHOW_KEYBOARD, 1)
         } else {
             Log.debug("Starting keyboard: non-VR")
             NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
@@ -79,6 +79,10 @@ object SoftwareKeyboard {
                 finishLock.wait()
             } catch (ignored: Exception) {
             }
+        }
+        // Hide keyboard
+        if (emulationActivity is VrActivity) {
+            VrMessageQueue.post(VrMessageQueue.MessageType.SHOW_KEYBOARD, 0)
         }
         return data
     }

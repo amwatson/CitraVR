@@ -21,6 +21,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "vr_settings.h"
 
 #include "utils/Common.h"
+#include "utils/MessageQueue.h"
 #include "utils/SyspropUtils.h"
 #include "utils/XrMath.h"
 
@@ -81,6 +82,7 @@ constexpr XrPerfSettingsLevelEXT kGpuPerfLevel =
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::atomic<bool>       gShouldShowErrorMessage = {false};
 std::unique_ptr<OpenXr> gOpenXr;
+MessageQueue            gMessageQueue;
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID      forwardVRInputMethodID,
@@ -278,7 +280,7 @@ public:
             jni, mActivityObject, gOpenXr->mSession);
 #endif
 
-        mUILayer = std::make_unique<UILayer>(
+        mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer",
             XrVector3f{0, 0.0f, -1.5f}, jni, mActivityObject,
             gOpenXr->mSession);
@@ -342,6 +344,7 @@ private:
     void Frame(JNIEnv* jni)
     {
         PollEvents();
+        HandleMessageQueueEvents();
         if (mIsStopRequested) { return; }
         if (!mIsXrSessionActive)
         {
@@ -523,7 +526,10 @@ private:
             }
         }
 
-        if (!mUILayer->IsSwapchainCreated()) { mUILayer->TryCreateSwapchain(); }
+        if (!mKeyboardLayer->IsSwapchainCreated())
+        {
+            mKeyboardLayer->TryCreateSwapchain();
+        }
 
         ////////////////////////////////
         // XrWaitFrame()
@@ -613,10 +619,10 @@ private:
             layers[layerCount++].Quad = quadLayer;
         }
 #endif
-        if (mUILayer->IsSwapchainCreated())
+        if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive)
         {
 
-            mUILayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+            mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
         }
 
         {
@@ -663,14 +669,15 @@ private:
                                 .mHandPositions[mInputStateFrame.mPreferredHand]
                                 .pose,
                             XrVector3f{0, 0, -3.5f});
-                        if (true)
+                        if (mKeyboardLayer->IsSwapchainCreated() &&
+                            mIsKeyboardActive)
                         {
                             shouldRenderCursor =
-                                mUILayer->GetRayIntersectionWithPanel(
+                                mKeyboardLayer->GetRayIntersectionWithPanel(
                                     start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync)
                             {
-                                mUILayer->SendClickToUI(
+                                mKeyboardLayer->SendClickToUI(
                                     cursorPos2d, triggerState.currentState);
                             }
                         }
@@ -1025,6 +1032,44 @@ private:
         }
     }
 
+    void HandleMessageQueueEvents()
+    {
+        // Arbitrary limit to prevent the render thread from blocking too long
+        // on a single frame. This may happen if the app is paused in an edge
+        // case. We should try to avoid these cases as it will result in a
+        // glitchy UX.
+        constexpr size_t kMaxNumMessagesPerFrame = 20;
+
+        size_t  numMessagesHandled = 0;
+        Message message;
+        while (numMessagesHandled < kMaxNumMessagesPerFrame)
+        {
+            if (!gMessageQueue.Poll(message)) { break; }
+            numMessagesHandled++;
+
+            switch (message.mType)
+            {
+                case Message::Type::SHOW_KEYBOARD:
+                {
+                    const bool shouldShowKeyboard = message.mPayload == 1;
+                    if (shouldShowKeyboard != mIsKeyboardActive)
+                    {
+                        ALOGD("Keyboard status changed: {} -> {}",
+                              mIsKeyboardActive, shouldShowKeyboard);
+                    }
+                    mIsKeyboardActive = shouldShowKeyboard;
+
+                    ALOGI("Received SHOW_KEYBOARD message");
+                    break;
+                }
+
+                default:
+                    ALOGE("Unknown message type: %d", message.mType);
+                    break;
+            }
+        }
+    }
+
     uint64_t                     mFrameIndex = 0;
     std::thread                  mThread;
     JNIEnv*                      mEnv;
@@ -1033,13 +1078,14 @@ private:
     std::atomic<bool>            mIsStopRequested   = {false};
     bool                         mIsXrSessionActive = false;
     bool                         mHasFocus          = false;
+    bool                         mIsKeyboardActive  = false;
     std::unique_ptr<CursorLayer> mCursorLayer;
 #if defined(UI_LAYER)
     std::unique_ptr<UILayer> mErrorMessageLayer;
 #endif
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
-    std::unique_ptr<UILayer>          mUILayer;
+    std::unique_ptr<UILayer>          mKeyboardLayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame                   mInputStateFrame;
@@ -1120,4 +1166,16 @@ Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(
     const VRSettings::HMDType hmdType =
         VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_citra_citra_1emu_vr_utils_VrMessageQueue_nativePost(JNIEnv* env,
+                                                             jobject thiz,
+                                                             jint  message_type,
+                                                             jlong payload)
+{
+    ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type,
+          payload);
+    gMessageQueue.Post(
+        Message(static_cast<Message::Type>(message_type), payload));
 }

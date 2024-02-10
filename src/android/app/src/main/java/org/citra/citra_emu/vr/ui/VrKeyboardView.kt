@@ -47,6 +47,7 @@ class VrKeyboardView : LinearLayout {
     override fun onFinishInflate() {
         super.onFinishInflate()
         mEditText = findViewById(R.id.vrKeyboardText)
+        setConfig(SoftwareKeyboard.sConfig)
         showKeyboardType(KeyboardType.Abc)
     }
 
@@ -54,7 +55,7 @@ class VrKeyboardView : LinearLayout {
     fun setConfig(config: SoftwareKeyboard.KeyboardConfig) {
         val editText: EditText = findViewById(R.id.vrKeyboardText)
         assert(editText != null)
-        editText!!.apply {
+       /* editText!!.apply {
             setHint(config!!.hintText)
             setSingleLine(!config.multilineMode)
             setFilters(
@@ -63,12 +64,9 @@ class VrKeyboardView : LinearLayout {
                     InputFilter.LengthFilter(config.maxTextLength)
                 )
             )
-            // Needed to show cursor onscreen.
-            requestFocus()
-            // Note: unlike 2D citra, don't need to worry about
-            // window insets as this view is surfaced in its own separate window
-        }
+        }*/
         setupResultButtons(config)
+        mConfig = config
     }
 
     private fun setupResultButtons(config: SoftwareKeyboard.KeyboardConfig?) {

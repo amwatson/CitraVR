@@ -21,13 +21,13 @@ app's packagename and returns information for the wrong window.-->
     android:gravity="center"
     android:orientation="vertical"
     android:paddingTop="40dp"
-    android:theme="@style/Theme.Citra.Main">
+    android:theme="@style/ThemeOverlay.Citra.Dark">
 
 
     <EditText
         android:id="@+id/vrKeyboardText"
         style="@style/VrKeyboardEditText"
-        android:layout_width="700dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:focusable="true"
@@ -36,7 +36,7 @@ app's packagename and returns information for the wrong window.-->
 
     <LinearLayout
         android:id="@+id/vr_keyboard_keyboard"
-        android:layout_width="match_parent"
+        android:layout_width="700dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 

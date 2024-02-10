@@ -28,8 +28,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <stdlib.h>
 
-namespace
-{
+namespace {
 
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
@@ -39,17 +38,14 @@ namespace
  * corresponding coordinates on the window, it will be as if the user touched
  * the game surface.
  */
-class AndroidWindowBounds
-{
+class AndroidWindowBounds {
 public:
     AndroidWindowBounds() = default;
     AndroidWindowBounds(const float widthInDp, const float heightInDp)
         : mLeftInDp(0.0f)
         , mRightInDp(widthInDp)
         , mTopInDp(0.0f)
-        , mBottomInDp(heightInDp)
-    {
-    }
+        , mBottomInDp(heightInDp) {}
 
     float Width() const { return mRightInDp - mLeftInDp; }
     float Height() const { return mBottomInDp - mTopInDp; }
@@ -64,8 +60,7 @@ public:
 
     // given a 2D point in worldspace 'point2d', returns the transformed
     // coordinate in DP, written to 'result'
-    void Transform(const XrVector2f& point2d, XrVector2f& result) const
-    {
+    void Transform(const XrVector2f& point2d, XrVector2f& result) const {
         const float left = mLeftInDp;
         const float top  = mTopInDp;
 
@@ -78,19 +73,13 @@ public:
     }
 };
 
-struct BoundsHandle
-{
+struct BoundsHandle {
     BoundsHandle(AndroidWindowBounds* _p)
-        : p(_p)
-    {
-    }
+        : p(_p) {}
     BoundsHandle(jlong _l)
-        : l(_l)
-    {
-    }
+        : l(_l) {}
 
-    union
-    {
+    union {
         AndroidWindowBounds* p = nullptr;
         jlong                l;
     };
@@ -101,8 +90,7 @@ struct BoundsHandle
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_ui_VrUILayer_00024Companion_nativeSetBounds(
     JNIEnv* env, jobject thiz, jlong handle, jint left, jint top, jint right,
-    jint bottom)
-{
+    jint bottom) {
     AndroidWindowBounds* b = BoundsHandle(handle).p;
     b->mLeftInDp           = left;
     b->mTopInDp            = top;
@@ -116,14 +104,13 @@ Java_org_citra_citra_1emu_vr_ui_VrUILayer_00024Companion_nativeSetBounds(
 static constexpr std::chrono::milliseconds kMinTimeBetweenChecks(500);
 
 // Get density on an interval
-float GetDensitySysprop()
-{
+float GetDensitySysprop() {
     const float  kDefaultDensity = 1200;
     static float lastDensity     = kDefaultDensity;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
-    {
+    if ((std::chrono::steady_clock::now() - lastTime) >=
+        kMinTimeBetweenChecks) {
         lastTime    = std::chrono::steady_clock::now();
         lastDensity = SyspropUtils::GetSysPropAsFloat("debug.citra.density",
                                                       kDefaultDensity);
@@ -150,8 +137,7 @@ bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
     const float tan = localStart.z / (localStart.z - localEnd.z);
 
     // Check for backwards controller
-    if (tan < 0)
-    {
+    if (tan < 0) {
         ALOGD("Backwards controller");
         return false;
     }
@@ -175,8 +161,7 @@ bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
 // Uses a density for scaling and sets aspect ratio
 XrVector2f GetDensityScaleForSize(const int32_t texWidth,
                                   const int32_t texHeight,
-                                  const float   scaleFactor)
-{
+                                  const float   scaleFactor) {
     const float density = GetDensitySysprop();
     return XrVector2f{static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
@@ -196,8 +181,7 @@ UILayer::UILayer(const std::string& className, const XrVector3f&& position,
 {
     const int32_t initializationStatus =
         Init(className, activityObject, position, session);
-    if (initializationStatus < 0)
-    {
+    if (initializationStatus < 0) {
         FAIL("Could not initialize UILayer -- error '%d'",
              initializationStatus);
     }
@@ -240,8 +224,7 @@ void UILayer::Frame(const XrSpace&                   space,
 bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                           const XrVector3f& end,
                                           XrVector2f&       result2d,
-                                          XrPosef&          result3d) const
-{
+                                          XrPosef&          result3d) const {
     const XrVector2f scale =
         GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
     return ::GetRayIntersectionWithPanel(mPanelFromWorld, mSwapchain.mWidth,
@@ -252,8 +235,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 // Next error code: -7
 int32_t UILayer::Init(const std::string& className,
                       const jobject activityObject, const XrVector3f& position,
-                      const XrSession& session)
-{
+                      const XrSession& session) {
     mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject,
                                                         className.c_str());
     BAIL_ON_COND(mVrUILayerClass == nullptr, "No java UI Layer class", -1);
@@ -286,14 +268,12 @@ int32_t UILayer::Init(const std::string& className,
     return 0;
 }
 
-void UILayer::Shutdown()
-{
+void UILayer::Shutdown() {
     xrDestroySwapchain(mSwapchain.mHandle);
     mEnv->DeleteGlobalRef(mVrUILayerClass);
 }
 
-void UILayer::TryCreateSwapchain()
-{
+void UILayer::TryCreateSwapchain() {
     assert(!mIsSwapchainCreated);
 
     AndroidWindowBounds viewBounds;
@@ -302,19 +282,16 @@ void UILayer::TryCreateSwapchain()
         const jint ret = mEnv->CallIntMethod(
             mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
         // Check for exceptions (and log them).
-        if (mEnv->ExceptionCheck())
-        {
+        if (mEnv->ExceptionCheck()) {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();
             FAIL("Exception in getBoundsForView()");
         }
-        if (ret < 0)
-        {
+        if (ret < 0) {
             ALOGE("{}() returned error {}", __FUNCTION__, ret);
             return;
         }
-        if (viewBounds.Width() == 0 || viewBounds.Height() == 0)
-        {
+        if (viewBounds.Width() == 0 || viewBounds.Height() == 0) {
             ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__,
                   viewBounds.Width(), viewBounds.Height());
             return;
@@ -344,8 +321,7 @@ void UILayer::TryCreateSwapchain()
             OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
             (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
         if (xrResult != XR_SUCCESS ||
-            pfnCreateSwapchainAndroidSurfaceKHR == nullptr)
-        {
+            pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
             FAIL("xrGetInstanceProcAddr failed for "
                  "xrCreateSwapchainAndroidSurfaceKHR");
         }
@@ -361,8 +337,7 @@ void UILayer::TryCreateSwapchain()
 
         mEnv->CallIntMethod(mVrUILayerObject, mSetSurfaceMethodId, mSurface,
                             (int)viewBounds.Width(), (int)viewBounds.Height());
-        if (mEnv->ExceptionCheck())
-        {
+        if (mEnv->ExceptionCheck()) {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();
             FAIL("Exception in setSurface()");
@@ -370,8 +345,7 @@ void UILayer::TryCreateSwapchain()
     }
 }
 
-void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type)
-{
+void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
     mEnv->CallIntMethod(mVrUILayerObject, mSendClickToUIMethodID, pos2d.x,
                         pos2d.y, type);
 }

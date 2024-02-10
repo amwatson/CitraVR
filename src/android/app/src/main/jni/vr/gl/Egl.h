@@ -16,8 +16,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 
-class EglContext
-{
+class EglContext {
 
 public:
     EglContext();

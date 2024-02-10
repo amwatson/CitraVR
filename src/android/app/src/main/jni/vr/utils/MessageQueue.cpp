@@ -13,20 +13,17 @@ License     :   Licensed under GPLv3 or any later version.
 #include <jni.h>
 #include <stdlib.h>
 
-MessageQueue::~MessageQueue()
-{
+MessageQueue::~MessageQueue() {
     std::unique_lock<std::mutex> lock(mQueueMutex);
     mQueue = std::queue<Message>();
 }
 
-void MessageQueue::Post(const Message& message)
-{
+void MessageQueue::Post(const Message& message) {
     std::unique_lock<std::mutex> lock(mQueueMutex);
     mQueue.push(message);
 }
 
-bool MessageQueue::Poll(Message& message)
-{
+bool MessageQueue::Poll(Message& message) {
     std::unique_lock<std::mutex> lock(mQueueMutex);
     if (mQueue.empty()) { return false; }
     message = mQueue.front();

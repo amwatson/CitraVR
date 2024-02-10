@@ -12,13 +12,10 @@ License     :   Licensed under GPLv3 or any later version.
 #include "Egl.h"
 #include "../utils/LogUtils.h"
 
-namespace
-{
+namespace {
 
-const char* EglErrorToStr(const EGLint error)
-{
-    switch (error)
-    {
+const char* EglErrorToStr(const EGLint error) {
+    switch (error) {
         case EGL_SUCCESS:
             return "EGL_SUCCESS";
         case EGL_NOT_INITIALIZED:
@@ -55,8 +52,7 @@ const char* EglErrorToStr(const EGLint error)
 }
 } // anonymous namespace
 
-EglContext::EglContext()
-{
+EglContext::EglContext() {
 
     const int32_t ret = Init();
     if (ret < 0) { FAIL("EglContext::EglContext() failed: ret=%d", ret); }
@@ -65,11 +61,9 @@ EglContext::EglContext()
 EglContext::~EglContext() { Shutdown(); }
 
 // next return code: -7
-int32_t EglContext::Init()
-{
+int32_t EglContext::Init() {
     mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (mDisplay == EGL_NO_DISPLAY)
-    {
+    if (mDisplay == EGL_NO_DISPLAY) {
         ALOGE("        eglGetDisplay() failed: {}",
               EglErrorToStr(eglGetError()));
         return -1;
@@ -78,8 +72,8 @@ int32_t EglContext::Init()
         ALOGV("        eglInitialize(mDisplay, &MajorVersion, &MinorVersion)");
         EGLint majorVersion = 0;
         EGLint minorVersion = 0;
-        if (eglInitialize(mDisplay, &majorVersion, &minorVersion) == EGL_FALSE)
-        {
+        if (eglInitialize(mDisplay, &majorVersion, &minorVersion) ==
+            EGL_FALSE) {
             ALOGE("        eglInitialize() failed: {}",
                   EglErrorToStr(eglGetError()));
             return -2;
@@ -104,8 +98,7 @@ int32_t EglContext::Init()
         EGL_NONE};
 
     if (eglChooseConfig(mDisplay, configAttribs, &mConfig, 1, &numConfigs) ==
-        EGL_FALSE)
-    {
+        EGL_FALSE) {
         ALOGE("        eglChooseConfig() failed: {}",
               EglErrorToStr(eglGetError()));
         return -3;
@@ -154,8 +147,7 @@ int32_t EglContext::Init()
           "contextAttribs)");
     mContext =
         eglCreateContext(mDisplay, mConfig, EGL_NO_CONTEXT, contextAttribs);
-    if (mContext == EGL_NO_CONTEXT)
-    {
+    if (mContext == EGL_NO_CONTEXT) {
         ALOGE("        eglCreateContext() failed: {}",
               EglErrorToStr(eglGetError()));
         return -4;
@@ -164,8 +156,7 @@ int32_t EglContext::Init()
     ALOGV("        mDummySurface = eglCreatePbufferSurface(mDisplay, mConfig, "
           "surfaceAttribs)");
     mDummySurface = eglCreatePbufferSurface(mDisplay, mConfig, surfaceAttribs);
-    if (mDummySurface == EGL_NO_SURFACE)
-    {
+    if (mDummySurface == EGL_NO_SURFACE) {
         ALOGE("        eglCreatePbufferSurface() failed: {}",
               EglErrorToStr(eglGetError()));
         eglDestroyContext(mDisplay, mContext);
@@ -175,8 +166,7 @@ int32_t EglContext::Init()
     ALOGV("        eglMakeCurrent(mDisplay, mDummySurface, mDummySurface, "
           "mContext)");
     if (eglMakeCurrent(mDisplay, mDummySurface, mDummySurface, mContext) ==
-        EGL_FALSE)
-    {
+        EGL_FALSE) {
         ALOGE("        eglMakeCurrent() failed: {}",
               EglErrorToStr(eglGetError()));
         eglDestroySurface(mDisplay, mDummySurface);
@@ -188,10 +178,8 @@ int32_t EglContext::Init()
     return 0;
 }
 
-void EglContext::Shutdown()
-{
-    if (mContext != EGL_NO_CONTEXT)
-    {
+void EglContext::Shutdown() {
+    if (mContext != EGL_NO_CONTEXT) {
         ALOGV(
             "        eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, "
             "EGL_NO_CONTEXT)");
@@ -203,8 +191,7 @@ void EglContext::Shutdown()
         eglDestroyContext(mDisplay, mContext);
         mContext = EGL_NO_CONTEXT;
     }
-    if (mDisplay != EGL_NO_DISPLAY)
-    {
+    if (mDisplay != EGL_NO_DISPLAY) {
         ALOGV("        eglTerminate(mDisplay)");
         eglTerminate(mDisplay);
         mDisplay = EGL_NO_DISPLAY;

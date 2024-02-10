@@ -22,23 +22,15 @@ License     :   Licensed under GPLv3 or any later version.
  * Optionally contains a payload, which is interpreted based on the message
  * type.
  */
-struct Message
-{
-    enum Type
-    {
-        SHOW_KEYBOARD = 0
-    };
+struct Message {
+    enum Type { SHOW_KEYBOARD = 0 };
 
     Message() {}
     Message(const Type type)
-        : mType(type)
-    {
-    }
+        : mType(type) {}
     Message(const Type type, const uint64_t payload)
         : mType(type)
-        , mPayload(payload)
-    {
-    }
+        , mPayload(payload) {}
 
     Type     mType;
     uint64_t mPayload;
@@ -47,8 +39,7 @@ struct Message
 /**
  * Message queue class
  */
-class MessageQueue
-{
+class MessageQueue {
 public:
     MessageQueue() = default;
     ~MessageQueue();

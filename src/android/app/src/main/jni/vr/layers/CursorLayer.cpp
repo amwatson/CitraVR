@@ -14,8 +14,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "../utils/LogUtils.h"
 #include "../utils/XrMath.h"
 
-namespace
-{
+namespace {
 
 constexpr uint32_t CURSOR_WIDTH        = 16;
 constexpr uint32_t CURSOR_HEIGHT       = CURSOR_WIDTH;
@@ -41,8 +40,7 @@ typedef std::array<uint8_t, CURSOR_WIDTH * CURSOR_HEIGHT * 4> CursorBuffer;
 #warning "CursorLayer.cpp is designed to be compiled with C++17 or later."
 #endif
 
-Swapchain CreateSwapchain(const XrSession& session)
-{
+Swapchain CreateSwapchain(const XrSession& session) {
     Swapchain             swapchain;
     XrSwapchainCreateInfo swapChainCreateInfo;
     memset(&swapChainCreateInfo, 0, sizeof(swapChainCreateInfo));
@@ -67,15 +65,14 @@ Swapchain CreateSwapchain(const XrSession& session)
 }
 
 std::vector<XrSwapchainImageOpenGLESKHR>
-CreateSwapchainImages(const XrSession& session, const XrSwapchain& xrSwapchain)
-{
+CreateSwapchainImages(const XrSession&   session,
+                      const XrSwapchain& xrSwapchain) {
     uint32_t length;
     OXR(xrEnumerateSwapchainImages(xrSwapchain, 0, &length, NULL));
 
     std::vector<XrSwapchainImageOpenGLESKHR> images =
         std::vector<XrSwapchainImageOpenGLESKHR>(length);
-    for (size_t i = 0; i < images.size(); i++)
-    {
+    for (size_t i = 0; i < images.size(); i++) {
         images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
         images[i].next = NULL;
     }
@@ -85,8 +82,7 @@ CreateSwapchainImages(const XrSession& session, const XrSwapchain& xrSwapchain)
     return images;
 }
 
-CursorBuffer CreateSuperSampledCursorBuffer(const uint8_t colorRGB[3])
-{
+CursorBuffer CreateSuperSampledCursorBuffer(const uint8_t colorRGB[3]) {
     constexpr uint32_t SUPER_WIDTH  = CURSOR_WIDTH * SUPER_SAMPLE_FACTOR;
     constexpr uint32_t SUPER_HEIGHT = CURSOR_HEIGHT * SUPER_SAMPLE_FACTOR;
     uint8_t            superCursorData[SUPER_WIDTH * SUPER_HEIGHT * 4];
@@ -100,33 +96,27 @@ CursorBuffer CreateSuperSampledCursorBuffer(const uint8_t colorRGB[3])
         constexpr uint32_t superOutlineThickness =
             OUTLINE_THICKNESS * SUPER_SAMPLE_FACTOR;
 
-        for (uint32_t y = 0; y < SUPER_HEIGHT; y++)
-        {
-            for (uint32_t x = 0; x < SUPER_WIDTH; x++)
-            {
+        for (uint32_t y = 0; y < SUPER_HEIGHT; y++) {
+            for (uint32_t x = 0; x < SUPER_WIDTH; x++) {
                 const uint32_t index           = (y * SUPER_WIDTH + x) * 4;
                 const int32_t  dx              = x - superCenterX;
                 const int32_t  dy              = y - superCenterY;
                 const uint32_t distanceSquared = dx * dx + dy * dy;
 
                 if (distanceSquared < (superRadius * superRadius) &&
-                    distanceSquared >= ((superRadius - superOutlineThickness) *
-                                        (superRadius - superOutlineThickness)))
-                {
+                    distanceSquared >=
+                        ((superRadius - superOutlineThickness) *
+                         (superRadius - superOutlineThickness))) {
                     // Pixel is part of the outline.
                     memcpy(&superCursorData[index], OUTLINE_COLOR_RGB, 3);
                     superCursorData[index + 3] = CURSOR_ALPHA;
-                }
-                else if (distanceSquared <
-                         ((superRadius - superOutlineThickness) *
-                          (superRadius - superOutlineThickness)))
-                {
+                } else if (distanceSquared <
+                           ((superRadius - superOutlineThickness) *
+                            (superRadius - superOutlineThickness))) {
                     // Pixel is inside the circle.
                     memcpy(&superCursorData[index], colorRGB, 3);
                     superCursorData[index + 3] = CURSOR_ALPHA;
-                }
-                else
-                {
+                } else {
                     // Pixel is outside the circle (transparent).
                     memset(&superCursorData[index], 0, 4);
                 }
@@ -136,17 +126,13 @@ CursorBuffer CreateSuperSampledCursorBuffer(const uint8_t colorRGB[3])
 
     CursorBuffer cursorData;
     // Downsample to the final image.
-    for (uint32_t y = 0; y < CURSOR_HEIGHT; y++)
-    {
-        for (uint32_t x = 0; x < CURSOR_WIDTH; x++)
-        {
+    for (uint32_t y = 0; y < CURSOR_HEIGHT; y++) {
+        for (uint32_t x = 0; x < CURSOR_WIDTH; x++) {
             uint32_t index = (y * CURSOR_WIDTH + x) * 4;
             uint32_t r = 0, g = 0, b = 0, a = 0;
 
-            for (uint32_t dy = 0; dy < SUPER_SAMPLE_FACTOR; dy++)
-            {
-                for (uint32_t dx = 0; dx < SUPER_SAMPLE_FACTOR; dx++)
-                {
+            for (uint32_t dy = 0; dy < SUPER_SAMPLE_FACTOR; dy++) {
+                for (uint32_t dx = 0; dx < SUPER_SAMPLE_FACTOR; dx++) {
                     const uint32_t superIndex =
                         ((y * SUPER_SAMPLE_FACTOR + dy) * SUPER_WIDTH +
                          (x * SUPER_SAMPLE_FACTOR + dx)) *
@@ -173,8 +159,7 @@ CursorBuffer CreateSuperSampledCursorBuffer(const uint8_t colorRGB[3])
 void GenerateCursorImage(
     const XrSwapchain&                              xrSwapchain,
     const std::vector<XrSwapchainImageOpenGLESKHR>& xrImages,
-    const uint8_t                                   colorRGB[3])
-{
+    const uint8_t                                   colorRGB[3]) {
     const CursorBuffer cursorData = CreateSuperSampledCursorBuffer(colorRGB);
 
     uint32_t                    index       = 0;
@@ -202,37 +187,30 @@ void GenerateCursorImage(
 } // anonymous namespace
 
 CursorLayer::CursorImage::CursorImage(const XrSession& session,
-                                      const uint8_t    colorRGB[3])
-{
+                                      const uint8_t    colorRGB[3]) {
     mSwapchain       = CreateSwapchain(session);
     mSwapchainImages = CreateSwapchainImages(session, mSwapchain.mHandle);
 
     GenerateCursorImage(mSwapchain.mHandle, mSwapchainImages, colorRGB);
 }
 
-CursorLayer::CursorImage::~CursorImage()
-{
-    if (mSwapchain.mHandle != XR_NULL_HANDLE)
-    {
+CursorLayer::CursorImage::~CursorImage() {
+    if (mSwapchain.mHandle != XR_NULL_HANDLE) {
         xrDestroySwapchain(mSwapchain.mHandle);
     }
     // destroy images.
-    for (size_t i = 0; i < mSwapchainImages.size(); i++)
-    {
+    for (size_t i = 0; i < mSwapchainImages.size(); i++) {
         glDeleteTextures(1, &mSwapchainImages[i].image);
     }
 }
 
 CursorLayer::CursorLayer(const XrSession& session)
     : mCursorImages({CursorImage(session, COLOR_WHITE_RGB),
-                     CursorImage(session, COLOR_CYAN_RGB)})
-{
-}
+                     CursorImage(session, COLOR_CYAN_RGB)}) {}
 
 void CursorLayer::Frame(const XrSpace& space, XrCompositionLayerQuad& layer,
                         const XrPosef& cursorPose, const float scaleFactor,
-                        const CursorType& cursorType) const
-{
+                        const CursorType& cursorType) const {
     layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
     layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;

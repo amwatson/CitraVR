@@ -4,8 +4,7 @@
 
 #include <string>
 
-class UILayer
-{
+class UILayer {
 
 public:
     /** Constructor.

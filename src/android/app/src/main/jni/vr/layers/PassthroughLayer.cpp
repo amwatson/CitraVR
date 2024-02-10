@@ -16,8 +16,7 @@ License     :   Licensed under GPLv3 or any later version.
     OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), #pfn,                     \
                               (PFN_xrVoidFunction*)(&pfn)))
 
-namespace
-{
+namespace {
 
 DECL_PFN(xrCreatePassthroughFB);
 DECL_PFN(xrDestroyPassthroughFB);
@@ -28,8 +27,7 @@ DECL_PFN(xrDestroyPassthroughLayerFB);
 DECL_PFN(xrPassthroughLayerPauseFB);
 DECL_PFN(xrPassthroughLayerResumeFB);
 
-void InitOXRFunctions()
-{
+void InitOXRFunctions() {
     INIT_PFN(xrCreatePassthroughFB);
     INIT_PFN(xrDestroyPassthroughFB);
     INIT_PFN(xrPassthroughStartFB);
@@ -44,11 +42,9 @@ static bool gAreOXRFunctionsInitialized = false;
 
 } // anonymous namespace
 
-PassthroughLayer::PassthroughLayer(const XrSession& session)
-{
+PassthroughLayer::PassthroughLayer(const XrSession& session) {
 
-    if (!gAreOXRFunctionsInitialized)
-    {
+    if (!gAreOXRFunctionsInitialized) {
         InitOXRFunctions();
         gAreOXRFunctionsInitialized = true;
     }
@@ -66,8 +62,7 @@ PassthroughLayer::PassthroughLayer(const XrSession& session)
     OXR(xrPassthroughLayerResumeFB(mPassthroughLayer));
 }
 
-PassthroughLayer::~PassthroughLayer()
-{
+PassthroughLayer::~PassthroughLayer() {
     OXR(xrPassthroughLayerPauseFB(mPassthroughLayer));
     OXR(xrPassthroughPauseFB(mPassthrough));
     OXR(xrDestroyPassthroughLayerFB(mPassthroughLayer));
@@ -77,8 +72,7 @@ PassthroughLayer::~PassthroughLayer()
     mPassthrough      = XR_NULL_HANDLE;
 }
 
-void PassthroughLayer::Frame(XrCompositionLayerPassthroughFB& layer) const
-{
+void PassthroughLayer::Frame(XrCompositionLayerPassthroughFB& layer) const {
     layer.type        = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
     layer.layerHandle = mPassthroughLayer;
     layer.flags       = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;

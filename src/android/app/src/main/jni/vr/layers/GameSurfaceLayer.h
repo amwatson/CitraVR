@@ -69,8 +69,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 ================================================================================
 */
-class GameSurfaceLayer
-{
+class GameSurfaceLayer {
 
 public:
     static constexpr float DEFAULT_QUAD_DENSITY                   = 240;

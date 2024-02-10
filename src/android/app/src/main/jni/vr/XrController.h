@@ -25,8 +25,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <memory> // for unique_ptr
 
-class InputStateStatic
-{
+class InputStateStatic {
 public:
     InputStateStatic(const XrInstance& instance, const XrSession& session);
     ~InputStateStatic();
@@ -54,8 +53,7 @@ public:
     XrAction mThumbRestTouchAction = XR_NULL_HANDLE;
 };
 
-struct InputStateFrame
-{
+struct InputStateFrame {
 
     void SyncButtonsAndThumbSticks(
         const XrSession&                         session,
@@ -65,8 +63,7 @@ struct InputStateFrame
                        const std::unique_ptr<InputStateStatic>& staticState,
                        const XrSpace&                           referenceSpace,
                        const XrTime predictedDisplayTime);
-    enum
-    {
+    enum {
         LEFT_CONTROLLER,
         RIGHT_CONTROLLER,
         NUM_CONTROLLERS

@@ -32,14 +32,12 @@ CursorLayer
 ================================================================================
 */
 
-class CursorLayer
-{
+class CursorLayer {
 public:
     /** The type of cursor to render.
      *  Determines the color of the cursor.
      **/
-    enum class CursorType
-    {
+    enum class CursorType {
         CURSOR_TYPE_NORMAL,
         CURSOR_TYPE_TOP_PANEL,
         NUM_CURSOR_TYPES
@@ -64,8 +62,7 @@ public:
 
 private:
     /** Helper class to manage the cursor image. */
-    class CursorImage
-    {
+    class CursorImage {
     public:
         /** Create a new cursor image.
          *

@@ -23,24 +23,12 @@ License     :   Licensed under GPLv3 or any later version.
 #define XR_HIGHEST_CPU_PREFERENCE                                              \
     4 // corresponds to XR_HIGHEST_CPU_PERF_LEVEL in quest logging
 
-namespace VRSettings
-{
+namespace VRSettings {
 
 // NOTE: keep this in-sync with HMDType in sync with VRUtils.java
-enum class HMDType
-{
-    UNKNOWN = 0,
-    QUEST1,
-    QUEST2,
-    QUEST3,
-    QUESTPRO
-};
+enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
 
-enum class VREnvironmentType
-{
-    PASSTHROUGH = 1,
-    VOID        = 2
-};
+enum class VREnvironmentType { PASSTHROUGH = 1, VOID = 2 };
 
 // Given a CPU level preference, return the corresponding OpenXR performance
 // level
@@ -50,8 +38,7 @@ std::string GetHMDTypeStr();
 // Given a string from GetHMDTypeStr(), return the corresponding HMDType
 HMDType HmdTypeFromStr(const std::string& hmdType);
 
-struct Values
-{
+struct Values {
     XrPerfSettingsLevelEXT cpu_level =
         XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
     HMDType  hmd_type                       = HMDType::UNKNOWN;

@@ -15,16 +15,13 @@ License     :   Licensed under GPLv3 or any later version.
 #include <string>
 #include <sys/system_properties.h>
 
-namespace SyspropUtils
-{
+namespace SyspropUtils {
 static inline float GetSysPropAsFloat(const char* propertyName,
-                                      const float defaultValue)
-{
+                                      const float defaultValue) {
     char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
-    if (length > 0)
-    {
+    if (length > 0) {
         // Attempt to convert the string to a float
         char* end;
         float float_value = std::strtof(value, &end);
@@ -39,13 +36,11 @@ static inline float GetSysPropAsFloat(const char* propertyName,
 }
 
 static inline int32_t GetSysPropAsInt(const char*   propertyName,
-                                      const int32_t defaultValue)
-{
+                                      const int32_t defaultValue) {
     char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
-    if (length > 0)
-    {
+    if (length > 0) {
         // Attempt to convert the string to an int
         char*   end;
         int32_t int_value = std::strtol(value, &end, 10);
@@ -60,8 +55,7 @@ static inline int32_t GetSysPropAsInt(const char*   propertyName,
 }
 
 static inline std::string GetSysPropAsString(const char*        propertyName,
-                                             const std::string& defaultValue)
-{
+                                             const std::string& defaultValue) {
     char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 

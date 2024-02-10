@@ -28,8 +28,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <stdlib.h>
 
-namespace
-{
+namespace {
 
 constexpr float lowerPanelScaleFactor = 0.75f;
 
@@ -43,14 +42,11 @@ const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
  * corresponding coordinates on the window, it will be as if the user touched
  * the game surface.
  */
-class AndroidWindowSpace
-{
+class AndroidWindowSpace {
 public:
     AndroidWindowSpace(const float widthInDp, const float heightInDp)
         : mWidthInDp(widthInDp)
-        , mHeightInDp(heightInDp)
-    {
-    }
+        , mHeightInDp(heightInDp) {}
     float Width() const { return mWidthInDp; }
     float Height() const { return mHeightInDp; }
 
@@ -61,8 +57,7 @@ public:
 
     // given a 2D point in worldspace 'point2d', returns the transformed
     // coordinate in DP, written to 'result'
-    void Transform(const XrVector2f& point2d, XrVector2f& result) const
-    {
+    void Transform(const XrVector2f& point2d, XrVector2f& result) const {
         const float width  = static_cast<float>(Width());
         const float height = static_cast<float>(Height());
 
@@ -78,15 +73,14 @@ public:
 static constexpr std::chrono::milliseconds kMinTimeBetweenChecks(500);
 
 // Get density on an interval
-float GetDensitySysprop(const uint32_t resolutionFactor)
-{
+float GetDensitySysprop(const uint32_t resolutionFactor) {
     const float kDefaultDensity =
         GameSurfaceLayer::DEFAULT_QUAD_DENSITY * resolutionFactor;
     static float lastDensity = kDefaultDensity;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
-    {
+    if ((std::chrono::steady_clock::now() - lastTime) >=
+        kMinTimeBetweenChecks) {
         lastTime    = std::chrono::steady_clock::now();
         lastDensity = SyspropUtils::GetSysPropAsFloat("debug.citra.density",
                                                       kDefaultDensity);
@@ -94,14 +88,13 @@ float GetDensitySysprop(const uint32_t resolutionFactor)
     return lastDensity;
 }
 
-int32_t GetCylinderSysprop()
-{
+int32_t GetCylinderSysprop() {
     static constexpr int32_t kDefaultCylinder = 0;
     static int32_t           lastCylinder     = kDefaultCylinder;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
-    {
+    if ((std::chrono::steady_clock::now() - lastTime) >=
+        kMinTimeBetweenChecks) {
         lastTime     = std::chrono::steady_clock::now();
         lastCylinder = SyspropUtils::GetSysPropAsInt("debug.citra.cylinder",
                                                      kDefaultCylinder);
@@ -109,15 +102,14 @@ int32_t GetCylinderSysprop()
     return lastCylinder;
 }
 
-float GetRadiusSysprop()
-{
+float GetRadiusSysprop() {
     static constexpr float kDefaultRadius =
         GameSurfaceLayer::DEFAULT_CYLINDER_RADIUS;
     static float lastRadius = kDefaultRadius;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
-    {
+    if ((std::chrono::steady_clock::now() - lastTime) >=
+        kMinTimeBetweenChecks) {
         lastTime   = std::chrono::steady_clock::now();
         lastRadius = SyspropUtils::GetSysPropAsFloat("debug.citra.radius",
                                                      kDefaultRadius);
@@ -125,15 +117,14 @@ float GetRadiusSysprop()
     return lastRadius;
 }
 
-float GetCentralAngleSysprop()
-{
+float GetCentralAngleSysprop() {
     static constexpr float kDefaultCentralAngle =
         GameSurfaceLayer::DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES;
     static float lastCentralAngle = kDefaultCentralAngle;
     static std::chrono::time_point<std::chrono::steady_clock> lastTime = {};
     // Only check the sysprop every 500ms
-    if ((std::chrono::steady_clock::now() - lastTime) >= kMinTimeBetweenChecks)
-    {
+    if ((std::chrono::steady_clock::now() - lastTime) >=
+        kMinTimeBetweenChecks) {
         lastTime         = std::chrono::steady_clock::now();
         lastCentralAngle = SyspropUtils::GetSysPropAsFloat(
             "debug.citra.cylinder_degrees", kDefaultCentralAngle);
@@ -149,8 +140,7 @@ float GetCentralAngleSysprop()
  *    - Rotated 45 degrees away from viewer
  *    - Half the distance away from viewer as top panel
  */
-XrPosef CreateLowerPanelFromWorld(const XrPosef& topPanelFromWorld)
-{
+XrPosef CreateLowerPanelFromWorld(const XrPosef& topPanelFromWorld) {
 
     constexpr float kLowerPanelYOffset  = -0.75f;
     XrPosef         lowerPanelFromWorld = topPanelFromWorld;
@@ -164,8 +154,7 @@ XrPosef CreateLowerPanelFromWorld(const XrPosef& topPanelFromWorld)
 
 XrVector3f CalculatePanelPosition(const XrVector3f& viewerPosition,
                                   const XrVector3f& controllerPosition,
-                                  float             sphereRadius)
-{
+                                  float             sphereRadius) {
     // Vector from viewer to controller
     XrVector3f viewerToController = controllerPosition - viewerPosition;
     XrMath::Vector3f::Normalize(viewerToController);
@@ -176,8 +165,7 @@ XrVector3f CalculatePanelPosition(const XrVector3f& viewerPosition,
 
 XrQuaternionf CalculatePanelRotation(const XrVector3f& windowPosition,
                                      const XrVector3f& viewerPosition,
-                                     const XrVector3f& upDirection)
-{
+                                     const XrVector3f& upDirection) {
     // Compute forward direction (normalized)
     XrVector3f forward = viewerPosition - windowPosition;
     XrMath::Vector3f::Normalize(forward);
@@ -208,8 +196,7 @@ bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
     const float tan = localStart.z / (localStart.z - localEnd.z);
 
     // Check for backwards controller
-    if (tan < 0)
-    {
+    if (tan < 0) {
         ALOGD("Backwards controller");
         return false;
     }
@@ -236,16 +223,14 @@ bool GetRayIntersectionWithPanel(const XrPosef&    panelFromWorld,
 XrVector2f GetDensityScaleForSize(const int32_t  texWidth,
                                   const int32_t  texHeight,
                                   const float    scaleFactor,
-                                  const uint32_t resolutionFactor)
-{
+                                  const uint32_t resolutionFactor) {
     const float density = GetDensitySysprop(resolutionFactor);
     return XrVector2f{2.0f * static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
            scaleFactor;
 }
 
-XrPosef CreateTopPanelFromWorld(const XrVector3f& position)
-{
+XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
     return XrPosef{XrMath::Quatf::Identity(), position};
 }
 
@@ -265,16 +250,14 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env,
 
 {
     assert(mImmersiveMode == 0 || mImmersiveMode == 1);
-    if (mImmersiveMode > 0)
-    {
+    if (mImmersiveMode > 0) {
         ALOGI("Using VR immersive mode {}", mImmersiveMode);
         mTopPanelFromWorld.position.z   = mLowerPanelFromWorld.position.z;
         mLowerPanelFromWorld.position.y = -1.0f - (0.5f * (mImmersiveMode - 1));
     }
     const int32_t initializationStatus =
         Init(activityObject, position, session);
-    if (initializationStatus < 0)
-    {
+    if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'",
              initializationStatus);
     }
@@ -282,8 +265,7 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env,
 
 GameSurfaceLayer::~GameSurfaceLayer() { Shutdown(); }
 
-void GameSurfaceLayer::SetSurface() const
-{
+void GameSurfaceLayer::SetSurface() const {
     assert(mVrGameSurfaceClass != nullptr);
 
     const jmethodID setSurfaceMethodID = mEnv->GetStaticMethodID(
@@ -307,12 +289,10 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
     constexpr uint32_t verticalBorderTex = 1;
     const bool         useCylinder =
         (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
-    if (useCylinder)
-    {
+    if (useCylinder) {
 
         // Create the Top Display Panel (Curved display)
-        for (uint32_t eye = 0; eye < NUM_EYES; eye++)
-        {
+        for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
             XrCompositionLayerCylinderKHR layer = {};
 
             layer.type = XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR;
@@ -352,12 +332,9 @@ void GameSurfaceLayer::Frame(const XrSpace&                   space,
             layer.aspectRatio              = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
         }
-    }
-    else
-    {
+    } else {
         // Create the Top Display Panel (Flat display)
-        for (uint32_t eye = 0; eye < 2; eye++)
-        {
+        for (uint32_t eye = 0; eye < 2; eye++) {
             const uint32_t         cropHoriz = 50 * mResolutionFactor;
             XrCompositionLayerQuad layer     = {};
 
@@ -457,8 +434,7 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(
 bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                                    const XrVector3f& end,
                                                    XrVector2f&       result2d,
-                                                   XrPosef& result3d) const
-{
+                                                   XrPosef& result3d) const {
     const uint32_t   panelWidth  = mSwapchain.mWidth / 2;
     const uint32_t   panelHeight = mSwapchain.mHeight / 2;
     const XrVector2f scale       = GetDensityScaleForSize(
@@ -469,8 +445,7 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 }
 
 void GameSurfaceLayer::SetTopPanelFromController(
-    const XrVector3f& controllerPosition)
-{
+    const XrVector3f& controllerPosition) {
 
     static const XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
     const float             sphereRadius = XrMath::Vector3f::Length(
@@ -485,8 +460,7 @@ void GameSurfaceLayer::SetTopPanelFromController(
     const XrQuaternionf windowRotation = CalculatePanelRotation(
         windowPosition, viewerPosition, windowUpDirection);
     if (windowPosition.y < 0) { return; }
-    if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f)
-    {
+    if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) {
         return;
     }
 
@@ -494,8 +468,7 @@ void GameSurfaceLayer::SetTopPanelFromController(
 }
 
 // based on thumbstick, modify the depth of the top panel
-void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY)
-{
+void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
     static constexpr float kDepthSpeed = 0.05f;
     static constexpr float kMaxDepth   = -10.0f;
 
@@ -509,8 +482,7 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY)
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const jobject     activityObject,
                                const XrVector3f& position,
-                               const XrSession&  session)
-{
+                               const XrSession&  session) {
     static const std::string gameSurfaceClassName =
         "org/citra/citra_emu/vr/GameSurfaceLayer";
     mVrGameSurfaceClass = JniUtils::GetGlobalClassReference(
@@ -523,14 +495,12 @@ int32_t GameSurfaceLayer::Init(const jobject     activityObject,
     return 0;
 }
 
-void GameSurfaceLayer::Shutdown()
-{
+void GameSurfaceLayer::Shutdown() {
     xrDestroySwapchain(mSwapchain.mHandle);
     mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
 }
 
-void GameSurfaceLayer::CreateSwapchain()
-{
+void GameSurfaceLayer::CreateSwapchain() {
     // Initialize swapchain
 
     XrSwapchainCreateInfo xsci;
@@ -563,8 +533,7 @@ void GameSurfaceLayer::CreateSwapchain()
         OpenXr::GetInstance(), "xrCreateSwapchainAndroidSurfaceKHR",
         (PFN_xrVoidFunction*)(&pfnCreateSwapchainAndroidSurfaceKHR));
     if (xrResult != XR_SUCCESS ||
-        pfnCreateSwapchainAndroidSurfaceKHR == nullptr)
-    {
+        pfnCreateSwapchainAndroidSurfaceKHR == nullptr) {
         FAIL("xrGetInstanceProcAddr failed for "
              "xrCreateSwapchainAndroidSurfaceKHR");
     }

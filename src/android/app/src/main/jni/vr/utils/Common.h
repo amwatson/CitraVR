@@ -21,8 +21,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #define BAIL_ON_COND(cond, errorStr, returnCode)                               \
     do {                                                                       \
-        if (cond)                                                              \
-        {                                                                      \
+        if (cond) {                                                            \
             ALOGE("ERROR ({}): {}", __FUNCTION__, errorStr);                   \
             return (returnCode);                                               \
         }                                                                      \
@@ -31,15 +30,13 @@ License     :   Licensed under GPLv3 or any later version.
 #define BAIL_ON_ERR(fn, returnCode)                                            \
     do {                                                                       \
         const int32_t ret = fn;                                                \
-        if (ret < 0)                                                           \
-        {                                                                      \
+        if (ret < 0) {                                                         \
             ALOGE("ERROR ({}): {}() returned {}", __FUNCTION__, #fn, ret);     \
             return (returnCode);                                               \
         }                                                                      \
     } while (0)
 
-union XrCompositionLayer
-{
+union XrCompositionLayer {
     XrCompositionLayerQuad          mQuad;
     XrCompositionLayerCylinderKHR   mCylinder;
     XrCompositionLayerPassthroughFB Passthrough;

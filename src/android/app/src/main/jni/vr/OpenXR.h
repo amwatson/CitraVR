@@ -26,8 +26,7 @@ License     :   Licensed under GPLv3 or any later version.
 #define OXR(func) OXR_CheckErrors(func, #func, true);
 void OXR_CheckErrors(XrResult result, const char* function, bool failOnError);
 
-class OpenXr
-{
+class OpenXr {
 
 public:
     static XrInstance& GetInstance();

@@ -10,8 +10,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <openxr/openxr.h>
 
-class PassthroughLayer
-{
+class PassthroughLayer {
 public:
     PassthroughLayer(const XrSession& session);
     ~PassthroughLayer();

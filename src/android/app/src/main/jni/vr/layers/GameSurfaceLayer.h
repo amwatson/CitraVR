@@ -78,6 +78,7 @@ public:
 
     /** Constructor.
      * @param position: position of the layer, in world space
+     * @param jni: the JNI environment. Should be attached to the current thread
      * @param activity object: reference to the current activity. Used to get
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
@@ -91,13 +92,14 @@ public:
      */
     void SetSurface() const;
 
-    /** Called once-per-frame. Populates the given layer descriptor to show the
+    /** Called once-per-frame. Populates the layer list to show the
      *  top and bottom panels as two separate layers.
      *
      *  @param space the XrSpace this layer should be positioned with. The
      * center of the layer is placed in the center of the FOV.
      *  @param layers the array of layers to populate
-     *  @param layerCount the number of layers in the array
+     *  @param layerCount the layer count passed to XrEndFrame. This is incremented by
+     *  the number of layers added by this function.
      */
     void Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
                uint32_t& layerCount) const;

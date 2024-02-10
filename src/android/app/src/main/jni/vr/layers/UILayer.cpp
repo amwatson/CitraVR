@@ -1,16 +1,17 @@
-/*******************************************************************************
+/***************************************************************************************************
 
-Filename    :   UILayer.cpp
+Filename    :   UILayer.h
 
-Content     :   Handles the projection of the "Game Surface" panels into XR.
-                Includes the "top" panel (stereo game screen) and the "bottom"
-                panel (mono touchpad).
+Content     :   Utility class for creating interactive Android UI windows that
+                are displayed in the VR environment.
 
 Authors     :   Amanda M. Watson
 License     :   Licensed under GPLv3 or any later version.
                 Refer to the license.txt file included.
 
-*******************************************************************************/
+***************************************************************************************************/
+
+
 
 #include "UILayer.h"
 
@@ -31,12 +32,7 @@ License     :   Licensed under GPLv3 or any later version.
 namespace {
 
 /** Used to translate texture coordinates into the corresponding coordinates
- * on the Android Activity Window.
- *
- * EmulationActivity still thinks its window
- * (invisible) shows the game surface, so when we forward touch events to
- * corresponding coordinates on the window, it will be as if the user touched
- * the game surface.
+ * on the virtual Window.
  */
 class AndroidWindowBounds {
 public:
@@ -87,6 +83,7 @@ struct BoundsHandle {
 
 //-----------------------------------------------------------------------------
 // JNI functions
+
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_ui_VrUILayer_00024Companion_nativeSetBounds(JNIEnv* env, jobject thiz,
                                                                          jlong handle, jint left,

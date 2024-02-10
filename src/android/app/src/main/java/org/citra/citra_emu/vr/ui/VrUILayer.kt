@@ -144,6 +144,7 @@ abstract class VrUILayer(
         onSurfaceCreated()
     }
 
+    /*** Debug/Testing  */
     fun writeBitmapToDisk(bmp: Bitmap, outName: String?) {
         val sdCard = activity.externalCacheDir
         if (sdCard != null && outName != null) {

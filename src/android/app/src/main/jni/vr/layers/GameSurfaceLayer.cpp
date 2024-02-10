@@ -526,8 +526,7 @@ int32_t GameSurfaceLayer::Init(const jobject     activityObject,
 void GameSurfaceLayer::Shutdown()
 {
     xrDestroySwapchain(mSwapchain.mHandle);
-    // This currently causes a memory exception
-    //    mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
+    mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
 }
 
 void GameSurfaceLayer::CreateSwapchain()

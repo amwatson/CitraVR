@@ -289,8 +289,7 @@ int32_t UILayer::Init(const std::string& className,
 void UILayer::Shutdown()
 {
     xrDestroySwapchain(mSwapchain.mHandle);
-    // This currently causes a memory exception
-    //    mEnv->DeleteGlobalRef(mVrUILayerClass);
+    mEnv->DeleteGlobalRef(mVrUILayerClass);
 }
 
 void UILayer::TryCreateSwapchain()

@@ -282,8 +282,9 @@ public:
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer",
-            XrVector3f{0, 0.0f, -1.5f}, jni, mActivityObject,
-            gOpenXr->mSession);
+            XrVector3f{0, -0.4f, -0.5f},
+            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni,
+            mActivityObject, gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -1059,7 +1060,7 @@ private:
                     }
                     mIsKeyboardActive = shouldShowKeyboard;
 
-                    ALOGI("Received SHOW_KEYBOARD message");
+                    ALOGD("Received SHOW_KEYBOARD message");
                     break;
                 }
 

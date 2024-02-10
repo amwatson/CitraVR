@@ -183,17 +183,13 @@ XrVector2f GetDensityScaleForSize(const int32_t texWidth,
            scaleFactor;
 }
 
-XrPosef CreatePanelFromWorld(const XrVector3f& position)
-{
-    return XrPosef{XrMath::Quatf::Identity(), position};
-}
-
 } // anonymous namespace
 
 UILayer::UILayer(const std::string& className, const XrVector3f&& position,
-                 JNIEnv* env, jobject activityObject, const XrSession& session)
+                 const XrQuaternionf&& orientation, JNIEnv* env,
+                 jobject activityObject, const XrSession& session)
     : mSession(session)
-    , mPanelFromWorld(CreatePanelFromWorld(position))
+    , mPanelFromWorld(XrPosef{XrMath::Quatf::Identity(), position})
     , mEnv(env)
     , mActivityObject(activityObject)
 
@@ -287,7 +283,6 @@ int32_t UILayer::Init(const std::string& className,
 
     BAIL_ON_COND(mSendClickToUIMethodID == nullptr,
                  "could not find sendClickToUI()", -6);
-
     return 0;
 }
 

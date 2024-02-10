@@ -15,7 +15,8 @@ public:
      * @param session a valid XrSession
      */
     UILayer(const std::string& className, const XrVector3f&& position,
-            JNIEnv* jni, jobject activityObject, const XrSession& session);
+            const XrQuaternionf&& orientation, JNIEnv* jni,
+            jobject activityObject, const XrSession& session);
     ~UILayer();
 
     /** Called on resume. Sets the surface in the native rendering library.

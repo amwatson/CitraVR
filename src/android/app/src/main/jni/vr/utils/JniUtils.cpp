@@ -24,16 +24,15 @@ jclass JniUtils::GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
     }
 
     // Get the getClassLoader method ID
-    const jmethodID getClassLoaderMethod = jni->GetMethodID(
-        activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    const jmethodID getClassLoaderMethod =
+        jni->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
     if (getClassLoaderMethod == nullptr) {
         ALOGE("Failed to get getClassLoader method ID");
         return nullptr;
     }
 
     // Call getClassLoader of the activity object to obtain the class loader
-    const jobject classLoaderObject =
-        jni->CallObjectMethod(activityObject, getClassLoaderMethod);
+    const jobject classLoaderObject = jni->CallObjectMethod(activityObject, getClassLoaderMethod);
     if (classLoaderObject == nullptr) {
         ALOGE("Failed to get class loader object");
         return nullptr;
@@ -47,8 +46,8 @@ jclass JniUtils::GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
     }
 
     // Get the findClass method ID from the class loader class
-    const jmethodID findClassMethod = jni->GetMethodID(
-        classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    const jmethodID findClassMethod =
+        jni->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     if (findClassMethod == nullptr) {
         ALOGE("Failed to get findClass method ID");
         return nullptr;
@@ -62,8 +61,8 @@ jclass JniUtils::GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
     }
 
     // Call findClass on the class loader object with the class name
-    const jclass classToFind = static_cast<jclass>(jni->CallObjectMethod(
-        classLoaderObject, findClassMethod, javaClassName));
+    const jclass classToFind = static_cast<jclass>(
+        jni->CallObjectMethod(classLoaderObject, findClassMethod, javaClassName));
 
     // Clean up local references
     jni->DeleteLocalRef(activityClass);
@@ -77,8 +76,7 @@ jclass JniUtils::GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
     }
 
     // Create a global reference to the class
-    const jclass globalClassRef =
-        reinterpret_cast<jclass>(jni->NewGlobalRef(classToFind));
+    const jclass globalClassRef = reinterpret_cast<jclass>(jni->NewGlobalRef(classToFind));
 
     // Clean up the local reference of the class
     jni->DeleteLocalRef(classToFind);

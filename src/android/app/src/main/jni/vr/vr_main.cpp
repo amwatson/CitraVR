@@ -44,9 +44,8 @@ License     :   Licensed under GPLv3 or any later version.
 #endif
 
 #define DECL_PFN(pfn) PFN_##pfn pfn = nullptr
-#define INIT_PFN(pfn)                                                          \
-    OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), #pfn,                     \
-                              (PFN_xrVoidFunction*)(&pfn)))
+#define INIT_PFN(pfn)                                                                              \
+    OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), #pfn, (PFN_xrVoidFunction*)(&pfn)))
 
 // Used by Citra core to set a higher priority to the non-VR render thread.
 namespace vr {
@@ -59,56 +58,45 @@ void       PrioritizeTid(const int tid) {
               ALOGE("PrioritizeTid() called before session is initialized");
               return;
     }
-          PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR =
-              NULL;
-          OXR(xrGetInstanceProcAddr(
-              OpenXr::GetInstance(), "xrSetAndroidApplicationThreadKHR",
-              (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
+          PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
+          OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrSetAndroidApplicationThreadKHR",
+                                    (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
 
-          OXR(pfnSetAndroidApplicationThreadKHR(
-              gSession, XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR, tid));
+          OXR(pfnSetAndroidApplicationThreadKHR(gSession, XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR, tid));
           gPriorityTid = tid;
           ALOGD("Setting prio tid from original code {}", vr::gPriorityTid);
 }
 } // namespace vr
 
 namespace {
-constexpr XrPerfSettingsLevelEXT kGpuPerfLevel =
-    XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
+constexpr XrPerfSettingsLevelEXT                   kGpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
-std::atomic<bool>       gShouldShowErrorMessage = {false};
-std::unique_ptr<OpenXr> gOpenXr;
-MessageQueue            gMessageQueue;
+std::atomic<bool>                                  gShouldShowErrorMessage = {false};
+std::unique_ptr<OpenXr>                            gOpenXr;
+MessageQueue                                       gMessageQueue;
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
-                                     jmethodID      forwardVRInputMethodID,
-                                     const int      androidButtonCode,
+                                     jmethodID forwardVRInputMethodID, const int androidButtonCode,
                                      const XrBool32 xrButtonState) {
-    jni->CallVoidMethod(activityObject, forwardVRInputMethodID,
-                        androidButtonCode, xrButtonState != XR_FALSE);
+    jni->CallVoidMethod(activityObject, forwardVRInputMethodID, androidButtonCode,
+                        xrButtonState != XR_FALSE);
 }
 
 bool ShouldForwardButtonState(const XrActionStateBoolean& actionState) {
-    return actionState.changedSinceLastSync ||
-           actionState.currentState == XR_TRUE;
+    return actionState.changedSinceLastSync || actionState.currentState == XR_TRUE;
 }
 
 void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
-                                jmethodID forwardVRInputMethodID,
-                                const int androidButtonCode,
-                                const XrActionStateBoolean& actionState,
-                                const char*                 buttonName) {
+                                jmethodID forwardVRInputMethodID, const int androidButtonCode,
+                                const XrActionStateBoolean& actionState, const char* buttonName) {
     if (ShouldForwardButtonState(actionState)) {
-        ALOG_INPUT_VERBOSE("Forwarding {} button state: {}", buttonName,
-                           actionState.currentState);
-        ForwardButtonStateChangeToCitra(
-            jni, activityObject, forwardVRInputMethodID, androidButtonCode,
-            actionState.currentState);
+        ALOG_INPUT_VERBOSE("Forwarding {} button state: {}", buttonName, actionState.currentState);
+        ForwardButtonStateChangeToCitra(jni, activityObject, forwardVRInputMethodID,
+                                        androidButtonCode, actionState.currentState);
     }
 }
 
-[[maybe_unused]] const char*
-XrSessionStateToString(const XrSessionState state) {
+[[maybe_unused]] const char* XrSessionStateToString(const XrSessionState state) {
     switch (state) {
         case XR_SESSION_STATE_UNKNOWN:
             return "XR_SESSION_STATE_UNKNOWN";
@@ -135,8 +123,7 @@ XrSessionStateToString(const XrSessionState state) {
     }
 }
 
-uint32_t
-GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
+uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
     static constexpr uint32_t kDefaultResolutionFactor = 2;
     switch (hmdType) {
         case VRSettings::HMDType::QUEST3:
@@ -192,8 +179,7 @@ public:
         mEnv = jni;
 
         ALOGI("VR Extra Performance Mode: {}",
-              VRSettings::values.extra_performance_mode_enabled ? "enabled"
-                                                                : "disabled");
+              VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
         // Gotta set this after the JNIEnv is attached, or else it'll be
         // overwritten
         prctl(PR_SET_NAME, (long)"CS::Main", 0, 0, 0);
@@ -202,9 +188,9 @@ public:
             const int32_t ret = gOpenXr->Init(mVm, mActivityObject);
             if (ret < 0) { FAIL("OpenXR::Init() failed: error code %d", ret); }
         }
-        vr::gSession      = gOpenXr->mSession;
-        mInputStateStatic = std::make_unique<InputStateStatic>(
-            OpenXr::GetInstance(), gOpenXr->mSession);
+        vr::gSession = gOpenXr->mSession;
+        mInputStateStatic =
+            std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Create the layers
@@ -214,95 +200,77 @@ public:
         assert(VRSettings::values.vr_environment ==
                    static_cast<int32_t>(VRSettings::VREnvironmentType::VOID) ||
                VRSettings::values.vr_environment ==
-                   static_cast<int32_t>(
-                       VRSettings::VREnvironmentType::PASSTHROUGH));
+                   static_cast<int32_t>(VRSettings::VREnvironmentType::PASSTHROUGH));
         // If user set "Void" in settings, don't render passthrough
         if (VRSettings::values.vr_environment !=
             static_cast<int32_t>(VRSettings::VREnvironmentType::VOID)) {
-            mPassthroughLayer =
-                std::make_unique<PassthroughLayer>(gOpenXr->mSession);
+            mPassthroughLayer = std::make_unique<PassthroughLayer>(gOpenXr->mSession);
         }
 
         // Create the game surface layer.
         {
             const uint32_t defaultResolutionFactor =
-                GetDefaultGameResolutionFactorForHmd(
-                    VRSettings::values.hmd_type);
-            const uint32_t resolutionFactorFromPreferences =
-                VRSettings::values.resolution_factor;
+                GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
+            const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
             // add a couple factors to resolution with immersive mode so users
             // aren't resetting their default settings to get higher res. min
             // resolution factor for immersive is 3x.
-            const uint32_t immersiveModeOffset =
-                (VRSettings::values.vr_immersive_mode > 0) ? 2 : 0;
+            const uint32_t immersiveModeOffset = (VRSettings::values.vr_immersive_mode > 0) ? 2 : 0;
             const uint32_t resolutionFactor =
-                (resolutionFactorFromPreferences > 0
-                     ? resolutionFactorFromPreferences
-                     : defaultResolutionFactor) +
+                (resolutionFactorFromPreferences > 0 ? resolutionFactorFromPreferences
+                                                     : defaultResolutionFactor) +
                 immersiveModeOffset;
 
             if (resolutionFactor != defaultResolutionFactor) {
-                ALOGI(
-                    "Using resolution factor of {}x instead of HMD default {}x",
-                    resolutionFactor, defaultResolutionFactor);
+                ALOGI("Using resolution factor of {}x instead of HMD default {}x", resolutionFactor,
+                      defaultResolutionFactor);
             }
             mGameSurfaceLayer = std::make_unique<GameSurfaceLayer>(
-                XrVector3f{0, 0, -2.0f}, jni, mActivityObject,
-                gOpenXr->mSession, resolutionFactor);
+                XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->mSession, resolutionFactor);
         }
 
         // Create the cursor layer.
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
 
 #if defined(UI_LAYER)
-        mErrorMessageLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ErrorMessageLayer", XrVector3f{0, 0, -0.7},
-            jni, mActivityObject, gOpenXr->mSession);
+        mErrorMessageLayer = std::make_unique<UILayer>("org/citra/citra_emu/vr/ErrorMessageLayer",
+                                                       XrVector3f{0, 0, -0.7}, jni, mActivityObject,
+                                                       gOpenXr->mSession);
 #endif
 
         mKeyboardLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrKeyboardLayer",
-            XrVector3f{0, -0.4f, -0.5f},
-            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni,
-            mActivityObject, gOpenXr->mSession);
+            "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
+            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
+            gOpenXr->mSession);
+
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
         //////////////////////////////////////////////////
 
-        mForwardVRInputMethodID = jni->GetMethodID(
-            jni->GetObjectClass(mActivityObject), "forwardVRInput", "(IZ)V");
-        if (mForwardVRInputMethodID == nullptr) {
-            FAIL("could not get forwardVRInputMethodID");
-        }
+        mForwardVRInputMethodID =
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "forwardVRInput", "(IZ)V");
+        if (mForwardVRInputMethodID == nullptr) { FAIL("could not get forwardVRInputMethodID"); }
         mForwardVRJoystickMethodID =
-            jni->GetMethodID(jni->GetObjectClass(mActivityObject),
-                             "forwardVRJoystick", "(FFI)V");
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "forwardVRJoystick", "(FFI)V");
         if (mForwardVRJoystickMethodID == nullptr) {
             FAIL("could not get forwardVRJoystickMethodID");
         }
 
         mSendClickToWindowMethodID =
-            jni->GetMethodID(jni->GetObjectClass(mActivityObject),
-                             "sendClickToWindow", "(FFI)V");
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "sendClickToWindow", "(FFI)V");
         if (mSendClickToWindowMethodID == nullptr) {
             FAIL("could not get sendClickToWindowMethodID");
         }
-        mResumeGameMethodID = jni->GetMethodID(
-            jni->GetObjectClass(mActivityObject), "resumeGame", "()V");
-        if (mResumeGameMethodID == nullptr) {
-            FAIL("could not get resumeGameMethodID");
-        }
-        mPauseGameMethodID = jni->GetMethodID(
-            jni->GetObjectClass(mActivityObject), "pauseGame", "()V");
-        if (mPauseGameMethodID == nullptr) {
-            FAIL("could not get pauseGameMethodID");
-        }
-        mOpenSettingsMethodID = jni->GetMethodID(
-            jni->GetObjectClass(mActivityObject), "openSettingsMenu", "()V");
-        if (mOpenSettingsMethodID == nullptr) {
-            FAIL("could not get openSettingsMenuMethodID");
-        }
+        mResumeGameMethodID =
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "resumeGame", "()V");
+        if (mResumeGameMethodID == nullptr) { FAIL("could not get resumeGameMethodID"); }
+        mPauseGameMethodID =
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "pauseGame", "()V");
+        if (mPauseGameMethodID == nullptr) { FAIL("could not get pauseGameMethodID"); }
+        mOpenSettingsMethodID =
+            jni->GetMethodID(jni->GetObjectClass(mActivityObject), "openSettingsMenu", "()V");
+        if (mOpenSettingsMethodID == nullptr) { FAIL("could not get openSettingsMenuMethodID"); }
 
         //////////////////////////////////////////////////
         // Frame loop
@@ -332,43 +300,32 @@ private:
 
         // Log time to first frame
         if (mFrameIndex == 1) {
-            std::chrono::steady_clock::time_point now =
-                std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
             ALOGI("Time to first frame: {} ms",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(
-                      now - gOnCreateStartTime)
+                  std::chrono::duration_cast<std::chrono::milliseconds>(now - gOnCreateStartTime)
                       .count());
         }
 
-        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession,
-                                                   mInputStateStatic);
+        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
 
         //////////////////////////////////////////////////
         // Forward VR input to Android gamepad emulation
         //////////////////////////////////////////////////
 
-        ForwardButtonStateIfNeeded(jni, mActivityObject,
-                                   mForwardVRInputMethodID, 96 /* BUTTON_A */,
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 96 /* BUTTON_A */,
                                    mInputStateFrame.mAButtonState, "a");
-        ForwardButtonStateIfNeeded(jni, mActivityObject,
-                                   mForwardVRInputMethodID, 97 /* BUTTON_B */,
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 97 /* BUTTON_B */,
                                    mInputStateFrame.mBButtonState, "b");
-        ForwardButtonStateIfNeeded(jni, mActivityObject,
-                                   mForwardVRInputMethodID, 99 /* BUTTON_X */,
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 99 /* BUTTON_X */,
                                    mInputStateFrame.mXButtonState, "x");
-        ForwardButtonStateIfNeeded(jni, mActivityObject,
-                                   mForwardVRInputMethodID, 100 /* BUTTON_Y */,
-                                   mInputStateFrame.mYButtonState, "y");
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
+                                   100 /* BUTTON_Y */, mInputStateFrame.mYButtonState, "y");
         ForwardButtonStateIfNeeded(
             jni, mActivityObject, mForwardVRInputMethodID, 102 /* BUTTON_L1 */,
-            mInputStateFrame
-                .mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER],
-            "l1");
+            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER], "l1");
         ForwardButtonStateIfNeeded(
             jni, mActivityObject, mForwardVRInputMethodID, 103 /* BUTTON_R1 */,
-            mInputStateFrame
-                .mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER],
-            "r1");
+            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER], "r1");
 
         {
             // Right is circlepad, left is leftstick/circlepad, dpad is whatever
@@ -377,16 +334,13 @@ private:
             const auto cStickHand    = InputStateFrame::RIGHT_CONTROLLER;
 
             const auto& leftThumbrestTouchState =
-                mInputStateFrame
-                    .mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
             const auto& rightThumbrestTouchState =
-                mInputStateFrame
-                    .mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
-            const int dpadHand = leftThumbrestTouchState.currentState
-                                     ? InputStateFrame::RIGHT_CONTROLLER
-                                 : rightThumbrestTouchState.currentState
-                                     ? InputStateFrame::LEFT_CONTROLLER
-                                     : InputStateFrame::NUM_CONTROLLERS;
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
+            const int dpadHand =
+                leftThumbrestTouchState.currentState    ? InputStateFrame::RIGHT_CONTROLLER
+                : rightThumbrestTouchState.currentState ? InputStateFrame::LEFT_CONTROLLER
+                                                        : InputStateFrame::NUM_CONTROLLERS;
 
             {
                 static constexpr float kThumbStickDirectionThreshold = 0.5f;
@@ -399,73 +353,59 @@ private:
                 static bool wasDpadUp    = false;
                 static bool wasDpadDown  = false;
 
-                const bool hasDpad =
-                    dpadHand != InputStateFrame::NUM_CONTROLLERS;
+                const bool  hasDpad = dpadHand != InputStateFrame::NUM_CONTROLLERS;
                 const auto& dpadThumbstickState =
-                    mInputStateFrame
-                        .mThumbStickState[hasDpad ? dpadHand : leftStickHand];
+                    mInputStateFrame.mThumbStickState[hasDpad ? dpadHand : leftStickHand];
 
-                if (hasDpad && dpadThumbstickState.currentState.y >
-                                   kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
-                                        19 /* DPAD_UP */, 1);
+                if (hasDpad && dpadThumbstickState.currentState.y > kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
+                                        1);
                     wasDpadUp = true;
                 } else if (wasDpadUp) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
-                                        19 /* DPAD_UP */, 0);
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
+                                        0);
                     wasDpadUp = false;
                 }
-                if (hasDpad && dpadThumbstickState.currentState.y <
-                                   -kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                if (hasDpad &&
+                    dpadThumbstickState.currentState.y < -kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         20 /* DPAD_DOWN */, 1);
                     wasDpadDown = true;
                 } else if (wasDpadDown) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         20 /* DPAD_DOWN */, 0);
                     wasDpadDown = false;
                 }
-                if (hasDpad && dpadThumbstickState.currentState.x <
-                                   -kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                if (hasDpad &&
+                    dpadThumbstickState.currentState.x < -kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         21 /* DPAD_LEFT */, 1);
                     wasDpadLeft = true;
                 } else if (wasDpadLeft) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         21 /* DPAD_LEFT */, 0);
                     wasDpadLeft = false;
                 }
 
-                if (hasDpad && dpadThumbstickState.currentState.x >
-                                   kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                if (hasDpad && dpadThumbstickState.currentState.x > kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         22 /* DPAD_RIGHT */, 1);
                     wasDpadRight = true;
                 } else if (wasDpadRight) {
-                    jni->CallVoidMethod(mActivityObject,
-                                        mForwardVRInputMethodID,
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
                                         22 /* DPAD_RIGHT */, 0);
                     wasDpadRight = false;
                 }
             }
 
             if (dpadHand != cStickHand) {
-                const auto cStickThumbstickState =
-                    mInputStateFrame.mThumbStickState[cStickHand];
+                const auto cStickThumbstickState = mInputStateFrame.mThumbStickState[cStickHand];
                 if (cStickThumbstickState.currentState.y != 0 ||
                     cStickThumbstickState.currentState.x != 0 ||
                     cStickThumbstickState.changedSinceLastSync) {
-                    jni->CallVoidMethod(
-                        mActivityObject, mForwardVRJoystickMethodID,
-                        cStickThumbstickState.currentState.x,
-                        cStickThumbstickState.currentState.y, 0);
+                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
+                                        cStickThumbstickState.currentState.x,
+                                        cStickThumbstickState.currentState.y, 0);
                 }
             }
             if (dpadHand != leftStickHand) {
@@ -474,17 +414,14 @@ private:
                 if (leftStickThumbstickState.currentState.y != 0 ||
                     leftStickThumbstickState.currentState.x != 0 ||
                     leftStickThumbstickState.changedSinceLastSync) {
-                    jni->CallVoidMethod(
-                        mActivityObject, mForwardVRJoystickMethodID,
-                        leftStickThumbstickState.currentState.x,
-                        leftStickThumbstickState.currentState.y, 1);
+                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
+                                        leftStickThumbstickState.currentState.x,
+                                        leftStickThumbstickState.currentState.y, 1);
                 }
             }
         }
 
-        if (!mKeyboardLayer->IsSwapchainCreated()) {
-            mKeyboardLayer->TryCreateSwapchain();
-        }
+        if (!mKeyboardLayer->IsSwapchainCreated()) { mKeyboardLayer->TryCreateSwapchain(); }
 
 
         ////////////////////////////////
@@ -519,17 +456,16 @@ private:
             // Create a reference space with the forward direction from the
             // starting frame.
             {
-                const XrReferenceSpaceCreateInfo sci = {
-                    XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                    XR_REFERENCE_SPACE_TYPE_LOCAL, XrMath::Posef::Identity()};
+                const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+                                                        nullptr, XR_REFERENCE_SPACE_TYPE_LOCAL,
+                                                        XrMath::Posef::Identity()};
                 OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
                                            &gOpenXr->mForwardDirectionSpace));
             }
 
             // Get the pose of the local space.
             XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
-            OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace,
-                              gOpenXr->mLocalSpace,
+            OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
                               frameState.predictedDisplayTime, &lsl));
 
             // Set the forward direction of the new space.
@@ -537,15 +473,13 @@ private:
 
             // Create a reference space with the same position and rotation as
             // local.
-            const XrReferenceSpaceCreateInfo sci = {
-                XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                XR_REFERENCE_SPACE_TYPE_LOCAL, forwardDirectionPose};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
-                                       &gOpenXr->mHeadSpace));
+            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                                    XR_REFERENCE_SPACE_TYPE_LOCAL,
+                                                    forwardDirectionPose};
+            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
         }
 
-        mInputStateFrame.SyncHandPoses(gOpenXr->mSession, mInputStateStatic,
-                                       gOpenXr->mLocalSpace,
+        mInputStateFrame.SyncHandPoses(gOpenXr->mSession, mInputStateStatic, gOpenXr->mLocalSpace,
                                        frameState.predictedDisplayTime);
 
         //////////////////////////////////////////////////
@@ -553,8 +487,7 @@ private:
         //////////////////////////////////////////////////
 
         uint32_t                        layerCount = 0;
-        std::vector<XrCompositionLayer> layers(gOpenXr->mMaxLayerCount,
-                                               XrCompositionLayer{});
+        std::vector<XrCompositionLayer> layers(gOpenXr->mMaxLayerCount, XrCompositionLayer{});
 
         // First, add the passthrough layer
         if (mPassthroughLayer != nullptr) {
@@ -580,78 +513,61 @@ private:
 
         {
             {
-                bool       shouldRenderCursor = false;
-                XrPosef    cursorPose3d       = XrMath::Posef::Identity();
-                XrVector2f cursorPos2d        = {0, 0};
-                float      scaleFactor        = 0.01f;
-                CursorLayer::CursorType cursorType =
-                    CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
+                bool                    shouldRenderCursor = false;
+                XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
+                XrVector2f              cursorPos2d        = {0, 0};
+                float                   scaleFactor        = 0.01f;
+                CursorLayer::CursorType cursorType = CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
 
                 [[maybe_unused]] const auto nonPreferredController =
-                    mInputStateFrame.mPreferredHand ==
-                            InputStateFrame::LEFT_CONTROLLER
+                    mInputStateFrame.mPreferredHand == InputStateFrame::LEFT_CONTROLLER
                         ? InputStateFrame::RIGHT_CONTROLLER
                         : InputStateFrame::LEFT_CONTROLLER;
                 // assert that we do not choose an inactive controller
                 // unless neither controller is available.
-                assert(mInputStateFrame
-                           .mIsHandActive[mInputStateFrame.mPreferredHand] ||
+                assert(mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand] ||
                        !mInputStateFrame.mIsHandActive[nonPreferredController]);
 
                 {
                     const bool isPreferredControllerActive =
-                        mInputStateFrame
-                            .mIsHandActive[mInputStateFrame.mPreferredHand];
+                        mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand];
                     if (isPreferredControllerActive) {
                         const XrPosef pose =
-                            mInputStateFrame
-                                .mHandPositions[mInputStateFrame.mPreferredHand]
-                                .pose;
+                            mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose;
                         const auto& triggerState =
-                            mInputStateFrame.mIndexTriggerState
-                                [mInputStateFrame.mPreferredHand];
+                            mInputStateFrame.mIndexTriggerState[mInputStateFrame.mPreferredHand];
 
                         const XrVector3f start = XrMath::Posef::Transform(
-                            mInputStateFrame
-                                .mHandPositions[mInputStateFrame.mPreferredHand]
-                                .pose,
+                            mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose,
                             XrVector3f{0, 0, 0});
                         const XrVector3f end = XrMath::Posef::Transform(
-                            mInputStateFrame
-                                .mHandPositions[mInputStateFrame.mPreferredHand]
-                                .pose,
+                            mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose,
                             XrVector3f{0, 0, -3.5f});
-                        if (mKeyboardLayer->IsSwapchainCreated() &&
-                            mIsKeyboardActive) {
-                            shouldRenderCursor =
-                                mKeyboardLayer->GetRayIntersectionWithPanel(
-                                    start, end, cursorPos2d, cursorPose3d);
+                        if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
+                            shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
+                                start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync) {
-                                mKeyboardLayer->SendClickToUI(
-                                    cursorPos2d, triggerState.currentState);
+                                mKeyboardLayer->SendClickToUI(cursorPos2d,
+                                                              triggerState.currentState);
                             }
                         } else {
-                            shouldRenderCursor =
-                                mGameSurfaceLayer->GetRayIntersectionWithPanel(
-                                    start, end, cursorPos2d, cursorPose3d);
-                            ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}",
-                                               cursorPos2d.x, cursorPos2d.y);
+                            shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
+                                start, end, cursorPos2d, cursorPose3d);
+                            ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x,
+                                               cursorPos2d.y);
                             if (triggerState.currentState == 0 &&
                                 triggerState.changedSinceLastSync) {
-                                jni->CallVoidMethod(
-                                    mActivityObject, mSendClickToWindowMethodID,
-                                    cursorPos2d.x, cursorPos2d.y, 0);
+                                jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                    cursorPos2d.x, cursorPos2d.y, 0);
                             } else if (triggerState.changedSinceLastSync &&
                                        triggerState.currentState == 1) {
-                                jni->CallVoidMethod(
-                                    mActivityObject, mSendClickToWindowMethodID,
-                                    cursorPos2d.x, cursorPos2d.y, 1);
+                                jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                    cursorPos2d.x, cursorPos2d.y, 1);
                             } else if (triggerState.currentState == 1 &&
                                        !triggerState.changedSinceLastSync) {
 
-                                jni->CallVoidMethod(
-                                    mActivityObject, mSendClickToWindowMethodID,
-                                    cursorPos2d.x, cursorPos2d.y, 2);
+                                jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                    cursorPos2d.x, cursorPos2d.y, 2);
                             }
                             if (!shouldRenderCursor) {
                                 // Handling this here means L2/R2 are liable to
@@ -660,18 +576,16 @@ private:
                                 // WaitFrame()). We'll see if that ends up being
                                 // a problem for any games.
                                 ForwardButtonStateIfNeeded(
-                                    jni, mActivityObject,
-                                    mForwardVRInputMethodID,
+                                    jni, mActivityObject, mForwardVRInputMethodID,
                                     104 /* BUTTON_L2 */,
-                                    mInputStateFrame.mIndexTriggerState
-                                        [InputStateFrame::LEFT_CONTROLLER],
+                                    mInputStateFrame
+                                        .mIndexTriggerState[InputStateFrame::LEFT_CONTROLLER],
                                     "l2");
                                 ForwardButtonStateIfNeeded(
-                                    jni, mActivityObject,
-                                    mForwardVRInputMethodID,
+                                    jni, mActivityObject, mForwardVRInputMethodID,
                                     105 /* BUTTON_R2 */,
-                                    mInputStateFrame.mIndexTriggerState
-                                        [InputStateFrame::RIGHT_CONTROLLER],
+                                    mInputStateFrame
+                                        .mIndexTriggerState[InputStateFrame::RIGHT_CONTROLLER],
                                     "r2");
                             }
                         }
@@ -679,36 +593,30 @@ private:
                         // Hit test the top panel
                         if (!shouldRenderCursor) {
                             shouldRenderCursor =
-                                mGameSurfaceLayer
-                                    ->GetRayIntersectionWithPanelTopPanel(
-                                        start, end, cursorPos2d, cursorPose3d);
+                                mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
+                                    start, end, cursorPos2d, cursorPose3d);
                             // If top panel is hit, trigger controls the
                             // position/rotation
-                            if (shouldRenderCursor &&
-                                triggerState.currentState) {
+                            if (shouldRenderCursor && triggerState.currentState) {
                                 // null out X component -- screen should stay
                                 // center
-                                mGameSurfaceLayer->SetTopPanelFromController(
-                                    XrVector3f{0, cursorPose3d.position.y,
-                                               cursorPose3d.position.z});
+                                mGameSurfaceLayer->SetTopPanelFromController(XrVector3f{
+                                    0, cursorPose3d.position.y, cursorPose3d.position.z});
                                 // If trigger is pressed, thumbstick controls
                                 // the depth
                                 const XrActionStateVector2f& thumbstickState =
-                                    mInputStateFrame.mThumbStickState
-                                        [mInputStateFrame.mPreferredHand];
+                                    mInputStateFrame
+                                        .mThumbStickState[mInputStateFrame.mPreferredHand];
 
-                                static constexpr float
-                                    kThumbStickDirectionThreshold = 0.5f;
+                                static constexpr float kThumbStickDirectionThreshold = 0.5f;
                                 if (std::abs(thumbstickState.currentState.y) >
                                     kThumbStickDirectionThreshold) {
-                                    mGameSurfaceLayer
-                                        ->SetTopPanelFromThumbstick(
-                                            thumbstickState.currentState.y);
+                                    mGameSurfaceLayer->SetTopPanelFromThumbstick(
+                                        thumbstickState.currentState.y);
                                 }
                             }
                             if (shouldRenderCursor) {
-                                cursorType = CursorLayer::CursorType::
-                                    CURSOR_TYPE_TOP_PANEL;
+                                cursorType = CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL;
                             }
                         }
                         // Add a scale factor so the cursor doesn't scale as
@@ -717,8 +625,8 @@ private:
                         // isn't invisisble at the furthest distance.
                         // It's just eyeballed -- no fantastic formula.
                         {
-                            const float distance = XrMath::Vector3f::Length(
-                                pose.position - cursorPose3d.position);
+                            const float distance =
+                                XrMath::Vector3f::Length(pose.position - cursorPose3d.position);
                             scaleFactor = 0.01f + 0.003f * distance;
                         }
                     }
@@ -726,8 +634,8 @@ private:
 
                 if (shouldRenderCursor) {
                     XrCompositionLayerQuad quadLayer = {};
-                    mCursorLayer->Frame(gOpenXr->mLocalSpace, quadLayer,
-                                        cursorPose3d, scaleFactor, cursorType);
+                    mCursorLayer->Frame(gOpenXr->mLocalSpace, quadLayer, cursorPose3d, scaleFactor,
+                                        cursorType);
                     layers[layerCount++].mQuad = quadLayer;
                 }
                 // FIXME Don't do this right now, because it's confusing to the
@@ -736,10 +644,8 @@ private:
                 // action. So instead, we'll map this to start/select
 
 #if defined(USE_INGAME_MENU)
-                if (mInputStateFrame.mLeftMenuButtonState
-                        .changedSinceLastSync ||
-                    mInputStateFrame.mLeftMenuButtonState.currentState ==
-                        XR_TRUE) {
+                if (mInputStateFrame.mLeftMenuButtonState.changedSinceLastSync ||
+                    mInputStateFrame.mLeftMenuButtonState.currentState == XR_TRUE) {
                     jni->CallVoidMethod(mActivityObject, mOpenSettingsMethodID);
                 }
 #else
@@ -748,30 +654,25 @@ private:
                 // overlay -- I could
                 // add a black border to the top/bottom. Don't want to change
                 // too much right now. That would have been smart, though.)
-                ForwardButtonStateIfNeeded(
-                    jni, mActivityObject, mForwardVRInputMethodID,
-                    108 /* BUTTON_START */,
-                    mInputStateFrame.mLeftMenuButtonState, "start");
+                ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
+                                           108 /* BUTTON_START */,
+                                           mInputStateFrame.mLeftMenuButtonState, "start");
 
 #endif
             }
         }
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
         for (uint32_t i = 0; i < layerCount; i++) {
-            layerHeaders.push_back(
-                (const XrCompositionLayerBaseHeader*)&layers[i]);
+            layerHeaders.push_back((const XrCompositionLayerBaseHeader*)&layers[i]);
         }
 
         ////////////////////////////////
         // XrEndFrame()
         ////////////////////////////////
 
-        const XrFrameEndInfo endFrameInfo = {XR_TYPE_FRAME_END_INFO,
-                                             nullptr,
-                                             frameState.predictedDisplayTime,
-                                             XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-                                             layerCount,
-                                             layerHeaders.data()};
+        const XrFrameEndInfo endFrameInfo = {
+            XR_TYPE_FRAME_END_INFO,           nullptr,    frameState.predictedDisplayTime,
+            XR_ENVIRONMENT_BLEND_MODE_OPAQUE, layerCount, layerHeaders.data()};
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
     }
 
@@ -779,11 +680,10 @@ private:
         if (state == XR_SESSION_STATE_READY) {
             assert(mIsXrSessionActive == false);
 
-            XrSessionBeginInfo sbi = {};
-            sbi.type               = XR_TYPE_SESSION_BEGIN_INFO;
-            sbi.next               = nullptr;
-            sbi.primaryViewConfigurationType =
-                gOpenXr->mViewportConfig.viewConfigurationType;
+            XrSessionBeginInfo sbi           = {};
+            sbi.type                         = XR_TYPE_SESSION_BEGIN_INFO;
+            sbi.next                         = nullptr;
+            sbi.primaryViewConfigurationType = gOpenXr->mViewportConfig.viewConfigurationType;
 
             XrResult result;
             OXR(result = xrBeginSession(gOpenXr->mSession, &sbi));
@@ -793,40 +693,35 @@ private:
             // Set session state once we have entered VR mode and have a valid
             // session object.
             if (mIsXrSessionActive) {
-                PFN_xrPerfSettingsSetPerformanceLevelEXT
-                    pfnPerfSettingsSetPerformanceLevelEXT = NULL;
+                PFN_xrPerfSettingsSetPerformanceLevelEXT pfnPerfSettingsSetPerformanceLevelEXT =
+                    NULL;
                 OXR(xrGetInstanceProcAddr(
                     gOpenXr->mInstance, "xrPerfSettingsSetPerformanceLevelEXT",
                     (PFN_xrVoidFunction*)(&pfnPerfSettingsSetPerformanceLevelEXT)));
 
+                OXR(pfnPerfSettingsSetPerformanceLevelEXT(gOpenXr->mSession,
+                                                          XR_PERF_SETTINGS_DOMAIN_CPU_EXT,
+                                                          VRSettings::values.cpu_level));
                 OXR(pfnPerfSettingsSetPerformanceLevelEXT(
-                    gOpenXr->mSession,
-                    XR_PERF_SETTINGS_DOMAIN_CPU_EXT,
-                    VRSettings::values.cpu_level));
-                OXR(pfnPerfSettingsSetPerformanceLevelEXT(
-                    gOpenXr->mSession, XR_PERF_SETTINGS_DOMAIN_GPU_EXT,
-                    kGpuPerfLevel));
+                    gOpenXr->mSession, XR_PERF_SETTINGS_DOMAIN_GPU_EXT, kGpuPerfLevel));
                 ALOGI("{}(): Set clock levels to CPU:{}, GPU:{}", __FUNCTION__,
                       VRSettings::values.cpu_level, kGpuPerfLevel);
 
-                PFN_xrSetAndroidApplicationThreadKHR
-                    pfnSetAndroidApplicationThreadKHR = NULL;
+                PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
                 OXR(xrGetInstanceProcAddr(
                     gOpenXr->mInstance, "xrSetAndroidApplicationThreadKHR",
                     (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
 
                 if (vr::gPriorityTid > 0) {
                     ALOGD("Setting prio tid from main {}", vr::gPriorityTid);
-                    OXR(pfnSetAndroidApplicationThreadKHR(
-                        gOpenXr->mSession,
-                        XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR,
-                        vr::gPriorityTid));
+                    OXR(pfnSetAndroidApplicationThreadKHR(gOpenXr->mSession,
+                                                          XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR,
+                                                          vr::gPriorityTid));
                 } else {
                     ALOGD("Not setting prio tid from main");
                 }
                 OXR(pfnSetAndroidApplicationThreadKHR(
-                    gOpenXr->mSession,
-                    XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
+                    gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
                     mGameSurfaceLayer->SetSurface();
@@ -839,32 +734,24 @@ private:
         }
     }
 
-    void HandleSessionStateChangedEvent(
-        const XrEventDataSessionStateChanged& newState) {
+    void HandleSessionStateChangedEvent(const XrEventDataSessionStateChanged& newState) {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
                   "session={} time={}",
                   __func__, XrSessionStateToString(lastState),
-                  XrSessionStateToString(newState.state), newState.session,
-                  newState.time);
+                  XrSessionStateToString(newState.state), newState.session, newState.time);
         }
         lastState = newState.state;
         switch (newState.state) {
             case XR_SESSION_STATE_FOCUSED:
-                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event",
-                      __func__);
-                if (!mHasFocus) {
-                    mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID);
-                }
+                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
+                if (!mHasFocus) { mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID); }
                 mHasFocus = true;
                 break;
             case XR_SESSION_STATE_VISIBLE:
-                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event",
-                      __func__);
-                if (mHasFocus) {
-                    mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID);
-                }
+                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
+                if (mHasFocus) { mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID); }
                 mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
@@ -884,10 +771,9 @@ private:
 
         // Process all pending messages.
         for (;;) {
-            XrEventDataBaseHeader* baseEventHeader =
-                (XrEventDataBaseHeader*)(&eventDataBuffer);
-            baseEventHeader->type = XR_TYPE_EVENT_DATA_BUFFER;
-            baseEventHeader->next = NULL;
+            XrEventDataBaseHeader* baseEventHeader = (XrEventDataBaseHeader*)(&eventDataBuffer);
+            baseEventHeader->type                  = XR_TYPE_EVENT_DATA_BUFFER;
+            baseEventHeader->next                  = NULL;
             XrResult r;
             OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
             if (r != XR_SUCCESS) { break; }
@@ -913,17 +799,15 @@ private:
                               __func__);
                         HandleSessionStateChangedEvent(*ssce);
                     } else {
-                        ALOGE(
-                            "{}(): Received "
-                            "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
-                            __func__);
+                        ALOGE("{}(): Received "
+                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
+                              __func__);
                     }
                 } break;
                 case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
-                    ALOGV(
-                        "{}(): Received "
-                        "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
-                        __func__);
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
+                          __func__);
                     break;
                 case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
                     [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
@@ -931,8 +815,7 @@ private:
                     ALOGV("{}(): Received "
                           "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
                           "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel,
-                          pfs->toLevel);
+                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
                 } break;
                 case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
                     ALOGV("{}(): Received "
@@ -964,8 +847,8 @@ private:
                 case Message::Type::SHOW_KEYBOARD: {
                     const bool shouldShowKeyboard = message.mPayload == 1;
                     if (shouldShowKeyboard != mIsKeyboardActive) {
-                        ALOGD("Keyboard status changed: {} -> {}",
-                              mIsKeyboardActive, shouldShowKeyboard);
+                        ALOGD("Keyboard status changed: {} -> {}", mIsKeyboardActive,
+                              shouldShowKeyboard);
                     }
                     mIsKeyboardActive = shouldShowKeyboard;
 
@@ -1021,8 +904,7 @@ struct VRAppHandle {
 };
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env,
-                                                       jobject thiz) {
+Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz) {
     // Log the creat start time, which will be used to calculate the total
     // time to first frame.
     gOnCreateStartTime = std::chrono::steady_clock::now();
@@ -1035,9 +917,7 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env,
-                                                        jobject thiz,
-                                                        jlong   handle) {
+Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
 
     ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) { delete VRAppHandle(handle).p; }
@@ -1048,33 +928,23 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env,
     if (gOpenXr != nullptr) { gOpenXr->Shutdown(); }
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_vr_ErrorMessageLayer_showErrorWindow(
+extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_ErrorMessageLayer_showErrorWindow(
     JNIEnv* env, jobject thiz, jboolean should_show_error) {
     gShouldShowErrorMessage = should_show_error;
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env,
-                                                      jclass  clazz) {
-    return static_cast<jint>(
-        VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
+Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env, jclass clazz) {
+    return static_cast<jint>(VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
 }
 extern "C" JNIEXPORT jint JNICALL
-Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(
-    JNIEnv* env, jclass clazz) {
-    const VRSettings::HMDType hmdType =
-        VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
+Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(JNIEnv* env, jclass clazz) {
+    const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_vr_utils_VrMessageQueue_nativePost(JNIEnv* env,
-                                                             jobject thiz,
-                                                             jint  message_type,
-                                                             jlong payload) {
-    ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type,
-          payload);
-    gMessageQueue.Post(
-        Message(static_cast<Message::Type>(message_type), payload));
+extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_utils_VrMessageQueue_nativePost(
+    JNIEnv* env, jobject thiz, jint message_type, jlong payload) {
+    ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type, payload);
+    gMessageQueue.Post(Message(static_cast<Message::Type>(message_type), payload));
 }

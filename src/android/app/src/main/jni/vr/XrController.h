@@ -55,19 +55,14 @@ public:
 
 struct InputStateFrame {
 
-    void SyncButtonsAndThumbSticks(
-        const XrSession&                         session,
-        const std::unique_ptr<InputStateStatic>& staticState);
+    void SyncButtonsAndThumbSticks(const XrSession&                         session,
+                                   const std::unique_ptr<InputStateStatic>& staticState);
     // Called after SyncButtonsAndThumbSticks
     void SyncHandPoses(const XrSession&                         session,
                        const std::unique_ptr<InputStateStatic>& staticState,
                        const XrSpace&                           referenceSpace,
-                       const XrTime predictedDisplayTime);
-    enum {
-        LEFT_CONTROLLER,
-        RIGHT_CONTROLLER,
-        NUM_CONTROLLERS
-    } mPreferredHand = RIGHT_CONTROLLER;
+                       const XrTime                             predictedDisplayTime);
+    enum { LEFT_CONTROLLER, RIGHT_CONTROLLER, NUM_CONTROLLERS } mPreferredHand = RIGHT_CONTROLLER;
 
     XrActionStateVector2f mThumbStickState[NUM_CONTROLLERS];
     XrActionStateBoolean  mThumbStickClickState[NUM_CONTROLLERS];
@@ -84,7 +79,7 @@ struct InputStateFrame {
     XrActionStateBoolean mAButtonState;
     XrActionStateBoolean mBButtonState;
 
-    XrSpaceLocation mHandPositions[NUM_CONTROLLERS] = {
-        {XR_TYPE_SPACE_LOCATION}, {XR_TYPE_SPACE_LOCATION}};
-    bool mIsHandActive[NUM_CONTROLLERS] = {false, false};
+    XrSpaceLocation mHandPositions[NUM_CONTROLLERS] = {{XR_TYPE_SPACE_LOCATION},
+                                                       {XR_TYPE_SPACE_LOCATION}};
+    bool            mIsHandActive[NUM_CONTROLLERS]  = {false, false};
 };

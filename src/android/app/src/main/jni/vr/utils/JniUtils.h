@@ -23,6 +23,5 @@ License     :   Licensed under GPLv3 or any later version.
 #include <string>
 
 namespace JniUtils {
-jclass GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
-                               const std::string& className);
+jclass GetGlobalClassReference(JNIEnv* jni, jobject activityObject, const std::string& className);
 } // namespace JniUtils

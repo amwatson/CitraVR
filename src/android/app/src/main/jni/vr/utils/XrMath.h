@@ -27,13 +27,11 @@ static inline XrVector2f operator*(const XrVector2f& lhs, const float rhs) {
     return XrVector2f{lhs.x * rhs, lhs.y * rhs};
 }
 
-static inline XrVector3f operator+(const XrVector3f& lhs,
-                                   const XrVector3f& rhs) {
+static inline XrVector3f operator+(const XrVector3f& lhs, const XrVector3f& rhs) {
     return XrVector3f{lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
 }
 
-static inline XrVector3f operator-(const XrVector3f& lhs,
-                                   const XrVector3f& rhs) {
+static inline XrVector3f operator-(const XrVector3f& lhs, const XrVector3f& rhs) {
     return XrVector3f{lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
 }
 
@@ -45,8 +43,7 @@ static inline XrVector3f operator*(const float lhs, const XrVector3f& rhs) {
     return XrVector3f{lhs * rhs.x, lhs * rhs.y, lhs * rhs.z};
 }
 
-static inline XrQuaternionf operator*(const XrQuaternionf& lhs,
-                                      const XrQuaternionf& rhs) {
+static inline XrQuaternionf operator*(const XrQuaternionf& lhs, const XrQuaternionf& rhs) {
     XrQuaternionf result;
     result.x = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
     result.y = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
@@ -60,16 +57,13 @@ namespace XrMath {
 static constexpr float kEpsilon = 0.00001f;
 
 static inline float SafeRcpSqrt(const float x) {
-    return (x >= std::numeric_limits<float>::min())
-               ? 1.0f / sqrtf(x)
-               : std::numeric_limits<float>::max();
+    return (x >= std::numeric_limits<float>::min()) ? 1.0f / sqrtf(x)
+                                                    : std::numeric_limits<float>::max();
 }
 
 class Vector3f {
 public:
-    static float LengthSq(const XrVector3f& v) {
-        return v.x * v.x + v.y * v.y + v.z * v.z;
-    }
+    static float LengthSq(const XrVector3f& v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
     static float Length(const XrVector3f& v) { return sqrtf(LengthSq(v)); }
 
     static void Normalize(XrVector3f& v) {
@@ -86,22 +80,18 @@ public:
     }
 
     static XrVector3f Cross(const XrVector3f& a, const XrVector3f& b) {
-        return XrVector3f{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
-                          a.x * b.y - a.y * b.x};
+        return XrVector3f{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
     }
 };
 
 class Quatf {
 public:
-    static XrQuaternionf Identity() {
-        return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f};
-    }
+    static XrQuaternionf Identity() { return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f}; }
 
     // Given a yaw (Y-axis), pitch (X-axis) and roll (Z-axis) in radians, create
     // a quaternion representing the same rotation
-    static XrQuaternionf FromEuler(const float yawInRadians,
-                                   const float pitchInRadians,
-                                   const float rollInRadians) {
+    static XrQuaternionf
+    FromEuler(const float yawInRadians, const float pitchInRadians, const float rollInRadians) {
         // Calculate half angles
         const float halfPitch = pitchInRadians * 0.5f;
         const float halfYaw   = yawInRadians * 0.5f;
@@ -145,8 +135,7 @@ public:
     }
 
     [[maybe_unused]] static bool IsNormalized(const XrQuaternionf& q) {
-        return fabs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1.0f) <
-               kEpsilon;
+        return fabs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1.0f) < kEpsilon;
     }
 
     static XrQuaternionf Inverted(const XrQuaternionf& q) {
@@ -170,30 +159,25 @@ public:
     // Compute a quaternion representing a rotation between three orthogonal
     // basis vectors. These vectors correspond to the forward, up, and right
     // directions of a rotation matrix.
-    static XrQuaternionf FromThreeVectors(const XrVector3f& forward,
-                                          const XrVector3f& up,
-                                          const XrVector3f& right) {
+    static XrQuaternionf
+    FromThreeVectors(const XrVector3f& forward, const XrVector3f& up, const XrVector3f& right) {
         const float trace = right.x + up.y + forward.z;
         if (trace > 0.0f) {
             const float s = 0.5f / sqrtf(trace + 1.0f);
-            return XrQuaternionf{(up.z - forward.y) * s,
-                                 (forward.x - right.z) * s,
+            return XrQuaternionf{(up.z - forward.y) * s, (forward.x - right.z) * s,
                                  (right.y - up.x) * s, 0.25f / s};
         }
         if (right.x > up.y && right.x > forward.z) {
             const float s = 2.0f * sqrtf(1.0f + right.x - up.y - forward.z);
-            return XrQuaternionf{0.25f * s, (up.x + right.y) / s,
-                                 (forward.x + right.z) / s,
+            return XrQuaternionf{0.25f * s, (up.x + right.y) / s, (forward.x + right.z) / s,
                                  (up.z - forward.y) / s};
         } else if (up.y > forward.z) {
             const float s = 2.0f * sqrtf(1.0f + up.y - right.x - forward.z);
-            return XrQuaternionf{(up.x + right.y) / s, 0.25f * s,
-                                 (forward.y + up.z) / s,
+            return XrQuaternionf{(up.x + right.y) / s, 0.25f * s, (forward.y + up.z) / s,
                                  (forward.x - right.z) / s};
         } else {
             const float s = 2.0f * sqrtf(1.0f + forward.z - right.x - up.y);
-            return XrQuaternionf{(forward.x + right.z) / s,
-                                 (forward.y + up.z) / s, 0.25f * s,
+            return XrQuaternionf{(forward.x + right.z) / s, (forward.y + up.z) / s, 0.25f * s,
                                  (up.z - forward.y) / s};
         }
     }
@@ -201,9 +185,7 @@ public:
 
 class Posef {
 public:
-    static XrPosef Identity() {
-        return XrPosef{Quatf::Identity(), {0.0f, 0.0f, 0.0f}};
-    }
+    static XrPosef Identity() { return XrPosef{Quatf::Identity(), {0.0f, 0.0f, 0.0f}}; }
 
     static XrVector3f Transform(const XrPosef& pose, const XrVector3f& vector) {
         return Quatf::Rotate(pose.orientation, vector) + pose.position;

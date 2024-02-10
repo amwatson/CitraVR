@@ -14,8 +14,8 @@ public:
      * @param session a valid XrSession
      */
     UILayer(const std::string& className, const XrVector3f&& position,
-            const XrQuaternionf&& orientation, JNIEnv* jni,
-            jobject activityObject, const XrSession& session);
+            const XrQuaternionf&& orientation, JNIEnv* jni, jobject activityObject,
+            const XrSession& session);
     ~UILayer();
 
     /** Called on resume. Sets the surface in the native rendering library.
@@ -69,8 +69,8 @@ public:
     void SendClickToUI(const XrVector2f& pos2d, const int type);
 
 private:
-    int  Init(const std::string& className, const jobject activityObject,
-              const XrVector3f& position, const XrSession& session);
+    int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
+             const XrSession& session);
     void Shutdown();
 
     const XrSession mSession;

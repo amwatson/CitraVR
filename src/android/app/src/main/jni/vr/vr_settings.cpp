@@ -22,8 +22,7 @@ Values values = {};
 HMDType HmdTypeFromStr(const std::string& hmdType) {
     if (hmdType == "Quest") {
         return HMDType::QUEST1;
-    } else if (hmdType == "Quest" || hmdType == "Quest 2" ||
-               hmdType == "Miramar") {
+    } else if (hmdType == "Quest" || hmdType == "Quest 2" || hmdType == "Miramar") {
         return HMDType::QUEST2;
     } else if (hmdType == "Quest 3") {
         return HMDType::QUEST3;
@@ -37,8 +36,7 @@ std::string GetHMDTypeStr() {
     return SyspropUtils::GetSysPropAsString("ro.product.model", "Unknown");
 }
 
-XrPerfSettingsLevelEXT
-CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
+XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
     switch (cpu_level_pref) {
         case 1:
             return XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT;

@@ -16,8 +16,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <sys/system_properties.h>
 
 namespace SyspropUtils {
-static inline float GetSysPropAsFloat(const char* propertyName,
-                                      const float defaultValue) {
+static inline float GetSysPropAsFloat(const char* propertyName, const float defaultValue) {
     char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
@@ -35,8 +34,7 @@ static inline float GetSysPropAsFloat(const char* propertyName,
     return defaultValue;
 }
 
-static inline int32_t GetSysPropAsInt(const char*   propertyName,
-                                      const int32_t defaultValue) {
+static inline int32_t GetSysPropAsInt(const char* propertyName, const int32_t defaultValue) {
     char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 

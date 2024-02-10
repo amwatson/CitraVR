@@ -13,6 +13,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.fragments.KeyboardDialogFragment
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.ui.VrKeyboardView
 import org.citra.citra_emu.vr.utils.VrMessageQueue
 import java.io.Serializable
 import java.security.Key
@@ -22,7 +23,6 @@ import java.security.Key
 object SoftwareKeyboard {
     lateinit var data: KeyboardData
     val finishLock = Object()
-    var sConfig : KeyboardConfig = KeyboardConfig()
 
     private fun ExecuteImpl(config: KeyboardConfig) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
@@ -68,7 +68,7 @@ object SoftwareKeyboard {
         if (emulationActivity is VrActivity) {
             NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
                 // Show keyboard
-                sConfig = config
+                VrKeyboardView.sVrKeyboardView.get()!!.setConfig(config)
                 VrMessageQueue.post(VrMessageQueue.MessageType.SHOW_KEYBOARD, 1)
             }
         } else {
@@ -173,7 +173,7 @@ object SoftwareKeyboard {
         }
     }
     fun onFinishVrKeyboardPositive(text: String?, config: KeyboardConfig?) {
-        Log.info("amwatson [SoftwareKeyboard] button positive: \"$text\"")
+        Log.debug("[SoftwareKeyboard] button positive: \"$text\" config button: ${config!!.buttonConfig}")
         data = KeyboardData(config!!.buttonConfig, text!!)
         val error = ValidateInput(data.text)
         if (error != ValidationError.None) {

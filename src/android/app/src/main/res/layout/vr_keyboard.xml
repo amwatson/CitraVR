@@ -15,28 +15,33 @@ app's packagename and returns information for the wrong window.-->
     android:id="@+id/vr_keyboard"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@color/citra_surface"
+    android:background="@drawable/vr_menu_background"
     android:layout_gravity="center"
     android:layout_marginHorizontal="30dp"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingTop="40dp"
     android:theme="@style/ThemeOverlay.Citra.Dark">
 
+    <LinearLayout
+        android:layout_width="700dp"
+        android:layout_height="30dp"
+        android:orientation="horizontal"/>
 
     <EditText
         android:id="@+id/vrKeyboardText"
         style="@style/VrKeyboardEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@color/citra_onSurface"
         android:ems="10"
+        android:layout_marginHorizontal="16dp"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:inputType="text" />
 
     <LinearLayout
         android:id="@+id/vr_keyboard_keyboard"
-        android:layout_width="700dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
@@ -47,6 +52,7 @@ app's packagename and returns information for the wrong window.-->
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
+        android:layout_marginBottom="20dp"
         android:orientation="horizontal">
 
         <Button
@@ -56,7 +62,7 @@ app's packagename and returns information for the wrong window.-->
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@android:string/ok"
-            android:visibility="gone" />
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/keyNeutral"

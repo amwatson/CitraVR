@@ -2,7 +2,7 @@
     <!-- Pressed state -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#DFA900"/> <!-- Pressed color -->
+            <solid android:color="@color/citra_primaryContainer"/> <!-- Pressed color -->
             <corners android:radius="4dp"/>
         </shape>
     </item>

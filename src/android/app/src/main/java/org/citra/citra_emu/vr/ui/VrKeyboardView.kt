@@ -11,8 +11,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import org.citra.citra_emu.R
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.applets.SoftwareKeyboard
 import org.citra.citra_emu.utils.Log
+import java.lang.ref.WeakReference
 import java.util.Locale
 
 class VrKeyboardView : LinearLayout {
@@ -40,22 +42,20 @@ class VrKeyboardView : LinearLayout {
 
     private fun init(attrs: AttributeSet?, defStyle: Int) {
         mLayoutInflator = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-
-
+        sVrKeyboardView = WeakReference(this)
     }
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         mEditText = findViewById(R.id.vrKeyboardText)
-        setConfig(SoftwareKeyboard.sConfig)
-        showKeyboardType(KeyboardType.Abc)
+        clearKeyboardState()
     }
 
     // Call from UI thread
     fun setConfig(config: SoftwareKeyboard.KeyboardConfig) {
-        val editText: EditText = findViewById(R.id.vrKeyboardText)
-        assert(editText != null)
-       /* editText!!.apply {
+        assert(mEditText != null)
+        clearKeyboardState()
+        mEditText!!.apply {
             setHint(config!!.hintText)
             setSingleLine(!config.multilineMode)
             setFilters(
@@ -64,9 +64,16 @@ class VrKeyboardView : LinearLayout {
                     InputFilter.LengthFilter(config.maxTextLength)
                 )
             )
-        }*/
+        }
         setupResultButtons(config)
         mConfig = config
+    }
+
+    private fun clearKeyboardState() {
+        assert(mEditText != null)
+        mEditText!!.setText("")
+        mIsShifted = false // gets used in showKeyboardType
+        showKeyboardType(KeyboardType.Abc)
     }
 
     private fun setupResultButtons(config: SoftwareKeyboard.KeyboardConfig?) {
@@ -248,6 +255,8 @@ class VrKeyboardView : LinearLayout {
     }
 
     companion object {
+
+        var sVrKeyboardView = WeakReference<VrKeyboardView?>(null)
         private fun setKeyCaseForViewGroup(viewGroup: ViewGroup, isShifted: Boolean) {
             for (i in 0 until viewGroup.childCount) {
                 val child = viewGroup.getChildAt(i)

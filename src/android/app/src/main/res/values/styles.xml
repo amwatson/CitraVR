@@ -16,12 +16,13 @@
 
     <!-- Style for VR keyboard buttons -->
     <style name="VrKeyboardButtonStyle" parent="Widget.Material3.Button">
-      <item name="android:background">@drawable/vr_keyboard_key_background</item>
-      <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/vr_keyboard_key_background</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textColor">@color/vr_keyboard_key_text_color</item>
-      <item name="android:padding">10dp</item>
-      <item name="android:layout_margin">2dp</item>
-     <item name="android:textAllCaps">false</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:layout_margin">2dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAlignment">center</item>
     </style>
 
     <style name="VrKeyboardButtonStyleModifier" parent="@style/VrKeyboardButtonStyle">

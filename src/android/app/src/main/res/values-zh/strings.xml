@@ -672,4 +672,5 @@
     <string name="vr_licenses_description">使Citra和Citravr成为可能的项目</string>
     <string name="game_compat_tooltip">游戏兼容性表</string>
     <string name="vr_extra_performance_mode_description">覆盖其他设置的价值，以最大程度地减少开销并最大程度地提高性能。注意：启用此设置后，忽略了以下设置的用户值：VR环境（始终选择void），音频拉伸（禁用）</string>
+    <string name="vr_notice_title">注意:</string>
 </resources>

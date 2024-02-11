@@ -183,4 +183,5 @@
     <string name="vr_licenses_description">Citra와 Citravr을 가능하게하는 프로젝트</string>
     <string name="game_compat_tooltip">게임 호환 시트</string>
     <string name="vr_extra_performance_mode_description">오버 헤드를 최소화하고 성능을 최대화하기 위해 다른 설정의 값을 무시합니다. 참고 :이 설정이 활성화되면 다음 설정에 대한 사용자의 값은 무시됩니다.  VR 환경 (항상 void를 선택), 오디오 스트레칭 (비활성화)</string>
+    <string name="vr_notice_title">주의:</string>
 </resources>

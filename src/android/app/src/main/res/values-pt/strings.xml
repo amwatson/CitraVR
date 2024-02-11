@@ -334,4 +334,5 @@
     <string name="vr_licenses_description">Projetos que tornam possível o Citra e Citravr</string>
     <string name="game_compat_tooltip">Folha de compatibilidade de jogos</string>
     <string name="vr_extra_performance_mode_description">Substitui o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. Nota: Quando essa configuração é ativada, os valores do usuário para as seguintes configurações são ignorados: ambiente VR (sempre seleciona o vazio), alongamento de áudio (desativado)</string>
+    <string name="vr_notice_title">Aviso:</string>
 </resources>

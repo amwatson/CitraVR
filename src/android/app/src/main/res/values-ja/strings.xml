@@ -126,4 +126,5 @@
     <string name="vr_licenses_description">CitraとCitravrを可能にするプロジェクト</string>
     <string name="game_compat_tooltip">ゲーム互換シート</string>
     <string name="vr_extra_performance_mode_description">オーバーヘッドを最小限に抑え、パフォーマンスを最大化するために、他の設定の値をオーバーライドします。注：この設定が有効になっている場合、次の設定のユーザーの値は無視されます：VR環境（常にボイドを選択）、オーディオストレッチング（無効）</string>
+    <string name="vr_notice_title">注意：</string>
     </resources>

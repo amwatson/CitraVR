@@ -181,4 +181,5 @@
     <string name="vr_licenses_description">Prosjekter som gjør citra og citravr mulig</string>
     <string name="game_compat_tooltip">Spillkompatibilitetsark</string>
     <string name="vr_extra_performance_mode_description">Overstyrer verdien av andre innstillinger for å minimere overhead og maksimalisere ytelsen. Merk: Når denne innstillingen er aktivert, blir brukerens verdier for følgende innstillinger ignorert: VR -miljø (velger alltid tomrom), lydstrekking (deaktivert)</string>
+    <string name="vr_notice_title">Merk:</string>
 </resources>

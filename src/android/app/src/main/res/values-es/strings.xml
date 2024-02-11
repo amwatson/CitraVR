@@ -674,4 +674,5 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="vr_licenses_description">Proyectos que hacen posible a Citra y Citravr</string>
     <string name="game_compat_tooltip">Hoja de compatibilidad del juego</string>
     <string name="vr_extra_performance_mode_description">Anula el valor de otras configuraciones para minimizar los gastos generales y maxmimizar el rendimiento. Nota: Cuando esta configuración está habilitada, se ignoran los valores del usuario para la siguiente configuración: entorno VR (siempre selecciona void), estiramiento de audio (deshabilitado)</string>
+    <string name="vr_notice_title">Aviso:</string>
 </resources>

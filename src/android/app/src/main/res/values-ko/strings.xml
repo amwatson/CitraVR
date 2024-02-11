@@ -183,5 +183,5 @@
     <string name="game_compat_tooltip">게임 호환성 시트</string>
     <string name="vr_extra_performance_mode_description">오버헤드를 최소화하고 성능을 극대화하기 위해 다른 설정의 값을 덮어씁니다. 주의: 이 설정이 활성화되면, 다음 설정에 대한 사용자의 값은 무시됩니다: VR 환경(항상 공허 선택), 오디오 스트레칭(비활성화)</string>
      <string name="vr_notice_title">주의:</string>
-    <string name="vr_notice_description">"번역: 게임이나 레벨의 첫 번째 진행 중에는 잠시 멈춤이나 오디오 지연이 발생할 수 있습니다.  셰이더가 로드된 후에는 해당 멈춤이 다음 실행 시에 방지됩니다. "</string>
+    <string name="vr_notice_description">게임이나 레벨의 첫 플레이 중에 잠시 멈춤이나 오디오 끊김이 발생할 수 있습니다.셰이더가 로드된 후에는 이러한 끊김이 이후에 발생하는 실행에서 방지되도록 기기에 저장됩니다.</string>
 </resources>

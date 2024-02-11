@@ -533,5 +533,7 @@
     <string name="game_compat_tooltip">Kompatibilitätsliste für Spiele</string>
     <string name="vr_extra_performance_mode_description">Überschreibt die Werte anderer Einstellungen, um Overhead zu minimieren und die Leistung zu maximieren. HINWEIS: Wenn diese Einstellung aktiviert ist, werden die Werte des Benutzers für die folgenden Einstellungen ignoriert: VR-Umgebung (wählt immer Leer), Audio-Stretching (deaktiviert)</string>
    <string name="vr_notice_title">Hinweis:</string>
-    <string name="vr_notice_description">Während deines ersten Durchgangs eines Spiels oder Levels könntest du kurze Pausen oder Audio-Stottern erleben.  Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert, wodurch diese Stotterer bei späteren Starts vermieden werden. </string>
+   <string name="vr_notice_description">Während deines ersten Playthroughs eines Spiels oder Levels könntest du kurzzeitige Stopps oder Audiostottern erleben.
+
+Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und verhindern diese Stotterer bei späteren Starts.</string>
 </resources>

@@ -675,4 +675,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="game_compat_tooltip">Hoja de Compatibilidad de Juegos</string>
     <string name="vr_extra_performance_mode_description">Sobrescribe el valor de otros ajustes para minimizar la sobrecarga y maximizar el rendimiento. NOTA: cuando este ajuste está habilitado, se ignoran los valores del usuario para los siguientes ajustes: Entorno VR (siempre selecciona Vacío), Estiramiento de audio (deshabilitado)</string>
     <string name="vr_notice_title">Aviso:</string>
+    <string name="vr_notice_description">Durante tu primera partida de un juego o nivel, es posible que experimentes breves pausas o interrupciones en el audio.
+
+Después de que los shaders se carguen, se almacenan en el dispositivo, lo que evita estas interrupciones en futuros lanzamientos.</string>
 </resources>

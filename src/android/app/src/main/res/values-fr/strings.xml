@@ -676,6 +676,6 @@
     <string name="game_compat_tooltip">Fiche de Compatibilité des Jeux</string>
     <string name="vr_extra_performance_mode_description">Outrepasse la valeur d\'autres paramètres pour minimiser la surcharge et maximiser la performance. NOTE : lorsque ce paramètre est activé, les valeurs de l\'utilisateur pour les paramètres suivants sont ignorées : Environnement VR (sélectionne toujours le Vide), Étirement audio (désactivé)</string>
     <string name="vr_notice_title">Avis:</string>
-    <string name="vr_notice_description">Lors de votre première partie d\'un jeu ou d\'un niveau, vous pourriez rencontrer de brèves pauses ou des saccades audio.
-Après le chargement des shaders, ils sont stockés sur l\'appareil, empêchant ces saccades lors des lancements ultérieurs. </string>
+    <string name="vr_notice_description">Lors de votre première partie d\'un jeu ou d\'un niveau, il se peut que vous rencontriez de brèves pauses ou des saccades audio.
+Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui empêche ces saccades lors des lancements ultérieurs.</string>
 </resources>

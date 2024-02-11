@@ -264,5 +264,7 @@
     <string name="game_compat_tooltip">Foglio di Compatibilità dei Giochi</string>
     <string name="vr_extra_performance_mode_description">Sovrascrive il valore delle altre impostazioni per minimizzare il sovraccarico e massimizzare le prestazioni. NOTA: quando questa impostazione è abilitata, i valori dell\'utente per le seguenti impostazioni vengono ignorati: Ambiente VR (seleziona sempre Vuoto), Stretching audio (disabilitato)</string>
     <string name="vr_notice_title">Avviso:</string>
-    <string name="vr_notice_description">"</string>
+    <string name="vr_notice_description">Durante la primera vez que juegues un juego o nivel, es posible que experimentes breves pausas o tartamudeos de audio.
+
+Después de que se carguen los sombreadores, estos se guardan en el dispositivo, evitando estos tartamudeos en lanzamientos posteriores.</string>
 </resources>

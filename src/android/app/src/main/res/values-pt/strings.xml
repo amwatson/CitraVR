@@ -335,5 +335,7 @@
     <string name="game_compat_tooltip">Folha de Compatibilidade de Jogos</string>
     <string name="vr_extra_performance_mode_description">Sobrepõe o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. NOTA: quando esta configuração está ativada, os valores do usuário para as seguintes configurações são ignorados: Ambiente VR (sempre seleciona Vazio), Esticamento de áudio (desativado)</string>
     <string name="vr_notice_title">Aviso:</string>
-    <string name="vr_notice_description">Durante a primeira vez que você joga um jogo ou nível, você pode experimentar breves pausas ou travamentos de áudio.  Após os shaders serem carregados, eles são armazenados no dispositivo, evitando esses travamentos em lançamentos subsequentes. </string>
+    <string name="vr_notice_description">Durante sua primeira jogada de um jogo ou nível, você pode experimentar breves pausas ou interrupções de áudio.
+
+Após os shaders serem carregados, eles são armazenados no dispositivo, evitando essas interrupções em lançamentos subsequentes.</string>
 </resources>

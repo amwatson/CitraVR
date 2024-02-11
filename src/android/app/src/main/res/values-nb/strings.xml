@@ -181,4 +181,5 @@
     <string name="game_compat_tooltip">Spillkompatibilitetsark</string>
     <string name="vr_extra_performance_mode_description">Overstyrer verdien av andre innstillinger for å minimere overhead og maksimere ytelse. MERK: når denne innstillingen er aktivert, ignoreres brukerens verdier for følgende innstillinger: VR-miljø (velger alltid Void), Lydstrekking (deaktivert)</string>
     <string name="vr_notice_title">Merk:</string>
+    <string name="vr_notice_description">Under dine første gjennomspill av et spill eller nivå, kan du oppleve korte pauser eller hakking i lyden. Etter at shaderne er lastet inn, blir de lagret på enheten og forhindrer disse hakkingene ved senere oppstart.</string>
 </resources>

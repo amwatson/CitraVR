@@ -127,4 +127,6 @@
     <string name="game_compat_tooltip">ゲーム互換性シート</string>
     <string name="vr_extra_performance_mode_description">他の設定の値を上書きして、オーバーヘッドを最小限に抑え、パフォーマンスを最大化します。注：この設定が有効になっている場合、以下の設定に対するユーザーの値は無視されます：VR環境（常にVoidを選択）、オーディオストレッチ（無効）</string>
     <string name="vr_notice_title">注意：</string>
+    <string name="vr_notice_description">ゲームやレベルの初回プレイ中には、一時的な一時停止やオーディオの途切れが発生することがあります。
+シェーダが読み込まれた後、デバイスに保存され、後続の起動時にこれらの途切れを防止します。</string>
     </resources>

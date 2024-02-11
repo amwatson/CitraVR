@@ -673,6 +673,7 @@
     <string name="game_compat_tooltip">游戏兼容性表</string>
     <string name="vr_extra_performance_mode_description">覆盖其他设置的值以最小化开销并最大化性能。注意：启用此设置时，将忽略用户对以下设置的值：VR环境（始终选择空白），音频拉伸（禁用）</string>
     <string name="vr_notice_title">注意:</string>
-    <string name="vr_notice_description">在首次进行游戏或关卡的过程中，您可能会遇到短暂的暂停或音频跳动。
-一旦这些着色器在初始加载后保存到您的设备上，它们将在随后的游戏再次进行时重复使用。</string>
+    <string name="vr_notice_description">在你第一次玩游戏或关卡时，你可能会遇到短暂的暂停或音频卡顿。
+
+在着色器加载完成后，它们会被存储到设备上，从而避免了后续启动时的卡顿。</string>
 </resources>

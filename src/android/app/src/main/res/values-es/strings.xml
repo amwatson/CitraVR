@@ -679,4 +679,5 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
 Después de que los shaders se carguen, se almacenan en el dispositivo, lo que evita estas interrupciones en futuros lanzamientos.</string>
     <string name="vr_notice_description2">Algunos juegos simplemente no funcionarán bien. Asegúrate de revisar la Lista de Compatibilidad de Juegos CitraVR para ver cuáles son los juegos que mejor rendimiento tienen.</string>
+    <string name="vr_input_binding_subtitle">¿Tienes problemas? Presiona Seleccionar + Iniciar para desactivar el Modo de mirada del Gamepad, y luego intenta de nuevo.</string>
 </resources>

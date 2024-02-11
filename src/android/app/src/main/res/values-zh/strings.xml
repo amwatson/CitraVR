@@ -677,4 +677,5 @@
 
 在着色器加载完成后，它们会被存储到设备上，从而避免了后续启动时的卡顿。</string>
     <string name="vr_notice_description2">有些游戏很难运行良好。请务必查阅 CitraVR 游戏兼容性列表，了解哪些游戏性能最佳。</string>
+    <string name="vr_input_binding_subtitle">遇到问题了吗？按下“选择”和“开始”键来禁用游戏手柄凝视模式，然后再试一次。</string>
 </resources>

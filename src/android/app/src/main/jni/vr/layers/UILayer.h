@@ -145,7 +145,6 @@ private:
     //============================
     // JNI objects
     JNIEnv* mEnv             = nullptr;
-    jobject mActivityObject  = nullptr;
     jclass  mVrUILayerClass  = nullptr;
     jobject mVrUILayerObject = nullptr;
     jobject mSurface         = nullptr;

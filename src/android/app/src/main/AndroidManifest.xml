@@ -74,6 +74,9 @@
             android:name="libopenxr_forwardloader.oculus.so"
             android:required="false" />
 
+        <meta-data android:name="android.game_mode_config"
+            android:resource="@xml/game_mode_config" />
+
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:configChanges="density|orientation|screenSize|keyboard|keyboardHidden|uiMode"

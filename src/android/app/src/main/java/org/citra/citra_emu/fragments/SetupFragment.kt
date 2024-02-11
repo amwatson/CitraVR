@@ -260,20 +260,8 @@ class SetupFragment : Fragment() {
             )
             add(
                 SetupPage(
-                    R.drawable.ic_info_outline,
-                    R.string.done,
-                    R.string.done_description,
-                    R.drawable.ic_arrow_forward,
-                    false,
-                    R.string.text_continue,
-                    { }
-                )
-            )
-
-            add(
-                SetupPage(
                     R.drawable.ic_check,
-                    R.string.vr_notice_title,
+                    R.string.done_description,
                     R.string.done_description,
                     R.drawable.ic_arrow_forward,
                     false,

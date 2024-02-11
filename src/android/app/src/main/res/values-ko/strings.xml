@@ -166,22 +166,22 @@
     <string name="camera_permission_needed">CitraVR는 3DS의 카메라를 에뮬레이션하기 위해 카메라에 액세스해야합니다.\n\n 그 대신에 카메라 설정에서 \"이미지 소스\"를 \"정지 이미지\"로 설정할 수도 있습니다.</string>
 
     <!-- VR-specific -->
-    <string name="vr_gamepad_warning">문제가있다? 입력 모드를 전환하려면 게임 패드에서 @string/button_start + @string/button_select를 누릅니다.</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR 환경</string>
-    <string name="vr_error_two_instances_title">오류 : 두 개의 CitraVR 인스턴스를 감지했습니다</string>
-    <string name="vr_error_two_instances_message">CitraVR로 치명적인 발사 버그를 감지했습니다. 이것은 알려진 문제입니다. \n\n이제 문제가 해결되었습니다. 게임을 다시 시작하십시오. </string>
+    <string name="vr_error_two_instances_title">오류: 두 개의 CitraVR 인스턴스 감지됨</string>
+    <string name="vr_error_two_instances_message">CitraVR과 관련된 치명적인 실행 버그가 감지되었습니다. 이는 알려진 문제입니다. \n\n문제가 현재 해결되었습니다. 게임을 다시 시작해 보십시오.</string>
     <string name="vr_extra_performance_mode">VR 추가 성능 모드</string>
     <string name="vr_cpu_level">CPU 레벨</string>
-    <string name="vr_cpu_level_description">레벨이 높을수록 오디오/에뮬레이션 성능이 향상 될 수 있지만 배터리가 더 빨리 배터리를 배출합니다. </string>
-    <string name="vr_immersive_mode_title">[경고 : 그래픽 아티팩트] 몰입 모드 (실험)</string>
-    <string name="vr_immersive_mode_description">몰입 형 게임 플레이를 위해 실린더 주위에 상단 화면을 확장합니다. </string>
-    <string name="vr_graphics_warning">위험 : 모든 게임/레벨이 몰입 형 모드에서 좋아 보이는 것은 아닙니다. 이 옵션을 선택할 때 큰 시각적 아티팩트가 일반적입니다. </string>
-    <string name="vr_graphics_warning_short">경고 : 대부분의 콘텐츠에서 시각적 아티팩트가 발생합니다. </string>
-    <string name="vr_new_3ds_description">대부분의 타이틀에 대해 활성화해야합니다. 비활성화되면 특정 타이틀의 성능을 향상시킵니다 (예 : Star Fox 64 3D)</string>
-    <string name="release_notes_title">릴리즈 노트</string>
-    <string name="vr_licenses_description">Citra와 Citravr을 가능하게하는 프로젝트</string>
-    <string name="game_compat_tooltip">게임 호환 시트</string>
-    <string name="vr_extra_performance_mode_description">오버 헤드를 최소화하고 성능을 최대화하기 위해 다른 설정의 값을 무시합니다. 참고 :이 설정이 활성화되면 다음 설정에 대한 사용자의 값은 무시됩니다.  VR 환경 (항상 void를 선택), 오디오 스트레칭 (비활성화)</string>
-    <string name="vr_notice_title">주의:</string>
+    <string name="vr_cpu_level_description">더 높은 레벨은 오디오/에뮬레이션 성능을 향상시킬 수 있지만 배터리 소모가 빨라집니다</string>
+    <string name="vr_immersive_mode_title">[경고: 그래픽 아티팩트] 몰입 모드 (실험적)</string>
+    <string name="vr_immersive_mode_description">몰입감 있는 게임플레이를 위해 상단 화면을 원통형으로 확장합니다</string>
+    <string name="vr_graphics_warning">위험: 모든 게임/레벨이 몰입 모드에서 좋아 보이는 것은 아닙니다. 이 옵션을 선택할 때 큰 시각적 아티팩트가 흔합니다</string>
+    <string name="vr_graphics_warning_short">경고: 대부분의 콘텐츠에서 시각적 아티팩트를 유발할 것입니다</string>
+    <string name="vr_new_3ds_description">대부분의 타이틀에 대해 활성화되어야 합니다. 비활성화하면 특정 타이틀(예: 스타 폭스 64 3D)의 성능이 향상됩니다</string>
+    <string name="release_notes_title">릴리스 노트</string>
+    <string name="vr_licenses_description">Citra 및 CitraVR을 가능하게 하는 프로젝트</string>
+    <string name="game_compat_tooltip">게임 호환성 시트</string>
+    <string name="vr_extra_performance_mode_description">오버헤드를 최소화하고 성능을 극대화하기 위해 다른 설정의 값을 덮어씁니다. 주의: 이 설정이 활성화되면, 다음 설정에 대한 사용자의 값은 무시됩니다: VR 환경(항상 공허 선택), 오디오 스트레칭(비활성화)</string>
+     <string name="vr_notice_title">주의:</string>
+    <string name="vr_notice_description">"번역: 게임이나 레벨의 첫 번째 진행 중에는 잠시 멈춤이나 오디오 지연이 발생할 수 있습니다.  셰이더가 로드된 후에는 해당 멈춤이 다음 실행 시에 방지됩니다. "</string>
 </resources>

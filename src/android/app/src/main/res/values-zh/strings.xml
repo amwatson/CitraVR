@@ -659,18 +659,20 @@
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR环境</string>
     <string name="vr_error_two_instances_title">错误：检测到两个CitraVR实例</string>
-    <string name="vr_error_two_instances_message">通过CitraVR检测到致命的发射错误。这是一个已知的问题。\n\n现在解决了问题。请尝试再次启动游戏。</string>
-    <string name="vr_extra_performance_mode">VR额外的性能模式</string>
+    <string name="vr_error_two_instances_message">检测到CitraVR的一个致命启动错误。这是一个已知问题。\n\n问题现已解决。请尝试重新启动游戏。</string>
+    <string name="vr_extra_performance_mode">VR额外性能模式</string>
     <string name="vr_cpu_level">CPU级别</string>
-    <string name="vr_cpu_level_description">较高的水平可以改善音频/仿真性能，但会更快地排出电池</string>
-    <string name="vr_immersive_mode_title">[警告：图形伪像]沉浸式模式（实验）</string>
-    <string name="vr_immersive_mode_description">将顶部屏幕扩展在圆柱体周围以进行沉浸游戏</string>
-    <string name="vr_graphics_warning">危险：并非所有的游戏/水平在沉浸式模式下看起来都不错。当选择此选项时，大型视觉伪像很常见</string>
-    <string name="vr_graphics_warning_short">警告：这将导致大多数内容的视觉文物</string>
-    <string name="vr_new_3ds_description">应启用大多数标题。禁用时，可以提高特定标题的性能（例如Star Fox 64 3D）</string>
-    <string name="release_notes_title">发行说明</string>
-    <string name="vr_licenses_description">使Citra和Citravr成为可能的项目</string>
+    <string name="vr_cpu_level_description">更高的级别可能会提高音频/仿真性能，但会更快耗尽电池</string>
+    <string name="vr_immersive_mode_title">【警告：图形错误】沉浸模式（实验性）</string>
+    <string name="vr_immersive_mode_description">将顶屏围绕一个圆柱体扩展，以实现沉浸式游戏体验</string>
+    <string name="vr_graphics_warning">危险：并非所有游戏/级别在沉浸模式下都表现良好。选择此选项时，出现大型视觉错误是常见的</string>
+    <string name="vr_graphics_warning_short">警告：这将在大多数内容中引起视觉错误</string>
+    <string name="vr_new_3ds_description">对于大多数标题应启用。禁用时，可提高特定标题的性能（例如：星际火狐64 3D）</string>
+    <string name="release_notes_title">发布说明</string>
+    <string name="vr_licenses_description">使Citra和CitraVR成为可能的项目</string>
     <string name="game_compat_tooltip">游戏兼容性表</string>
-    <string name="vr_extra_performance_mode_description">覆盖其他设置的价值，以最大程度地减少开销并最大程度地提高性能。注意：启用此设置后，忽略了以下设置的用户值：VR环境（始终选择void），音频拉伸（禁用）</string>
+    <string name="vr_extra_performance_mode_description">覆盖其他设置的值以最小化开销并最大化性能。注意：启用此设置时，将忽略用户对以下设置的值：VR环境（始终选择空白），音频拉伸（禁用）</string>
     <string name="vr_notice_title">注意:</string>
+    <string name="vr_notice_description">在首次进行游戏或关卡的过程中，您可能会遇到短暂的暂停或音频跳动。
+一旦这些着色器在初始加载后保存到您的设备上，它们将在随后的游戏再次进行时重复使用。</string>
 </resources>

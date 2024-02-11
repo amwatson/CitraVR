@@ -110,4 +110,5 @@
     <string name="game_compat_tooltip">Pelin yhteensopivuuslomake</string>
     <string name="vr_extra_performance_mode_description">Ohittaa muiden asetusten arvon yleiskustannusten minimoimiseksi ja suorituskyvyn maksimimiseksi. Huomaa: Kun tämä asetus on käytössä, seuraavien asetusten käyttäjän arvot jätetään huomiotta: VR -ympäristö (valittuu aina tyhjä), äänen venytys (pois käytöstä)</string>
     <string name="vr_notice_title">Huomio:</string>
+    <string name="vr_notice_description">"Ensimmäisen pelikerran tai tason aikana saatat kokea lyhyitä pysähdyksiä tai äänien katkeamista.  Kun varjostimet on ladattu, ne tallennetaan laitteelle, mikä estää nämä katkokset myöhemmissä käynnistyksissä. "</string>
 </resources>

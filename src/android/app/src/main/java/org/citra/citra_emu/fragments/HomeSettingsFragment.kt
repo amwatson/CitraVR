@@ -76,7 +76,7 @@ class HomeSettingsFragment : Fragment() {
                 R.drawable.ic_settings,
                 { SettingsActivity.launch(requireContext(), SettingsFile.FILE_NAME_CONFIG, "") }
             ),
-            HomeSetting(
+            /*HomeSetting(
                 R.string.system_files,
                 R.string.system_files_description,
                 R.drawable.ic_system_update,
@@ -85,7 +85,7 @@ class HomeSettingsFragment : Fragment() {
                     parentFragmentManager.primaryNavigationFragment?.findNavController()
                         ?.navigate(R.id.action_homeSettingsFragment_to_systemFilesFragment)
                 }
-            ),
+            ),*/
             HomeSetting(
                 R.string.install_game_content,
                 R.string.install_game_content_description,

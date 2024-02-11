@@ -536,4 +536,5 @@
    <string name="vr_notice_description">Während deines ersten Playthroughs eines Spiels oder Levels könntest du kurzzeitige Stopps oder Audiostottern erleben.
 
 Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und verhindern diese Stotterer bei späteren Starts.</string>
+    <string name="vr_notice_description2">Einige Spiele laufen einfach nicht gut. Stellen Sie sicher, dass Sie die CitraVR-Spielkompatibilitätsliste überprüfen, um zu sehen, welche Spiele am besten funktionieren.</string>
 </resources>

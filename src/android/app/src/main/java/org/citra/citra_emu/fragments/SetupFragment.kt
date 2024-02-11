@@ -261,7 +261,7 @@ class SetupFragment : Fragment() {
             add(
                 SetupPage(
                     R.drawable.ic_check,
-                    R.string.done_description,
+                    R.string.done,
                     R.string.done_description,
                     R.drawable.ic_arrow_forward,
                     false,

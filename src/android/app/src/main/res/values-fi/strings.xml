@@ -113,4 +113,5 @@
     <string name="vr_notice_description">Ensimmäisen pelikerran tai tason aikana saatat kokea lyhyitä taukoja tai äänen nykimistä.
 
 Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nämä nykimiset seuraavilla käynnistyksillä.</string>
+    <string name="vr_notice_description2">Jotkin pelit eivät vain toimi hyvin. Muista tarkistaa CitraVR-pelien yhteensopivuusluettelo nähdäksesi, mitkä pelit toimivat parhaiten.</string>
 </resources>

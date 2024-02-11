@@ -267,4 +267,5 @@
     <string name="vr_notice_description">Durante la primera vez que juegues un juego o nivel, es posible que experimentes breves pausas o tartamudeos de audio.
 
 Después de que se carguen los sombreadores, estos se guardan en el dispositivo, evitando estos tartamudeos en lanzamientos posteriores.</string>
+    <string name="vr_notice_description2">Alcuni giochi semplicemente non funzioneranno bene. Assicurati di controllare la lista di compatibilità dei giochi CitraVR per vedere quali giochi hanno le migliori prestazioni.</string>
 </resources>

@@ -7,10 +7,14 @@ package org.citra.citra_emu.ui.main
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
 import android.view.animation.PathInterpolator
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -27,11 +31,13 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
+import androidx.viewpager2.widget.ViewPager2
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationBarView
@@ -56,6 +62,7 @@ import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.ui.VrNoticePagerAdapter
 import org.citra.citra_emu.vr.utils.VrMainActivityUtils
 
 class MainActivity : AppCompatActivity(), ThemeProvider {
@@ -208,15 +215,47 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         }
     }
 
+    fun showVrNotice() {
+        val builder = MaterialAlertDialogBuilder(this)
+        val inflater: LayoutInflater = layoutInflater
+        val dialogView: View = inflater.inflate(R.layout.vr_notice_dialog, null)
+        val viewPager = dialogView.findViewById<ViewPager2>(R.id.viewPager)
+        val pagerAdapter = VrNoticePagerAdapter(this)
+        viewPager.adapter = pagerAdapter
+        val btnNext = dialogView.findViewById<ImageButton>(R.id.button_next)
+        val btnClose = dialogView.findViewById<MaterialButton>(R.id.button_close)
+        dialogView.findViewById<TextView>(R.id.notice_title).text = resources.getString(R.string.vr_notice_title)
+        btnNext.setOnClickListener {
+            val currentItem = viewPager.currentItem
+            if (currentItem < pagerAdapter.itemCount - 1) {
+                viewPager.setCurrentItem(currentItem + 1, true)
+            } else {
+            }
+        }
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                if (position >= pagerAdapter.itemCount - 1) {
+                    btnNext.isEnabled = false
+                    btnNext.visibility = View.GONE
+                    btnClose.visibility = View.VISIBLE
+                } else {
+                    btnNext.isEnabled = true
+                    btnNext.visibility = View.VISIBLE
+                    btnClose.visibility = View.GONE
+                }
+            }
+        })
+        builder.setView(dialogView)
+        val dialog = builder.create()
+        btnClose.setOnClickListener { _ -> dialog.dismiss()}
+        dialog.show()
+    }
+
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.vr_notice_title)
-            .setMessage(R.string.vr_notice_description)
-            .setIcon(R.drawable.ic_info_outline)
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
+        showVrNotice()
     }
 
     private fun setUpNavigation(navController: NavController) {

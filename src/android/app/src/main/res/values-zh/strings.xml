@@ -676,4 +676,5 @@
     <string name="vr_notice_description">在你第一次玩游戏或关卡时，你可能会遇到短暂的暂停或音频卡顿。
 
 在着色器加载完成后，它们会被存储到设备上，从而避免了后续启动时的卡顿。</string>
+    <string name="vr_notice_description2">有些游戏很难运行良好。请务必查阅 CitraVR 游戏兼容性列表，了解哪些游戏性能最佳。</string>
 </resources>

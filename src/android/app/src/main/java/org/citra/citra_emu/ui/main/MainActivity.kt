@@ -211,6 +211,12 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.vr_notice_title)
+            .setMessage(R.string.vr_notice_description)
+            .setIcon(R.drawable.ic_info_outline)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun setUpNavigation(navController: NavController) {

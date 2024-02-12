@@ -213,7 +213,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          scale, start, end, result2d, result3d);
 }
 
-// Next error code: -7
+// Next error code: -8
 int32_t UILayer::Init(const std::string& className, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
     mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject, className.c_str());
@@ -236,38 +236,47 @@ int32_t UILayer::Init(const std::string& className, const jobject activityObject
     mSendClickToUIMethodID = mEnv->GetMethodID(mVrUILayerClass, "sendClickToUI", "(FFI)I");
 
     BAIL_ON_COND(mSendClickToUIMethodID == nullptr, "could not find sendClickToUI()", -6);
+
+    BAIL_ON_ERR(CreateSwapchain(), -7);
+
     return 0;
 }
 
 void UILayer::Shutdown() {
     xrDestroySwapchain(mSwapchain.mHandle);
+    mSwapchain.mHandle = XR_NULL_HANDLE;
+    mSwapchain.mWidth  = 0;
+    mSwapchain.mHeight = 0;
     mEnv->DeleteGlobalRef(mVrUILayerClass);
+    mVrUILayerClass = nullptr;
+    mEnv->DeleteGlobalRef(mVrUILayerObject);
+    mVrUILayerClass = nullptr;
 }
 
-void UILayer::TryCreateSwapchain() {
-    assert(!mIsSwapchainCreated);
-
+int UILayer::CreateSwapchain() {
+  {
     AndroidWindowBounds viewBounds;
-    {
-        if (mEnv->ExceptionCheck()) { mEnv->ExceptionClear(); }
-        const jint ret =
-            mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
-        // Check for exceptions (and log them).
-        if (mEnv->ExceptionCheck()) {
-            mEnv->ExceptionDescribe();
-            mEnv->ExceptionClear();
-            FAIL("Exception in getBoundsForView()");
-        }
-        if (ret < 0) {
-            ALOGE("{}() returned error {}", __FUNCTION__, ret);
-            return;
-        }
-        if (viewBounds.Width() == 0 || viewBounds.Height() == 0) {
-            ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__, viewBounds.Width(),
-                  viewBounds.Height());
-            return;
-        }
+    if (mEnv->ExceptionCheck()) { mEnv->ExceptionClear(); }
+    const jint ret =
+      mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
+    // Check for exceptions (and log them).
+    if (mEnv->ExceptionCheck()) {
+      mEnv->ExceptionDescribe();
+      mEnv->ExceptionClear();
+      FAIL("Exception in getBoundsForView()");
     }
+    if (ret < 0) {
+      ALOGE("{}() returned error {}", __FUNCTION__, ret);
+      return -1;
+    }
+    if (viewBounds.Width() == 0 || viewBounds.Height() == 0) {
+      ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__, viewBounds.Width(),
+          viewBounds.Height());
+      return -2;
+    }
+    mSwapchain.mWidth  = viewBounds.Width();
+    mSwapchain.mHeight = viewBounds.Height();
+  }
     // Initialize swapchain.
     {
         XrSwapchainCreateInfo swapchainCreateInfo;
@@ -278,8 +287,8 @@ void UILayer::TryCreateSwapchain() {
             XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
         swapchainCreateInfo.format      = 0;
         swapchainCreateInfo.sampleCount = 0;
-        swapchainCreateInfo.width       = viewBounds.Width();
-        swapchainCreateInfo.height      = viewBounds.Height();
+        swapchainCreateInfo.width       =  mSwapchain.mWidth;
+        swapchainCreateInfo.height      = mSwapchain.mHeight;
         swapchainCreateInfo.faceCount   = 0;
         swapchainCreateInfo.arraySize   = 0;
         swapchainCreateInfo.mipCount    = 0;
@@ -296,20 +305,18 @@ void UILayer::TryCreateSwapchain() {
 
         OXR(pfnCreateSwapchainAndroidSurfaceKHR(mSession, &swapchainCreateInfo, &mSwapchain.mHandle,
                                                 &mSurface));
-        mSwapchain.mWidth  = viewBounds.Width();
-        mSwapchain.mHeight = viewBounds.Height();
+
         ALOGD("UILayer: created swapchain {}x{}", mSwapchain.mWidth, mSwapchain.mHeight);
 
-        mIsSwapchainCreated = true;
-
         mEnv->CallIntMethod(mVrUILayerObject, mSetSurfaceMethodId, mSurface,
-                            (int)viewBounds.Width(), (int)viewBounds.Height());
+                            (int)mSwapchain.mWidth, (int)mSwapchain.mHeight);
         if (mEnv->ExceptionCheck()) {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();
             FAIL("Exception in setSurface()");
         }
     }
+    return 0;
 }
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {

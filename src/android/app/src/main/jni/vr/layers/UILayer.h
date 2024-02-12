@@ -115,14 +115,6 @@ public:
                                      XrVector2f&       result2d,
                                      XrPosef&          result3d) const;
 
-    /** Returns whether the swapchain is created
-     */
-    bool IsSwapchainCreated() const { return mIsSwapchainCreated; }
-
-    /** Creates the swapchain.
-     */
-    void TryCreateSwapchain();
-
     /** Forwards the click event to the corresponding position on the Android UI window.
      *  @param pos2d the 2D position of the click in the Android display coordinate
      *  system.
@@ -136,7 +128,11 @@ private:
              const XrSession& session);
     void Shutdown();
 
-    bool            mIsSwapchainCreated = false;
+    /** Creates the swapchain.
+     * @return 0 on success, error code less than 0 on failure.
+     */
+    int CreateSwapchain();
+
     const XrSession mSession;
     Swapchain       mSwapchain;
 

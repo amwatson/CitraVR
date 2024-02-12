@@ -417,9 +417,6 @@ private:
             }
         }
 
-        if (!mKeyboardLayer->IsSwapchainCreated()) { mKeyboardLayer->TryCreateSwapchain(); }
-        if (!mErrorMessageLayer->IsSwapchainCreated()) { mErrorMessageLayer->TryCreateSwapchain(); }
-
         ////////////////////////////////
         // XrWaitFrame()
         ////////////////////////////////
@@ -495,13 +492,10 @@ private:
 
         mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
 
-        if (mErrorMessageLayer->IsSwapchainCreated() && mShouldShowErrorMessage) {
+        if (mShouldShowErrorMessage) {
             mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
         }
-        if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
-
-            mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
-        }
+        if (mIsKeyboardActive) { mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
 
         {
             {
@@ -538,14 +532,14 @@ private:
 
                         // Hit-test panels in order of priority (and known depth)
 
-                        if (mErrorMessageLayer->IsSwapchainCreated() && mShouldShowErrorMessage) {
+                        if (mShouldShowErrorMessage) {
                             shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync) {
                                 mErrorMessageLayer->SendClickToUI(cursorPos2d,
                                                                   triggerState.currentState);
                             }
-                        } else if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
+                        } else if (mIsKeyboardActive) {
                             shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync) {

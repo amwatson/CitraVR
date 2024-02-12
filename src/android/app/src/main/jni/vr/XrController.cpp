@@ -45,8 +45,8 @@ XrAction CreateAction(XrActionSet actionSet, XrActionType type, const char* acti
     return action;
 }
 
-XrActionSuggestedBinding
-ActionSuggestedBinding(const XrInstance& instance, XrAction action, const char* bindingString) {
+XrActionSuggestedBinding ActionSuggestedBinding(const XrInstance& instance, XrAction action,
+                                                const char* bindingString) {
     XrActionSuggestedBinding asb;
     asb.action = action;
     XrPath bindingPath;
@@ -107,8 +107,8 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
                                          "squeeze_trigger", nullptr, 2, handSubactionPaths);
 
     XrPath interactionProfilePath = XR_NULL_PATH;
-    OXR(xrStringToPath(
-        instance, "/interaction_profiles/oculus/touch_controller", &interactionProfilePath));
+    OXR(xrStringToPath(instance, "/interaction_profiles/oculus/touch_controller",
+                       &interactionProfilePath));
 
     // Create bindings for Quest controllers.
     {

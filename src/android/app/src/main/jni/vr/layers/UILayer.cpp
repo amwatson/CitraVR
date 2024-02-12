@@ -11,8 +11,6 @@ License     :   Licensed under GPLv3 or any later version.
 
 ***************************************************************************************************/
 
-
-
 #include "UILayer.h"
 
 #include "../vr_settings.h"
@@ -151,8 +149,8 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
 }
 
 // Uses a density for scaling and sets aspect ratio
-XrVector2f
-GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeight, const float scaleFactor) {
+XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeight,
+                                  const float scaleFactor) {
     const float density = GetDensitySysprop();
     return XrVector2f{static_cast<float>(texWidth) / density,
                       (static_cast<float>(texHeight) / density)} *
@@ -166,8 +164,7 @@ UILayer::UILayer(const std::string& className, const XrVector3f&& position,
                  const XrSession& session)
     : mSession(session)
     , mPanelFromWorld(XrPosef{XrMath::Quatf::Identity(), position})
-    , mEnv(env)
-{
+    , mEnv(env) {
     const int32_t initializationStatus = Init(className, activityObject, position, session);
     if (initializationStatus < 0) {
         FAIL("Could not initialize UILayer -- error '%d'", initializationStatus);

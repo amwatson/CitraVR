@@ -71,7 +71,6 @@ void       PrioritizeTid(const int tid) {
 namespace {
 constexpr XrPerfSettingsLevelEXT                   kGpuPerfLevel = XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
-std::atomic<bool>                                  gShouldShowErrorMessage = {false};
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
@@ -232,17 +231,14 @@ public:
         // Create the cursor layer.
         mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
 
-#if defined(UI_LAYER)
-        mErrorMessageLayer = std::make_unique<UILayer>("org/citra/citra_emu/vr/ErrorMessageLayer",
-                                                       XrVector3f{0, 0, -0.7}, jni, mActivityObject,
-                                                       gOpenXr->mSession);
-#endif
+        mErrorMessageLayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
+            XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
             XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
-
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -422,7 +418,7 @@ private:
         }
 
         if (!mKeyboardLayer->IsSwapchainCreated()) { mKeyboardLayer->TryCreateSwapchain(); }
-
+        if (!mErrorMessageLayer->IsSwapchainCreated()) { mErrorMessageLayer->TryCreateSwapchain(); }
 
         ////////////////////////////////
         // XrWaitFrame()
@@ -499,13 +495,9 @@ private:
 
         mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
 
-#if defined(UI_LAYER)
-        if (gShouldShowErrorMessage) {
-            XrCompositionLayerQuad quadLayer = {};
-            mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, quadLayer);
-            layers[layerCount++].Quad = quadLayer;
+        if (mErrorMessageLayer->IsSwapchainCreated() && mShouldShowErrorMessage) {
+            mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
         }
-#endif
         if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
 
             mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
@@ -543,7 +535,17 @@ private:
                         const XrVector3f end = XrMath::Posef::Transform(
                             mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose,
                             XrVector3f{0, 0, -3.5f});
-                        if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
+
+                        // Hit-test panels in order of priority (and known depth)
+
+                        if (mErrorMessageLayer->IsSwapchainCreated() && mShouldShowErrorMessage) {
+                            shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
+                                start, end, cursorPos2d, cursorPose3d);
+                            if (triggerState.changedSinceLastSync) {
+                                mErrorMessageLayer->SendClickToUI(cursorPos2d,
+                                                                  triggerState.currentState);
+                            }
+                        } else if (mKeyboardLayer->IsSwapchainCreated() && mIsKeyboardActive) {
                             shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
                                 start, end, cursorPos2d, cursorPose3d);
                             if (triggerState.changedSinceLastSync) {
@@ -746,12 +748,12 @@ private:
         switch (newState.state) {
             case XR_SESSION_STATE_FOCUSED:
                 ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mHasFocus) { mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID); }
+                if (!mHasFocus && !mShouldShowErrorMessage) { ResumeEmulation(); }
                 mHasFocus = true;
                 break;
             case XR_SESSION_STATE_VISIBLE:
                 ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mHasFocus) { mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID); }
+                if (mHasFocus) { PauseEmulation(); }
                 mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
@@ -764,6 +766,16 @@ private:
             default:
                 break;
         }
+    }
+
+    void PauseEmulation() {
+        mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID);
+        mIsEmulationPaused = true;
+    }
+
+    void ResumeEmulation() {
+        mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID);
+        mIsEmulationPaused = false;
     }
 
     void PollEvents() {
@@ -850,9 +862,28 @@ private:
                         ALOGD("Keyboard status changed: {} -> {}", mIsKeyboardActive,
                               shouldShowKeyboard);
                     }
+
+                    ALOGD("Received SHOW_KEYBOARD message: {}, state change {} -> {}",
+                          shouldShowKeyboard, mIsKeyboardActive, shouldShowKeyboard);
                     mIsKeyboardActive = shouldShowKeyboard;
 
-                    ALOGD("Received SHOW_KEYBOARD message");
+                    break;
+                }
+                case Message::Type::SHOW_ERROR_MESSAGE: {
+                    const bool shouldShowErrorMessage = message.mPayload == 1;
+                    ALOGD("Received SHOW_ERROR_MESSAGE message: {}, state change {} -> {}",
+                          shouldShowErrorMessage, mShouldShowErrorMessage, shouldShowErrorMessage);
+                    mShouldShowErrorMessage = shouldShowErrorMessage;
+                    if (mShouldShowErrorMessage && !mIsEmulationPaused) {
+                        ALOGD("Pausing emulation due to error message");
+                        PauseEmulation();
+                        mIsEmulationPaused = true;
+                    }
+                    if (!mShouldShowErrorMessage && mIsEmulationPaused && mHasFocus) {
+                        ALOGD("Resuming emulation after error message");
+                        ResumeEmulation();
+                        mIsEmulationPaused = false;
+                    }
                     break;
                 }
 
@@ -863,19 +894,21 @@ private:
         }
     }
 
-    uint64_t                     mFrameIndex = 0;
-    std::thread                  mThread;
-    JNIEnv*                      mEnv;
-    JavaVM*                      mVm;
-    jobject                      mActivityObject;
-    std::atomic<bool>            mIsStopRequested   = {false};
-    bool                         mIsXrSessionActive = false;
-    bool                         mHasFocus          = false;
-    bool                         mIsKeyboardActive  = false;
-    std::unique_ptr<CursorLayer> mCursorLayer;
-#if defined(UI_LAYER)
-    std::unique_ptr<UILayer> mErrorMessageLayer;
-#endif
+    uint64_t    mFrameIndex = 0;
+    std::thread mThread;
+    JNIEnv*     mEnv;
+    JavaVM*     mVm;
+    jobject     mActivityObject;
+
+    std::atomic<bool> mIsStopRequested        = {false};
+    bool              mIsXrSessionActive      = false;
+    bool              mHasFocus               = false;
+    bool              mIsKeyboardActive       = false;
+    bool              mShouldShowErrorMessage = false;
+    bool              mIsEmulationPaused      = false;
+
+    std::unique_ptr<CursorLayer>      mCursorLayer;
+    std::unique_ptr<UILayer>          mErrorMessageLayer;
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
     std::unique_ptr<UILayer>          mKeyboardLayer;
@@ -926,11 +959,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thi
     // should be ok because thread exit is a fence, and the delete waits to
     // join.
     if (gOpenXr != nullptr) { gOpenXr->Shutdown(); }
-}
-
-extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_ErrorMessageLayer_showErrorWindow(
-    JNIEnv* env, jobject thiz, jboolean should_show_error) {
-    gShouldShowErrorMessage = should_show_error;
 }
 
 extern "C" JNIEXPORT jint JNICALL

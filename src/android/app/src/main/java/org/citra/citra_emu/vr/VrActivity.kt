@@ -97,7 +97,7 @@ class VrActivity : EmulationActivity() {
             if (isPressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, keycode
         )
         event.source = InputDevice.SOURCE_GAMEPAD
-        dispatchKeyEvent(event)
+        runOnUiThread { dispatchKeyEvent(event) }
     }
 
     fun forwardVRJoystick(x: Float, y: Float, joystickType: Int) {

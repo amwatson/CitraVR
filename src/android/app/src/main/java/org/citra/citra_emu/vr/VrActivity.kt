@@ -177,13 +177,13 @@ class VrActivity : EmulationActivity() {
             )
                intent.putExtra("SelectedGame", gamePath);
               intent.putExtra("SelectedTitle", gameTitle);
+            (context as Activity).finish()
             if (context is ContextWrapper) {
                 val baseContext = context.baseContext
                 baseContext.startActivity(intent, options.toBundle())
             } else {
                 context.startActivity(intent, options.toBundle())
             }
-            (context as Activity).finish()
         }
 
         private fun getMainDisplay(context: Context): Int {

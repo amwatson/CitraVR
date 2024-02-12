@@ -113,6 +113,12 @@ class VrActivity : EmulationActivity() {
         runOnUiThread(clickRunnable)
     }
 
+    fun quitToMenu() {
+        finish()
+        val relaunchMainIntent = Intent(this, MainActivity::class.java)
+        startActivity(relaunchMainIntent)
+    }
+
     fun pauseGame() {
        Log.info("VR [Java] pauseGame");
         if (NativeLibrary.isRunning()) { NativeLibrary.pauseEmulation(); }

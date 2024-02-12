@@ -41,6 +41,7 @@ import org.citra.citra_emu.utils.BirthdayMonth
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
+import org.citra.citra_emu.vr.utils.VRUtils
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
     private var menuTag: String? = null
@@ -630,11 +631,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             }
 
             // VR-SPECIFIC: just remove hotkeys for this version.
-         /*   add(HeaderSetting(R.string.controller_hotkeys))
-            Settings.hotKeys.forEachIndexed { i: Int, key: String ->
+            add(HeaderSetting(R.string.controller_hotkeys))
+            VRUtils.hotKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
-            }*/
+                add(InputBindingSetting(button, VRUtils.hotkeyTitles[i]))
+            }
         }
     }
 

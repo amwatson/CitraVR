@@ -249,18 +249,24 @@
     <!-- VR-specific -->
     <string name="preferences_vr">VR</string>
     <string name="vr_background">Ambiente VR</string>
-    <string name="vr_error_two_instances_title">Errore: rilevato due istanze CitraVR</string>
-    <string name="vr_error_two_instances_message">Ho rilevato un bug di lancio fatale con CitraVR. Questo è un problema noto. \n\nIl problema è ora risolto. Prova a lanciare di nuovo il gioco. </string>
-    <string name="vr_extra_performance_mode">Modalità di prestazione extra VR</string>
+    <string name="vr_error_two_instances_title">Errore: Rilevate Due Istanze di CitraVR</string>
+    <string name="vr_error_two_instances_message">Rilevato un bug di avvio fatale con CitraVR. Questo è un problema noto. \n\nIl problema è ora risolto. Si prega di tentare nuovamente l\'avvio del gioco.</string>
+    <string name="vr_extra_performance_mode">Modalità Extra Performance VR</string>
     <string name="vr_cpu_level">Livello CPU</string>
-    <string name="vr_cpu_level_description">Livelli più alti possono migliorare le prestazioni audio/emulazione, ma prosciugheranno la batteria più velocemente</string>
-    <string name="vr_immersive_mode_title">[ATTENZIONE: artefatti grafici] Modalità immersiva (sperimentale)</string>
-    <string name="vr_immersive_mode_description">Estende lo schermo superiore attorno a un cilindro per il gameplay immersivo</string>
-    <string name="vr_graphics_warning">Pericolo: non tutti i giochi/livelli hanno un bell\'aspetto in modalità immersiva. I grandi manufatti visivi sono comuni quando viene selezionata questa opzione</string>
-    <string name="vr_graphics_warning_short">ATTENZIONE: questo causerà un artefatto visivo nella maggior parte dei contenuti</string>
-    <string name="vr_new_3ds_description">Dovrebbe essere abilitato per la maggior parte dei titoli. Se disabilitato, migliora le prestazioni di titoli specifici (ad es.  Star Fox 64 3D)</string>
-    <string name="release_notes_title">Note di rilascio</string>
-    <string name="vr_licenses_description">Progetti che rendono possibili Citra e Citravr</string>
-    <string name="game_compat_tooltip">Foglio di compatibilità del gioco</string>
-    <string name="vr_extra_performance_mode_description">Scora il valore di altre impostazioni per ridurre al minimo le prestazioni generali e maxmimizza. NOTA: quando questa impostazione è abilitata, i valori dell\'utente per le seguenti impostazioni vengono ignorati: VR Environment (seleziona sempre il vuoto), Stretching audio (disabilitato)</string>
+    <string name="vr_cpu_level_description">Livelli più alti possono migliorare le prestazioni audio/emulazione, ma esauriranno più rapidamente la batteria</string>
+    <string name="vr_immersive_mode_title">[AVVERTENZA: Artefatti Grafici] Modalità Immersiva (Sperimentale)</string>
+    <string name="vr_immersive_mode_description">Estende lo schermo superiore attorno a un cilindro per un gameplay immersivo</string>
+    <string name="vr_graphics_warning">PERICOLO: non tutti i giochi/livelli appaiono bene in modalità immersiva. Artefatti visivi grandi sono comuni quando questa opzione è selezionata</string>
+    <string name="vr_graphics_warning_short">AVVERTENZA: ciò CAUSERÀ artefatti visivi nella maggior parte dei contenuti</string>
+    <string name="vr_new_3ds_description">Dovrebbe essere abilitato per la maggior parte dei titoli. Quando disabilitato, migliora le prestazioni di titoli specifici (es. Star Fox 64 3D)</string>
+    <string name="release_notes_title">Note di Rilascio</string>
+    <string name="vr_licenses_description">Progetti che rendono possibile Citra e CitraVR</string>
+    <string name="game_compat_tooltip">Foglio di Compatibilità dei Giochi</string>
+    <string name="vr_extra_performance_mode_description">Sovrascrive il valore delle altre impostazioni per minimizzare il sovraccarico e massimizzare le prestazioni. NOTA: quando questa impostazione è abilitata, i valori dell\'utente per le seguenti impostazioni vengono ignorati: Ambiente VR (seleziona sempre Vuoto), Stretching audio (disabilitato)</string>
+    <string name="vr_notice_title">Avviso:</string>
+    <string name="vr_notice_description">Durante la primera vez que juegues un juego o nivel, es posible que experimentes breves pausas o tartamudeos de audio.
+
+Después de que se carguen los sombreadores, estos se guardan en el dispositivo, evitando estos tartamudeos en lanzamientos posteriores.</string>
+    <string name="vr_notice_description2">Alcuni giochi semplicemente non funzioneranno bene. Assicurati di controllare la lista di compatibilità dei giochi CitraVR per vedere quali giochi hanno le migliori prestazioni.</string>
+    <string name="vr_input_binding_subtitle">Avere problemi? Premi Seleziona + Avvia per disattivare la modalità di controllo dello sguardo del gamepad, poi riprova.</string>
 </resources>

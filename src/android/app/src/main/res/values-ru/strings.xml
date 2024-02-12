@@ -657,4 +657,27 @@
     <string name="november">Ноябрь</string>
     <string name="december">Декабрь</string>
 
+    <!-- VR-specific -->
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR Окружение</string>
+    <string name="vr_error_two_instances_title">Ошибка: Обнаружено Два Экземпляра CitraVR</string>
+    <string name="vr_error_two_instances_message">Обнаружена критическая ошибка запуска с CitraVR. Это известная проблема. \n\nПроблема теперь решена. Пожалуйста, попробуйте запустить игру снова.</string>
+    <string name="vr_extra_performance_mode">Режим Повышенной Производительности VR</string>
+    <string name="vr_cpu_level">Уровень CPU</string>
+    <string name="vr_cpu_level_description">Более высокие уровни могут улучшить производительность аудио/эмуляции, но будут быстрее разряжать батарею</string>
+    <string name="vr_immersive_mode_title">[ВНИМАНИЕ: Графические Артефакты] Погружающий Режим (Экспериментальный)</string>
+    <string name="vr_immersive_mode_description">Расширяет верхний экран вокруг цилиндра для погружающего геймплея</string>
+    <string name="vr_graphics_warning">ОПАСНОСТЬ: не все игры/уровни хорошо выглядят в погружающем режиме. Большие визуальные артефакты являются обычным явлением, когда выбрана эта опция</string>
+    <string name="vr_graphics_warning_short">ВНИМАНИЕ: это ПРИВЕДЕТ к визуальным артефактам в большинстве контента</string>
+    <string name="vr_new_3ds_description">Должно быть включено для большинства титулов. При отключении улучшает производительность конкретных титулов (например, Star Fox 64 3D)</string>
+    <string name="release_notes_title">Примечания к Релизу</string>
+    <string name="vr_licenses_description">Проекты, благодаря которым возможны Citra и CitraVR</string>
+    <string name="game_compat_tooltip">Таблица Совместимости Игр</string>
+    <string name="vr_extra_performance_mode_description">Переопределяет значение других настроек для минимизации накладных расходов и максимизации производительности. ВНИМАНИЕ: когда эта настройка включена, значения пользователя для следующих настроек игнорируются: VR Окружение (всегда выбирается Пустота), Растяжение аудио (отключено)</string>
+    <string name="vr_notice_title">Внимание:</string>
+    <string name="vr_notice_description">Во время первого прохождения игры или уровня вы можете столкнуться с краткими остановками или прерываниями звука.
+
+После загрузки шейдеров они хранятся на устройстве, предотвращая эти прерывания при последующих запусках.</string>
+    <string name="vr_notice_description2">Некоторые игры просто не будут работать хорошо. Убедитесь, что проверяете список совместимости игр CitraVR, чтобы узнать, какие игры показывают лучшие результаты.</string>
+    <string name="vr_input_binding_subtitle">Имеете проблемы? Нажмите кнопки "Select + Start", чтобы отключить режим геймпада "Gaze", а затем попробуйте снова.</string>
 </resources>

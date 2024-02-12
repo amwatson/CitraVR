@@ -9,45 +9,45 @@ License     :   Licensed under GPLv3 or any later version.
 
 *******************************************************************************/
 
-#include "../utils/LogUtils.h"
 #include "Egl.h"
+#include "../utils/LogUtils.h"
 
 namespace {
 
 const char* EglErrorToStr(const EGLint error) {
     switch (error) {
-    case EGL_SUCCESS:
-        return "EGL_SUCCESS";
-    case EGL_NOT_INITIALIZED:
-        return "EGL_NOT_INITIALIZED";
-    case EGL_BAD_ACCESS:
-        return "EGL_BAD_ACCESS";
-    case EGL_BAD_ALLOC:
-        return "EGL_BAD_ALLOC";
-    case EGL_BAD_ATTRIBUTE:
-        return "EGL_BAD_ATTRIBUTE";
-    case EGL_BAD_CONTEXT:
-        return "EGL_BAD_CONTEXT";
-    case EGL_BAD_CONFIG:
-        return "EGL_BAD_CONFIG";
-    case EGL_BAD_CURRENT_SURFACE:
-        return "EGL_BAD_CURRENT_SURFACE";
-    case EGL_BAD_DISPLAY:
-        return "EGL_BAD_DISPLAY";
-    case EGL_BAD_SURFACE:
-        return "EGL_BAD_SURFACE";
-    case EGL_BAD_MATCH:
-        return "EGL_BAD_MATCH";
-    case EGL_BAD_PARAMETER:
-        return "EGL_BAD_PARAMETER";
-    case EGL_BAD_NATIVE_PIXMAP:
-        return "EGL_BAD_NATIVE_PIXMAP";
-    case EGL_BAD_NATIVE_WINDOW:
-        return "EGL_BAD_NATIVE_WINDOW";
-    case EGL_CONTEXT_LOST:
-        return "EGL_CONTEXT_LOST";
-    default:
-        return "UNKNOWN";
+        case EGL_SUCCESS:
+            return "EGL_SUCCESS";
+        case EGL_NOT_INITIALIZED:
+            return "EGL_NOT_INITIALIZED";
+        case EGL_BAD_ACCESS:
+            return "EGL_BAD_ACCESS";
+        case EGL_BAD_ALLOC:
+            return "EGL_BAD_ALLOC";
+        case EGL_BAD_ATTRIBUTE:
+            return "EGL_BAD_ATTRIBUTE";
+        case EGL_BAD_CONTEXT:
+            return "EGL_BAD_CONTEXT";
+        case EGL_BAD_CONFIG:
+            return "EGL_BAD_CONFIG";
+        case EGL_BAD_CURRENT_SURFACE:
+            return "EGL_BAD_CURRENT_SURFACE";
+        case EGL_BAD_DISPLAY:
+            return "EGL_BAD_DISPLAY";
+        case EGL_BAD_SURFACE:
+            return "EGL_BAD_SURFACE";
+        case EGL_BAD_MATCH:
+            return "EGL_BAD_MATCH";
+        case EGL_BAD_PARAMETER:
+            return "EGL_BAD_PARAMETER";
+        case EGL_BAD_NATIVE_PIXMAP:
+            return "EGL_BAD_NATIVE_PIXMAP";
+        case EGL_BAD_NATIVE_WINDOW:
+            return "EGL_BAD_NATIVE_WINDOW";
+        case EGL_CONTEXT_LOST:
+            return "EGL_CONTEXT_LOST";
+        default:
+            return "UNKNOWN";
     }
 }
 } // anonymous namespace
@@ -55,14 +55,10 @@ const char* EglErrorToStr(const EGLint error) {
 EglContext::EglContext() {
 
     const int32_t ret = Init();
-    if (ret < 0) {
-        FAIL("EglContext::EglContext() failed: ret=%d", ret);
-    }
+    if (ret < 0) { FAIL("EglContext::EglContext() failed: ret=%d", ret); }
 }
 
-EglContext::~EglContext() {
-    Shutdown();
-}
+EglContext::~EglContext() { Shutdown(); }
 
 // next return code: -7
 int32_t EglContext::Init() {
@@ -80,7 +76,7 @@ int32_t EglContext::Init() {
             return -2;
         }
     }
-    EGLint numConfigs = 0;
+    EGLint       numConfigs      = 0;
     const EGLint configAttribs[] = {EGL_RED_SIZE,
                                     8,
                                     EGL_GREEN_SIZE,

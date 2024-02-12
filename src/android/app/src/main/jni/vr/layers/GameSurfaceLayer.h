@@ -72,12 +72,13 @@ License     :   Licensed under GPLv3 or any later version.
 class GameSurfaceLayer {
 
 public:
-    static constexpr float DEFAULT_QUAD_DENSITY = 240;
-    static constexpr float DEFAULT_CYLINDER_RADIUS = 2.0f;
+    static constexpr float DEFAULT_QUAD_DENSITY                   = 240;
+    static constexpr float DEFAULT_CYLINDER_RADIUS                = 2.0f;
     static constexpr float DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES = 55.0f;
 
     /** Constructor.
      * @param position: position of the layer, in world space
+     * @param jni: the JNI environment. Should be attached to the current thread
      * @param activity object: reference to the current activity. Used to get
      * the class information for gameSurfaceClass
      * @param session a valid XrSession
@@ -91,13 +92,14 @@ public:
      */
     void SetSurface() const;
 
-    /** Called once-per-frame. Populates the given layer descriptor to show the
+    /** Called once-per-frame. Populates the layer list to show the
      *  top and bottom panels as two separate layers.
      *
      *  @param space the XrSpace this layer should be positioned with. The
      * center of the layer is placed in the center of the FOV.
      *  @param layers the array of layers to populate
-     *  @param layerCount the number of layers in the array
+     *  @param layerCount the layer count passed to XrEndFrame. This is incremented by
+     *  the number of layers added by this function.
      */
     void Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
                uint32_t& layerCount) const;
@@ -121,16 +123,20 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool GetRayIntersectionWithPanel(const XrVector3f& start, const XrVector3f& end,
-                                     XrVector2f& result2d, XrPosef& result3d) const;
-    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start, const XrVector3f& end,
-                                             XrVector2f& result2d, XrPosef& result3d) const;
+    bool GetRayIntersectionWithPanel(const XrVector3f& start,
+                                     const XrVector3f& end,
+                                     XrVector2f&       result2d,
+                                     XrPosef&          result3d) const;
+    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
+                                             const XrVector3f& end,
+                                             XrVector2f&       result2d,
+                                             XrPosef&          result3d) const;
     void SetTopPanelFromController(const XrVector3f& controllerPosition);
 
     void SetTopPanelFromThumbstick(const float thumbstickY);
 
 private:
-    int Init(const jobject activityObject, const XrVector3f& position, const XrSession& session);
+    int  Init(const jobject activityObject, const XrVector3f& position, const XrSession& session);
     void Shutdown();
 
     /** Creates the swapchain.
@@ -148,15 +154,15 @@ private:
     static_assert((SURFACE_WIDTH_UNSCALED % 2) == 0, "Swapchain width must be a multiple of 2");
     static_assert((SURFACE_HEIGHT_UNSCALED % 2) == 0, "Swapchain height must be a multiple of 2");
 
-    const XrSession session_;
-    Swapchain swapchain_;
+    const XrSession mSession;
+    Swapchain       mSwapchain;
 
-    XrPosef topPanelFromWorld_;
-    XrPosef lowerPanelFromWorld_;
+    XrPosef mTopPanelFromWorld;
+    XrPosef mLowerPanelFromWorld;
 
     // Density scale for surface. Citra's auto-scale sets this as the internal
     // resolution.
-    const uint32_t resolutionFactor_;
+    const uint32_t mResolutionFactor;
 
     // EXPERIMENTAL: When true, the top screen + its extents
     // (previously-unseen parts of the scene) are projected onto a 275-degree
@@ -168,16 +174,12 @@ private:
     // performance optimizations to avoid maxing out the GPU, e.g.:
     //   - Multiview (requires a merged Citra/CitraVR renderer)
     //   - Rendering the top-screen and bottom screen separately.
-    const uint32_t immersiveMode_;
+    const uint32_t mImmersiveMode;
 
     //============================
     // JNI objects
-    JNIEnv* env_ = nullptr;
-    jobject activityObject_ = nullptr;
-    jclass vrGameSurfaceClass_ = nullptr;
-    jobject surface_ = nullptr;
-
-    //============================
-    // JNI methods
-    jmethodID setSurfaceMethodID_ = nullptr;
+    JNIEnv* mEnv                = nullptr;
+    jobject mActivityObject     = nullptr;
+    jclass  mVrGameSurfaceClass = nullptr;
+    jobject mSurface            = nullptr;
 };

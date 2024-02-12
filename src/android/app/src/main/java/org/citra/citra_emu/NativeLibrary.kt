@@ -24,8 +24,8 @@ import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
-import org.citra.citra_emu.vr.ErrorMessageLayer
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.ui.VrErrorMessageLayer
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -192,13 +192,16 @@ object NativeLibrary {
             Log.error("[NativeLibrary] EmulationActivity not present")
             return
         }
-        if (ErrorMessageLayer.instance != null) {
-            ErrorMessageLayer.showErrorWindow(title, message)
-        } else if (emulationActivity !is VrActivity) {
+        if (emulationActivity !is VrActivity) {
+            Log.debug("[NativeLibrary] (2D) Core error: $title: $message")
             val fragment = CoreErrorDialogFragment.newInstance(title, message)
             fragment.show(emulationActivity.supportFragmentManager, "coreError")
         } else {
-            Log.error("[NativeLibrary] Core error: $title: $message")
+            Log.debug("[NativeLibrary] (VR) Core error: $title: $message")
+            val vrErrorMessageLayer : VrErrorMessageLayer? = VrErrorMessageLayer.sVrErrorMessageLayer.get()
+            if (vrErrorMessageLayer == null || !vrErrorMessageLayer.showErrorMessage(title, message)) {
+                Log.error("[NativeLibrary] (could not show dialog) Core error: $title: $message")
+            }
         }
     }
 

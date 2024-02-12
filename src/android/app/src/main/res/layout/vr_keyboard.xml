@@ -11,24 +11,30 @@ This bug prevents me from pulling up the Quest system keyboard.
 Why it happens: Quest's window manager is performing a single check based on the
 app's packagename and returns information for the wrong window.-->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.citra.citra_emu.vr.ui.VrKeyboardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/vr_keyboard"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="@drawable/vr_menu_background"
     android:layout_gravity="center"
     android:layout_marginHorizontal="30dp"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingTop="40dp"
-    android:theme="@style/Theme.Citra.Main">
+    android:theme="@style/ThemeOverlay.Citra.Dark">
 
+    <LinearLayout
+        android:layout_width="700dp"
+        android:layout_height="30dp"
+        android:orientation="horizontal"/>
 
     <EditText
         android:id="@+id/vrKeyboardText"
         style="@style/VrKeyboardEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@color/citra_onSurface"
         android:ems="10"
+        android:layout_marginHorizontal="16dp"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:inputType="text" />
@@ -36,7 +42,8 @@ app's packagename and returns information for the wrong window.-->
     <LinearLayout
         android:id="@+id/vr_keyboard_keyboard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
     </LinearLayout>
 
@@ -45,6 +52,7 @@ app's packagename and returns information for the wrong window.-->
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
+        android:layout_marginBottom="20dp"
         android:orientation="horizontal">
 
         <Button
@@ -54,7 +62,7 @@ app's packagename and returns information for the wrong window.-->
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@android:string/ok"
-            android:visibility="gone" />
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/keyNeutral"
@@ -75,4 +83,4 @@ app's packagename and returns information for the wrong window.-->
             android:visibility="gone" />
     </LinearLayout>
 
-</LinearLayout>
+</org.citra.citra_emu.vr.ui.VrKeyboardView>

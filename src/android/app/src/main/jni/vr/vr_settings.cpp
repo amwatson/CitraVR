@@ -38,16 +38,16 @@ std::string GetHMDTypeStr() {
 
 XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref) {
     switch (cpu_level_pref) {
-    case 1:
-        return XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT;
-    case 2:
-        return XR_PERF_SETTINGS_LEVEL_SUSTAINED_LOW_EXT;
-    case 3:
-        return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
-    case 4:
-        return XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
-    default:
-        FAIL("Invalid CPU level preference %d", cpu_level_pref);
+        case 1:
+            return XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT;
+        case 2:
+            return XR_PERF_SETTINGS_LEVEL_SUSTAINED_LOW_EXT;
+        case 3:
+            return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
+        case 4:
+            return XR_PERF_SETTINGS_LEVEL_BOOST_EXT;
+        default:
+            FAIL("Invalid CPU level preference %d", cpu_level_pref);
     }
 }
 

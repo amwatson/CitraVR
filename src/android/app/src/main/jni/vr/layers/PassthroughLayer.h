@@ -17,6 +17,6 @@ public:
     void Frame(XrCompositionLayerPassthroughFB& layer) const;
 
 private:
-    XrPassthroughFB mPassthrough = XR_NULL_HANDLE;
+    XrPassthroughFB      mPassthrough      = XR_NULL_HANDLE;
     XrPassthroughLayerFB mPassthroughLayer = XR_NULL_HANDLE;
 }; // class PassthroughLayer

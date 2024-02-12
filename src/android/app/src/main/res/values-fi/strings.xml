@@ -109,4 +109,10 @@
     <string name="vr_licenses_description">Projektit, jotka tekevät Citrasta ja Citravrista mahdolliseksi</string>
     <string name="game_compat_tooltip">Pelin yhteensopivuuslomake</string>
     <string name="vr_extra_performance_mode_description">Ohittaa muiden asetusten arvon yleiskustannusten minimoimiseksi ja suorituskyvyn maksimimiseksi. Huomaa: Kun tämä asetus on käytössä, seuraavien asetusten käyttäjän arvot jätetään huomiotta: VR -ympäristö (valittuu aina tyhjä), äänen venytys (pois käytöstä)</string>
+    <string name="vr_notice_title">Huomio:</string>
+    <string name="vr_notice_description">Ensimmäisen pelikerran tai tason aikana saatat kokea lyhyitä taukoja tai äänen nykimistä.
+
+Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nämä nykimiset seuraavilla käynnistyksillä.</string>
+    <string name="vr_notice_description2">Jotkin pelit eivät vain toimi hyvin. Muista tarkistaa CitraVR-pelien yhteensopivuusluettelo nähdäksesi, mitkä pelit toimivat parhaiten.</string>
+    <string name="vr_input_binding_subtitle">Koetko ongelmia? Paina Select + Start poistaaksesi Gamepad Gaze -tilan käytöstä ja yritä uudelleen.</string>
 </resources>

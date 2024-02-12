@@ -516,20 +516,26 @@
     <string name="december">Dezember</string>
 
     <!-- VR-specific -->
-    <string name="preferences_vr">Vr</string>
-    <string name="vr_background">VR -Umgebung</string>
-    <string name="vr_error_two_instances_title">Fehler: Erkennete zwei CitraVR -Instanzen</string>
-    <string name="vr_error_two_instances_message">Erkannte einen tödlichen Startfehler mit CitraVR. Dies ist ein bekanntes Problem. \n\nDas Problem ist jetzt gelöst. Bitte versuchen Sie, das Spiel erneut zu starten. </string>
-    <string name="vr_extra_performance_mode">VR zusätzlicher Leistungsmodus</string>
-    <string name="vr_cpu_level">CPU -Ebene</string>
-    <string name="vr_cpu_level_description">Höhere Werte können die Audio-/Emulationsleistung verbessern, die Batterie jedoch schneller abtropfen lassen</string>
-    <string name="vr_immersive_mode_title">[Warnung: Grafikartefakte] Immersive Modus (experimentell)</string>
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR-Umgebung</string>
+    <string name="vr_error_two_instances_title">Fehler: Zwei CitraVR-Instanzen erkannt</string>
+    <string name="vr_error_two_instances_message">Ein schwerwiegender Startfehler mit CitraVR wurde erkannt. Dies ist ein bekanntes Problem. \n\nDas Problem ist jetzt behoben. Bitte versuchen Sie, das Spiel erneut zu starten.</string>
+    <string name="vr_extra_performance_mode">VR-Extra-Leistungsmodus</string>
+    <string name="vr_cpu_level">CPU-Stufe</string>
+    <string name="vr_cpu_level_description">Höhere Stufen können die Audio-/Emulationsleistung verbessern, aber den Akku schneller entleeren</string>
+    <string name="vr_immersive_mode_title">[WARNUNG: Grafikfehler] Immersiver Modus (Experimentell)</string>
     <string name="vr_immersive_mode_description">Erweitert den oberen Bildschirm um einen Zylinder für ein immersives Gameplay</string>
-    <string name="vr_graphics_warning">Gefahr: Nicht alle Spiele/Levels sehen im beeindruckenden Modus gut aus. Große visuelle Artefakte sind häufig, wenn diese Option ausgewählt ist</string>
-    <string name="vr_graphics_warning_short">Warnung: Dies führt zu visuellen Artefakten in den meisten Inhalten</string>
-    <string name="vr_new_3ds_description">Sollte für die meisten Titel aktiviert werden. Verbessert bei Behinderungen die Leistung spezifischer Titel (z.  B.  Star Fox 64 3D)</string>
+    <string name="vr_graphics_warning">GEFAHR: Nicht alle Spiele/Ebenen sehen im immersiven Modus gut aus. Große visuelle Artefakte sind üblich, wenn diese Option ausgewählt ist</string>
+    <string name="vr_graphics_warning_short">WARNUNG: Dies wird bei den meisten Inhalten visuelle Artefakte verursachen</string>
+    <string name="vr_new_3ds_description">Sollte für die meisten Titel aktiviert sein. Bei Deaktivierung wird die Leistung bestimmter Titel verbessert (z. B. Star Fox 64 3D)</string>
     <string name="release_notes_title">Versionshinweise</string>
-    <string name="vr_licenses_description">Projekte, die Citra und Citravr ermöglichen</string>
-    <string name="game_compat_tooltip">Spielkompatibilitätsblatt</string>
-    <string name="vr_extra_performance_mode_description">Überschreibt den Wert anderer Einstellungen, um den Overhead zu minimieren und die Leistung zu maximieren. HINWEIS: Wenn diese Einstellung aktiviert ist, werden die Werte des Benutzers für die folgenden Einstellungen ignoriert: VR -Umgebung (wählt immer void), Audio -Dehnung (deaktiviert). </string>
+    <string name="vr_licenses_description">Projekte, die Citra und CitraVR ermöglichen</string>
+    <string name="game_compat_tooltip">Kompatibilitätsliste für Spiele</string>
+    <string name="vr_extra_performance_mode_description">Überschreibt die Werte anderer Einstellungen, um Overhead zu minimieren und die Leistung zu maximieren. HINWEIS: Wenn diese Einstellung aktiviert ist, werden die Werte des Benutzers für die folgenden Einstellungen ignoriert: VR-Umgebung (wählt immer Leer), Audio-Stretching (deaktiviert)</string>
+   <string name="vr_notice_title">Hinweis:</string>
+   <string name="vr_notice_description">Während deines ersten Playthroughs eines Spiels oder Levels könntest du kurzzeitige Stopps oder Audiostottern erleben.
+
+Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und verhindern diese Stotterer bei späteren Starts.</string>
+    <string name="vr_notice_description2">Einige Spiele laufen einfach nicht gut. Stellen Sie sicher, dass Sie die CitraVR-Spielkompatibilitätsliste überprüfen, um zu sehen, welche Spiele am besten funktionieren.</string>
+    <string name="vr_input_binding_subtitle">Problem beim Spielen? Drücke "Select + Start", um den Gamepad-Gaze-Modus zu deaktivieren, und versuche es dann erneut.</string>
 </resources>

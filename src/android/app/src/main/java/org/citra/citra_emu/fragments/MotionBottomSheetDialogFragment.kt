@@ -86,7 +86,7 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 R.string.input_binding_description_vertical_axis
             }
         }
-        binding.textMessage.text = getString(messageResId)
+        binding.textMessage.text = getString(messageResId) + "\n" + getString(R.string.vr_input_binding_subtitle)
 
         binding.buttonClear.setOnClickListener {
             setting?.removeOldMapping()

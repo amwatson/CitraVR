@@ -1,88 +1,23 @@
-package org.citra.citra_emu.vr
+package org.citra.citra_emu.vr.ui
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.os.Bundle
-import android.text.InputFilter.LengthFilter
+import android.text.InputFilter
+import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
+import android.widget.LinearLayout
 import org.citra.citra_emu.R
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.applets.SoftwareKeyboard
-import org.citra.citra_emu.applets.SoftwareKeyboard.KeyboardConfig
-import org.citra.citra_emu.applets.SoftwareKeyboard.onFinishVrKeyboardNegative
-import org.citra.citra_emu.applets.SoftwareKeyboard.onFinishVrKeyboardNeutral
-import org.citra.citra_emu.applets.SoftwareKeyboard.onFinishVrKeyboardPositive
-import org.citra.citra_emu.utils.Log.error
-import org.citra.citra_emu.utils.Log.warning
-import java.io.Serializable
+import org.citra.citra_emu.utils.Log
+import java.lang.ref.WeakReference
 import java.util.Locale
 
-class VrKeyboardActivity : Activity() {
-
-    // Result sent to the (Citra) software keyboard.
-    class Result : Serializable {
-        enum class Type {
-            None,
-            Positive,
-            Neutral,
-            Negative
-        }
-
-        constructor() {
-            text = ""
-            type = Type.None
-            config = null
-        }
-
-        constructor(
-            text: String, type: Type,
-            config: KeyboardConfig?
-        ) {
-            this.text = text
-            this.type = type
-            this.config = config
-        }
-
-        constructor(type: Type) {
-            text = ""
-            this.type = type
-            config = null
-        }
-
-        var text: String
-        var type: Type
-        var config: KeyboardConfig?
-    }
-
-    class Contract : ActivityResultContract<KeyboardConfig?, Result>() {
-        override fun createIntent(context: Context, config: KeyboardConfig?): Intent {
-            val intent = Intent(context, VrKeyboardActivity::class.java)
-            intent.putExtra(EXTRA_KEYBOARD_INPUT_CONFIG, config)
-            return intent
-        }
-
-        override fun parseResult(resultCode: Int, intent: Intent?): Result {
-            if (resultCode != RESULT_OK) {
-                warning("parseResult(): Unexpected result code: $resultCode")
-                return Result()
-            }
-            if (intent != null) {
-                val result = intent.getSerializableExtra(EXTRA_KEYBOARD_RESULT) as Result?
-                if (result != null) {
-                    return result
-                }
-            }
-            warning("parseResult(): finished with OK, but no result. Intent: $intent")
-            return Result()
-        }
-    }
+class VrKeyboardView : LinearLayout {
 
     private enum class KeyboardType {
         None,
@@ -93,73 +28,71 @@ class VrKeyboardActivity : Activity() {
     private var mEditText: EditText? = null
     private var mIsShifted = false
     private var mKeyboardTypeCur = KeyboardType.None
-    public override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val extras = intent.extras
-        var config: KeyboardConfig? = KeyboardConfig()
-        if (extras != null) {
-            config = extras.getSerializable(
-                EXTRA_KEYBOARD_INPUT_CONFIG
-            ) as KeyboardConfig?
-        }
-        setContentView(R.layout.vr_keyboard)
+    private var mLayoutInflator : LayoutInflater? = null
+    private var mConfig : SoftwareKeyboard.KeyboardConfig? = null
+
+    constructor(context: Context) : super(context) {
+        init(null, 0)
+    }
+
+    // Constructor for inflating the view from XML
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        init(attrs, 0)
+    }
+
+    private fun init(attrs: AttributeSet?, defStyle: Int) {
+        mLayoutInflator = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        sVrKeyboardView = WeakReference(this)
+    }
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
         mEditText = findViewById(R.id.vrKeyboardText)
+        clearKeyboardState()
+    }
+
+    // Call from UI thread
+    fun setConfig(config: SoftwareKeyboard.KeyboardConfig) {
+        assert(mEditText != null)
+        clearKeyboardState()
         mEditText!!.apply {
             setHint(config!!.hintText)
             setSingleLine(!config.multilineMode)
             setFilters(
                 arrayOf(
                     SoftwareKeyboard.Filter(),
-                    LengthFilter(config.maxTextLength)
+                    InputFilter.LengthFilter(config.maxTextLength)
                 )
             )
-            // Needed to show cursor onscreen.
-            requestFocus()
-            WindowCompat.getInsetsController(window, this)
-                .show(WindowInsetsCompat.Type.ime())
         }
-
         setupResultButtons(config)
+        mConfig = config
+    }
+
+    private fun clearKeyboardState() {
+        assert(mEditText != null)
+        mEditText!!.setText("")
+        mIsShifted = false // gets used in showKeyboardType
         showKeyboardType(KeyboardType.Abc)
     }
 
-    // Finish the activity when it loses focus, like an AlertDialog.
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (!hasFocus) {
-            finish()
-        }
-    }
-
-    private fun setupResultButtons(config: KeyboardConfig?) {
+    private fun setupResultButtons(config: SoftwareKeyboard.KeyboardConfig?) {
         // Configure the result buttons
         findViewById<View>(R.id.keyPositive).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                val resultIntent = Intent()
-                resultIntent.putExtra(
-                    EXTRA_KEYBOARD_RESULT,
-                    Result(mEditText!!.text.toString(), Result.Type.Positive, config)
-                )
-                setResult(RESULT_OK, resultIntent)
-                finish()
+                SoftwareKeyboard.onFinishVrKeyboardPositive(mEditText!!.text.toString(), mConfig)
             }
             false
         }
         findViewById<View>(R.id.keyNeutral).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                val resultIntent = Intent()
-                resultIntent.putExtra(EXTRA_KEYBOARD_RESULT, Result(Result.Type.Neutral))
-                setResult(RESULT_OK, resultIntent)
-                finish()
+                SoftwareKeyboard.onFinishVrKeyboardNeutral()
             }
             false
         }
         findViewById<View>(R.id.keyNegative).setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                val resultIntent = Intent()
-                resultIntent.putExtra(EXTRA_KEYBOARD_RESULT, Result(Result.Type.Negative))
-                setResult(RESULT_OK, resultIntent)
-                finish()
+                SoftwareKeyboard.onFinishVrKeyboardNegative()
             }
             false
         }
@@ -180,7 +113,7 @@ class VrKeyboardActivity : Activity() {
 
             SoftwareKeyboard.ButtonConfig.None -> {}
             else -> {
-                error("Unknown button config: " + config.buttonConfig)
+                Log.error("Unknown button config: " + config.buttonConfig)
                 assert(false)
             }
         }
@@ -195,12 +128,12 @@ class VrKeyboardActivity : Activity() {
         keyboard.removeAllViews()
         when (keyboardType) {
             KeyboardType.Abc -> {
-                layoutInflater.inflate(R.layout.vr_keyboard_abc, keyboard)
+                mLayoutInflator!!.inflate(R.layout.vr_keyboard_abc, keyboard)
                 addLetterKeyHandlersForViewGroup(keyboard, mIsShifted)
             }
 
             KeyboardType.Num -> {
-                layoutInflater.inflate(R.layout.vr_keyboard_123, keyboard)
+                mLayoutInflator!!.inflate(R.layout.vr_keyboard_123, keyboard)
                 addLetterKeyHandlersForViewGroup(keyboard, false)
             }
 
@@ -322,17 +255,8 @@ class VrKeyboardActivity : Activity() {
     }
 
     companion object {
-        private const val EXTRA_KEYBOARD_INPUT_CONFIG =
-            "org.citra.citra_emu.vr.KEYBOARD_INPUT_CONFIG"
-        private const val EXTRA_KEYBOARD_RESULT = "org.citra.citra_emu.vr.KEYBOARD_RESULT"
-        fun onFinishResult(result: Result) {
-            when (result.type) {
-                Result.Type.Positive -> onFinishVrKeyboardPositive(result.text, result.config!!)
-                Result.Type.Neutral -> onFinishVrKeyboardNeutral()
-                Result.Type.Negative, Result.Type.None -> onFinishVrKeyboardNegative()
-            }
-        }
 
+        var sVrKeyboardView = WeakReference<VrKeyboardView?>(null)
         private fun setKeyCaseForViewGroup(viewGroup: ViewGroup, isShifted: Boolean) {
             for (i in 0 until viewGroup.childCount) {
                 val child = viewGroup.getChildAt(i)

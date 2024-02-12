@@ -13,7 +13,10 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.fragments.KeyboardDialogFragment
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.ui.VrKeyboardView
+import org.citra.citra_emu.vr.utils.VrMessageQueue
 import java.io.Serializable
+import java.security.Key
 
 
 @Keep
@@ -63,9 +66,11 @@ object SoftwareKeyboard {
 
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         if (emulationActivity is VrActivity) {
-            Log.debug("Starting keyboard: VR")
-            data = KeyboardData(0, "")
-            emulationActivity.mVrKeyboardLauncher.launch(config)
+            NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
+                // Show keyboard
+                VrKeyboardView.sVrKeyboardView.get()!!.setConfig(config)
+                VrMessageQueue.post(VrMessageQueue.MessageType.SHOW_KEYBOARD, 1)
+            }
         } else {
             Log.debug("Starting keyboard: non-VR")
             NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
@@ -79,6 +84,10 @@ object SoftwareKeyboard {
                 finishLock.wait()
             } catch (ignored: Exception) {
             }
+        }
+        // Hide keyboard
+        if (emulationActivity is VrActivity) {
+            VrMessageQueue.post(VrMessageQueue.MessageType.SHOW_KEYBOARD, 0)
         }
         return data
     }
@@ -163,9 +172,9 @@ object SoftwareKeyboard {
             }
         }
     }
-    fun onFinishVrKeyboardPositive(text: String?, config: KeyboardConfig) {
-        Log.debug("[SoftwareKeyboard] button positive: \"$text\"")
-        data = KeyboardData(config.buttonConfig, text!!)
+    fun onFinishVrKeyboardPositive(text: String?, config: KeyboardConfig?) {
+        Log.debug("[SoftwareKeyboard] button positive: \"$text\" config button: ${config!!.buttonConfig}")
+        data = KeyboardData(config!!.buttonConfig, text!!)
         val error = ValidateInput(data.text)
         if (error != ValidationError.None) {
             HandleValidationError(config, error)

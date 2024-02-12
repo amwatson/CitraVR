@@ -318,20 +318,26 @@
     <string name="anguilla">Anguilla</string>
 
     <!-- VR-specific -->
-    <string name="preferences_vr">Vr</string>
+    <string name="preferences_vr">VR</string>
     <string name="vr_background">Ambiente VR</string>
-    <string name="vr_error_two_instances_title">Erro: detectado duas instâncias de CitraVR</string>
-    <string name="vr_error_two_instances_message">Detectou um bug de lançamento fatal com CitraVR. Este é um problema conhecido. \n\nO problema agora está resolvido. Por favor, tente lançar o jogo novamente. </string>
-    <string name="vr_extra_performance_mode">VR Modo de desempenho extra</string>
-    <string name="vr_cpu_level">Nível da CPU</string>
-    <string name="vr_cpu_level_description">Níveis mais altos podem melhorar o desempenho de áudio/emulação, mas drenará a bateria mais rapidamente</string>
-    <string name="vr_immersive_mode_title">[Aviso: artefatos gráficos] Modo imersivo (experimental)</string>
-    <string name="vr_immersive_mode_description">Estende a tela superior em torno de um cilindro para uma jogabilidade imersiva</string>
-    <string name="vr_graphics_warning">Perigo: Nem todos os jogos/níveis parecem bons no modo imersivo. Artefatos visuais grandes são comuns quando esta opção é selecionada</string>
-    <string name="vr_graphics_warning_short">Aviso: isso causará artefato visual na maioria dos conteúdos</string>
-    <string name="vr_new_3ds_description">Deve estar ativado para a maioria dos títulos. Quando desativado, melhora o desempenho de títulos específicos (por exemplo, Star Fox 64 3D)</string>
-    <string name="release_notes_title">Notas de liberação</string>
-    <string name="vr_licenses_description">Projetos que tornam possível o Citra e Citravr</string>
-    <string name="game_compat_tooltip">Folha de compatibilidade de jogos</string>
-    <string name="vr_extra_performance_mode_description">Substitui o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. Nota: Quando essa configuração é ativada, os valores do usuário para as seguintes configurações são ignorados: ambiente VR (sempre seleciona o vazio), alongamento de áudio (desativado)</string>
+    <string name="vr_error_two_instances_title">Erro: Duas Instâncias do CitraVR Detectadas</string>
+    <string name="vr_error_two_instances_message">Foi detectado um bug de lançamento fatal com o CitraVR. Este é um problema conhecido. \n\nO problema agora está resolvido. Por favor, tente iniciar o jogo novamente.</string>
+    <string name="vr_extra_performance_mode">Modo de Desempenho Extra VR</string>
+    <string name="vr_cpu_level">Nível de CPU</string>
+    <string name="vr_cpu_level_description">Níveis mais altos podem melhorar a performance de áudio/emulação, mas irão esgotar a bateria mais rapidamente</string>
+    <string name="vr_immersive_mode_title">[AVISO: Artefatos Gráficos] Modo Imersivo (Experimental)</string>
+    <string name="vr_immersive_mode_description">Expande a tela superior em torno de um cilindro para uma gameplay imersiva</string>
+    <string name="vr_graphics_warning">PERIGO: nem todos os jogos/níveis ficam bons no modo imersivo. Artefatos visuais grandes são comuns quando esta opção é selecionada</string>
+    <string name="vr_graphics_warning_short">AVISO: isso IRÁ causar artefatos visuais na maioria dos conteúdos</string>
+    <string name="vr_new_3ds_description">Deve ser ativado para a maioria dos títulos. Quando desativado, melhora o desempenho de títulos específicos (ex.: Star Fox 64 3D)</string>
+    <string name="release_notes_title">Notas de Lançamento</string>
+    <string name="vr_licenses_description">Projetos que tornam possível o Citra e CitraVR</string>
+    <string name="game_compat_tooltip">Folha de Compatibilidade de Jogos</string>
+    <string name="vr_extra_performance_mode_description">Sobrepõe o valor de outras configurações para minimizar a sobrecarga e maximizar o desempenho. NOTA: quando esta configuração está ativada, os valores do usuário para as seguintes configurações são ignorados: Ambiente VR (sempre seleciona Vazio), Esticamento de áudio (desativado)</string>
+    <string name="vr_notice_title">Aviso:</string>
+    <string name="vr_notice_description">Durante sua primeira jogada de um jogo ou nível, você pode experimentar breves pausas ou interrupções de áudio.
+
+Após os shaders serem carregados, eles são armazenados no dispositivo, evitando essas interrupções em lançamentos subsequentes.</string>
+    <string name="vr_notice_description2">Alguns jogos simplesmente não rodarão bem. Certifique-se de consultar a lista de compatibilidade de jogos do CitraVR para ver quais jogos têm melhor desempenho.</string>
+    <string name="vr_input_binding_subtitle">Com problemas? Pressione Select + Start para desativar o modo de olhar do Gamepad e tente novamente.</string>
 </resources>

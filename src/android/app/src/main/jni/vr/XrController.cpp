@@ -9,8 +9,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 *******************************************************************************/
 
-#include "OpenXR.h"
 #include "XrController.h"
+#include "OpenXR.h"
 #include "utils/LogUtils.h"
 
 #include <vector>
@@ -31,12 +31,12 @@ XrAction CreateAction(XrActionSet actionSet, XrActionType type, const char* acti
     ALOG_INPUT_VERBOSE("CreateAction {}, {}" actionName, countSubactionPaths);
 
     XrActionCreateInfo aci = {};
-    aci.type = XR_TYPE_ACTION_CREATE_INFO;
-    aci.next = nullptr;
-    aci.actionType = type;
+    aci.type               = XR_TYPE_ACTION_CREATE_INFO;
+    aci.next               = nullptr;
+    aci.actionType         = type;
     if (countSubactionPaths > 0) {
         aci.countSubactionPaths = countSubactionPaths;
-        aci.subactionPaths = subactionPaths;
+        aci.subactionPaths      = subactionPaths;
     }
     strcpy(aci.actionName, actionName);
     strcpy(aci.localizedActionName, localizedName ? localizedName : actionName);
@@ -56,12 +56,12 @@ XrActionSuggestedBinding ActionSuggestedBinding(const XrInstance& instance, XrAc
 }
 
 XrSpace CreateActionSpace(const XrSession& session, XrAction poseAction, XrPath subactionPath) {
-    XrActionSpaceCreateInfo asci = {};
-    asci.type = XR_TYPE_ACTION_SPACE_CREATE_INFO;
-    asci.action = poseAction;
+    XrActionSpaceCreateInfo asci         = {};
+    asci.type                            = XR_TYPE_ACTION_SPACE_CREATE_INFO;
+    asci.action                          = poseAction;
     asci.poseInActionSpace.orientation.w = 1.0f;
-    asci.subactionPath = subactionPath;
-    XrSpace actionSpace = XR_NULL_HANDLE;
+    asci.subactionPath                   = subactionPath;
+    XrSpace actionSpace                  = XR_NULL_HANDLE;
     OXR(xrCreateActionSpace(session, &asci, &actionSpace));
     return actionSpace;
 }
@@ -79,13 +79,13 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
     }
     mRightHandIndexTriggerAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT,
                                                 "right_index_trigger", "Right Index Trigger");
-    mLeftHandIndexTriggerAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT,
-                                               "left_index_trigger", "Left Index Trigger");
+    mLeftHandIndexTriggerAction  = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT,
+                                                "left_index_trigger", "Left Index Trigger");
     mLeftMenuButtonAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "menu", "Menu");
-    mAButtonAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "a", "A button");
-    mBButtonAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "b", "B button");
-    mXButtonAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "x", "X button");
-    mYButtonAction = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "y", "Y button");
+    mAButtonAction        = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "a", "A button");
+    mBButtonAction        = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "b", "B button");
+    mXButtonAction        = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "x", "X button");
+    mYButtonAction        = CreateAction(mActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "y", "Y button");
 
     OXR(xrStringToPath(instance, "/user/hand/left", &mLeftHandSubactionPath));
     OXR(xrStringToPath(instance, "/user/hand/right", &mRightHandSubactionPath));
@@ -155,17 +155,17 @@ InputStateStatic::InputStateStatic(const XrInstance& instance, const XrSession& 
                                                   "/user/hand/left/input/squeeze/value"));
 
         XrInteractionProfileSuggestedBinding suggestedBindings = {};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = interactionProfilePath;
-        suggestedBindings.suggestedBindings = &bindings[0];
+        suggestedBindings.type                   = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.interactionProfile     = interactionProfilePath;
+        suggestedBindings.suggestedBindings      = &bindings[0];
         suggestedBindings.countSuggestedBindings = bindings.size();
         OXR(xrSuggestInteractionProfileBindings(instance, &suggestedBindings));
 
         // Attach to session
         XrSessionActionSetsAttachInfo attachInfo = {};
-        attachInfo.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO;
-        attachInfo.countActionSets = 1;
-        attachInfo.actionSets = &mActionSet;
+        attachInfo.type                          = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO;
+        attachInfo.countActionSets               = 1;
+        attachInfo.actionSets                    = &mActionSet;
         OXR(xrAttachSessionActionSets(session, &attachInfo));
     }
 }
@@ -210,15 +210,16 @@ InputStateStatic::~InputStateStatic() {
     }
 }
 
-XrActionStateBoolean SyncButtonState(const XrSession& session, const XrAction& action,
-                                     const XrPath& subactionPath = XR_NULL_PATH) {
+XrActionStateBoolean SyncButtonState(const XrSession& session,
+                                     const XrAction&  action,
+                                     const XrPath&    subactionPath = XR_NULL_PATH) {
     XrActionStateGetInfo getInfo = {};
-    getInfo.type = XR_TYPE_ACTION_STATE_GET_INFO;
-    getInfo.action = action;
-    getInfo.subactionPath = subactionPath;
+    getInfo.type                 = XR_TYPE_ACTION_STATE_GET_INFO;
+    getInfo.action               = action;
+    getInfo.subactionPath        = subactionPath;
 
     XrActionStateBoolean state = {};
-    state.type = XR_TYPE_ACTION_STATE_BOOLEAN;
+    state.type                 = XR_TYPE_ACTION_STATE_BOOLEAN;
 
     OXR(xrGetActionStateBoolean(session, &getInfo, &state));
     return state;
@@ -227,12 +228,12 @@ XrActionStateBoolean SyncButtonState(const XrSession& session, const XrAction& a
 XrActionStateVector2f SyncVector2fState(const XrSession& session, const XrAction& action,
                                         const XrPath& subactionPath = XR_NULL_PATH) {
     XrActionStateGetInfo getInfo = {};
-    getInfo.type = XR_TYPE_ACTION_STATE_GET_INFO;
-    getInfo.action = action;
-    getInfo.subactionPath = subactionPath;
+    getInfo.type                 = XR_TYPE_ACTION_STATE_GET_INFO;
+    getInfo.action               = action;
+    getInfo.subactionPath        = subactionPath;
 
     XrActionStateVector2f state = {};
-    state.type = XR_TYPE_ACTION_STATE_VECTOR2F;
+    state.type                  = XR_TYPE_ACTION_STATE_VECTOR2F;
 
     OXR(xrGetActionStateVector2f(session, &getInfo, &state));
     return state;
@@ -242,14 +243,14 @@ void InputStateFrame::SyncButtonsAndThumbSticks(
     const XrSession& session, const std::unique_ptr<InputStateStatic>& staticState) {
     assert(staticState != nullptr);
     XrActiveActionSet activeActionSet = {};
-    activeActionSet.actionSet = staticState->mActionSet;
-    activeActionSet.subactionPath = XR_NULL_PATH;
+    activeActionSet.actionSet         = staticState->mActionSet;
+    activeActionSet.subactionPath     = XR_NULL_PATH;
 
-    XrActionsSyncInfo syncInfo = {};
-    syncInfo.type = XR_TYPE_ACTIONS_SYNC_INFO;
-    syncInfo.next = nullptr;
+    XrActionsSyncInfo syncInfo     = {};
+    syncInfo.type                  = XR_TYPE_ACTIONS_SYNC_INFO;
+    syncInfo.next                  = nullptr;
     syncInfo.countActiveActionSets = 1;
-    syncInfo.activeActionSets = &activeActionSet;
+    syncInfo.activeActionSets      = &activeActionSet;
     OXR(xrSyncActions(session, &syncInfo));
 
     // Sync button states
@@ -261,8 +262,8 @@ void InputStateFrame::SyncButtonsAndThumbSticks(
     mLeftMenuButtonState = SyncButtonState(session, staticState->mLeftMenuButtonAction);
 
     // Sync thumbstick states
-    mThumbStickState[LEFT_CONTROLLER] = SyncVector2fState(session, staticState->mThumbStickAction,
-                                                          staticState->mLeftHandSubactionPath);
+    mThumbStickState[LEFT_CONTROLLER]  = SyncVector2fState(session, staticState->mThumbStickAction,
+                                                           staticState->mLeftHandSubactionPath);
     mThumbStickState[RIGHT_CONTROLLER] = SyncVector2fState(session, staticState->mThumbStickAction,
                                                            staticState->mRightHandSubactionPath);
 
@@ -301,27 +302,27 @@ void InputStateFrame::SyncButtonsAndThumbSticks(
 
     // get the active state and pose for the two comtrollers
     if (staticState->mLeftHandSpace != XR_NULL_HANDLE) {
-        XrActionStateGetInfo getInfo = {.type = XR_TYPE_ACTION_STATE_GET_INFO,
-                                        .action = staticState->mHandPoseAction,
-                                        .subactionPath = staticState->mLeftHandSubactionPath};
-        XrActionStatePose handPose = {.type = XR_TYPE_ACTION_STATE_POSE};
+        XrActionStateGetInfo getInfo  = {.type          = XR_TYPE_ACTION_STATE_GET_INFO,
+                                         .action        = staticState->mHandPoseAction,
+                                         .subactionPath = staticState->mLeftHandSubactionPath};
+        XrActionStatePose    handPose = {.type = XR_TYPE_ACTION_STATE_POSE};
         OXR(xrGetActionStatePose(session, &getInfo, &handPose));
         mIsHandActive[LEFT_CONTROLLER] = handPose.isActive;
     }
     if (staticState->mRightHandSpace != XR_NULL_HANDLE) {
-        XrActionStateGetInfo getInfo = {.type = XR_TYPE_ACTION_STATE_GET_INFO,
-                                        .action = staticState->mHandPoseAction,
-                                        .subactionPath = staticState->mRightHandSubactionPath};
-        XrActionStatePose handPose = {.type = XR_TYPE_ACTION_STATE_POSE};
+        XrActionStateGetInfo getInfo  = {.type          = XR_TYPE_ACTION_STATE_GET_INFO,
+                                         .action        = staticState->mHandPoseAction,
+                                         .subactionPath = staticState->mRightHandSubactionPath};
+        XrActionStatePose    handPose = {.type = XR_TYPE_ACTION_STATE_POSE};
         OXR(xrGetActionStatePose(session, &getInfo, &handPose));
         mIsHandActive[RIGHT_CONTROLLER] = handPose.isActive;
     }
 }
 
-void InputStateFrame::SyncHandPoses(const XrSession& session,
+void InputStateFrame::SyncHandPoses(const XrSession&                         session,
                                     const std::unique_ptr<InputStateStatic>& staticState,
-                                    const XrSpace& referenceSpace,
-                                    const XrTime predictedDisplayTime) {
+                                    const XrSpace&                           referenceSpace,
+                                    const XrTime                             predictedDisplayTime) {
     OXR(xrLocateSpace(staticState->mRightHandSpace, referenceSpace, predictedDisplayTime,
                       &mHandPositions[InputStateFrame::RIGHT_CONTROLLER]));
     mIsHandActive[RIGHT_CONTROLLER] =
@@ -337,7 +338,7 @@ void InputStateFrame::SyncHandPoses(const XrSession& session,
     // Determine preferred hand.
     {
         // First, determine which controllers are active
-        const bool isLeftHandActive = mIsHandActive[LEFT_CONTROLLER];
+        const bool isLeftHandActive  = mIsHandActive[LEFT_CONTROLLER];
         const bool isRightHandActive = mIsHandActive[RIGHT_CONTROLLER];
 
         // if only one controller is active, use that one

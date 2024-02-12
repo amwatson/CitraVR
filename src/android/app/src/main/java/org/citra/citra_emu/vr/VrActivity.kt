@@ -24,14 +24,6 @@ class VrActivity : EmulationActivity() {
     private var mHandle: Long = 0
     private var clickRunnable = ClickRunnable()
 
-    val mVrKeyboardLauncher = registerForActivityResult(
-        VrKeyboardActivity.Contract()
-    ) { result: VrKeyboardActivity.Result? ->
-        VrKeyboardActivity.onFinishResult(
-            result!!
-        )
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.info("VR [Java] onCreate()");
         super.onCreate(savedInstanceState)
@@ -97,7 +89,7 @@ class VrActivity : EmulationActivity() {
             if (isPressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, keycode
         )
         event.source = InputDevice.SOURCE_GAMEPAD
-        dispatchKeyEvent(event)
+        runOnUiThread { dispatchKeyEvent(event) }
     }
 
     fun forwardVRJoystick(x: Float, y: Float, joystickType: Int) {

@@ -74,6 +74,9 @@
             android:name="libopenxr_forwardloader.oculus.so"
             android:required="false" />
 
+        <meta-data android:name="android.game_mode_config"
+            android:resource="@xml/game_mode_config" />
+
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:configChanges="density|orientation|screenSize|keyboard|keyboardHidden|uiMode"
@@ -138,21 +141,6 @@
             <intent-filter>
                 <category android:name="com.oculus.intent.category.VR" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name="org.citra.citra_emu.vr.VrKeyboardActivity"
-            android:exported="true"
-            android:process=":vr_process"
-            android:windowSoftInputMode="stateVisible|adjustResize"
-            android:resizeableActivity="false"
-            android:screenOrientation="landscape">
-
-            <!-- This intentfilter marks this Activity as the one that gets launched from Home screen. -->
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="com.oculus.intent.category.2D" />
             </intent-filter>
         </activity>
 

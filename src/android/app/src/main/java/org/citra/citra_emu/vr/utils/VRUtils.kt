@@ -22,10 +22,10 @@ object VRUtils {
     }
 
     val hotKeys = listOf(
-        Settings.HOTKEY_CLOSE_GAME,
+        Settings.HOTKEY_CLOSE_GAME
     )
     val hotkeyTitles = listOf(
-        R.string.emulation_close_game,
+        R.string.emulation_close_game
     )
 
     // Not really VR-related, but for some reason, Citra doesn't have default mappings for gamepad

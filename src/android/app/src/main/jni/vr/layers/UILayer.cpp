@@ -254,29 +254,29 @@ void UILayer::Shutdown() {
 }
 
 int UILayer::CreateSwapchain() {
-  {
-    AndroidWindowBounds viewBounds;
-    if (mEnv->ExceptionCheck()) { mEnv->ExceptionClear(); }
-    const jint ret =
-      mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
-    // Check for exceptions (and log them).
-    if (mEnv->ExceptionCheck()) {
-      mEnv->ExceptionDescribe();
-      mEnv->ExceptionClear();
-      FAIL("Exception in getBoundsForView()");
+    {
+        AndroidWindowBounds viewBounds;
+        if (mEnv->ExceptionCheck()) { mEnv->ExceptionClear(); }
+        const jint ret =
+            mEnv->CallIntMethod(mVrUILayerObject, mGetBoundsMethodID, BoundsHandle(&viewBounds).l);
+        // Check for exceptions (and log them).
+        if (mEnv->ExceptionCheck()) {
+            mEnv->ExceptionDescribe();
+            mEnv->ExceptionClear();
+            FAIL("Exception in getBoundsForView()");
+        }
+        if (ret < 0) {
+            ALOGE("{}() returned error {}", __FUNCTION__, ret);
+            return -1;
+        }
+        if (viewBounds.Width() == 0 || viewBounds.Height() == 0) {
+            ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__, viewBounds.Width(),
+                  viewBounds.Height());
+            return -2;
+        }
+        mSwapchain.mWidth  = viewBounds.Width();
+        mSwapchain.mHeight = viewBounds.Height();
     }
-    if (ret < 0) {
-      ALOGE("{}() returned error {}", __FUNCTION__, ret);
-      return -1;
-    }
-    if (viewBounds.Width() == 0 || viewBounds.Height() == 0) {
-      ALOGE("{}() returned invalid bounds {} x {}", __FUNCTION__, viewBounds.Width(),
-          viewBounds.Height());
-      return -2;
-    }
-    mSwapchain.mWidth  = viewBounds.Width();
-    mSwapchain.mHeight = viewBounds.Height();
-  }
     // Initialize swapchain.
     {
         XrSwapchainCreateInfo swapchainCreateInfo;
@@ -287,7 +287,7 @@ int UILayer::CreateSwapchain() {
             XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
         swapchainCreateInfo.format      = 0;
         swapchainCreateInfo.sampleCount = 0;
-        swapchainCreateInfo.width       =  mSwapchain.mWidth;
+        swapchainCreateInfo.width       = mSwapchain.mWidth;
         swapchainCreateInfo.height      = mSwapchain.mHeight;
         swapchainCreateInfo.faceCount   = 0;
         swapchainCreateInfo.arraySize   = 0;
@@ -308,8 +308,8 @@ int UILayer::CreateSwapchain() {
 
         ALOGD("UILayer: created swapchain {}x{}", mSwapchain.mWidth, mSwapchain.mHeight);
 
-        mEnv->CallIntMethod(mVrUILayerObject, mSetSurfaceMethodId, mSurface,
-                            (int)mSwapchain.mWidth, (int)mSwapchain.mHeight);
+        mEnv->CallIntMethod(mVrUILayerObject, mSetSurfaceMethodId, mSurface, (int)mSwapchain.mWidth,
+                            (int)mSwapchain.mHeight);
         if (mEnv->ExceptionCheck()) {
             mEnv->ExceptionDescribe();
             mEnv->ExceptionClear();

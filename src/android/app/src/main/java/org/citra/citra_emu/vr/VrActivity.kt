@@ -24,14 +24,6 @@ class VrActivity : EmulationActivity() {
     private var mHandle: Long = 0
     private var clickRunnable = ClickRunnable()
 
-    val mVrKeyboardLauncher = registerForActivityResult(
-        VrKeyboardActivity.Contract()
-    ) { result: VrKeyboardActivity.Result? ->
-        VrKeyboardActivity.onFinishResult(
-            result!!
-        )
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.info("VR [Java] onCreate()");
         super.onCreate(savedInstanceState)

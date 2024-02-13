@@ -4,13 +4,21 @@
 
 package org.citra.citra_emu.utils
 
+import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.vr.VrActivity
+
 object EmulationLifecycleUtil {
     private var shutdownHooks: MutableList<Runnable> = ArrayList()
     private var pauseResumeHooks: MutableList<Runnable> = ArrayList()
 
 
     fun closeGame() {
-        shutdownHooks.forEach(Runnable::run)
+        val activity = NativeLibrary.sEmulationActivity.get()
+        if (activity != null && activity is VrActivity) {
+            activity.quitToMenu()
+        } else {
+            shutdownHooks.forEach(Runnable::run)
+        }
     }
 
     fun pauseOrResume() {

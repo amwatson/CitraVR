@@ -2,6 +2,8 @@ package org.citra.citra_emu.vr.utils
 
 import android.view.KeyEvent
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.R
+import org.citra.citra_emu.features.settings.model.Settings
 
 object VRUtils {
     val hMDType: Int
@@ -18,6 +20,13 @@ object VRUtils {
         QUESTPRO(4)
 
     }
+
+    val hotKeys = listOf(
+        Settings.HOTKEY_CLOSE_GAME
+    )
+    val hotkeyTitles = listOf(
+        R.string.emulation_close_game
+    )
 
     // Not really VR-related, but for some reason, Citra doesn't have default mappings for gamepad
     enum class ButtonType(val nativeLibrary: Int, val android: Int) {

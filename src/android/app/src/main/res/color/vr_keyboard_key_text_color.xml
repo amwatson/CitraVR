@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true" android:color="@color/citra_onSecondaryContainer" /> <!-- Pressed color -->
+    <item android:color="@color/citra_onSecondary" /> <!-- Default color -->
+</selector>

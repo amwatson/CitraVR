@@ -17,7 +17,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <EGL/egl.h>
 
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
-#define XR_USE_PLATFORM_ANDROID 1
+#define XR_USE_PLATFORM_ANDROID       1
 
 #include <openxr/openxr_platform.h>
 
@@ -68,12 +68,10 @@ private:
         ~CursorImage();
 
         /** Get the swapchain used to render the cursor. */
-        const Swapchain& GetSwapchain() const {
-            return mSwapchain;
-        }
+        const Swapchain& GetSwapchain() const { return mSwapchain; }
 
     private:
-        Swapchain mSwapchain;
+        Swapchain                                mSwapchain;
         std::vector<XrSwapchainImageOpenGLESKHR> mSwapchainImages;
     };
 

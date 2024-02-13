@@ -6,17 +6,12 @@
 
 #include <map>
 #include <memory>
-#include <utility>
-#include <vector>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
-#include "core/mmio.h"
 
 namespace Kernel {
 
@@ -25,8 +20,6 @@ enum class VMAType : u8 {
     Free,
     /// VMA is backed by a raw, unmanaged pointer.
     BackingMemory,
-    /// VMA is mapped to MMIO registers at a fixed PAddr.
-    MMIO,
 };
 
 /// Permissions for mapped memory blocks
@@ -74,14 +67,9 @@ struct VirtualMemoryArea {
     /// Tag returned by svcQueryMemory. Not otherwise used.
     MemoryState meminfo_state = MemoryState::Free;
 
-    // Settings for type = BackingMemory
+    /// Settings for type = BackingMemory
     /// Pointer backing this VMA. It will not be destroyed or freed when the VMA is removed.
     MemoryRef backing_memory{};
-
-    // Settings for type = MMIO
-    /// Physical address of the register area this VMA maps to.
-    PAddr paddr = 0;
-    Memory::MMIORegionPointer mmio_handler = nullptr;
 
     /// Tests if this area can be merged to the right with `next`.
     bool CanBeMergedWith(const VirtualMemoryArea& next) const;
@@ -89,16 +77,7 @@ struct VirtualMemoryArea {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& base;
-        ar& size;
-        ar& type;
-        ar& permissions;
-        ar& meminfo_state;
-        ar& backing_memory;
-        ar& paddr;
-        ar& mmio_handler;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -167,18 +146,6 @@ public:
                                           MemoryState state);
 
     /**
-     * Maps a memory-mapped IO region at a given address.
-     *
-     * @param target The guest address to start the mapping at.
-     * @param paddr The physical address where the registers are present.
-     * @param size Size of the mapping.
-     * @param state MemoryState tag to attach to the VMA.
-     * @param mmio_handler The handler that will implement read and write for this MMIO region.
-     */
-    ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state,
-                                 Memory::MMIORegionPointer mmio_handler);
-
-    /**
      * Updates the memory state and permissions of the specified range. The range's original memory
      * state and permissions must match the `expected` parameters.
      *
@@ -189,24 +156,25 @@ public:
      * @param new_state New MemoryState for the range.
      * @param new_perms New VMAPermission for the range.
      */
-    ResultCode ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
-                                 VMAPermission expected_perms, MemoryState new_state,
-                                 VMAPermission new_perms);
+    Result ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
+                             VMAPermission expected_perms, MemoryState new_state,
+                             VMAPermission new_perms);
 
     /// Unmaps a range of addresses, splitting VMAs as necessary.
-    ResultCode UnmapRange(VAddr target, u32 size);
+    Result UnmapRange(VAddr target, u32 size);
 
     /// Changes the permissions of the given VMA.
     VMAHandle Reprotect(VMAHandle vma, VMAPermission new_perms);
 
     /// Changes the permissions of a range of addresses, splitting VMAs as necessary.
-    ResultCode ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
+    Result ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Common::Log::Level log_level) const;
 
     /// Gets a list of backing memory blocks for the specified range
-    ResultVal<MemoryRegionInfo::IntervalSet> GetBackingBlocksForRange(VAddr address, u32 size);
+    ResultVal<std::vector<std::pair<MemoryRef, u32>>> GetBackingBlocksForRange(VAddr address,
+                                                                               u32 size);
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.
@@ -261,13 +229,9 @@ private:
     bool is_locked{};
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& vma_map;
-        ar& page_table;
-        if (Archive::is_loading::value) {
-            is_locked = true;
-        }
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::VirtualMemoryArea)

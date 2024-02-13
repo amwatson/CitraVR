@@ -7,8 +7,6 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
@@ -46,7 +44,7 @@ public:
      * waiting on it to awake.
      * @returns ClientSession The client endpoint of the created Session pair, or error code.
      */
-    ResultVal<std::shared_ptr<ClientSession>> Connect();
+    Result Connect(std::shared_ptr<ClientSession>* out_client_session);
 
     /**
      * Signifies that a previously active connection has been closed,
@@ -66,13 +64,7 @@ private:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& server_port;
-        ar& max_sessions;
-        ar& active_sessions;
-        ar& name;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel

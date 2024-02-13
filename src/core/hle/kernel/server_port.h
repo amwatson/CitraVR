@@ -39,9 +39,9 @@ public:
 
     /**
      * Accepts a pending incoming connection on this port. If there are no pending sessions, will
-     * return ERR_NO_PENDING_SESSIONS.
+     * return ResultNoPendingSessions.
      */
-    ResultVal<std::shared_ptr<ServerSession>> Accept();
+    Result Accept(std::shared_ptr<ServerSession>* out_server_session);
 
     /**
      * Sets the HLE handler template for the port. ServerSessions crated by connecting to this port
@@ -66,7 +66,7 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel

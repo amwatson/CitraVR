@@ -82,7 +82,8 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    explicit AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) {}
+    explicit AppLoader(Core::System& system_, FileUtil::IOFile&& file)
+        : system(system_), file(std::move(file)) {}
     virtual ~AppLoader() {}
 
     /**
@@ -90,6 +91,14 @@ public:
      * @return FileType corresponding to the loaded file
      */
     virtual FileType GetFileType() = 0;
+
+    /**
+     * Returns the preferred region codes of this file
+     * @return A vector of the preferred region codes
+     */
+    [[nodiscard]] virtual std::span<const u32> GetPreferredRegions() const {
+        return {};
+    }
 
     /**
      * Load the application and return the created Process instance
@@ -245,6 +254,7 @@ public:
     }
 
 protected:
+    Core::System& system;
     FileUtil::IOFile file;
     bool is_loaded = false;
 };

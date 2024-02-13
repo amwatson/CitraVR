@@ -429,18 +429,20 @@ Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
 
 #if SDL_VERSION_ATLEAST(2, 0, 6)
         {
-            const SDL_ExtendedGameControllerBind extended_bind =
-                controller->bindings[mapped_button];
-            if (extended_bind.input.axis.axis_max < extended_bind.input.axis.axis_min) {
-                params.Set("direction", "-");
-            } else {
-                params.Set("direction", "+");
+            if (mapped_button != SDL_CONTROLLER_BUTTON_INVALID) {
+                const SDL_ExtendedGameControllerBind extended_bind =
+                    controller->bindings[mapped_button];
+                if (extended_bind.input.axis.axis_max < extended_bind.input.axis.axis_min) {
+                    params.Set("direction", "-");
+                } else {
+                    params.Set("direction", "+");
+                }
+                params.Set("threshold", (extended_bind.input.axis.axis_min +
+                                         (extended_bind.input.axis.axis_max -
+                                          extended_bind.input.axis.axis_min) /
+                                             2.0f) /
+                                            SDL_JOYSTICK_AXIS_MAX);
             }
-            params.Set(
-                "threshold",
-                (extended_bind.input.axis.axis_min +
-                 (extended_bind.input.axis.axis_max - extended_bind.input.axis.axis_min) / 2.0f) /
-                    SDL_JOYSTICK_AXIS_MAX);
         }
 #else
         params.Set("direction", "+"); // lacks extended_bind, so just a guess
@@ -833,6 +835,19 @@ SDLState::SDLState() {
     // There are also hints to toggle the individual drivers if needed.
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
 #endif
+#endif
+
+    // Prevent SDL from adding undesired axis
+#ifdef SDL_HINT_ACCELEROMETER_AS_JOYSTICK
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#endif
+
+    // Enable HIDAPI rumble. This prevents SDL from disabling motion on PS4 and PS5 controllers
+#ifdef SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
+#endif
+#ifdef SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
 #endif
 
     SDL_AddEventWatch(&SDLEventWatcher, this);

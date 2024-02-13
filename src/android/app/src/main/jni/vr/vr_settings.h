@@ -29,7 +29,8 @@ enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
 
 enum class VREnvironmentType { PASSTHROUGH = 1, VOID = 2 };
 
-// Given a CPU level preference, return the corresponding OpenXR performance level
+// Given a CPU level preference, return the corresponding OpenXR performance
+// level
 XrPerfSettingsLevelEXT CPUPrefToPerfSettingsLevel(const int32_t cpu_level_pref);
 // Return the HMD type as a string (queried from ro.product.model)
 std::string GetHMDTypeStr();
@@ -37,12 +38,12 @@ std::string GetHMDTypeStr();
 HMDType HmdTypeFromStr(const std::string& hmdType);
 
 struct Values {
-    XrPerfSettingsLevelEXT cpu_level = XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
-    HMDType hmd_type = HMDType::UNKNOWN;
-    uint32_t resolution_factor = 0;
-    int32_t vr_environment = 0;
-    int32_t vr_immersive_mode = 0;
-    bool extra_performance_mode_enabled = false;
+    XrPerfSettingsLevelEXT cpu_level         = XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
+    HMDType                hmd_type          = HMDType::UNKNOWN;
+    uint32_t               resolution_factor = 0;
+    int32_t                vr_environment    = 0;
+    int32_t                vr_immersive_mode = 0;
+    bool                   extra_performance_mode_enabled = false;
 } extern values;
 
 } // namespace VRSettings

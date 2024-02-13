@@ -2,9 +2,6 @@ add_executable(tests
     common/bit_field.cpp
     common/file_util.cpp
     common/param_package.cpp
-    core/arm/arm_test_common.cpp
-    core/arm/arm_test_common.h
-    core/arm/dyncom/arm_dyncom_vfp_tests.cpp
     core/core_timing.cpp
     core/file_sys/path_parser.cpp
     core/hle/kernel/hle_ipc.cpp
@@ -12,17 +9,22 @@ add_executable(tests
     core/memory/vm_manager.cpp
     precompiled_headers.h
     audio_core/hle/hle.cpp
-    audio_core/hle/adts_reader.cpp
+    audio_core/hle/source.cpp
     audio_core/lle/lle.cpp
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
-    video_core/shader/shader_jit_x64_compiler.cpp
+    video_core/shader/shader_jit_compiler.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/merry_audio.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/merry_audio.h
+    audio_core/merryhime_3ds_audio/merry_audio/service_fixture.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/service_fixture.h
+    audio_core/merryhime_3ds_audio/audio_test_biquad_filter.cpp
 )
 
 create_target_directory_groups(tests)
 
 target_link_libraries(tests PRIVATE citra_common citra_core video_core audio_core)
-target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} Catch2::Catch2WithMain nihstro-headers Threads::Threads)
+target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers Threads::Threads)
 
 add_test(NAME tests COMMAND tests)
 

@@ -17,7 +17,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace SyspropUtils {
 static inline float GetSysPropAsFloat(const char* propertyName, const float defaultValue) {
-    char value[PROP_VALUE_MAX];
+    char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
     if (length > 0) {
@@ -27,9 +27,7 @@ static inline float GetSysPropAsFloat(const char* propertyName, const float defa
 
         // Check if the conversion was successful (end points to the end of the
         // number)
-        if (end != value) {
-            return float_value;
-        }
+        if (end != value) { return float_value; }
     }
 
     // Return default value if property is not set or conversion failed
@@ -37,33 +35,29 @@ static inline float GetSysPropAsFloat(const char* propertyName, const float defa
 }
 
 static inline int32_t GetSysPropAsInt(const char* propertyName, const int32_t defaultValue) {
-    char value[PROP_VALUE_MAX];
+    char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
     if (length > 0) {
         // Attempt to convert the string to an int
-        char* end;
+        char*   end;
         int32_t int_value = std::strtol(value, &end, 10);
 
         // Check if the conversion was successful (end points to the end of the
         // number)
-        if (end != value) {
-            return int_value;
-        }
+        if (end != value) { return int_value; }
     }
 
     // Return default value if property is not set or conversion failed
     return defaultValue;
 }
 
-static inline std::string GetSysPropAsString(const char* propertyName,
+static inline std::string GetSysPropAsString(const char*        propertyName,
                                              const std::string& defaultValue) {
-    char value[PROP_VALUE_MAX];
+    char    value[PROP_VALUE_MAX];
     int32_t length = __system_property_get(propertyName, value);
 
-    if (length > 0) {
-        return std::string(value);
-    }
+    if (length > 0) { return std::string(value); }
 
     // Return default value if property is not set
     return defaultValue;

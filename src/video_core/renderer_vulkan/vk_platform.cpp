@@ -63,7 +63,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags,
                                                           VkDebugReportObjectTypeEXT objectType,
-                                                          uint64_t object, size_t location,
+                                                          uint64_t object, std::size_t location,
                                                           int32_t messageCode,
                                                           const char* pLayerPrefix,
                                                           const char* pMessage, void* pUserData) {
@@ -206,10 +206,12 @@ std::vector<const char*> GetInstanceExtensions(Frontend::WindowSystemType window
 
     // Add the windowing system specific extension
     std::vector<const char*> extensions;
-    extensions.reserve(6);
+    extensions.reserve(7);
 
 #if defined(__APPLE__)
     extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    // For configuring MoltenVK.
+    extensions.push_back(VK_EXT_LAYER_SETTINGS_EXTENSION_NAME);
 #endif
 
     switch (window_type) {
@@ -304,7 +306,7 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "Citra Vulkan",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = available_version,
+        .apiVersion = VK_API_VERSION_1_3,
     };
 
     boost::container::static_vector<const char*, 2> layers;
@@ -315,7 +317,7 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         layers.push_back("VK_LAYER_LUNARG_api_dump");
     }
 
-    const vk::InstanceCreateInfo instance_ci = {
+    vk::InstanceCreateInfo instance_ci = {
         .flags = GetInstanceFlags(),
         .pApplicationInfo = &application_info,
         .enabledLayerCount = static_cast<u32>(layers.size()),
@@ -323,6 +325,36 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         .enabledExtensionCount = static_cast<u32>(extensions.size()),
         .ppEnabledExtensionNames = extensions.data(),
     };
+
+#ifdef __APPLE__
+    // Use synchronous queue submits if async presentation is enabled, to avoid threading
+    // indirection.
+    const auto synchronous_queue_submits = Settings::values.async_presentation.GetValue();
+    // If the device is lost, make an attempt to resume if possible to avoid crashes.
+    constexpr auto resume_lost_device = true;
+    // Maximize concurrency to improve shader compilation performance.
+    constexpr auto maximize_concurrent_compilation = true;
+
+    constexpr auto layer_name = "MoltenVK";
+    const vk::LayerSettingEXT layer_settings[] = {
+        {layer_name, "MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", vk::LayerSettingTypeEXT::eBool32, 1,
+         &synchronous_queue_submits},
+        {layer_name, "MVK_CONFIG_RESUME_LOST_DEVICE", vk::LayerSettingTypeEXT::eBool32, 1,
+         &resume_lost_device},
+        {layer_name, "MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION",
+         vk::LayerSettingTypeEXT::eBool32, 1, &maximize_concurrent_compilation},
+    };
+    const vk::LayerSettingsCreateInfoEXT layer_settings_ci = {
+        .pNext = nullptr,
+        .settingCount = static_cast<uint32_t>(std::size(layer_settings)),
+        .pSettings = layer_settings,
+    };
+
+    if (std::find(extensions.begin(), extensions.end(), VK_EXT_LAYER_SETTINGS_EXTENSION_NAME) !=
+        extensions.end()) {
+        instance_ci.pNext = &layer_settings_ci;
+    }
+#endif
 
     auto instance = vk::createInstanceUnique(instance_ci);
 

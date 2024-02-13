@@ -41,6 +41,7 @@ class LoadingScreen;
 class MicroProfileDialog;
 class MultiplayerState;
 class ProfilerWidget;
+class QFileOpenEvent;
 template <typename>
 class QFutureWatcher;
 class QLabel;
@@ -73,19 +74,15 @@ namespace Service::AM {
 enum class InstallStatus : u32;
 }
 
+namespace Service::FS {
+enum class MediaType : u32;
+}
+
 class GMainWindow : public QMainWindow {
     Q_OBJECT
 
     /// Max number of recently loaded items to keep track of
     static const int max_recent_files_item = 10;
-
-    // TODO: Make use of this!
-    enum {
-        UI_IDLE,
-        UI_EMU_BOOTING,
-        UI_EMU_RUNNING,
-        UI_EMU_STOPPING,
-    };
 
 public:
     void filterBarSetChecked(bool state);
@@ -99,6 +96,11 @@ public:
 
     bool DropAction(QDropEvent* event);
     void AcceptDropEvent(QDropEvent* event);
+
+    void OnFileOpen(const QFileOpenEvent* event);
+
+    void UninstallTitles(
+        const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles);
 
 public slots:
     void OnAppFocusStateChanged(Qt::ApplicationState state);
@@ -138,6 +140,7 @@ private:
     void SyncMenuUISettings();
     void RestoreUIState();
 
+    void ConnectAppEvents();
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
     void UpdateMenuState();
@@ -264,6 +267,10 @@ private slots:
     void OnLanguageChanged(const QString& locale);
     void OnMouseActivity();
 
+    void OnDecreaseVolume();
+    void OnIncreaseVolume();
+    void OnMute();
+
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
@@ -276,7 +283,12 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
+    void UpdateVolumeUI();
     void UpdateAPIIndicator(bool update = false);
+    void UpdateStatusButtons();
+#ifdef __unix__
+    void SetGamemodeEnabled(bool state);
+#endif
 
     std::unique_ptr<Ui::MainWindow> ui;
     Core::System& system;
@@ -295,6 +307,9 @@ private:
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
     QPushButton* graphics_api_button = nullptr;
+    QPushButton* volume_button = nullptr;
+    QWidget* volume_popup = nullptr;
+    QSlider* volume_slider = nullptr;
     QTimer status_bar_update_timer;
     bool message_label_used_for_movie = false;
 
@@ -310,6 +325,7 @@ private:
     QString game_path;
 
     bool auto_paused = false;
+    bool auto_muted = false;
     QTimer mouse_hide_timer;
 
     // Movie
@@ -328,6 +344,7 @@ private:
     // Whether game was paused due to stopping video dumping
     bool game_paused_for_dumping = false;
 
+    QString gl_renderer;
     std::vector<QString> physical_devices;
 
     // Debugger panes
@@ -378,6 +395,16 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+};
+
+class GApplicationEventFilter : public QObject {
+    Q_OBJECT
+
+signals:
+    void FileOpen(const QFileOpenEvent* event);
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 Q_DECLARE_METATYPE(std::size_t);

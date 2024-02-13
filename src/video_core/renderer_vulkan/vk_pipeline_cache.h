@@ -9,12 +9,14 @@
 
 #include "video_core/renderer_vulkan/vk_descriptor_pool.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
-#include "video_core/shader/generator/glsl_shader_gen.h"
-#include "video_core/shader/generator/spv_shader_gen.h"
+#include "video_core/shader/generator/pica_fs_config.h"
+#include "video_core/shader/generator/profile.h"
+#include "video_core/shader/generator/shader_gen.h"
 
 namespace Pica {
-struct Regs;
-}
+struct RegsInternal;
+struct ShaderSetup;
+} // namespace Pica
 
 namespace Vulkan {
 
@@ -49,20 +51,20 @@ public:
     bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
 
     /// Binds a PICA decompiled vertex shader
-    bool UseProgrammableVertexShader(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+    bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
                                      const VertexLayout& layout);
 
     /// Binds a passthrough vertex shader
     void UseTrivialVertexShader();
 
     /// Binds a PICA decompiled geometry shader
-    bool UseFixedGeometryShader(const Pica::Regs& regs);
+    bool UseFixedGeometryShader(const Pica::RegsInternal& regs);
 
     /// Binds a passthrough geometry shader
     void UseTrivialGeometryShader();
 
     /// Binds a fragment shader generated from PICA state
-    void UseFragmentShader(const Pica::Regs& regs);
+    void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
     /// Binds a texture to the specified binding
     void BindTexture(u32 binding, vk::ImageView image_view, vk::Sampler sampler);
@@ -77,7 +79,7 @@ public:
     void BindTexelBuffer(u32 binding, vk::BufferView buffer_view);
 
     /// Sets the dynamic offset for the uniform buffer at binding
-    void SetBufferOffset(u32 binding, size_t offset);
+    void SetBufferOffset(u32 binding, std::size_t offset);
 
 private:
     /// Builds the rasterizer pipeline layout
@@ -98,6 +100,7 @@ private:
     RenderpassCache& renderpass_cache;
     DescriptorPool& pool;
 
+    Pica::Shader::Profile profile{};
     vk::UniquePipelineCache pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
     std::size_t num_worker_threads;
@@ -118,7 +121,7 @@ private:
     std::unordered_map<Pica::Shader::Generator::PicaVSConfig, Shader*> programmable_vertex_map;
     std::unordered_map<std::string, Shader> programmable_vertex_cache;
     std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
-    std::unordered_map<Pica::Shader::Generator::PicaFSConfig, Shader> fragment_shaders;
+    std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
 };
 

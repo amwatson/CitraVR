@@ -15,29 +15,11 @@ public:
     virtual ~Applet() = default;
 
     /**
-     * Creates an instance of the Applet subclass identified by the parameter.
-     * and stores it in a global map.
-     * @param id Id of the applet to create.
-     * @param parent Id of the applet's parent.
-     * @param preload Whether the applet is being preloaded.
-     * @returns ResultCode Whether the operation was successful or not.
-     */
-    static ResultCode Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                             const std::shared_ptr<Service::APT::AppletManager>& manager);
-
-    /**
-     * Retrieves the Applet instance identified by the specified id.
-     * @param id Id of the Applet to retrieve.
-     * @returns Requested Applet or nullptr if not found.
-     */
-    static std::shared_ptr<Applet> Get(Service::APT::AppletId id);
-
-    /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter);
+    Result ReceiveParameter(const Service::APT::MessageParameter& parameter);
 
     /**
      * Whether the applet is currently running.
@@ -55,29 +37,31 @@ public:
     virtual void Update() = 0;
 
 protected:
-    Applet(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-           std::weak_ptr<Service::APT::AppletManager> manager)
-        : id(id), parent(parent), preload(preload), manager(std::move(manager)) {}
+    Applet(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+           bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : system(system), id(id), parent(parent), preload(preload), manager(std::move(manager)) {}
 
     /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    virtual ResultCode ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) = 0;
+    virtual Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) = 0;
 
     /**
      * Handles the Applet start event, triggered from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    virtual ResultCode Start(const Service::APT::MessageParameter& parameter) = 0;
+    virtual Result Start(const Service::APT::MessageParameter& parameter) = 0;
 
     /**
      * Sends the LibAppletClosing signal to the application,
      * along with the relevant data buffers.
      */
-    virtual ResultCode Finalize() = 0;
+    virtual Result Finalize() = 0;
+
+    Core::System& system;
 
     Service::APT::AppletId id;                    ///< Id of this Applet
     Service::APT::AppletId parent;                ///< Id of this Applet's parent
@@ -97,9 +81,4 @@ private:
     std::weak_ptr<Service::APT::AppletManager> manager;
 };
 
-/// Initializes the HLE applets
-void Init();
-
-/// Shuts down the HLE applets
-void Shutdown();
 } // namespace HLE::Applets

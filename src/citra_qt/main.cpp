@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QSysInfo>
+#include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
@@ -25,6 +26,7 @@
 #include <QVariant>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QtDBus>
+#include "common/linux/gamemode.h"
 #endif
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/mii_selector.h"
@@ -62,7 +64,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
-#include "citra_qt/util/vk_device_info.h"
+#include "citra_qt/util/graphics_device_info.h"
 #include "common/arch.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
@@ -72,7 +74,6 @@
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/memory_detect.h"
-#include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #if CITRA_ARCH(x86_64)
@@ -94,8 +95,8 @@
 #include "input_common/main.h"
 #include "network/network_settings.h"
 #include "ui_main.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 #ifdef __APPLE__
 #include "common/apple_authorization.h"
@@ -181,6 +182,10 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     Debugger::ToggleConsole();
 
+#ifdef __unix__
+    SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
+#endif
+
     // register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
@@ -224,6 +229,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     SetDefaultUIGeometry();
     RestoreUIState();
 
+    ConnectAppEvents();
     ConnectMenuEvents();
     ConnectWidgetEvents();
 
@@ -264,6 +270,19 @@ GMainWindow::GMainWindow(Core::System& system_)
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
 
+#ifdef ENABLE_OPENGL
+    gl_renderer = GetOpenGLRenderer();
+#if defined(_WIN32)
+    if (gl_renderer.startsWith(QStringLiteral("D3D12"))) {
+        // OpenGLOn12 supports but does not yet advertise OpenGL 4.0+
+        // We can override the version here to allow Citra to work.
+        // TODO: Remove this when OpenGL 4.0+ is advertised.
+        qputenv("MESA_GL_VERSION_OVERRIDE", "4.6");
+    }
+#endif
+#endif
+
+#ifdef ENABLE_VULKAN
     physical_devices = GetVulkanPhysicalDevices();
     if (physical_devices.empty()) {
         QMessageBox::warning(this, tr("No Suitable Vulkan Devices Detected"),
@@ -271,6 +290,7 @@ GMainWindow::GMainWindow(Core::System& system_)
                                 "Your GPU may not support Vulkan 1.1, or you do not "
                                 "have the latest graphics driver."));
     }
+#endif
 
 #if ENABLE_QT_UPDATER
     if (UISettings::values.check_for_update_on_start) {
@@ -414,6 +434,38 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->insertPermanentWidget(0, graphics_api_button);
 
+    volume_popup = new QWidget(this);
+    volume_popup->setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::Popup);
+    volume_popup->setLayout(new QVBoxLayout());
+    volume_popup->setMinimumWidth(200);
+
+    volume_slider = new QSlider(Qt::Horizontal);
+    volume_slider->setObjectName(QStringLiteral("volume_slider"));
+    volume_slider->setMaximum(100);
+    volume_slider->setPageStep(5);
+    connect(volume_slider, &QSlider::valueChanged, this, [this](int percentage) {
+        Settings::values.audio_muted = false;
+        const auto value = static_cast<float>(percentage) / volume_slider->maximum();
+        Settings::values.volume.SetValue(value);
+        UpdateVolumeUI();
+    });
+    volume_popup->layout()->addWidget(volume_slider);
+
+    volume_button = new QPushButton();
+    volume_button->setObjectName(QStringLiteral("TogglableStatusBarButton"));
+    volume_button->setFocusPolicy(Qt::NoFocus);
+    volume_button->setCheckable(true);
+    UpdateVolumeUI();
+    connect(volume_button, &QPushButton::clicked, this, [&] {
+        UpdateVolumeUI();
+        volume_popup->setVisible(!volume_popup->isVisible());
+        QRect rect = volume_button->geometry();
+        QPoint bottomLeft = statusBar()->mapToGlobal(rect.topLeft());
+        bottomLeft.setY(bottomLeft.y() - volume_popup->geometry().height());
+        volume_popup->setGeometry(QRect(bottomLeft, QSize(rect.width(), rect.height())));
+    });
+    statusBar()->insertPermanentWidget(1, volume_button);
+
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
 
@@ -452,7 +504,7 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
 
-    graphicsWidget = new GPUCommandStreamWidget(this);
+    graphicsWidget = new GPUCommandStreamWidget(system, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
     graphicsWidget->hide();
     debug_menu->addAction(graphicsWidget->toggleViewAction());
@@ -467,12 +519,13 @@ void GMainWindow::InitializeDebugWidgets() {
     graphicsBreakpointsWidget->hide();
     debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
-    graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
+    graphicsVertexShaderWidget =
+        new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
     debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
-    graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
+    graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
     debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
@@ -665,8 +718,10 @@ void GMainWindow::InitializeHotkeys() {
         }
         UpdateStatusBar();
     });
-    connect_shortcut(QStringLiteral("Mute Audio"),
-                     [] { Settings::values.audio_muted = !Settings::values.audio_muted; });
+
+    connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
+    connect_shortcut(QStringLiteral("Audio Volume Down"), &GMainWindow::OnDecreaseVolume);
+    connect_shortcut(QStringLiteral("Audio Volume Up"), &GMainWindow::OnIncreaseVolume);
 
     // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
     // variable hold a garbage value after this function exits
@@ -737,22 +792,49 @@ void GMainWindow::RestoreUIState() {
 }
 
 void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
-    if (!UISettings::values.pause_when_in_background) {
-        return;
-    }
     if (state != Qt::ApplicationHidden && state != Qt::ApplicationInactive &&
         state != Qt::ApplicationActive) {
         LOG_DEBUG(Frontend, "ApplicationState unusual flag: {} ", state);
     }
-    if (ui->action_Pause->isEnabled() &&
-        (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
-        auto_paused = true;
-        OnPauseGame();
-    } else if (emulation_running && !emu_thread->IsRunning() && auto_paused &&
-               state == Qt::ApplicationActive) {
-        auto_paused = false;
-        OnStartGame();
+    if (!emulation_running) {
+        return;
     }
+    if (UISettings::values.pause_when_in_background) {
+        if (emu_thread->IsRunning() &&
+            (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+            auto_paused = true;
+            OnPauseGame();
+        } else if (!emu_thread->IsRunning() && auto_paused && state == Qt::ApplicationActive) {
+            auto_paused = false;
+            OnStartGame();
+        }
+    }
+    if (UISettings::values.mute_when_in_background) {
+        if (!Settings::values.audio_muted &&
+            (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+            Settings::values.audio_muted = true;
+            auto_muted = true;
+        } else if (auto_muted && state == Qt::ApplicationActive) {
+            Settings::values.audio_muted = false;
+            auto_muted = false;
+        }
+        UpdateVolumeUI();
+    }
+}
+
+bool GApplicationEventFilter::eventFilter(QObject* object, QEvent* event) {
+    if (event->type() == QEvent::FileOpen) {
+        emit FileOpen(static_cast<QFileOpenEvent*>(event));
+        return true;
+    }
+    return false;
+}
+
+void GMainWindow::ConnectAppEvents() {
+    const auto filter = new GApplicationEventFilter();
+    QGuiApplication::instance()->installEventFilter(filter);
+
+    connect(filter, &GApplicationEventFilter::FileOpen, this, &GMainWindow::OnFileOpen);
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -1231,6 +1313,11 @@ void GMainWindow::BootGame(const QString& filename) {
         video_dumping_path.clear();
     }
 
+    // Register debug widgets
+    if (graphicsWidget->isVisible()) {
+        graphicsWidget->Register();
+    }
+
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(system, *render_window);
     emit EmulationStarting(emu_thread.get());
@@ -1269,10 +1356,6 @@ void GMainWindow::BootGame(const QString& filename) {
         mouse_hide_timer.start();
         setMouseTracking(true);
     }
-
-    // show and hide the render_window to create the context
-    render_window->show();
-    render_window->hide();
 
     loading_screen->Prepare(system.GetAppLoader());
     loading_screen->show();
@@ -1313,6 +1396,11 @@ void GMainWindow::ShutdownGame() {
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
     Pica::g_debug_context->ClearBreakpoints();
 
+    // Unregister debug widgets
+    if (graphicsWidget->isVisible()) {
+        graphicsWidget->Unregister();
+    }
+
     // Frame advancing must be cancelled in order to release the emu thread from waiting
     system.frame_limiter.SetFrameAdvancing(false);
 
@@ -1325,6 +1413,10 @@ void GMainWindow::ShutdownGame() {
     OnCloseMovie();
 
     discord_rpc->Update();
+
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
 
     // The emulation is stopped, so closing the window or not does not matter anymore
     disconnect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
@@ -1754,6 +1846,57 @@ void GMainWindow::OnCIAInstallFinished() {
     game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
+void GMainWindow::UninstallTitles(
+    const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles) {
+    if (titles.empty()) {
+        return;
+    }
+
+    // Select the first title in the list as representative.
+    const auto first_name = std::get<QString>(titles[0]);
+
+    QProgressDialog progress(tr("Uninstalling '%1'...").arg(first_name), tr("Cancel"), 0,
+                             static_cast<int>(titles.size()), this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    QFutureWatcher<void> future_watcher;
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::finished, &progress,
+                     &QProgressDialog::reset);
+    QObject::connect(&progress, &QProgressDialog::canceled, &future_watcher,
+                     &QFutureWatcher<void>::cancel);
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::progressValueChanged, &progress,
+                     &QProgressDialog::setValue);
+
+    auto failed = false;
+    QString failed_name;
+
+    const auto uninstall_title = [&future_watcher, &failed, &failed_name](const auto& title) {
+        const auto name = std::get<QString>(title);
+        const auto media_type = std::get<Service::FS::MediaType>(title);
+        const auto program_id = std::get<u64>(title);
+
+        const auto result = Service::AM::UninstallProgram(media_type, program_id);
+        if (result.IsError()) {
+            LOG_ERROR(Frontend, "Failed to uninstall '{}': 0x{:08X}", name.toStdString(),
+                      result.raw);
+            failed = true;
+            failed_name = name;
+            future_watcher.cancel();
+        }
+    };
+
+    future_watcher.setFuture(QtConcurrent::map(titles, uninstall_title));
+    progress.exec();
+    future_watcher.waitForFinished();
+
+    if (failed) {
+        QMessageBox::critical(this, tr("Citra"), tr("Failed to uninstall '%1'.").arg(failed_name));
+    } else if (!future_watcher.isCanceled()) {
+        QMessageBox::information(this, tr("Citra"),
+                                 tr("Successfully uninstalled '%1'.").arg(first_name));
+    }
+}
+
 void GMainWindow::OnMenuRecentFile() {
     QAction* action = qobject_cast<QAction*>(sender());
     ASSERT(action);
@@ -1786,8 +1929,12 @@ void GMainWindow::OnStartGame() {
 
     discord_rpc->Update();
 
+#ifdef __unix__
+    Common::Linux::StartGamemode();
+#endif
+
     UpdateSaveStates();
-    UpdateAPIIndicator();
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnRestartGame() {
@@ -1804,6 +1951,10 @@ void GMainWindow::OnPauseGame() {
 
     UpdateMenuState();
     AllowOSSleep();
+
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
 }
 
 void GMainWindow::OnPauseContinueGame() {
@@ -1820,7 +1971,7 @@ void GMainWindow::OnStopGame() {
     ShutdownGame();
     graphics_api_button->setEnabled(true);
     Settings::RestoreGlobalState(false);
-    UpdateAPIIndicator();
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnLoadComplete() {
@@ -2019,7 +2170,7 @@ void GMainWindow::OnLoadState() {
 void GMainWindow::OnConfigure() {
     game_list->SetDirectoryWatcherEnabled(false);
     Settings::SetConfiguringGlobal(true);
-    ConfigureDialog configureDialog(this, hotkey_registry, system, physical_devices,
+    ConfigureDialog configureDialog(this, hotkey_registry, system, gl_renderer, physical_devices,
                                     !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::LanguageChanged, this,
             &GMainWindow::OnLanguageChanged);
@@ -2028,15 +2179,25 @@ void GMainWindow::OnConfigure() {
     const auto old_input_profiles = Settings::values.input_profiles;
     const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
     const bool old_discord_presence = UISettings::values.enable_discord_presence.GetValue();
+#ifdef __unix__
+    const bool old_gamemode = Settings::values.enable_gamemode.GetValue();
+#endif
     auto result = configureDialog.exec();
     game_list->SetDirectoryWatcherEnabled(true);
     if (result == QDialog::Accepted) {
         configureDialog.ApplyConfiguration();
         InitializeHotkeys();
-        if (UISettings::values.theme != old_theme)
+        if (UISettings::values.theme != old_theme) {
             UpdateUITheme();
-        if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence)
+        }
+        if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
+        }
+#ifdef __unix__
+        if (Settings::values.enable_gamemode.GetValue() != old_gamemode) {
+            SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
+        }
+#endif
         if (!multiplayer_state->IsHostingPublicRoom())
             multiplayer_state->UpdateCredentials();
         emit UpdateThemedIcons();
@@ -2051,7 +2212,7 @@ void GMainWindow::OnConfigure() {
         }
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
-        UpdateAPIIndicator();
+        UpdateStatusButtons();
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
@@ -2070,6 +2231,7 @@ void GMainWindow::OnLoadAmiibo() {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     if (nfc->IsTagActive()) {
         QMessageBox::warning(this, tr("Error opening amiibo data file"),
                              tr("A tag is already in use."));
@@ -2100,6 +2262,7 @@ void GMainWindow::LoadAmiibo(const QString& filename) {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     if (!nfc->LoadAmiibo(filename.toStdString())) {
         QMessageBox::warning(this, tr("Error opening amiibo data file"),
                              tr("Unable to open amiibo file \"%1\" for reading.").arg(filename));
@@ -2116,6 +2279,7 @@ void GMainWindow::OnRemoveAmiibo() {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     nfc->RemoveAmiibo();
     ui->action_Remove_Amiibo->setEnabled(false);
 }
@@ -2136,7 +2300,7 @@ void GMainWindow::OnToggleFilterBar() {
 
 void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     auto graphicsSurfaceViewerWidget =
-        new GraphicsSurfaceWidget(system.Memory(), Pica::g_debug_context, this);
+        new GraphicsSurfaceWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();
@@ -2356,10 +2520,10 @@ void GMainWindow::OnStartVideoDumping() {
 }
 
 void GMainWindow::StartVideoDumping(const QString& path) {
-    Layout::FramebufferLayout layout{
-        Layout::FrameLayoutFromResolutionScale(VideoCore::g_renderer->GetResolutionScaleFactor())};
+    auto& renderer = system.GPU().Renderer();
+    const auto layout{Layout::FrameLayoutFromResolutionScale(renderer.GetResolutionScaleFactor())};
 
-    auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+    auto dumper = std::make_shared<VideoDumper::FFmpegBackend>(renderer);
     if (dumper->StartDumping(path.toStdString(), layout)) {
         system.RegisterVideoDumper(dumper);
     } else {
@@ -2478,6 +2642,57 @@ void GMainWindow::ShowMouseCursor() {
     }
 }
 
+void GMainWindow::OnMute() {
+    Settings::values.audio_muted = !Settings::values.audio_muted;
+    UpdateVolumeUI();
+}
+
+void GMainWindow::OnDecreaseVolume() {
+    Settings::values.audio_muted = false;
+    const auto current_volume =
+        static_cast<s32>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    int step = 5;
+    if (current_volume <= 30) {
+        step = 2;
+    }
+    if (current_volume <= 6) {
+        step = 1;
+    }
+    const auto value =
+        static_cast<float>(std::max(current_volume - step, 0)) / volume_slider->maximum();
+    Settings::values.volume.SetValue(value);
+    UpdateVolumeUI();
+}
+
+void GMainWindow::OnIncreaseVolume() {
+    Settings::values.audio_muted = false;
+    const auto current_volume =
+        static_cast<s32>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    int step = 5;
+    if (current_volume < 30) {
+        step = 2;
+    }
+    if (current_volume < 6) {
+        step = 1;
+    }
+    const auto value = static_cast<float>(current_volume + step) / volume_slider->maximum();
+    Settings::values.volume.SetValue(value);
+    UpdateVolumeUI();
+}
+
+void GMainWindow::UpdateVolumeUI() {
+    const auto volume_value =
+        static_cast<int>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    volume_slider->setValue(volume_value);
+    if (Settings::values.audio_muted) {
+        volume_button->setChecked(false);
+        volume_button->setText(tr("VOLUME: MUTE"));
+    } else {
+        volume_button->setChecked(true);
+        volume_button->setText(tr("VOLUME: %1%", "Volume percentage (e.g. 50%)").arg(volume_value));
+    }
+}
+
 void GMainWindow::UpdateAPIIndicator(bool update) {
     static std::array graphics_apis = {QStringLiteral("SOFTWARE"), QStringLiteral("OPENGL"),
                                        QStringLiteral("VULKAN")};
@@ -2488,6 +2703,22 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
     u32 api_index = static_cast<u32>(Settings::values.graphics_api.GetValue());
     if (update) {
         api_index = (api_index + 1) % graphics_apis.size();
+        // Skip past any disabled renderers.
+#ifndef ENABLE_SOFTWARE_RENDERER
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::Software)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
+#ifndef ENABLE_OPENGL
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::OpenGL)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
+#ifndef ENABLE_VULKAN
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::Vulkan)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
         Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(api_index);
     }
 
@@ -2496,6 +2727,11 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
 
     graphics_api_button->setText(graphics_apis[api_index]);
     graphics_api_button->setStyleSheet(style_sheet);
+}
+
+void GMainWindow::UpdateStatusButtons() {
+    UpdateAPIIndicator();
+    UpdateVolumeUI();
 }
 
 void GMainWindow::OnMouseActivity() {
@@ -2664,6 +2900,10 @@ bool GMainWindow::DropAction(QDropEvent* event) {
     return true;
 }
 
+void GMainWindow::OnFileOpen(const QFileOpenEvent* event) {
+    BootGame(event->file());
+}
+
 void GMainWindow::dropEvent(QDropEvent* event) {
     DropAction(event);
 }
@@ -2693,7 +2933,10 @@ void GMainWindow::filterBarSetChecked(bool state) {
 }
 
 void GMainWindow::UpdateUITheme() {
-    const QString default_icons = QStringLiteral(":/icons/default");
+    const QString icons_base_path = QStringLiteral(":/icons/");
+    const QString default_theme = QStringLiteral("default");
+    const QString default_theme_path = icons_base_path + default_theme;
+
     const QString& current_theme = UISettings::values.theme;
     const bool is_default_theme = current_theme == QString::fromUtf8(UISettings::themes[0].second);
     QStringList theme_paths(default_theme_paths);
@@ -2711,8 +2954,8 @@ void GMainWindow::UpdateUITheme() {
             qApp->setStyleSheet({});
             setStyleSheet({});
         }
-        theme_paths.append(default_icons);
-        QIcon::setThemeName(default_icons);
+        theme_paths.append(default_theme_path);
+        QIcon::setThemeName(default_theme);
     } else {
         const QString theme_uri(QLatin1Char{':'} + current_theme + QStringLiteral("/style.qss"));
         QFile f(theme_uri);
@@ -2724,9 +2967,9 @@ void GMainWindow::UpdateUITheme() {
             LOG_ERROR(Frontend, "Unable to set style, stylesheet file not found");
         }
 
-        const QString theme_name = QStringLiteral(":/icons/") + current_theme;
-        theme_paths.append({default_icons, theme_name});
-        QIcon::setThemeName(theme_name);
+        const QString current_theme_path = icons_base_path + current_theme;
+        theme_paths.append({default_theme_path, current_theme_path});
+        QIcon::setThemeName(current_theme);
     }
 
     QIcon::setThemeSearchPaths(theme_paths);
@@ -2775,7 +3018,7 @@ void GMainWindow::OnConfigurePerGame() {
 
 void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_name) {
     Settings::SetConfiguringGlobal(false);
-    ConfigurePerGame dialog(this, title_id, file_name, physical_devices, system);
+    ConfigurePerGame dialog(this, title_id, file_name, gl_renderer, physical_devices, system);
     const auto result = dialog.exec();
 
     if (result != QDialog::Accepted) {
@@ -2792,6 +3035,8 @@ void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_nam
     if (!is_powered_on) {
         config->Save();
     }
+
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnMoviePlaybackCompleted() {
@@ -2877,6 +3122,14 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
     discord_rpc->Update();
 }
 
+#ifdef __unix__
+void GMainWindow::SetGamemodeEnabled(bool state) {
+    if (emulation_running) {
+        Common::Linux::SetGamemodeState(state);
+    }
+}
+#endif
+
 #ifdef main
 #undef main
 #endif
@@ -2941,8 +3194,11 @@ int main(int argc, char* argv[]) {
     chdir(bin_path.c_str());
 #endif
 
+#ifdef ENABLE_OPENGL
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+#endif
+
     QApplication app(argc, argv);
 
     // Qt changes the locale and causes issues in float conversion using std::to_string() when
@@ -2950,6 +3206,10 @@ int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "C");
 
     auto& system{Core::System::GetInstance()};
+
+    // Register Qt image interface
+    system.RegisterImageInterface(std::make_shared<QtImageInterface>());
+
     GMainWindow main_window(system);
 
     // Register frontend applets
@@ -2957,9 +3217,6 @@ int main(int argc, char* argv[]) {
 
     system.RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
     system.RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
-
-    // Register Qt image interface
-    system.RegisterImageInterface(std::make_shared<QtImageInterface>());
 
 #ifdef __APPLE__
     // Register microphone permission check.

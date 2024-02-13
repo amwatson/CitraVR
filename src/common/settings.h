@@ -28,6 +28,11 @@ enum class InitClock : u32 {
     FixedTime = 1,
 };
 
+enum class InitTicks : u32 {
+    Random = 0,
+    Fixed = 1,
+};
+
 enum class LayoutOption : u32 {
     Default,
     SingleScreen,
@@ -72,10 +77,15 @@ enum class TextureFilter : u32 {
     None = 0,
     Anime4K = 1,
     Bicubic = 2,
-    NearestNeighbor = 3,
-    ScaleForce = 4,
-    xBRZ = 5,
-    MMPX = 6
+    ScaleForce = 3,
+    xBRZ = 4,
+    MMPX = 5,
+};
+
+enum class TextureSampling : u32 {
+    GameControlled = 0,
+    NearestNeighbor = 1,
+    Linear = 2,
 };
 
 namespace NativeButton {
@@ -416,10 +426,13 @@ struct Values {
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
     std::vector<TouchFromButtonMap> touch_from_button_maps;
 
+    SwitchableSetting<bool> enable_gamemode{true, "enable_gamemode"};
+
     // Core
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
+    SwitchableSetting<bool> lle_applets{false, "lle_applets"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
@@ -430,12 +443,25 @@ struct Values {
     Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
     Setting<u64> init_time{946681277ULL, "init_time"};
     Setting<s64> init_time_offset{0, "init_time_offset"};
+    Setting<InitTicks> init_ticks_type{InitTicks::Random, "init_ticks_type"};
+    Setting<s64> init_ticks_override{0, "init_ticks_override"};
     Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
 
     // Renderer
-    SwitchableSetting<GraphicsAPI, true> graphics_api{GraphicsAPI::OpenGL, GraphicsAPI::Software,
-                                                      GraphicsAPI::Vulkan, "graphics_api"};
+    SwitchableSetting<GraphicsAPI, true> graphics_api {
+#if defined(ENABLE_OPENGL)
+        GraphicsAPI::OpenGL,
+#elif defined(ENABLE_VULKAN)
+        GraphicsAPI::Vulkan,
+#elif defined(ENABLE_SOFTWARE_RENDERER)
+        GraphicsAPI::Software,
+#else
+// TODO: Add a null renderer backend for this, perhaps.
+#error "At least one renderer must be enabled."
+#endif
+            GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"
+    };
     SwitchableSetting<u32> physical_device{0, "physical_device"};
     Setting<bool> use_gles{false, "use_gles"};
     Setting<bool> renderer_debug{false, "renderer_debug"};
@@ -448,9 +474,11 @@ struct Values {
     SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
     SwitchableSetting<bool> use_vsync_new{true, "use_vsync_new"};
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
+    SwitchableSetting<u32, true> resolution_factor{0, 0, 10, "resolution_factor"};
     SwitchableSetting<u16, true> frame_limit{100, 0, 1000, "frame_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::None, "texture_filter"};
+    SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
+                                                        "texture_sampling"};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};
@@ -481,7 +509,7 @@ struct Values {
     Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
     Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};
 
-    SwitchableSetting<bool> filter_mode{true, "filter_mode"};
+    SwitchableSetting<bool> filter_mode{false, "filter_mode"};
     SwitchableSetting<std::string> pp_shader_name{"none (builtin)", "pp_shader_name"};
     SwitchableSetting<std::string> anaglyph_shader_name{"dubois (builtin)", "anaglyph_shader_name"};
 
@@ -493,7 +521,7 @@ struct Values {
     // Audio
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
+    SwitchableSetting<bool> enable_audio_stretching{false, "enable_audio_stretching"};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
     Setting<std::string> output_device{"auto", "output_device"};
@@ -508,6 +536,7 @@ struct Values {
     // Debugging
     bool record_frame_times;
     std::unordered_map<std::string, bool> lle_modules;
+    Setting<bool> delay_start_for_lle_modules{true, "delay_start_for_lle_modules"};
     Setting<bool> use_gdbstub{false, "use_gdbstub"};
     Setting<u16> gdbstub_port{24689, "gdbstub_port"};
 

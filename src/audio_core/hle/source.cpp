@@ -161,12 +161,12 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                   static_cast<std::size_t>(state.mono_or_stereo));
     }
 
+    // play_position applies only to the embedded buffer, and defaults to 0 w/o a dirty bit
+    // This will be the starting sample for the first time the buffer is played.
     u32_dsp play_position = {};
-    if (config.play_position_dirty && config.play_position != 0) {
+    if (config.play_position_dirty) {
         config.play_position_dirty.Assign(0);
         play_position = config.play_position;
-        // play_position applies only to the embedded buffer, and defaults to 0 w/o a dirty bit
-        // This will be the starting sample for the first time the buffer is played.
     }
 
     // TODO(xperia64): Is this in the correct spot in terms of the bit handling order?
@@ -324,6 +324,7 @@ void Source::GenerateFrame() {
     if (state.current_buffer.empty() && !DequeueBuffer()) {
         state.enabled = false;
         state.buffer_update = true;
+        state.last_buffer_id = state.current_buffer_id;
         state.current_buffer_id = 0;
         return;
     }
@@ -411,6 +412,7 @@ bool Source::DequeueBuffer() {
     state.next_sample_number = state.current_sample_number;
     state.current_buffer_physical_address = buf.physical_address;
     state.current_buffer_id = buf.buffer_id;
+    state.last_buffer_id = 0;
     state.buffer_update = buf.from_queue && !buf.has_played;
 
     if (buf.is_looping) {
@@ -432,9 +434,10 @@ SourceStatus::Status Source::GetCurrentStatus() {
     ret.is_enabled = state.enabled;
     ret.current_buffer_id_dirty = state.buffer_update ? 1 : 0;
     state.buffer_update = false;
-    ret.current_buffer_id = state.current_buffer_id;
-    ret.buffer_position = state.current_sample_number;
     ret.sync_count = state.sync_count;
+    ret.buffer_position = state.current_sample_number;
+    ret.current_buffer_id = state.current_buffer_id;
+    ret.last_buffer_id = state.last_buffer_id;
 
     return ret;
 }

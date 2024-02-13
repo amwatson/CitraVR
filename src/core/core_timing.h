@@ -37,6 +37,10 @@
 constexpr u64 BASE_CLOCK_RATE_ARM11 = 268111856;
 constexpr u64 MAX_VALUE_TO_MULTIPLY = std::numeric_limits<s64>::max() / BASE_CLOCK_RATE_ARM11;
 
+/// Refresh rate defined by ratio of ARM11 frequency to ARM11 ticks per frame
+/// (268,111,856) / (4,481,136) = 59.83122493939037Hz
+constexpr double SCREEN_REFRESH_RATE = BASE_CLOCK_RATE_ARM11 / static_cast<double>(4481136ull);
+
 constexpr s64 msToCycles(int ms) {
     // since ms is int there is no way to overflow
     return BASE_CLOCK_RATE_ARM11 * static_cast<s64>(ms) / 1000;
@@ -181,7 +185,7 @@ public:
 
     class Timer {
     public:
-        Timer();
+        Timer(s64 base_ticks = 0);
         ~Timer();
 
         s64 GetMaxSliceLength() const;
@@ -245,7 +249,7 @@ public:
         friend class boost::serialization::access;
     };
 
-    explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage);
+    explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage, s64 override_base_ticks = -1);
 
     ~Timing(){};
 
@@ -254,9 +258,12 @@ public:
      */
     TimingEventType* RegisterEvent(const std::string& name, TimedCallback callback);
 
+    // Make sure to use thread_safe_mode = true if called from a different thread than the
+    // emulator thread, such as coroutines.
     void ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type,
                        std::uintptr_t user_data = 0,
-                       std::size_t core_id = std::numeric_limits<std::size_t>::max());
+                       std::size_t core_id = std::numeric_limits<std::size_t>::max(),
+                       bool thread_safe_mode = false);
 
     void UnscheduleEvent(const TimingEventType* event_type, std::uintptr_t user_data);
 
@@ -282,6 +289,9 @@ public:
     void UnlockEventQueue() {
         event_queue_locked = false;
     }
+
+    /// Generates a random tick count to seed the system tick timer with.
+    static s64 GenerateBaseTicks();
 
 private:
     // unordered_map stores each element separately as a linked list node so pointers to

@@ -18,7 +18,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <jni.h> // needed for openxr_platform.h when XR_USE_PLATFORM_ANDROID is defined
 
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
-#define XR_USE_PLATFORM_ANDROID 1
+#define XR_USE_PLATFORM_ANDROID       1
 
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
@@ -32,42 +32,43 @@ public:
     XrActionSet mActionSet = XR_NULL_HANDLE;
 
     XrSpace mLeftHandSpace = XR_NULL_HANDLE;
-    XrPath mLeftHandSubactionPath;
+    XrPath  mLeftHandSubactionPath;
 
     XrAction mLeftHandIndexTriggerAction = XR_NULL_HANDLE;
-    XrAction mXButtonAction = XR_NULL_HANDLE;
-    XrAction mYButtonAction = XR_NULL_HANDLE;
-    XrAction mLeftMenuButtonAction = XR_NULL_HANDLE;
+    XrAction mXButtonAction              = XR_NULL_HANDLE;
+    XrAction mYButtonAction              = XR_NULL_HANDLE;
+    XrAction mLeftMenuButtonAction       = XR_NULL_HANDLE;
 
     XrSpace mRightHandSpace = XR_NULL_HANDLE;
-    XrPath mRightHandSubactionPath;
+    XrPath  mRightHandSubactionPath;
 
     XrAction mRightHandIndexTriggerAction = XR_NULL_HANDLE;
-    XrAction mAButtonAction = XR_NULL_HANDLE;
-    XrAction mBButtonAction = XR_NULL_HANDLE;
+    XrAction mAButtonAction               = XR_NULL_HANDLE;
+    XrAction mBButtonAction               = XR_NULL_HANDLE;
 
-    XrAction mThumbStickAction = XR_NULL_HANDLE;
-    XrAction mHandPoseAction = XR_NULL_HANDLE;
-    XrAction mThumbClickAction = XR_NULL_HANDLE;
+    XrAction mThumbStickAction     = XR_NULL_HANDLE;
+    XrAction mHandPoseAction       = XR_NULL_HANDLE;
+    XrAction mThumbClickAction     = XR_NULL_HANDLE;
     XrAction mSqueezeTriggerAction = XR_NULL_HANDLE;
     XrAction mThumbRestTouchAction = XR_NULL_HANDLE;
 };
 
 struct InputStateFrame {
 
-    void SyncButtonsAndThumbSticks(const XrSession& session,
+    void SyncButtonsAndThumbSticks(const XrSession&                         session,
                                    const std::unique_ptr<InputStateStatic>& staticState);
     // Called after SyncButtonsAndThumbSticks
-    void SyncHandPoses(const XrSession& session,
+    void SyncHandPoses(const XrSession&                         session,
                        const std::unique_ptr<InputStateStatic>& staticState,
-                       const XrSpace& referenceSpace, const XrTime predictedDisplayTime);
+                       const XrSpace&                           referenceSpace,
+                       const XrTime                             predictedDisplayTime);
     enum { LEFT_CONTROLLER, RIGHT_CONTROLLER, NUM_CONTROLLERS } mPreferredHand = RIGHT_CONTROLLER;
 
     XrActionStateVector2f mThumbStickState[NUM_CONTROLLERS];
-    XrActionStateBoolean mThumbStickClickState[NUM_CONTROLLERS];
-    XrActionStateBoolean mThumbrestTouchState[NUM_CONTROLLERS];
-    XrActionStateBoolean mIndexTriggerState[NUM_CONTROLLERS];
-    XrActionStateBoolean mSqueezeTriggerState[NUM_CONTROLLERS];
+    XrActionStateBoolean  mThumbStickClickState[NUM_CONTROLLERS];
+    XrActionStateBoolean  mThumbrestTouchState[NUM_CONTROLLERS];
+    XrActionStateBoolean  mIndexTriggerState[NUM_CONTROLLERS];
+    XrActionStateBoolean  mSqueezeTriggerState[NUM_CONTROLLERS];
 
     // Left hand buttons.
     XrActionStateBoolean mXButtonState;
@@ -80,5 +81,5 @@ struct InputStateFrame {
 
     XrSpaceLocation mHandPositions[NUM_CONTROLLERS] = {{XR_TYPE_SPACE_LOCATION},
                                                        {XR_TYPE_SPACE_LOCATION}};
-    bool mIsHandActive[NUM_CONTROLLERS] = {false, false};
+    bool            mIsHandActive[NUM_CONTROLLERS]  = {false, false};
 };

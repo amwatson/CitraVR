@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_disclaimer">このソフトではニンテンドー3DS用ゲームをプレイできますが、ゲーム自体は含まれていません。\n\n実行前に、3DSゲームファイルを端末のストレージに保存しておいてください。</string>
-    <string name="app_notification_channel_description">Citra 3DS 通知</string>
-    <string name="app_notification_running">Citraを実行中</string>
+    <string name="app_notification_channel_description">CitraVR 3DS 通知</string>
+    <string name="app_notification_running">CitraVRを実行中</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">スライドパッド</string>
@@ -97,7 +97,7 @@
     <string name="write_permission_needed">動作させるためには外部ストレージへのアクセスを許可する必要があります。</string>
     <string name="load_settings">設定を読込中...</string>
 
-    <string name="external_storage_not_mounted">Citraを利用するには外部ストレージが必要です。</string>
+    <string name="external_storage_not_mounted">CitraVRを利用するには外部ストレージが必要です。</string>
 
     <string name="select_dir">このフォルダを選択</string>
     <string name="empty_gamelist">ゲームファイルのあるフォルダが選択されていません</string>
@@ -112,14 +112,23 @@
     <!-- VR-specific -->
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR環境</string>
-    <string name="vr_error_two_instances_title">エラー：2つのCitraVRインスタンスを検出しました</string>
-    <string name="vr_error_two_instances_message">CitraVRを使用した致命的な打ち上げバグを検出しました。これは既知の問題です。\n\n問題が解決されました。もう一度ゲームを起動してみてください。</string>
-    <string name="vr_extra_performance_mode_description">オーバーヘッドを最小限に抑え、パフォーマンスを最大化するために、他の設定の値をオーバーライドします。注：この設定が有効になっている場合、次の設定のユーザーの値は無視されます：VR環境（常に「void」を選択）、すべてのオーディオ（無効）</string>
-    <string name="vr_extra_performance_mode">VR追加パフォーマンスモード</string>
+    <string name="vr_error_two_instances_title">エラー：CitraVRの二重インスタンスを検出</string>
+    <string name="vr_error_two_instances_message">CitraVRに致命的な起動バグが検出されました。これは既知の問題です。\n\n問題は現在解決されています。ゲームの起動を再試行してください。</string>
+    <string name="vr_extra_performance_mode">VRエクストラパフォーマンスモード</string>
     <string name="vr_cpu_level">CPUレベル</string>
-    <string name="vr_cpu_level_description">より高いレベルはオーディオ/エミュレーションのパフォーマンスを改善する可能性がありますが、バッテリーをより速く排出します</string>
-    <string name="vr_immersive_mode_title">[警告：グラフィックアーティファクト]没入型モード（実験）</string>
-    <string name="vr_immersive_mode_description">没入型ゲームプレイのために、シリンダーの周りのトップ画面を拡張します</string>
-    <string name="vr_graphics_warning">危険：すべてのゲーム/レベルが没入型モードでよく見えるわけではありません。このオプションが選択されている場合、大きな視覚アーティファクトが一般的です</string>
-    <string name="vr_graphics_warning_short">警告：これは、ほとんどのコンテンツで視覚的なアーティファクトを引き起こします</string>
+    <string name="vr_cpu_level_description">高いレベルはオーディオ/エミュレーションのパフォーマンスを向上させる可能性がありますが、バッテリーの消耗が早くなります</string>
+    <string name="vr_immersive_mode_title">[警告：グラフィックアーティファクト] イマーシブモード（実験的）</string>
+    <string name="vr_immersive_mode_description">没入型ゲームプレイのために上画面を円筒形に広げます</string>
+    <string name="vr_graphics_warning">危険：すべてのゲーム/レベルがイマーシブモードで良く見えるわけではありません。このオプションを選択すると、大きな視覚的アーティファクトが一般的です</string>
+    <string name="vr_graphics_warning_short">警告：これはほとんどのコンテンツで視覚的アーティファクトを引き起こします</string>
+    <string name="vr_new_3ds_description">ほとんどのタイトルで有効にするべきです。無効にすると、特定のタイトル（例：スターフォックス64 3D）のパフォーマンスが向上します</string>
+    <string name="release_notes_title">リリースノート</string>
+    <string name="vr_licenses_description">CitraおよびCitraVRを可能にするプロジェクト</string>
+    <string name="game_compat_tooltip">ゲーム互換性シート</string>
+    <string name="vr_extra_performance_mode_description">他の設定の値を上書きして、オーバーヘッドを最小限に抑え、パフォーマンスを最大化します。注：この設定が有効になっている場合、以下の設定に対するユーザーの値は無視されます：VR環境（常にVoidを選択）、オーディオストレッチ（無効）</string>
+    <string name="vr_notice_title">注意：</string>
+    <string name="vr_notice_description">ゲームやレベルの初回プレイ中には、一時的な一時停止やオーディオの途切れが発生することがあります。
+シェーダが読み込まれた後、デバイスに保存され、後続の起動時にこれらの途切れを防止します。</string>
+    <string name="vr_notice_description2">一部分のゲームはうまく動作しません。CitralVR Game Compatibility Listを確認して、最も動作が良いゲームをチェックしてください。</string>
+    <string name="vr_input_binding_subtitle">問題がありますか？ ゲームパッドゲイズモードを無効にするには、SelectボタンとStartボタンを同時に押してからやり直してください。</string>
     </resources>

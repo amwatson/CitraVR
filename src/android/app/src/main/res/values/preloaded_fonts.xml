@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="preloaded_fonts" translatable="false">
+        <item>@font/dancing_script_bold</item>
+        <item>@font/lato_bold</item>
+    </array>
+</resources>

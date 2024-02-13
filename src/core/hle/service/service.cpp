@@ -35,6 +35,7 @@
 #include "core/hle/service/http/http_c.h"
 #include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ldr_ro/ldr_ro.h"
+#include "core/hle/service/mcu/mcu.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/mvd/mvd.h"
 #include "core/hle/service/ndm/ndm_u.h"
@@ -101,7 +102,7 @@ const std::array<ServiceModuleInfo, 41> service_module_map{
      {"CDC", 0x00040130'00001802, nullptr},
      {"GPIO", 0x00040130'00001B02, nullptr},
      {"I2C", 0x00040130'00001E02, nullptr},
-     {"MCU", 0x00040130'00001F02, nullptr},
+     {"MCU", 0x00040130'00001F02, MCU::InstallInterfaces},
      {"MP", 0x00040130'00002A02, nullptr},
      {"PDN", 0x00040130'00002102, nullptr},
      {"SPI", 0x00040130'00002302, nullptr}}};
@@ -130,7 +131,8 @@ ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_ses
 ServiceFrameworkBase::~ServiceFrameworkBase() = default;
 
 void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager) {
-    auto port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
+    std::shared_ptr<Kernel::ServerPort> port;
+    R_ASSERT(service_manager.RegisterService(std::addressof(port), service_name, max_sessions));
     port->SetHleHandler(shared_from_this());
 }
 
@@ -213,10 +215,20 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 /// Initialize ServiceManager
 void Init(Core::System& core) {
     SM::ServiceManager::InstallInterfaces(core);
+    core.Kernel().SetAppMainThreadExtendedSleep(false);
+    bool lle_module_present = false;
 
     for (const auto& service_module : service_module_map) {
-        if (!AttemptLLE(service_module) && service_module.init_function != nullptr)
+        const bool has_lle = AttemptLLE(service_module);
+        if (!has_lle && service_module.init_function != nullptr) {
             service_module.init_function(core);
+        }
+        lle_module_present |= has_lle;
+    }
+    if (lle_module_present) {
+        // If there is at least one LLE module, tell the kernel to
+        // add a extended sleep to the app main thread (if option enabled).
+        core.Kernel().SetAppMainThreadExtendedSleep(true);
     }
     LOG_DEBUG(Service, "initialized OK");
 }

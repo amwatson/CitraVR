@@ -12,8 +12,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "LogUtils.h"
 
-#include <cmath>
 #include <assert.h>
+#include <cmath>
 
 #ifndef MATH_FLOAT_PI
 #define MATH_FLOAT_PI 3.14159265358979323846f
@@ -63,12 +63,8 @@ static inline float SafeRcpSqrt(const float x) {
 
 class Vector3f {
 public:
-    static float LengthSq(const XrVector3f& v) {
-        return v.x * v.x + v.y * v.y + v.z * v.z;
-    }
-    static float Length(const XrVector3f& v) {
-        return sqrtf(LengthSq(v));
-    }
+    static float LengthSq(const XrVector3f& v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
+    static float Length(const XrVector3f& v) { return sqrtf(LengthSq(v)); }
 
     static void Normalize(XrVector3f& v) {
         const float lengthRcp = SafeRcpSqrt(LengthSq(v));
@@ -90,26 +86,24 @@ public:
 
 class Quatf {
 public:
-    static XrQuaternionf Identity() {
-        return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f};
-    }
+    static XrQuaternionf Identity() { return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f}; }
 
     // Given a yaw (Y-axis), pitch (X-axis) and roll (Z-axis) in radians, create
     // a quaternion representing the same rotation
-    static XrQuaternionf FromEuler(const float yawInRadians, const float pitchInRadians,
-                                   const float rollInRadians) {
+    static XrQuaternionf
+    FromEuler(const float yawInRadians, const float pitchInRadians, const float rollInRadians) {
         // Calculate half angles
         const float halfPitch = pitchInRadians * 0.5f;
-        const float halfYaw = yawInRadians * 0.5f;
-        const float halfRoll = rollInRadians * 0.5f;
+        const float halfYaw   = yawInRadians * 0.5f;
+        const float halfRoll  = rollInRadians * 0.5f;
 
         // Calculate sin and cos for each half angle
         const float sinPitch = std::sin(halfPitch);
         const float cosPitch = std::cos(halfPitch);
-        const float sinYaw = std::sin(halfYaw);
-        const float cosYaw = std::cos(halfYaw);
-        const float sinRoll = std::sin(halfRoll);
-        const float cosRoll = std::cos(halfRoll);
+        const float sinYaw   = std::sin(halfYaw);
+        const float cosYaw   = std::cos(halfYaw);
+        const float sinRoll  = std::sin(halfRoll);
+        const float cosRoll  = std::cos(halfRoll);
 
         // Create quaternions for each rotation
         const XrQuaternionf qx = {sinPitch, 0.0f, 0.0f, cosPitch};
@@ -165,8 +159,8 @@ public:
     // Compute a quaternion representing a rotation between three orthogonal
     // basis vectors. These vectors correspond to the forward, up, and right
     // directions of a rotation matrix.
-    static XrQuaternionf FromThreeVectors(const XrVector3f& forward, const XrVector3f& up,
-                                          const XrVector3f& right) {
+    static XrQuaternionf
+    FromThreeVectors(const XrVector3f& forward, const XrVector3f& up, const XrVector3f& right) {
         const float trace = right.x + up.y + forward.z;
         if (trace > 0.0f) {
             const float s = 0.5f / sqrtf(trace + 1.0f);
@@ -191,9 +185,7 @@ public:
 
 class Posef {
 public:
-    static XrPosef Identity() {
-        return XrPosef{Quatf::Identity(), {0.0f, 0.0f, 0.0f}};
-    }
+    static XrPosef Identity() { return XrPosef{Quatf::Identity(), {0.0f, 0.0f, 0.0f}}; }
 
     static XrVector3f Transform(const XrPosef& pose, const XrVector3f& vector) {
         return Quatf::Rotate(pose.orientation, vector) + pose.position;
@@ -203,9 +195,9 @@ public:
         const XrQuaternionf invOrientation = Quatf::Inverted(pose.orientation);
 
         XrVector3f invPosition = Quatf::Rotate(invOrientation, pose.position);
-        invPosition.x = -invPosition.x;
-        invPosition.y = -invPosition.y;
-        invPosition.z = -invPosition.z;
+        invPosition.x          = -invPosition.x;
+        invPosition.y          = -invPosition.y;
+        invPosition.z          = -invPosition.z;
 
         return {invOrientation, invPosition};
     }

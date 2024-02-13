@@ -37,9 +37,23 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="toggle_background_mute">
+          <property name="text">
+           <string>Mute audio when in background</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="toggle_hide_mouse">
           <property name="text">
            <string>Hide mouse on inactivity</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="toggle_gamemode">
+          <property name="text">
+           <string>Enable Gamemode</string>
           </property>
          </widget>
         </item>

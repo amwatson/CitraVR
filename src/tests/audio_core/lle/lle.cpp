@@ -11,6 +11,7 @@
 #include "common/file_util.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/memory.h"
 
 TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
@@ -18,7 +19,7 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
     Memory::MemorySystem memory{system};
     Core::Timing core_timing(1, 100);
 
-    AudioCore::DspLle lle(memory, core_timing, true);
+    AudioCore::DspLle lle(system, memory, core_timing, true);
     {
         FileUtil::SetUserPath();
         // dspaudio.cdc can be dumped from Pokemon X & Y, It can be found in the romfs at
@@ -37,26 +38,11 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
         std::vector<u8> firm_file_buf(firm_file.GetSize());
         firm_file.ReadArray(firm_file_buf.data(), firm_file_buf.size());
         lle.LoadComponent(firm_file_buf);
+
+        lle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+            fmt::print("SetInterruptHandler type={} pipe={}\n", type, pipe);
+        });
     }
-    lle.SetSemaphoreHandler([&lle]() {
-        u16 slot = lle.RecvData(2);
-        u16 side = slot % 2;
-        u16 pipe = slot / 2;
-        fmt::print("SetSemaphoreHandler slot={}\n", slot);
-        if (pipe > 15)
-            return;
-        if (side != 0)
-            return;
-        if (pipe == 0) {
-            // pipe 0 is for debug. 3DS automatically drains this pipe and discards the
-            // data
-            lle.PipeRead(static_cast<AudioCore::DspPipe>(pipe),
-                         lle.GetPipeReadableSize(static_cast<AudioCore::DspPipe>(pipe)));
-        }
-    });
-    lle.SetRecvDataHandler(0, []() { fmt::print("SetRecvDataHandler 0\n"); });
-    lle.SetRecvDataHandler(1, []() { fmt::print("SetRecvDataHandler 1\n"); });
-    lle.SetRecvDataHandler(2, []() { fmt::print("SetRecvDataHandler 2\n"); });
     SECTION("Initialise Audio Pipe") {
         std::vector<u8> buffer(4, 0);
         buffer[0] = 0;

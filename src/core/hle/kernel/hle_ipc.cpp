@@ -4,6 +4,10 @@
 
 #include <algorithm>
 #include <vector>
+#include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -14,6 +18,12 @@
 #include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler)
+SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler::SessionDataBase)
+SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler::SessionInfo)
+SERIALIZE_EXPORT_IMPL(Kernel::HLERequestContext)
+SERIALIZE_EXPORT_IMPL(Kernel::HLERequestContext::ThreadCallback)
 
 namespace Kernel {
 
@@ -77,6 +87,23 @@ void SessionRequestHandler::ClientDisconnected(std::shared_ptr<ServerSession> se
         connected_sessions.end());
 }
 
+template <class Archive>
+void SessionRequestHandler::serialize(Archive& ar, const unsigned int) {
+    ar& connected_sessions;
+}
+SERIALIZE_IMPL(SessionRequestHandler)
+
+template <class Archive>
+void SessionRequestHandler::SessionDataBase::serialize(Archive& ar, const unsigned int) {}
+SERIALIZE_IMPL(SessionRequestHandler::SessionDataBase)
+
+template <class Archive>
+void SessionRequestHandler::SessionInfo::serialize(Archive& ar, const unsigned int) {
+    ar& session;
+    ar& data;
+}
+SERIALIZE_IMPL(SessionRequestHandler::SessionInfo)
+
 std::shared_ptr<Event> HLERequestContext::SleepClientThread(
     const std::string& reason, std::chrono::nanoseconds timeout,
     std::shared_ptr<WakeupCallback> callback) {
@@ -126,8 +153,8 @@ void HLERequestContext::AddStaticBuffer(u8 buffer_id, std::vector<u8> data) {
     static_buffers[buffer_id] = std::move(data);
 }
 
-ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(
-    const u32_le* src_cmdbuf, std::shared_ptr<Process> src_process_) {
+Result HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
+                                                            std::shared_ptr<Process> src_process_) {
     auto& src_process = *src_process_;
     IPC::Header header{src_cmdbuf[0]};
 
@@ -203,11 +230,11 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(
                                                std::move(translated_cmdbuf));
     }
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
-                                                           Process& dst_process) const {
+Result HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
+                                                       Process& dst_process) const {
     IPC::Header header{cmd_buf[0]};
 
     std::size_t untranslated_size = 1u + header.normal_params_size;
@@ -239,7 +266,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
                 Handle handle = 0;
                 if (object != nullptr) {
                     // TODO(yuriks): Figure out the proper error handling for if this fails
-                    handle = dst_process.handle_table.Create(object).Unwrap();
+                    R_ASSERT(dst_process.handle_table.Create(std::addressof(handle), object));
                 }
                 dst_cmdbuf[i++] = handle;
             }
@@ -281,7 +308,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
                                              std::move(translated_cmdbuf));
     }
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 MappedBuffer& HLERequestContext::GetMappedBuffer(u32 id_from_cmdbuf) {
@@ -294,6 +321,17 @@ void HLERequestContext::ReportUnimplemented() const {
         kernel.GetIPCRecorder().SetHLEUnimplemented(thread);
     }
 }
+
+template <class Archive>
+void HLERequestContext::serialize(Archive& ar, const unsigned int) {
+    ar& cmd_buf;
+    ar& session;
+    ar& thread;
+    ar& request_handles;
+    ar& static_buffers;
+    ar& request_mapped_buffers;
+}
+SERIALIZE_IMPL(HLERequestContext)
 
 MappedBuffer::MappedBuffer() : memory(&Core::Global<Core::System>().Memory()) {}
 
@@ -318,5 +356,3 @@ void MappedBuffer::Write(const void* src_buffer, std::size_t offset, std::size_t
 }
 
 } // namespace Kernel
-
-SERIALIZE_EXPORT_IMPL(Kernel::HLERequestContext::ThreadCallback)

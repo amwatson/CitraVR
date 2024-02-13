@@ -230,6 +230,8 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             &ConfigureSystem::UpdateBirthdayComboBox);
     connect(ui->combo_init_clock, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateInitTime);
+    connect(ui->combo_init_ticks_type, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            &ConfigureSystem::UpdateInitTicks);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     connect(ui->button_start_download, &QPushButton::clicked, this,
@@ -293,20 +295,21 @@ void ConfigureSystem::SetConfiguration() {
     QTime time = QTime::fromMSecsSinceStartOfDay(static_cast<int>(time_offset * 1000));
     ui->edit_init_time_offset_time->setTime(time);
 
-    if (!enabled) {
-        cfg = Service::CFG::GetModule(system);
-        ASSERT_MSG(cfg, "CFG Module missing!");
-        ReadSystemSettings();
-        ui->group_system_settings->setEnabled(false);
-    } else {
-        // This tab is enabled only when game is not running (i.e. all service are not initialized).
-        cfg = std::make_shared<Service::CFG::Module>();
-        ReadSystemSettings();
+    ui->combo_init_ticks_type->setCurrentIndex(
+        static_cast<u8>(Settings::values.init_ticks_type.GetValue()));
+    ui->edit_init_ticks_value->setText(
+        QString::number(Settings::values.init_ticks_override.GetValue()));
 
+    cfg = Service::CFG::GetModule(system);
+    ReadSystemSettings();
+
+    ui->group_system_settings->setEnabled(enabled);
+    if (enabled) {
         ui->label_disable_info->hide();
     }
 
     ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds.GetValue());
+    ui->toggle_lle_applets->setChecked(Settings::values.lle_applets.GetValue());
     ui->plugin_loader->setChecked(Settings::values.plugin_loader_enabled.GetValue());
     ui->allow_plugin_loader->setChecked(Settings::values.allow_plugin_loader.GetValue());
 }
@@ -413,10 +416,17 @@ void ConfigureSystem::ApplyConfiguration() {
 
         ConfigurationShared::ApplyPerGameSetting(&Settings::values.is_new_3ds, ui->toggle_new_3ds,
                                                  is_new_3ds);
+        ConfigurationShared::ApplyPerGameSetting(&Settings::values.lle_applets,
+                                                 ui->toggle_lle_applets, lle_applets);
 
         Settings::values.init_clock =
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
         Settings::values.init_time = ui->edit_init_time->dateTime().toSecsSinceEpoch();
+
+        Settings::values.init_ticks_type =
+            static_cast<Settings::InitTicks>(ui->combo_init_ticks_type->currentIndex());
+        Settings::values.init_ticks_override =
+            static_cast<s64>(ui->edit_init_ticks_value->text().toLongLong());
 
         s64 time_offset_time = ui->edit_init_time_offset_time->time().msecsSinceStartOfDay() / 1000;
         s64 time_offset_days = ui->edit_init_time_offset_days->value() * 86400;
@@ -427,6 +437,7 @@ void ConfigureSystem::ApplyConfiguration() {
 
         Settings::values.init_time_offset = time_offset_days + time_offset_time;
         Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
+        Settings::values.lle_applets = ui->toggle_lle_applets->isChecked();
 
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
@@ -467,6 +478,7 @@ void ConfigureSystem::ConfigureTime() {
     SetConfiguration();
 
     UpdateInitTime(ui->combo_init_clock->currentIndex());
+    UpdateInitTicks(ui->combo_init_ticks_type->currentIndex());
 }
 
 void ConfigureSystem::UpdateInitTime(int init_clock) {
@@ -480,6 +492,15 @@ void ConfigureSystem::UpdateInitTime(int init_clock) {
     ui->label_init_time_offset->setVisible(!is_fixed_time && is_global);
     ui->edit_init_time_offset_days->setVisible(!is_fixed_time && is_global);
     ui->edit_init_time_offset_time->setVisible(!is_fixed_time && is_global);
+}
+
+void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
+    const bool is_global = Settings::IsConfiguringGlobal();
+    const bool is_fixed =
+        static_cast<Settings::InitTicks>(init_ticks_type) == Settings::InitTicks::Fixed;
+
+    ui->label_init_ticks_value->setVisible(is_fixed && is_global);
+    ui->edit_init_ticks_value->setVisible(is_fixed && is_global);
 }
 
 void ConfigureSystem::RefreshConsoleID() {
@@ -509,6 +530,7 @@ void ConfigureSystem::SetupPerGameUI() {
     // Block the global settings if a game is currently running that overrides them
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_new_3ds->setEnabled(Settings::values.is_new_3ds.UsingGlobal());
+        ui->toggle_lle_applets->setEnabled(Settings::values.lle_applets.UsingGlobal());
         return;
     }
 
@@ -517,6 +539,8 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_birthday->setVisible(false);
     ui->label_init_clock->setVisible(false);
     ui->label_init_time->setVisible(false);
+    ui->label_init_ticks_type->setVisible(false);
+    ui->label_init_ticks_value->setVisible(false);
     ui->label_console_id->setVisible(false);
     ui->label_sound->setVisible(false);
     ui->label_language->setVisible(false);
@@ -527,12 +551,14 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->combo_birthday->setVisible(false);
     ui->combo_birthmonth->setVisible(false);
     ui->combo_init_clock->setVisible(false);
+    ui->combo_init_ticks_type->setVisible(false);
     ui->combo_sound->setVisible(false);
     ui->combo_language->setVisible(false);
     ui->combo_country->setVisible(false);
     ui->label_init_time_offset->setVisible(false);
     ui->edit_init_time_offset_days->setVisible(false);
     ui->edit_init_time_offset_time->setVisible(false);
+    ui->edit_init_ticks_value->setVisible(false);
     ui->toggle_system_setup->setVisible(false);
     ui->button_regenerate_console_id->setVisible(false);
     // Apps can change the state of the plugin loader, so plugins load
@@ -548,6 +574,8 @@ void ConfigureSystem::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);
+    ConfigurationShared::SetColoredTristate(ui->toggle_lle_applets, Settings::values.lle_applets,
+                                            lle_applets);
 }
 
 void ConfigureSystem::DownloadFromNUS() {

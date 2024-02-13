@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "core/global.h"
@@ -20,33 +22,42 @@ namespace Kernel {
 ClientPort::ClientPort(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 ClientPort::~ClientPort() = default;
 
-ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
+Result ClientPort::Connect(std::shared_ptr<ClientSession>* out_client_session) {
     // Note: Threads do not wait for the server endpoint to call
     // AcceptSession before returning from this call.
 
-    if (active_sessions >= max_sessions) {
-        return ERR_MAX_CONNECTIONS_REACHED;
-    }
+    R_UNLESS(active_sessions < max_sessions, ResultMaxConnectionsReached);
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
     auto [server, client] = kernel.CreateSessionPair(server_port->GetName(), SharedFrom(this));
 
-    if (server_port->hle_handler)
+    if (server_port->hle_handler) {
         server_port->hle_handler->ClientConnected(server);
-    else
+    } else {
         server_port->pending_sessions.push_back(server);
+    }
 
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
 
-    return client;
+    *out_client_session = client;
+    return ResultSuccess;
 }
 
 void ClientPort::ConnectionClosed() {
     ASSERT(active_sessions > 0);
-
     --active_sessions;
 }
+
+template <class Archive>
+void ClientPort::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& server_port;
+    ar& max_sessions;
+    ar& active_sessions;
+    ar& name;
+}
+SERIALIZE_IMPL(ClientPort)
 
 } // namespace Kernel

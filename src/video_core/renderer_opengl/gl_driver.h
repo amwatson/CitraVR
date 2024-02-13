@@ -107,7 +107,27 @@ public:
 
     /// Returns true if the implementation supports (EXT/ARM)_shader_framebuffer_fetch
     bool HasShaderFramebufferFetch() const {
-        return shader_framebuffer_fetch;
+        return ext_shader_framebuffer_fetch || arm_shader_framebuffer_fetch;
+    }
+
+    bool HasExtFramebufferFetch() const {
+        return ext_shader_framebuffer_fetch;
+    }
+
+    bool HasArmShaderFramebufferFetch() const {
+        return arm_shader_framebuffer_fetch;
+    }
+
+    bool HasArbFragmentShaderInterlock() const {
+        return arb_fragment_shader_interlock;
+    }
+
+    bool HasNvFragmentShaderInterlock() const {
+        return nv_fragment_shader_interlock;
+    }
+
+    bool HasIntelFragmentShaderOrdering() const {
+        return intel_fragment_shader_ordering;
     }
 
     /// Returns true if the implementation supports (NV/AMD)_blend_minmax_factor
@@ -117,6 +137,7 @@ public:
 
 private:
     void ReportDriverInfo();
+    void DeduceGLES();
     void DeduceVendor();
     void CheckExtensionSupport();
     void FindBugs();
@@ -135,7 +156,11 @@ private:
     bool clip_cull_distance{};
     bool ext_texture_compression_s3tc{};
     bool arb_texture_compression_bptc{};
-    bool shader_framebuffer_fetch{};
+    bool arm_shader_framebuffer_fetch{};
+    bool ext_shader_framebuffer_fetch{};
+    bool arb_fragment_shader_interlock{};
+    bool nv_fragment_shader_interlock{};
+    bool intel_fragment_shader_ordering{};
     bool blend_minmax_factor{};
 
     std::string_view gl_version{};

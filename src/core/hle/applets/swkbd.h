@@ -175,13 +175,13 @@ static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config
 
 class SoftwareKeyboard final : public Applet {
 public:
-    SoftwareKeyboard(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                     std::weak_ptr<Service::APT::AppletManager> manager)
-        : Applet(id, parent, preload, std::move(manager)) {}
+    SoftwareKeyboard(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+                     bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : Applet(system, id, parent, preload, std::move(manager)) {}
 
-    ResultCode ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
-    ResultCode Start(const Service::APT::MessageParameter& parameter) override;
-    ResultCode Finalize() override;
+    Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
+    Result Start(const Service::APT::MessageParameter& parameter) override;
+    Result Finalize() override;
     void Update() override;
 
     /**

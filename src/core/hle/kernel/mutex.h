@@ -6,12 +6,10 @@
 
 #include <memory>
 #include <string>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
@@ -36,6 +34,7 @@ public:
         return HANDLE_TYPE;
     }
 
+    std::shared_ptr<ResourceLimit> resource_limit;
     int lock_count;   ///< Number of times the mutex has been acquired
     u32 priority;     ///< The priority of the mutex, used for priority inheritance.
     std::string name; ///< Name of mutex (optional)
@@ -58,20 +57,14 @@ public:
      * @param thread Thread that wants to release the mutex.
      * @returns The result code of the operation.
      */
-    ResultCode Release(Thread* thread);
+    Result Release(Thread* thread);
 
 private:
     KernelSystem& kernel;
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<WaitObject>(*this);
-        ar& lock_count;
-        ar& priority;
-        ar& name;
-        ar& holding_thread;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**

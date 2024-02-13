@@ -182,8 +182,6 @@ add_library(citra_core STATIC
     hle/kernel/vm_manager.h
     hle/kernel/wait_object.cpp
     hle/kernel/wait_object.h
-    hle/lock.cpp
-    hle/lock.h
     hle/mii.h
     hle/mii.cpp
     hle/result.h
@@ -236,6 +234,8 @@ add_library(citra_core STATIC
     hle/service/boss/boss_p.h
     hle/service/boss/boss_u.cpp
     hle/service/boss/boss_u.h
+    hle/service/boss/online_service.cpp
+    hle/service/boss/online_service.h
     hle/service/cam/cam.cpp
     hle/service/cam/cam.h
     hle/service/cam/cam_c.cpp
@@ -299,8 +299,10 @@ add_library(citra_core STATIC
     hle/service/fs/fs_user.h
     hle/service/gsp/gsp.cpp
     hle/service/gsp/gsp.h
+    hle/service/gsp/gsp_command.h
     hle/service/gsp/gsp_gpu.cpp
     hle/service/gsp/gsp_gpu.h
+    hle/service/gsp/gsp_interrupt.h
     hle/service/gsp/gsp_lcd.cpp
     hle/service/gsp/gsp_lcd.h
     hle/service/hid/hid.cpp
@@ -325,6 +327,10 @@ add_library(citra_core STATIC
     hle/service/ldr_ro/cro_helper.h
     hle/service/ldr_ro/ldr_ro.cpp
     hle/service/ldr_ro/ldr_ro.h
+    hle/service/mcu/mcu_hwc.cpp
+    hle/service/mcu/mcu_hwc.h
+    hle/service/mcu/mcu.cpp
+    hle/service/mcu/mcu.h
     hle/service/mic/mic_u.cpp
     hle/service/mic/mic_u.h
     hle/service/mvd/mvd.cpp
@@ -433,12 +439,6 @@ add_library(citra_core STATIC
     hw/aes/ccm.h
     hw/aes/key.cpp
     hw/aes/key.h
-    hw/gpu.cpp
-    hw/gpu.h
-    hw/hw.cpp
-    hw/hw.h
-    hw/lcd.cpp
-    hw/lcd.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
     hw/y2r.cpp
@@ -455,7 +455,6 @@ add_library(citra_core STATIC
     loader/smdh.h
     memory.cpp
     memory.h
-    mmio.h
     movie.cpp
     movie.h
     nus_download.cpp
@@ -478,9 +477,8 @@ add_library(citra_core STATIC
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
-target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization
-  Boost::iostreams httplib)
-target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepng open_source_archives)
+target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams httplib)
+target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt lodepng open_source_archives)
 
 if (ENABLE_WEB_SERVICE)
     target_link_libraries(citra_core PRIVATE web_service)

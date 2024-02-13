@@ -22,7 +22,7 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/version.hpp>
+#include <boost/serialization/export.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -52,6 +52,7 @@ public:
             friend class boost::serialization::access;
         };
         bool is_enabled = true;
+        bool allow_game_change = true;
         bool plugin_loaded = false;
         bool is_default_path = false;
         std::string plugin_path = "";
@@ -69,26 +70,14 @@ public:
         std::vector<u32> load_exe_func;
         u32_le load_exe_args[4] = {0};
 
+        PAddr plugin_fb_addr = 0;
+
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& is_enabled;
-            ar& plugin_loaded;
-            ar& is_default_path;
-            ar& plugin_path;
-            ar& use_user_load_parameters;
-            ar& user_load_parameters;
-            ar& plg_event;
-            ar& plg_reply;
-            ar& memory_changed_handle;
-            ar& is_exe_load_function_set;
-            ar& exe_load_checksum;
-            ar& load_exe_func;
-            ar& load_exe_args;
-        }
+        void serialize(Archive& ar, const unsigned int);
         friend class boost::serialization::access;
     };
 
-    PLG_LDR();
+    PLG_LDR(Core::System& system_);
     ~PLG_LDR() {}
 
     void OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel);
@@ -96,31 +85,35 @@ public:
     ResultVal<Kernel::Handle> GetMemoryChangedHandle(Kernel::KernelSystem& kernel);
     void OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& kernel);
 
-    static void SetEnabled(bool enabled) {
+    PluginLoaderContext& GetPluginLoaderContext() {
+        return plgldr_context;
+    }
+    void SetPluginLoaderContext(PluginLoaderContext& context) {
+        plgldr_context = context;
+    }
+    void SetEnabled(bool enabled) {
         plgldr_context.is_enabled = enabled;
     }
-    static bool GetEnabled() {
+    bool GetEnabled() {
         return plgldr_context.is_enabled;
     }
-    static void SetAllowGameChangeState(bool allow) {
-        allow_game_change = allow;
+    void SetAllowGameChangeState(bool allow) {
+        plgldr_context.allow_game_change = allow;
     }
-    static bool GetAllowGameChangeState() {
-        return allow_game_change;
+    bool GetAllowGameChangeState() {
+        return plgldr_context.allow_game_change;
     }
-    static void SetPluginFBAddr(PAddr addr) {
-        plugin_fb_addr = addr;
+    void SetPluginFBAddr(PAddr addr) {
+        plgldr_context.plugin_fb_addr = addr;
     }
-    static PAddr GetPluginFBAddr() {
-        return plugin_fb_addr;
+    PAddr GetPluginFBAddr() {
+        return plgldr_context.plugin_fb_addr;
     }
 
 private:
-    static const Kernel::CoreVersion plgldr_version;
+    Core::System& system;
 
-    static PluginLoaderContext plgldr_context;
-    static PAddr plugin_fb_addr;
-    static bool allow_game_change;
+    PluginLoaderContext plgldr_context;
 
     void IsEnabled(Kernel::HLERequestContext& ctx);
     void SetEnabled(Kernel::HLERequestContext& ctx);
@@ -131,12 +124,7 @@ private:
     void GetPluginPath(Kernel::HLERequestContext& ctx);
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& plgldr_context;
-        ar& plugin_fb_addr;
-        ar& allow_game_change;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -147,3 +135,4 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::PLGLDR
 
 BOOST_CLASS_EXPORT_KEY(Service::PLGLDR::PLG_LDR)
+SERVICE_CONSTRUCT(Service::PLGLDR::PLG_LDR)

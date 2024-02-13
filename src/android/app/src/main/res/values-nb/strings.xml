@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_disclaimer">Denne programvaren kjører spill for Nintendo 3DS håndholdte spillkonsoll. Ingen spilltitler er inkludert.\n\nFør du starter, vennligst plasser dine rettmessig eide 3DS-spillfiler på lagringsenheten.</string>
-    <string name="app_notification_channel_description">Citra 3DS emulator notifikasjoner</string>
-    <string name="app_notification_running">Citra kjører</string>
+    <string name="app_notification_channel_description">CitraVR 3DS emulator notifikasjoner</string>
+    <string name="app_notification_running">CitraVR kjører</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">Gliplate</string>
@@ -75,8 +75,8 @@
 
     <!-- Premium strings -->
     <string name="premium_text">Premium</string>
-    <string name="premium_settings_upsell">Oppgrader til Premium og støtt Citra!</string>
-    <string name="premium_settings_upsell_description">Med Premium vil du støtte utviklerne til å fortsette å forbedre Citra, og få tilgang til disse eksklusive funksjonene!</string>
+    <string name="premium_settings_upsell">Oppgrader til Premium og støtt CitraVR!</string>
+    <string name="premium_settings_upsell_description">Med Premium vil du støtte utviklerne til å fortsette å forbedre CitraVR, og få tilgang til disse eksklusive funksjonene!</string>
     <string name="premium_settings_welcome">Velkommen til Premium.</string>
     <string name="premium_settings_welcome_description">Takk for støtten!</string>
 
@@ -141,7 +141,7 @@
     <string name="write_permission_needed">Du må gi skrivetilgang til ekstern lagring for at emulatoren skal fungere</string>
     <string name="load_settings">Laster Innstillinger...</string>
 
-    <string name="external_storage_not_mounted">Den eksterne lagringen må være tilgjengelig for å kunne bruke Citra</string>
+    <string name="external_storage_not_mounted">Den eksterne lagringen må være tilgjengelig for å kunne bruke CitraVR</string>
 
     <string name="select_dir">Velg Denne Mappen</string>
     <string name="empty_gamelist">Ingen filer ble funnet, eller det er ikke valgt noen spillkatalog ennå.</string>
@@ -161,20 +161,27 @@
     <!-- Camera -->
     <string name="camera_select_image">Velg Bilde</string>
     <string name="camera">Kamera</string>
-    <string name="camera_permission_needed">Citra trenger tilgang til kameraet ditt for å emulere 3DS-kameraene.\n\n Alternativt kan du også stille \"Bildekilde\" til \"Stillbilde\" i kamerainnstillinger.</string>
+    <string name="camera_permission_needed">CitraVR trenger tilgang til kameraet ditt for å emulere 3DS-kameraene.\n\n Alternativt kan du også stille \"Bildekilde\" til \"Stillbilde\" i kamerainnstillinger.</string>
 
     <!-- VR-specific -->
-    <string name="vr_gamepad_warning">Har problemer? Trykk @string/button_start + @string/button_select på gamepad for å veksle inngangsmodus</string>
     <string name="preferences_vr">VR</string>
-    <string name="vr_background">VR -miljø</string>
-    <string name="vr_error_two_instances_title">Feil: oppdaget to CitraVR -forekomster</string>
-    <string name="vr_error_two_instances_message">Oppdaget en dødelig lanseringsfeil med CitraVR. Dette er et kjent spørsmål. \n\nProblemet er nå løst. Vennligst prøv å starte spillet igjen. </string>
-    <string name="vr_extra_performance_mode_description">Overstyrer verdien av andre innstillinger for å minimere overhead og maksimalisere ytelsen. Merk: Når denne innstillingen er aktivert, blir brukerens verdier for følgende innstillinger ignorert: VR -miljø (velger alltid "Void"), All Audio (deaktivert)</string>
-    <string name="vr_extra_performance_mode">VR Extra Performance Mode</string>
-    <string name="vr_cpu_level">CPU -nivå</string>
-    <string name="vr_cpu_level_description">Høyere nivåer kan forbedre ytelsen til lyd/emulering, men vil tømme batteriet raskere</string>
-    <string name="vr_immersive_mode_title">[ADVARSEL: GRAFICS ARTIFACTS] Immersive Mode (Experimental)</string>
+    <string name="vr_background">VR-miljø</string>
+    <string name="vr_error_two_instances_title">Feil: Oppdaget To Instanser av CitraVR</string>
+    <string name="vr_error_two_instances_message">En fatal oppstartfeil med CitraVR ble oppdaget. Dette er et kjent problem. \n\nProblemet er nå løst. Vennligst prøv å starte spillet igjen.</string>
+    <string name="vr_extra_performance_mode">VR Ekstra Ytelsesmodus</string>
+    <string name="vr_cpu_level">CPU-nivå</string>
+    <string name="vr_cpu_level_description">Høyere nivåer kan forbedre lyd/emuleringsytelsen, men vil tømme batteriet raskere</string>
+    <string name="vr_immersive_mode_title">[ADVARSEL: Grafikkartefakter] Oppslukende Modus (Eksperimentell)</string>
     <string name="vr_immersive_mode_description">Utvider toppskjermen rundt en sylinder for oppslukende spill</string>
-    <string name="vr_graphics_warning">FARE: Ikke alle spill/nivåer ser bra ut i oppslukende modus. Store visuelle gjenstander er vanlige når dette alternativet er valgt</string>
-    <string name="vr_graphics_warning_short">Advarsel: Dette vil forårsake visuell gjenstand i det meste</string>
+    <string name="vr_graphics_warning">FARE: ikke alle spill/nivåer ser bra ut i oppslukende modus. Store visuelle artefakter er vanlige når denne opsjonen er valgt</string>
+    <string name="vr_graphics_warning_short">ADVARSEL: dette VIL forårsake visuelle artefakter i de fleste innhold</string>
+    <string name="vr_new_3ds_description">Bør aktiveres for de fleste titler. Når deaktivert, forbedrer ytelsen for spesifikke titler (f.eks. Star Fox 64 3D)</string>
+    <string name="release_notes_title">Utgivelsesnotater</string>
+    <string name="vr_licenses_description">Prosjektene som gjør Citra og CitraVR mulig</string>
+    <string name="game_compat_tooltip">Spillkompatibilitetsark</string>
+    <string name="vr_extra_performance_mode_description">Overstyrer verdien av andre innstillinger for å minimere overhead og maksimere ytelse. MERK: når denne innstillingen er aktivert, ignoreres brukerens verdier for følgende innstillinger: VR-miljø (velger alltid Void), Lydstrekking (deaktivert)</string>
+    <string name="vr_notice_title">Merk:</string>
+    <string name="vr_notice_description">Under dine første gjennomspill av et spill eller nivå, kan du oppleve korte pauser eller hakking i lyden. Etter at shaderne er lastet inn, blir de lagret på enheten og forhindrer disse hakkingene ved senere oppstart.</string>
+    <string name="vr_notice_description2">Noen spill vil bare ikke kjøre bra. Sørg for å sjekke CitraVR-spillkompatibilitetslisten for å se hvilke spill som fungerer best.</string>
+    <string name="vr_input_binding_subtitle">Har du problemer? Trykk på Velg + Start for å deaktivere Gamepad Gaze Mode, og prøv igjen.</string>
 </resources>

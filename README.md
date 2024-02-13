@@ -1,9 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="200"></a>
-  <br>
-  <b>CitraVR (Beta)</b>
-  <br>
+  <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="500"></a> (Beta)
 </h1>
 
 <h4 align="center"> Play 3DS homebrew and personal game backups in 3D on the go with your Quest.

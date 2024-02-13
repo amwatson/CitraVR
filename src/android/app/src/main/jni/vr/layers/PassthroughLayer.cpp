@@ -68,12 +68,12 @@ PassthroughLayer::~PassthroughLayer() {
     OXR(xrDestroyPassthroughFB(mPassthrough));
 
     mPassthroughLayer = XR_NULL_HANDLE;
-    mPassthrough = XR_NULL_HANDLE;
+    mPassthrough      = XR_NULL_HANDLE;
 }
 
 void PassthroughLayer::Frame(XrCompositionLayerPassthroughFB& layer) const {
-    layer.type = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
+    layer.type        = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
     layer.layerHandle = mPassthroughLayer;
-    layer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-    layer.space = XR_NULL_HANDLE;
+    layer.flags       = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+    layer.space       = XR_NULL_HANDLE;
 }

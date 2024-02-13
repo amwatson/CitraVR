@@ -15,18 +15,24 @@
 
 namespace FileSys {
 
+enum class ExtSaveDataType {
+    Normal, ///< Regular non-shared ext save data
+    Shared, ///< Shared ext save data
+    Boss,   ///< SpotPass ext save data
+};
+
 /// File system interface to the ExtSaveData archive
 class ArchiveFactory_ExtSaveData final : public ArchiveFactory {
 public:
-    ArchiveFactory_ExtSaveData(const std::string& mount_point, bool shared);
+    ArchiveFactory_ExtSaveData(const std::string& mount_point, ExtSaveDataType type_);
 
     std::string GetName() const override {
         return "ExtSaveData";
     }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path, u64 program_id) override;
-    ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
-                      u64 program_id) override;
+    Result Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+                  u64 program_id) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
     const std::string& GetMountPoint() const {
@@ -42,8 +48,8 @@ public:
     void WriteIcon(const Path& path, std::span<const u8> icon);
 
 private:
-    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData
-                 /// archive
+    /// Type of ext save data archive being accessed.
+    ExtSaveDataType type;
 
     /**
      * This holds the full directory path for this archive, it is only set after a successful call
@@ -59,7 +65,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& shared;
+        ar& type;
         ar& mount_point;
     }
     friend class boost::serialization::access;

@@ -23,12 +23,12 @@ public:
     ~EglContext();
 
     EGLDisplay mDisplay = 0;
-    EGLConfig mConfig = 0;
+    EGLConfig  mConfig  = 0;
     EGLContext mContext = EGL_NO_CONTEXT;
 
 private:
     int32_t Init();
-    void Shutdown();
+    void    Shutdown();
     // Create an unused surface because our device doesn't support creating a
     // surfaceless context (KHR_surfaceless_context) (It's available in AOSP as
     // a module, though, so that might be cool).

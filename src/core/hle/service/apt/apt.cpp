@@ -70,7 +70,7 @@ void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) 
     apt->wireless_reboot_info = std::move(buffer);
 
     auto rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_APT, "called size={}", size);
 }
@@ -83,7 +83,7 @@ void Module::NSInterface::ShutdownAsync(Kernel::HLERequestContext& ctx) {
     apt->system.RequestShutdown();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::NSInterface::RebootSystem(Kernel::HLERequestContext& ctx) {
@@ -107,7 +107,7 @@ void Module::NSInterface::RebootSystem(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::NSInterface::RebootSystemClean(Kernel::HLERequestContext& ctx) {
@@ -118,7 +118,7 @@ void Module::NSInterface::RebootSystemClean(Kernel::HLERequestContext& ctx) {
     apt->system.RequestReset();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::Initialize(Kernel::HLERequestContext& ctx) {
@@ -134,7 +134,7 @@ void Module::APTInterface::Initialize(Kernel::HLERequestContext& ctx) {
         rb.Push(result.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushCopyObjects(result->notification_event, result->parameter_event);
     }
 }
@@ -195,8 +195,6 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 
 bool Module::LoadSharedFont() {
     auto cfg = Service::CFG::GetModule(system);
-    ASSERT_MSG(cfg, "CFG Module missing!");
-
     u8 font_region_code;
     switch (cfg->GetRegionValue()) {
     case 4: // CHN
@@ -316,7 +314,7 @@ void Module::APTInterface::GetSharedFont(Kernel::HLERequestContext& ctx) {
         apt->shared_font_relocated = true;
     }
 
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was
     // allocated, the real APT service calculates this address by scanning the entire address space
     // (using svcQueryMemory) and searches for an allocation of the same size as the Shared Font.
@@ -331,7 +329,7 @@ void Module::APTInterface::GetWirelessRebootInfo(Kernel::HLERequestContext& ctx)
     LOG_WARNING(Service_APT, "called size={:08X}", size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(apt->wireless_reboot_info, 0);
 }
 
@@ -340,7 +338,7 @@ void Module::APTInterface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     const auto app_id = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
 
     LOG_WARNING(Service_APT, "(STUBBED) app_id={}", app_id);
 }
@@ -361,7 +359,7 @@ void Module::APTInterface::GetLockHandle(Kernel::HLERequestContext& ctx) {
         rb.Push(result.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushRaw(result->corrected_attributes);
         rb.Push<u32>(result->state);
         rb.PushCopyObjects(result->lock);
@@ -400,7 +398,7 @@ void Module::APTInterface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
         rb.Push(info.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushEnum(info->active_applet_pos);
         rb.PushEnum(info->requested_applet_id);
         rb.PushEnum(info->home_menu_applet_id);
@@ -414,7 +412,7 @@ void Module::APTInterface::CountRegisteredApplet(Kernel::HLERequestContext& ctx)
     LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(apt->applet_manager->CountRegisteredApplet());
 }
 
@@ -423,7 +421,7 @@ void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     const auto app_id = rp.PopEnum<AppletId>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
     rb.Push(apt->applet_manager->IsRegistered(app_id));
 
     LOG_DEBUG(Service_APT, "called app_id={:#010X}", app_id);
@@ -441,7 +439,7 @@ void Module::APTInterface::GetAttribute(Kernel::HLERequestContext& ctx) {
         rb.Push(applet_attr.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(applet_attr.Unwrap().raw);
     }
 }
@@ -458,7 +456,7 @@ void Module::APTInterface::InquireNotification(Kernel::HLERequestContext& ctx) {
         rb.Push(notification.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(static_cast<u32>(notification.Unwrap()));
     }
 }
@@ -504,7 +502,7 @@ void Module::APTInterface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
             buffer_size); // APT always push a buffer with the maximum size
 
         IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
-        rb.Push(RESULT_SUCCESS); // No error
+        rb.Push(ResultSuccess); // No error
         rb.PushEnum(next_parameter->sender_id);
         rb.PushEnum(next_parameter->signal); // Signal type
         rb.Push(size);                       // Parameter buffer size
@@ -530,7 +528,7 @@ void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
             buffer_size); // APT always push a buffer with the maximum size
 
         IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
-        rb.Push(RESULT_SUCCESS); // No error
+        rb.Push(ResultSuccess); // No error
         rb.PushEnum(next_parameter->sender_id);
         rb.PushEnum(next_parameter->signal); // Signal type
         rb.Push(size);                       // Parameter buffer size
@@ -552,7 +550,7 @@ void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
         check_sender, sender_appid, check_receiver, receiver_appid);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
     rb.Push(apt->applet_manager->CancelParameter(check_sender, sender_appid, check_receiver,
                                                  receiver_appid));
 }
@@ -566,7 +564,7 @@ void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext&
     LOG_INFO(Service_APT, "called title_id={:016X}, media_type={:#01X}, flags={:#08X}", title_id,
              media_type, flags);
 
-    ResultCode result = apt->applet_manager->PrepareToDoApplicationJump(
+    Result result = apt->applet_manager->PrepareToDoApplicationJump(
         title_id, static_cast<FS::MediaType>(media_type), flags);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -594,7 +592,7 @@ void Module::APTInterface::GetProgramIdOnApplicationJump(Kernel::HLERequestConte
     const auto parameters = apt->applet_manager->GetApplicationJumpParameters();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u64>(parameters.current_title_id);
     rb.Push(static_cast<u8>(parameters.current_media_type));
     rb.Push<u64>(parameters.next_title_id);
@@ -613,7 +611,7 @@ void Module::APTInterface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     apt->applet_manager->SetDeliverArg(DeliverArg{param, hmac});
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
@@ -628,7 +626,7 @@ void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
     arg.hmac.resize(std::min<std::size_t>(hmac_size, 0x20));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(arg.source_program_id);
     rb.Push<u8>(1);
     rb.PushStaticBuffer(std::move(arg.param), 0);
@@ -704,8 +702,8 @@ void Module::APTInterface::AppletUtility(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(RESULT_SUCCESS); // Utility function result
+    rb.Push(ResultSuccess); // No error
+    rb.Push(ResultSuccess); // Utility function result
     rb.PushStaticBuffer(out, 0);
 }
 
@@ -722,7 +720,7 @@ void Module::APTInterface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     apt->cpu_percent = value;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
 }
 
 void Module::APTInterface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
@@ -735,7 +733,7 @@ void Module::APTInterface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
     rb.Push(apt->cpu_percent);
 }
 
@@ -769,8 +767,8 @@ void Module::APTInterface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContex
 
     // This command must return an error when called, otherwise the Home Menu will try to reboot the
     // system.
-    rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
-                       ErrorSummary::InvalidState, ErrorLevel::Status));
+    rb.Push(Result(ErrorDescription::AlreadyExists, ErrorModule::Applet, ErrorSummary::InvalidState,
+                   ErrorLevel::Status));
 }
 
 void Module::APTInterface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -937,6 +935,28 @@ void Module::APTInterface::SendDspWakeUp(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->SendDspWakeUp(from_app_id, object));
 }
 
+void Module::APTInterface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+    const auto reply_value = rp.PopEnum<SleepQueryReply>();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called, from_app_id={:08X}, reply_value={:08X}",
+                from_app_id, reply_value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void Module::APTInterface::ReplySleepNotificationComplete(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called, from_app_id={:08X}", from_app_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
 void Module::APTInterface::PrepareToJumpToHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -990,7 +1010,7 @@ void Module::APTInterface::LoadSysMenuArg(Kernel::HLERequestContext& ctx) {
     std::copy_n(apt->sys_menu_arg_buffer.cbegin(), size, buffer.begin());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
@@ -1005,7 +1025,7 @@ void Module::APTInterface::StoreSysMenuArg(Kernel::HLERequestContext& ctx) {
     std::copy_n(buffer.cbegin(), size, apt->sys_menu_arg_buffer.begin());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
@@ -1018,7 +1038,7 @@ void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx)
     apt->applet_manager->SendCaptureBufferInfo(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
@@ -1032,7 +1052,7 @@ void Module::APTInterface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& c
     screen_capture_buffer.resize(size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(real_size);
     rb.PushStaticBuffer(std::move(screen_capture_buffer), 0);
 }
@@ -1048,7 +1068,7 @@ void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
     screen_capture_buffer.resize(size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(real_size);
     rb.PushStaticBuffer(std::move(screen_capture_buffer), 0);
 }
@@ -1065,7 +1085,7 @@ void Module::APTInterface::Unknown54(Kernel::HLERequestContext& ctx) {
         rb.Push(media_type.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushEnum(media_type.Unwrap());
     }
 }
@@ -1079,7 +1099,7 @@ void Module::APTInterface::SetScreenCapturePostPermission(Kernel::HLERequestCont
     apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(permission & 0xF);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
 }
 
 void Module::APTInterface::GetScreenCapturePostPermission(Kernel::HLERequestContext& ctx) {
@@ -1088,7 +1108,7 @@ void Module::APTInterface::GetScreenCapturePostPermission(Kernel::HLERequestCont
     LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(ResultSuccess); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
 }
 
@@ -1111,10 +1131,9 @@ void Module::APTInterface::GetProgramId(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called process_id={}", process_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
-    auto fs_user =
-        Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+    auto fs_user = apt->system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
     ASSERT_MSG(fs_user != nullptr, "fs:USER service is missing.");
 
     auto program_info_result = fs_user->GetProgramLaunchInfo(process_id);
@@ -1141,7 +1160,7 @@ void Module::APTInterface::GetProgramInfo(Kernel::HLERequestContext& ctx) {
 
         // TODO: Proper error code
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_UNKNOWN);
+        rb.Push(ResultUnknown);
         return;
     }
 
@@ -1151,7 +1170,7 @@ void Module::APTInterface::GetProgramInfo(Kernel::HLERequestContext& ctx) {
 
         // TODO: Proper error code
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_UNKNOWN);
+        rb.Push(ResultUnknown);
         return;
     }
 
@@ -1161,12 +1180,12 @@ void Module::APTInterface::GetProgramInfo(Kernel::HLERequestContext& ctx) {
 
         // TODO: Proper error code
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_UNKNOWN);
+        rb.Push(ResultUnknown);
         return;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(static_cast<u8>(memory_mode.first.value()));
     rb.Push(core_version.first.value());
 }
@@ -1183,7 +1202,7 @@ void Module::APTInterface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
         rb.Push(info.Code());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(info->title_id);
         rb.Push(static_cast<u8>(info->media_type));
         rb.Push(info->registered);
@@ -1228,7 +1247,7 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     param.resize(std::min(parameter_size, max_parameter_size));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(exists);
     rb.PushStaticBuffer(std::move(param), 0);
 }
@@ -1272,7 +1291,7 @@ void Module::APTInterface::Wrap(Kernel::HLERequestContext& ctx) {
     output.Write(cipher.data(), nonce_size, cipher.size());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     // Unmap buffer
     rb.PushMappedBuffer(input);
     rb.PushMappedBuffer(output);
@@ -1318,11 +1337,11 @@ void Module::APTInterface::Unwrap(Kernel::HLERequestContext& ctx) {
         output.Write(nonce.data(), nonce_offset, nonce_size);
         output.Write(pdata.data() + nonce_offset, nonce_offset + nonce_size,
                      pdata.size() - nonce_offset);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
     } else {
         LOG_ERROR(Service_APT, "Failed to decrypt data");
-        rb.Push(ResultCode(static_cast<ErrorDescription>(1), ErrorModule::PS,
-                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        rb.Push(Result(static_cast<ErrorDescription>(1), ErrorModule::PS,
+                       ErrorSummary::WrongArgument, ErrorLevel::Status));
     }
 
     // Unmap buffer
@@ -1346,7 +1365,7 @@ void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
     NS::RebootToTitle(apt->system, media_type, title_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::HardwareResetAsync(Kernel::HLERequestContext& ctx) {
@@ -1357,7 +1376,7 @@ void Module::APTInterface::HardwareResetAsync(Kernel::HLERequestContext& ctx) {
     apt->system.RequestReset();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::APTInterface::GetTargetPlatform(Kernel::HLERequestContext& ctx) {
@@ -1366,7 +1385,7 @@ void Module::APTInterface::GetTargetPlatform(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(apt->applet_manager->GetTargetPlatform());
 }
 
@@ -1385,7 +1404,7 @@ void Module::APTInterface::GetApplicationRunningMode(Kernel::HLERequestContext& 
     LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(apt->applet_manager->GetApplicationRunningMode());
 }
 
@@ -1405,7 +1424,7 @@ void Module::APTInterface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(is_standard);
 }
 
@@ -1419,7 +1438,7 @@ void Module::APTInterface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {
 
     // We allow all titles to be launched, so this function is a no-op
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(true);
 }
 

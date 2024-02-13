@@ -179,14 +179,14 @@ add_executable(citra-qt
     qt_image_interface.h
     util/clickable_label.cpp
     util/clickable_label.h
+    util/graphics_device_info.cpp
+    util/graphics_device_info.h
     util/sequence_dialog/sequence_dialog.cpp
     util/sequence_dialog/sequence_dialog.h
     util/spinbox.cpp
     util/spinbox.h
     util/util.cpp
     util/util.h
-    util/vk_device_info.cpp
-    util/vk_device_info.h
 )
 
 file(GLOB COMPAT_LIST
@@ -300,15 +300,23 @@ endif()
 create_target_directory_groups(citra-qt)
 
 target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
-target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
-target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads vulkan-headers)
+target_link_libraries(citra-qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
+target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+
+if (ENABLE_OPENGL)
+    target_link_libraries(citra-qt PRIVATE glad)
+endif()
+
+if (ENABLE_VULKAN)
+    target_link_libraries(citra-qt PRIVATE vulkan-headers)
+endif()
 
 if (NOT WIN32)
     target_include_directories(citra-qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
 endif()
 
 if (UNIX AND NOT APPLE)
-    target_link_libraries(citra-qt PRIVATE Qt6::DBus)
+    target_link_libraries(citra-qt PRIVATE Qt6::DBus gamemode)
 endif()
 
 target_compile_definitions(citra-qt PRIVATE
@@ -349,10 +357,6 @@ endif()
 
 if(UNIX AND NOT APPLE)
     install(TARGETS citra-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-endif()
-
-if (NOT APPLE)
-    target_compile_definitions(citra-qt PRIVATE HAS_OPENGL)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

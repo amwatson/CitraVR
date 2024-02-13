@@ -101,7 +101,8 @@ public:
      *  @param visibleLowerPanel whether the lower panel is shown/visible
      */
     void Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-               uint32_t& layerCount, const bool visibleLowerPanel) const;
+               uint32_t& layerCount, const XrPosef& headPose,
+               const float& immersiveModeFactor, const bool visibleLowerPanel);
 
     /** Given an origin, direction of a ray,
      *  returns the coordinates of where the ray will intersects
@@ -127,6 +128,7 @@ public:
     bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start, const XrVector3f& end,
                                              XrVector2f& result2d, XrPosef& result3d) const;
     void SetTopPanelFromController(const XrVector3f& controllerPosition);
+    XrPosef GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
 
     void SetTopPanelFromThumbstick(const float thumbstickY);
 

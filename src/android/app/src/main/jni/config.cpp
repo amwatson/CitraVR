@@ -308,9 +308,15 @@ void Config::ReadValues() {
     VRSettings::values.vr_immersive_mode = sdl2_config->GetInteger(
             "VR", "vr_immersive_mode", 0);
     Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;
+    VRSettings::values.vr_si_mode_register_offset = sdl2_config->GetInteger(
+            "VR", "vr_si_mode_register_offset", 0);
+    Settings::values.vr_si_mode_register_offset = VRSettings::values.vr_si_mode_register_offset;
     VRSettings::values.vr_immersive_positional_factor = sdl2_config->GetInteger(
             "VR", "vr_immersive_positional_factor", 0);
     Settings::values.vr_immersive_positional_factor = VRSettings::values.vr_immersive_positional_factor;
+    VRSettings::values.vr_immersive_positional_game_scaler = sdl2_config->GetInteger(
+            "VR", "vr_immersive_positional_game_scaler", 0);
+    Settings::values.vr_immersive_positional_game_scaler = VRSettings::values.vr_immersive_positional_game_scaler;
 
     if (Settings::values.vr_immersive_mode.GetValue() > 0) {
       LOG_INFO(Config, "VR immersive mode enabled");

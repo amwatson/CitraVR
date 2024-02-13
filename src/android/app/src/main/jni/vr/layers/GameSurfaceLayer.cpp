@@ -31,8 +31,7 @@ License     :   Licensed under GPLv3 or any later version.
 namespace {
 
 constexpr float defaultLowerPanelScaleFactor = 0.75f;
-
-const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
+constexpr float superImmersiveRadius = 0.5f;
 
 /** Used to translate texture coordinates into the corresponding coordinates
  * on the Android Activity Window.
@@ -254,20 +253,55 @@ void GameSurfaceLayer::SetSurface() const {
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-                             uint32_t& layerCount, const bool showLowerPanel) const
+                             uint32_t& layerCount, const XrPosef& headPose, const float& immersiveModeFactor, const bool showLowerPanel)
 
 {
     const uint32_t panelWidth = swapchain_.Width / 2;
     const uint32_t panelHeight = swapchain_.Height / 2;
     const double aspectRatio =
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
+
+    /*
+     * This bit is entirely optional, rather than having the panel appear/disappear it emerge in
+     * smoothly, however to achieve it I had to make the scale factor mutable, which I appreciate
+     * might not be following the intention of this class.
+     * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
+     * variable directly.
+     */
+    const auto panelZoomSpeed = 0.15f;
+    if (showLowerPanel && lowerPanelScaleFactor < defaultLowerPanelScaleFactor)
+    {
+        if (lowerPanelScaleFactor == 0.0f)
+        {
+            lowerPanelScaleFactor = panelZoomSpeed;
+        }
+        else
+        {
+            lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
+            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, defaultLowerPanelScaleFactor);
+        }
+    }
+    else if (!showLowerPanel && lowerPanelScaleFactor > 0.0f)
+    {
+        lowerPanelScaleFactor /= 1.0f + panelZoomSpeed;
+        if (lowerPanelScaleFactor < panelZoomSpeed)
+        {
+            lowerPanelScaleFactor = 0.0f;
+        }
+    }
+
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
     const bool useCylinder = (GetCylinderSysprop() != 0) || (immersiveMode_ > 0);
     if (useCylinder) {
-
         // Create the Top Display Panel (Curved display)
         for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
+            XrPosef topPanelFromWorld = topPanelFromWorld_;
+            if (immersiveMode_ >= 3 && !showLowerPanel)
+            {
+                topPanelFromWorld = GetTopPanelFromHeadPose(eye, headPose);
+            }
+
             XrCompositionLayerCylinderKHR layer = {};
 
             layer.type = XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR;
@@ -278,6 +312,12 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
             layer.space = space;
 
+            // Radius effectively controls the width of the cylinder shape.
+            // Central angle controls how much of the cylinder is
+            // covered by the texture. Together, they control the
+            // scale of the texture.
+            const float radius = (immersiveMode_ <= 2 || showLowerPanel) ? GetRadiusSysprop() : superImmersiveRadius;
+
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain = swapchain_.Handle;
@@ -286,17 +326,11 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layer.subImage.imageRect.extent.width = panelWidth;
             layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex = 0;
-            layer.pose = topPanelFromWorld_;
-            layer.pose.position.z += GetRadiusSysprop();
-
-            // Radius effectively controls the width of the cylinder shape.
-            // Central angle controls how much of the cylinder is
-            // covered by the texture. Together, they control the
-            // scale of the texture.
-            const float radius = GetRadiusSysprop();
+            layer.pose = topPanelFromWorld;
+            layer.pose.position.z += (immersiveMode_ < 3) ? radius : 0.0f;
             layer.radius = radius;
             layer.centralAngle = (!immersiveMode_ ? GetCentralAngleSysprop()
-                                                  : 55.0f * immersiveLevelFactor[immersiveMode_]) *
+                                                  : GameSurfaceLayer::DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES * immersiveModeFactor) *
                                  MATH_FLOAT_PI / 180.0f;
             layer.aspectRatio = -aspectRatio;
             layers[layerCount++].mCylinder = layer;
@@ -335,35 +369,6 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         }
     }
 
-    /*
-     * This bit is entirely optional, rather than having the panel appear/disappear it emerge in
-     * smoothly, however to achieve it I had to make the scale factor mutable, which I appreciate
-     * might not be following the intention of this class.
-     * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
-     * variable directly.
-     */
-    const auto panelZoomSpeed = 0.15f;
-    if (showLowerPanel && lowerPanelScaleFactor < defaultLowerPanelScaleFactor)
-    {
-        if (lowerPanelScaleFactor == 0.0f)
-        {
-            lowerPanelScaleFactor = panelZoomSpeed;
-        }
-        else
-        {
-            lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
-            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, defaultLowerPanelScaleFactor);
-        }
-    }
-    else if (!showLowerPanel && lowerPanelScaleFactor > 0.0f)
-    {
-        lowerPanelScaleFactor /= 1.0f + panelZoomSpeed;
-        if (lowerPanelScaleFactor < panelZoomSpeed)
-        {
-            lowerPanelScaleFactor = 0.0f;
-        }
-    }
-
 
     // Create the Lower Display Panel (flat touchscreen)
     // When citra is in stereo mode, this panel is also rendered in stereo (i.e.
@@ -389,14 +394,14 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
         layer.subImage.swapchain = swapchain_.Handle;
         layer.subImage.imageRect.offset.x =
-            (cropHoriz / 2) / immersiveLevelFactor[immersiveMode_] +
-            panelWidth * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+                (cropHoriz / 2) / immersiveModeFactor +
+            panelWidth * (0.5f - (0.5f / immersiveModeFactor));
         layer.subImage.imageRect.offset.y =
             panelHeight + verticalBorderTex +
-            panelHeight * (0.5f - (0.5f / immersiveLevelFactor[immersiveMode_]));
+            panelHeight * (0.5f - (0.5f / immersiveModeFactor));
         layer.subImage.imageRect.extent.width =
-            (panelWidth - cropHoriz) / immersiveLevelFactor[immersiveMode_];
-        layer.subImage.imageRect.extent.height = panelHeight / immersiveLevelFactor[immersiveMode_];
+                (panelWidth - cropHoriz) / immersiveModeFactor;
+        layer.subImage.imageRect.extent.height = panelHeight / immersiveModeFactor;
         layer.subImage.imageArrayIndex = 0;
         layer.pose = lowerPanelFromWorld_;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
@@ -451,6 +456,23 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     }
 
     topPanelFromWorld_ = XrPosef{windowRotation, windowPosition};
+}
+
+XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose) {
+    XrVector3f panelPosition = headPose.position;
+
+    XrVector3f forward, up, right;
+    XrMath::Quatf::ToVectors(headPose.orientation, forward, right, up);
+
+    panelPosition.z += superImmersiveRadius * (forward.x * 0.4f);
+    panelPosition.y -= superImmersiveRadius * (forward.z * 0.4f);
+    panelPosition.x += superImmersiveRadius * (forward.y * 0.4f);
+
+    panelPosition.z += up.x / 12.f;
+    panelPosition.y -= up.z / 12.f;
+    panelPosition.x += up.y / 12.f;
+
+    return XrPosef{headPose.orientation, panelPosition};
 }
 
 // based on thumbstick, modify the depth of the top panel

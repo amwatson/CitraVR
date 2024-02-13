@@ -94,9 +94,8 @@ struct VSUniformData {
 
     //VR data at the end to ensure it doesn't interfere with existing uniforms' alignment
     alignas(4) float vr_immersive_mode_factor;
-    alignas(16) Common::Vec3f vr_position;
 };
-static_assert(sizeof(VSUniformData) == 64,
+static_assert(sizeof(VSUniformData) == 48,
               "The size of the VSUniformData does not match the structure in the shader");
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");

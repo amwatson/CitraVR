@@ -1133,6 +1133,9 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
     if (sync_vs_pica) {
         VSPicaUniformData vs_uniforms;
         vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
+
+        ApplyVRDataToPicaVSUniforms(vs_uniforms);
+
         std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
 
         pipeline_cache.SetBufferOffset(0, offset + used_bytes);

@@ -434,9 +434,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     SyncAndUploadLUTs();
     SyncAndUploadLUTsLF();
 
-    //Sync VR data if needed
-    SyncVRData();
-
     // Sync the uniform data
     UploadUniforms(accelerate);
 
@@ -1133,6 +1130,9 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
     if (sync_vs_pica) {
         VSPicaUniformData vs_uniforms;
         vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
+
+        ApplyVRDataToPicaVSUniforms(vs_uniforms);
+
         std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::VSPicaData,
                           uniform_buffer.GetHandle(), offset + used_bytes, sizeof(vs_uniforms));

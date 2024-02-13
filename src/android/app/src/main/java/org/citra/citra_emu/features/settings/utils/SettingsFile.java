@@ -139,6 +139,9 @@ public final class SettingsFile {
 
     public static final String KEY_VR_IMMERSIVE_POSITIONAL_FACTOR = "vr_immersive_positional_factor";
 
+    public static final String KEY_VR_IMMERSIVE_POSITIONAL_GAME_SCALER = "vr_immersive_positional_game_scaler";
+    public static final String KEY_VR_SI_MODE_REGISTER_OFFSET = "vr_si_mode_register_offset";
+
     public static final String KEY_LOG_FILTER = "log_filter";
 
     private static BiMap<String, String> sectionsMap = new BiMap<>();

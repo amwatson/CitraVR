@@ -47,7 +47,6 @@ layout (binding = 1, std140) uniform vs_data {
     vec4 clip_coef;
 
     float vr_immersive_mode_factor;
-    vec3 vr_position;
 };
 )";
 
@@ -1642,12 +1641,13 @@ do {
     return out;
 }
 
-
 static std::string GenerateGLPositionAndGLClipDistanceBlock(bool use_clip_planes)
 {
     std::string out;
-
-    out+= "\n    gl_Position = vec4(vtx_pos.x / vr_immersive_mode_factor + vr_position.x, vtx_pos.y / vr_immersive_mode_factor + vr_position.y, -vtx_pos.z - vr_position.z, vtx_pos.w - vr_position.z);\n";
+    out += R"(
+        gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
+        gl_Position.xy /= vr_immersive_mode_factor;
+    )";
 
     if (use_clip_planes)
     {
@@ -1706,7 +1706,22 @@ void main() {
     }
 )";
 
-    out += GenerateGLPositionAndGLClipDistanceBlock(use_clip_planes);
+    out += R"(
+        gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
+        gl_Position.xy /= vr_immersive_mode_factor;
+    )";
+
+    if (use_clip_planes)
+    {
+        out += R"(
+            gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
+            if (enable_clip1) {
+                gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
+            } else {
+                gl_ClipDistance[1] = 0.0;
+            }
+        )";
+    }
 
     out += "}\n";
 
@@ -1814,7 +1829,22 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
         out += "        vtx_pos.z = 0.f;\n";
         out += "    }\n";
 
-        out += GenerateGLPositionAndGLClipDistanceBlock(config.state.use_clip_planes);
+        out += R"(
+            gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
+            gl_Position.xy /= vr_immersive_mode_factor;
+        )";
+
+        if (config.state.use_clip_planes)
+        {
+            out += R"(
+                gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
+                if (enable_clip1) {
+                    gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
+                } else {
+                    gl_ClipDistance[1] = 0.0;
+                }
+            )";
+        }
 
         out += "    normquat = GetVertexQuaternion();\n";
         out += "    vec4 vtx_color = vec4(" + semantic(VSOutputAttributes::COLOR_R) + ", " +

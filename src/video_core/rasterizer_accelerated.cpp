@@ -13,8 +13,6 @@ namespace VideoCore {
 
 using Pica::f24;
 
-const std::vector<float> immersiveLevelFactor = {1.0f, 5.0f, 3.0f};
-
 static Common::Vec4f ColorRGBA8(const u32 color) {
     const auto rgba =
         Common::Vec4u{color >> 0 & 0xFF, color >> 8 & 0xFF, color >> 16 & 0xFF, color >> 24 & 0xFF};
@@ -139,7 +137,6 @@ void RasterizerAccelerated::SyncEntireState() {
 
     // Sync uniforms
     SyncClipPlane();
-    SyncVRData();
     SyncDepthScale();
     SyncDepthOffset();
     SyncAlphaTest();
@@ -864,19 +861,105 @@ void RasterizerAccelerated::SyncClipPlane() {
     }
 }
 
-void RasterizerAccelerated::SyncVRData() {
-    if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveLevelFactor[Settings::values.vr_immersive_mode.GetValue()])
+void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16])
+{
+    if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveModeFactor)
     {
-        vs_uniform_block_data.data.vr_immersive_mode_factor = immersiveLevelFactor[Settings::values.vr_immersive_mode.GetValue()];
+        vs_uniform_block_data.data.vr_immersive_mode_factor = immersiveModeFactor;
         vs_uniform_block_data.dirty = true;
+    }
+
+    vr_uoffset = uoffset;
+    vr_immersive_mode = vrImmersiveMode;
+    std::memcpy(vr_view, view, sizeof(float) * 16);
+}
+
+static void MatrixTranspose(float m[16], const float src[16]) {
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            m[i * 4 + j] = src[j * 4 + i];
+        }
     }
 }
 
-void RasterizerAccelerated::SetVRData(Common::Vec3f position)
-{
-    //Positional Tinkering
-    vs_uniform_block_data.data.vr_position = position;
-    vs_uniform_block_data.dirty = true;
+static void MatrixMultiply(float m[16], const float a[16], const float b[16]) {
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            m[i * 4 + j] = a[j] * b[i*4] + a[j+4] * b[i*4+1] + a[j+8] * b[i*4+2] + a[j+12] * b[i*4+3];
+        }
+    }
 }
+
+void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator::VSPicaUniformData &vs_uniforms)
+{
+    if (vr_immersive_mode)
+    {
+        auto &f = vs_uniforms.uniforms.f;
+
+        int viewMatrixIndex = -1;
+        int mode = vr_immersive_mode;
+        int matrixMode = vr_immersive_mode;
+        if (vr_immersive_mode > 9)
+        {
+            mode = vr_immersive_mode / 10;
+            matrixMode = vr_immersive_mode % 10;
+        }
+        switch (mode)
+        {
+            //OOT / MM specific
+            case 3:
+                if (vs_uniforms.uniforms.bools[1].b != 0 // this is essential
+                    && f[0][3] != 1.0) // This fixes the HUD
+                {
+                    viewMatrixIndex = 4;
+                }
+                break;
+            case 4:
+                viewMatrixIndex = Settings::values.vr_si_mode_register_offset.GetValue();
+                break;
+            case 9:
+                //TEST MODE
+                viewMatrixIndex = vr_uoffset;
+                break;
+            default:
+                viewMatrixIndex = -1;
+                break;
+        }
+
+        if (viewMatrixIndex != -1 && vs_uniforms.uniforms.f.size() > viewMatrixIndex)
+        {
+            if (matrixMode == 3)
+            {
+                f[viewMatrixIndex][0] = vr_view[0];
+                f[viewMatrixIndex][1] = vr_view[4];
+                f[viewMatrixIndex][2] = vr_view[8];
+                f[viewMatrixIndex + 1][0] = vr_view[1];
+                f[viewMatrixIndex + 1][1] = vr_view[5];
+                f[viewMatrixIndex + 1][2] = vr_view[9];
+                f[viewMatrixIndex + 2][0] = vr_view[2];
+                f[viewMatrixIndex + 2][1] = vr_view[6];
+                f[viewMatrixIndex + 2][2] = vr_view[10];
+            }
+            else if (matrixMode >= 4)
+            {
+                float v[16], v2[16], v3[16];
+                MatrixTranspose(v, &f[viewMatrixIndex].x);
+                std::memcpy(v2, vr_view, sizeof(float) * 16);
+                v2[12] = v2[13] = v2[14] = 0.f;
+                MatrixMultiply(v3, v2, v);
+                MatrixTranspose(&f[viewMatrixIndex].x, v3);
+            }
+
+            f[viewMatrixIndex][3] += vr_view[12];
+            f[viewMatrixIndex + 1][3] += vr_view[13];
+            f[viewMatrixIndex + 2][3] += vr_view[14];
+        }
+    }
+}
+
 
 } // namespace VideoCore

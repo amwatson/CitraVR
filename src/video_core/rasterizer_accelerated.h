@@ -29,7 +29,7 @@ public:
     void NotifyPicaRegisterChanged(u32 id) override;
     void SyncEntireState() override;
 
-    void SetVRData(Common::Vec3f position) override;
+    void SetVRData(const int32_t  &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16]) override;
 
 protected:
     /// Sync fixed-function pipeline state
@@ -105,9 +105,6 @@ protected:
     /// Syncs the clip plane state to match the PICA register
     void SyncClipPlane();
 
-    /// Syncs the VR data
-    void SyncVRData();
-
 protected:
     /// Structure that keeps tracks of the vertex shader uniform state
     struct VSUniformBlockData {
@@ -170,5 +167,14 @@ protected:
     std::array<Common::Vec2f, 128> proctex_alpha_map_data{};
     std::array<Common::Vec4f, 256> proctex_lut_data{};
     std::array<Common::Vec4f, 256> proctex_diff_lut_data{};
+
+    //VR Stuff
+    u32     vr_uoffset = -1;
+    u32     vr_immersive_mode;
+    float   vr_view[16] = {};
+
+public:
+
+    void ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator::VSPicaUniformData &vs_uniforms);
 };
 } // namespace VideoCore

@@ -305,8 +305,6 @@ void Config::ReadValues() {
       // no point rendering passthrough in immersive mode
       VRSettings::values.vr_environment =
         static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
-      // When immersive mode is enabled, only OpenGL is supported.
-      Settings::values.graphics_api = Settings::GraphicsAPI::OpenGL;
     }
 
     // Miscellaneous

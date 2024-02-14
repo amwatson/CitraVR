@@ -14,8 +14,7 @@ enum class BooleanSetting(
     PLUGIN_LOADER("plugin_loader", Settings.SECTION_SYSTEM, false),
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
-    VR_EXTRA_PERFORMANCE_MODE("vr_extra_performance_mode", Settings.SECTION_VR, false),
-    VR_IMMERSIVE_MODE("vr_immersive_mode", Settings.SECTION_VR, false);
+    VR_EXTRA_PERFORMANCE_MODE("vr_extra_performance_mode", Settings.SECTION_VR, false);
     
     override var boolean: Boolean = defaultValue
 

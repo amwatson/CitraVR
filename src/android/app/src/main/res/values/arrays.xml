@@ -471,8 +471,7 @@
 
     <string-array name="vrImmersiveModeNames">
         <item>Off</item>
-        <item>Large - Low Resolution</item>
-        <item>Higher Resolution</item>
+        <item>180 Degree Immersive</item>
         <item>Super Immersive - Profile 1</item>
         <item>Super Immersive - Profile 2 (Set Register Offset for game)</item>
     </string-array>
@@ -482,7 +481,6 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        <item>4</item>
     </integer-array>
 
     <string-array name="vrPosFactorGameScalerNames">

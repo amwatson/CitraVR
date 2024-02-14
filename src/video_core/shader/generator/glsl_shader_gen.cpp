@@ -39,6 +39,7 @@ layout (binding = 1, std140) uniform vs_data {
 #endif
     bool enable_clip1;
     vec4 clip_coef;
+    float vr_immersive_mode_factor;
 };
 
 const vec2 EPSILON_Z = vec2(0.000001f, -1.00001f);

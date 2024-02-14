@@ -909,14 +909,14 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
         switch (mode)
         {
             //OOT / MM specific
-            case 3:
+            case 2:
                 if (vs_uniforms.uniforms.bools[1].b != 0 // this is essential
                     && f[0][3] != 1.0) // This fixes the HUD
                 {
                     viewMatrixIndex = 4;
                 }
                 break;
-            case 4:
+            case 3:
                 viewMatrixIndex = Settings::values.vr_si_mode_register_offset.GetValue();
                 break;
             case 9:
@@ -930,7 +930,7 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
 
         if (viewMatrixIndex != -1 && vs_uniforms.uniforms.f.size() > viewMatrixIndex)
         {
-            if (matrixMode == 3)
+            if (matrixMode == 2)
             {
                 f[viewMatrixIndex][0] = vr_view[0];
                 f[viewMatrixIndex][1] = vr_view[4];
@@ -942,7 +942,7 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
                 f[viewMatrixIndex + 2][1] = vr_view[6];
                 f[viewMatrixIndex + 2][2] = vr_view[10];
             }
-            else if (matrixMode >= 4)
+            else if (matrixMode >= 3)
             {
                 float v[16], v2[16], v3[16];
                 MatrixTranspose(v, &f[viewMatrixIndex].x);

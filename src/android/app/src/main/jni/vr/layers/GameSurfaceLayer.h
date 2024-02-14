@@ -178,11 +178,6 @@ private:
     //   - Rendering the top-screen and bottom screen separately.
     const uint32_t mImmersiveMode;
 
-    // Used to nicely present the lower panel when in toggleable mode.
-    // Instead of it just appearing instantly, it emerges in a hopefully pleasant
-    // fashion
-    mutable float lowerPanelScaleFactor = 0.0f;
-
     //============================
     // JNI objects
     JNIEnv* mEnv                = nullptr;

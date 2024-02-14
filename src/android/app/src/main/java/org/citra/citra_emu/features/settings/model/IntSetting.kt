@@ -47,7 +47,11 @@ enum class IntSetting(
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
     VR_ENVIRONMENT("vr_environment", Settings.SECTION_VR,
         if (hMDType == VRUtils.HMDType.QUEST3.value) 1 else 2),
-    VR_CPU_LEVEL("vr_cpu_level", Settings.SECTION_VR, 3);
+    VR_CPU_LEVEL("vr_cpu_level", Settings.SECTION_VR, 3),
+    VR_IMMERSIVE_MODE("vr_immersive_mode", Settings.SECTION_VR, 0),
+    VR_IMMERSIVE_POSITIONAL_FACTOR("vr_immersive_positional_factor", Settings.SECTION_VR, 0),
+    VR_IMMERSIVE_POSITIONAL_GAME_SCALER("vr_immersive_positional_game_scaler", Settings.SECTION_VR, 0),
+    VR_SI_MODE_REGISTER_OFFSET("vr_si_mode_register_offset", Settings.SECTION_VR, 0);
 
     override var int: Int = defaultValue
 

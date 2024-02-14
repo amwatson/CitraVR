@@ -78,7 +78,7 @@ std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
-const std::vector<float> immersiveScaleFactor = {1.0f, 5.0f, 3.0f, 1.8f};
+const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.8f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID forwardVRInputMethodID, const int androidButtonCode,
@@ -537,15 +537,16 @@ private:
         }
 
         bool showLowerPanel = true;
-        float immersiveModeFactor = (VRSettings::values.vr_immersive_mode <= 2) ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode] : immersiveScaleFactor[3];
+        float immersiveModeFactor = (VRSettings::values.vr_immersive_mode < 2) ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode] : immersiveScaleFactor[2];
         // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
-        if (Core::System::GetInstance().GPU().Renderer().Rasterizer())
+        if (Core::System::GetInstance().IsPoweredOn() &&
+            Core::System::GetInstance().GPU().Renderer().Rasterizer())
         {
-            if ((VRSettings::values.vr_immersive_positional_factor == 0) ||
-                //If in Normal immersive modes then look down for the lower panel to reveal itself (for some reason the Roll function returns pitch)
-                (VRSettings::values.vr_immersive_mode <= 2 && XrMath::Quatf::GetRollInRadians(gOpenXr->headLocation.pose.orientation) < -MATH_FLOAT_PI / 8.0f) ||
+            if (VRSettings::values.vr_immersive_mode == 0 ||
+                //If in normal immersive mode then look down for the lower panel to reveal itself (for some reason the Roll function returns pitch)
+                (VRSettings::values.vr_immersive_mode == 1 && XrMath::Quatf::GetRollInRadians(gOpenXr->headLocation.pose.orientation) < -MATH_FLOAT_PI / 8.0f) ||
                 //If in "super immersive" mode then put controller next to head in order to disable the mode temporarily
-                (VRSettings::values.vr_immersive_mode >= 3 && length < 0.2))
+                (VRSettings::values.vr_immersive_mode > 2 && length < 0.2))
             {
                 XrVector4f identity[4] = {};
                 XrMath::Matrixf::Identity(identity);
@@ -564,10 +565,10 @@ private:
                 XrQuaternionf invertedOrientation = XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
                 XrVector3f position = XrMath::Quatf::Rotate(invertedOrientation, gOpenXr->headLocation.pose.position);
 
-                float posScaler = powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler);
-                inv_transform[3].x = -position.x * VRSettings::values.vr_immersive_positional_factor * posScaler;
-                inv_transform[3].y = -position.y * VRSettings::values.vr_immersive_positional_factor * posScaler;
-                inv_transform[3].z = -position.z * VRSettings::values.vr_immersive_positional_factor * posScaler;
+                float gamePosScaler = powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler);
+                inv_transform[3].x = -position.x * VRSettings::values.vr_immersive_positional_factor * gamePosScaler;
+                inv_transform[3].y = -position.y * VRSettings::values.vr_immersive_positional_factor * gamePosScaler;
+                inv_transform[3].z = -position.z * VRSettings::values.vr_immersive_positional_factor * gamePosScaler;
 
                 Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset, (float*)inv_transform);
                 showLowerPanel = false;

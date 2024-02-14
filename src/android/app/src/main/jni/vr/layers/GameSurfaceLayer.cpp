@@ -264,35 +264,6 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     const double   aspectRatio =
         static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
 
-    /*
-     * This bit is entirely optional, rather than having the panel appear/disappear it emerge in
-     * smoothly, however to achieve it I had to make the scale factor mutable, which I appreciate
-     * might not be following the intention of this class.
-     * If a mutable class member isn't desired, then just drop this bit and use the visibleLowerPanel
-     * variable directly.
-     */
-    const auto panelZoomSpeed = 0.15f;
-    if (showLowerPanel && lowerPanelScaleFactor < defaultLowerPanelScaleFactor)
-    {
-        if (lowerPanelScaleFactor == 0.0f)
-        {
-            lowerPanelScaleFactor = panelZoomSpeed;
-        }
-        else
-        {
-            lowerPanelScaleFactor *= 1.0f + panelZoomSpeed;
-            lowerPanelScaleFactor = std::min(lowerPanelScaleFactor, defaultLowerPanelScaleFactor);
-        }
-    }
-    else if (!showLowerPanel && lowerPanelScaleFactor > 0.0f)
-    {
-        lowerPanelScaleFactor /= 1.0f + panelZoomSpeed;
-        if (lowerPanelScaleFactor < panelZoomSpeed)
-        {
-            lowerPanelScaleFactor = 0.0f;
-        }
-    }
-
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
     const bool         useCylinder       = (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
@@ -380,7 +351,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // FIXME we waste rendering time rendering both displays. That said, We also
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
-    if (lowerPanelScaleFactor > 0.0f)
+    if (showLowerPanel)
     {
         const uint32_t         cropHoriz = 90 * mResolutionFactor;
         XrCompositionLayerQuad layer     = {};
@@ -408,9 +379,9 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.subImage.imageArrayIndex = 0;
         layer.pose = mLowerPanelFromWorld;
         const auto scale = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
-                                                  lowerPanelScaleFactor, mResolutionFactor);
-        layer.size.width = scale.x * lowerPanelScaleFactor;
-        layer.size.height = scale.y * lowerPanelScaleFactor;
+                                                  defaultLowerPanelScaleFactor, mResolutionFactor);
+        layer.size.width = scale.x * defaultLowerPanelScaleFactor;
+        layer.size.height = scale.y * defaultLowerPanelScaleFactor;
         layers[layerCount++].mQuad = layer;
     }
 }
@@ -435,7 +406,7 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
     const uint32_t   panelWidth  = mSwapchain.mWidth / 2;
     const uint32_t   panelHeight = mSwapchain.mHeight / 2;
     const XrVector2f scale =
-        GetDensityScaleForSize(panelWidth, panelHeight, lowerPanelScaleFactor, mResolutionFactor);
+        GetDensityScaleForSize(panelWidth, panelHeight, defaultLowerPanelScaleFactor, mResolutionFactor);
     return ::GetRayIntersectionWithPanel(mLowerPanelFromWorld, panelWidth, panelHeight, scale,
                                          start, end, result2d, result3d);
 }

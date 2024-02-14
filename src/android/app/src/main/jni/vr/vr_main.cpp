@@ -37,6 +37,10 @@ License     :   Licensed under GPLv3 or any later version.
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#include "video_core/renderer_base.h"
+#include "video_core/gpu.h"
+#include "core/core.h"
+
 #if defined(DEBUG_INPUT_VERBOSE)
 #define ALOG_INPUT_VERBOSE(...) ALOGI(__VA_ARGS__)
 #else
@@ -73,6 +77,8 @@ constexpr XrPerfSettingsLevelEXT                   kGpuPerfLevel = XR_PERF_SETTI
 std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
+
+const std::vector<float> immersiveScaleFactor = {1.0f, 5.0f, 3.0f, 1.8f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID forwardVRInputMethodID, const int androidButtonCode,
@@ -456,6 +462,14 @@ private:
                                            &gOpenXr->mForwardDirectionSpace));
             }
 
+            {
+                const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+                                                        nullptr, XR_REFERENCE_SPACE_TYPE_VIEW,
+                                                        XrMath::Posef::Identity()};
+                OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
+                                           &gOpenXr->mViewSpace));
+            }
+
             // Get the pose of the local space.
             XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
             OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
@@ -472,8 +486,93 @@ private:
             OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
         }
 
+        gOpenXr->headLocation = {XR_TYPE_SPACE_LOCATION};
+        OXR(xrLocateSpace(gOpenXr->mViewSpace, gOpenXr->mHeadSpace, frameState.predictedDisplayTime, &gOpenXr->headLocation));
+
         mInputStateFrame.SyncHandPoses(gOpenXr->mSession, mInputStateStatic, gOpenXr->mLocalSpace,
                                        frameState.predictedDisplayTime);
+
+        //XrMath::Vector3f::
+        XrVector3f leftVec = {
+                gOpenXr->headLocation.pose.position.x - mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER].pose.position.x,
+                gOpenXr->headLocation.pose.position.y - mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER].pose.position.y,
+                gOpenXr->headLocation.pose.position.z - mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER].pose.position.z,
+        };
+        const float lengthLeft = XrMath::Vector3f::Length(leftVec);
+        XrVector3f rightVec = {
+                gOpenXr->headLocation.pose.position.x - mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER].pose.position.x,
+                gOpenXr->headLocation.pose.position.y - mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER].pose.position.y,
+                gOpenXr->headLocation.pose.position.z - mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER].pose.position.z,
+        };
+        const float lengthRight = XrMath::Vector3f::Length(rightVec);
+        const float length = std::min(lengthLeft, lengthRight);
+
+        // This block is for testing which uinform offset is needed
+        // for a given game to implement new super-immersive profiles if needed
+        static bool increase = false;
+        static int uoffset = -1;
+        {
+            if (VRSettings::values.vr_immersive_mode > 90)
+            {
+                if (mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER].currentState)
+                {
+                    if (increase)
+                    {
+                        ++uoffset;
+                        increase = false;
+                    }
+
+                    //There are 96 Vec4f; since we are applying 4 of them at a time we need to loop
+                    // after 92
+                    if (uoffset > 92)
+                    {
+                        uoffset = 0;
+                    }
+                }
+                else
+                {
+                    increase = true;
+                }
+            }
+        }
+
+        bool showLowerPanel = true;
+        float immersiveModeFactor = (VRSettings::values.vr_immersive_mode <= 2) ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode] : immersiveScaleFactor[3];
+        // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
+        if (Core::System::GetInstance().GPU().Renderer().Rasterizer())
+        {
+            if ((VRSettings::values.vr_immersive_positional_factor == 0) ||
+                //If in Normal immersive modes then look down for the lower panel to reveal itself (for some reason the Roll function returns pitch)
+                (VRSettings::values.vr_immersive_mode <= 2 && XrMath::Quatf::GetRollInRadians(gOpenXr->headLocation.pose.orientation) < -MATH_FLOAT_PI / 8.0f) ||
+                //If in "super immersive" mode then put controller next to head in order to disable the mode temporarily
+                (VRSettings::values.vr_immersive_mode >= 3 && length < 0.2))
+            {
+                XrVector4f identity[4] = {};
+                XrMath::Matrixf::Identity(identity);
+                immersiveModeFactor = 1.0f;
+                Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(1, immersiveModeFactor, -1, (float*)identity);
+            }
+            else
+            {
+                XrVector4f transform[4] = {};
+                XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation, (float*)transform);
+
+                //Calculate the inverse
+                XrVector4f inv_transform[4];
+                XrMath::Matrixf::ToInverse(transform, inv_transform);
+
+                XrQuaternionf invertedOrientation = XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
+                XrVector3f position = XrMath::Quatf::Rotate(invertedOrientation, gOpenXr->headLocation.pose.position);
+
+                float posScaler = powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler);
+                inv_transform[3].x = -position.x * VRSettings::values.vr_immersive_positional_factor * posScaler;
+                inv_transform[3].y = -position.y * VRSettings::values.vr_immersive_positional_factor * posScaler;
+                inv_transform[3].z = -position.z * VRSettings::values.vr_immersive_positional_factor * posScaler;
+
+                Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset, (float*)inv_transform);
+                showLowerPanel = false;
+            }
+        }
 
         //////////////////////////////////////////////////
         //  Set the compositor layers for this frame.
@@ -490,11 +589,13 @@ private:
             layers[layerCount++].Passthrough = passthroughLayer;
         }
 
-        mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+        mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount, gOpenXr->headLocation.pose,
+                                 immersiveModeFactor, showLowerPanel);
 
         if (mShouldShowErrorMessage) {
             mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
         }
+
         if (mIsKeyboardActive) { mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
 
         {

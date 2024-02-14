@@ -43,12 +43,15 @@ public:
     XrViewConfigurationProperties            mViewportConfig            = {};
     static constexpr XrViewConfigurationType VIEW_CONFIG_TYPE =
         XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
-    XrSpace mHeadSpace             = XR_NULL_HANDLE;
+    XrSpace mHeadSpace = XR_NULL_HANDLE;
+    XrSpace mViewSpace = XR_NULL_HANDLE;
     XrSpace mForwardDirectionSpace = XR_NULL_HANDLE;
 
-    XrSpace mLocalSpace    = XR_NULL_HANDLE;
-    XrSpace mStageSpace    = XR_NULL_HANDLE;
-    size_t  mMaxLayerCount = 0;
+    XrSpaceLocation headLocation = {};
+
+    XrSpace mLocalSpace = XR_NULL_HANDLE;
+    XrSpace mStageSpace = XR_NULL_HANDLE;
+    size_t mMaxLayerCount = 0;
 
     // EGL context
     std::unique_ptr<EglContext> mEglContext;

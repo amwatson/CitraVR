@@ -1112,12 +1112,12 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
-            add(HeaderSetting(R.string.immersive_mode))
+            add(HeaderSetting(R.string.vr_immersive_mode_title))
 
             add(
                 SingleChoiceSetting(
                     IntSetting.VR_IMMERSIVE_MODE,
-                    R.string.vr_immersive_mode_title,
+                    R.string.immersive_mode,
                     R.string.vr_immersive_mode_description,
                     R.array.vrImmersiveModeNames,
                     R.array.vrImmersiveModeValues,

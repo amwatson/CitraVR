@@ -275,4 +275,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_immersive_pos_factor_title">Fattore di Movimento Posizionale</string>
     <string name="vr_immersive_pos_factor_description">Regola quanto il movimento destra/sinistra/su/giù influisce sulla telecamera del gioco (0 = disattivato)</string>
     <string name="vr_immersive_pos_game_scaler_title">Moltiplicatore del Fattore di Movimento Posizionale</string>
+    <string name="vr_immersive_pos_game_scaler_description">Regola quanto i movimenti sinistra/destra/su/giù influiscono sulla telecamera di gioco; alcuni giochi richiedono valori più elevati, quindi questo moltiplica il fattore di movimento posizionale.</string>
 </resources>

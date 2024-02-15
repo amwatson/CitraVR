@@ -686,4 +686,5 @@
     <string name="vr_immersive_pos_factor_title">Фактор Позиционного Движения</string>
     <string name="vr_immersive_pos_factor_description">Регулирует, насколько движение влево/вправо/вверх/вниз влияет на игровую камеру (0 = отключено).</string>
     <string name="vr_immersive_pos_game_scaler_title">Множитель фактора позиционного перемещения</string>
+    <string name="vr_immersive_pos_game_scaler_description">Настройка определяет, насколько движение влево/вправо/вверх/вниз влияет на камеру игры; в некоторых играх требуются большие значения, поэтому это умножает фактор перемещения положения.</string>
 </resources>

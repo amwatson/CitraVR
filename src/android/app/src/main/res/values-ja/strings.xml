@@ -137,4 +137,5 @@
     <string name="vr_immersive_pos_factor_title">位置情報移動ファクター</string>
     <string name="vr_immersive_pos_factor_description">「ゲームのカメラに左/右/上/下の移動がどれくらい影響を与えるかを調整します（0 = 無効）」</string>
     <string name="vr_immersive_pos_game_scaler_title">位置移動ファクターの乗数変更</string>
+    <string name="vr_immersive_pos_game_scaler_description">ゲームカメラに左右、上下の移動がどれだけ影響するかを調整します。一部のゲームではより大きな値が必要になる場合があるため、これは位置移動係数を乗算します。</string>
     </resources>

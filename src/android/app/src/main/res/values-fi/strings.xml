@@ -121,4 +121,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_immersive_pos_factor_title">Sijainnillisen Liikkeen Kerroin</string>
     <string name="vr_immersive_pos_factor_description">Säätää, kuinka paljon liike vasemmalle/oikealle/ylös/alas vaikuttaa pelikameraan (0 = pois käytöstä)</string>
     <string name="vr_immersive_pos_game_scaler_title">Paikallisen Liikkeen Tekijän Kerroin</string>
+    <string name="vr_immersive_pos_game_scaler_description">Säätää kuinka paljon liikkuminen vasemmalta/oikealta/ylös/alas vaikuttaa pelikameraan, joidenkin pelien vaatiessa suurempia arvoja, joten tämä kertoo Liike Kertoimen sijaintiin vaikuttavalta tekijältä.</string>
 </resources>

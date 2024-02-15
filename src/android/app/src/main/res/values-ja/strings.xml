@@ -131,4 +131,5 @@
 シェーダが読み込まれた後、デバイスに保存され、後続の起動時にこれらの途切れを防止します。</string>
     <string name="vr_notice_description2">一部分のゲームはうまく動作しません。CitralVR Game Compatibility Listを確認して、最も動作が良いゲームをチェックしてください。</string>
     <string name="vr_input_binding_subtitle">問題がありますか？ ゲームパッドゲイズモードを無効にするには、SelectボタンとStartボタンを同時に押してからやり直してください。</string>
+    <string name="immersive_mode">没入モード</string>
     </resources>

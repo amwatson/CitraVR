@@ -115,4 +115,5 @@
 Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nämä nykimiset seuraavilla käynnistyksillä.</string>
     <string name="vr_notice_description2">Jotkin pelit eivät vain toimi hyvin. Muista tarkistaa CitraVR-pelien yhteensopivuusluettelo nähdäksesi, mitkä pelit toimivat parhaiten.</string>
     <string name="vr_input_binding_subtitle">Koetko ongelmia? Paina Select + Start poistaaksesi Gamepad Gaze -tilan käytöstä ja yritä uudelleen.</string>
+    <string name="immersive_mode">Immersiivinen Tila</string>
 </resources>

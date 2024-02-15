@@ -684,7 +684,6 @@
     <string name="vr_cpu_level_description">Higher levels may improve audio/emulation performance, but will drain the battery faster</string>
     <string name="vr_immersive_mode_title">[WARNING: Graphics Artifacts] Immersive Mode (Experimental)</string>
     <string name="vr_immersive_mode_description">Extends the top screen around a cylinder for immersive gameplay</string>
-    <string name="vr_immersive_pos_factor_title">Immersive Mode Positional Movement Factor</string>
     <string name="vr_immersive_pos_factor_description">Adjusts how much movement left/right/up/down affects the game camera (0 = disabled)</string>
     <string name="vr_immersive_pos_game_scaler_title">Adjusts Positional Movement Factor by a scaler</string>
     <string name="vr_immersive_pos_game_scaler_description">Adjusts how much movement left/right/up/down affects the game camera, some games required larger values, so this multiplies the positional factor</string>
@@ -703,4 +702,5 @@
     <string name="immersive_mode">Immersive Mode</string>
     <string name="vr_si_mode_register_offset_title">Register Offset</string>
     <string name="vr_si_mode_register_offset_description">Sets the register offset used for the view when using Super Immersive Mode Profile 2 - varies by game</string>
+    <string name="vr_immersive_pos_factor_title">Positional Movement Factor</string>
 </resources>

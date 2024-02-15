@@ -681,4 +681,5 @@
     <string name="immersive_mode">沉浸模式</string>
     <string name="vr_si_mode_register_offset_title">寄存器偏移</string>
     <string name="vr_si_mode_register_offset_description">设置使用超级沉浸模式配置文件2时用于视图的寄存器偏移量-根据游戏而变化。</string>
+    <string name="vr_immersive_pos_factor_title">位置移动因素</string>
 </resources>

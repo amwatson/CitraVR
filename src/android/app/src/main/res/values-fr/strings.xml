@@ -683,4 +683,5 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="immersive_mode">Mode Immersif</string>
     <string name="vr_si_mode_register_offset_title">Décalage d\'Enregistrement</string>
     <string name="vr_si_mode_register_offset_description">Définit le décalage d\'enregistrement utilisé pour la vue lors de l\'utilisation du Mode Super Immersif Profil 2 - varie selon le jeu.</string>
+    <string name="vr_immersive_pos_factor_title">Facteur de Mouvement Positionnel</string>
 </resources>

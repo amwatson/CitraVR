@@ -683,4 +683,5 @@
     <string name="immersive_mode">Режим полного погружения</string>
     <string name="vr_si_mode_register_offset_title">Сдвиг регистра.</string>
     <string name="vr_si_mode_register_offset_description">Устанавливает смещение регистра, используемого для вида при использовании профиля 2 режима Super Immersive Mode - варьируется в зависимости от игры.</string>
+    <string name="vr_immersive_pos_factor_title">Фактор Позиционного Движения</string>
 </resources>

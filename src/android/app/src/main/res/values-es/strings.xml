@@ -684,4 +684,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_si_mode_register_offset_title">Desplazamiento del Registro</string>
     <string name="vr_si_mode_register_offset_description">Establece el desplazamiento del registro utilizado para la vista al utilizar el Perfil 2 del Modo Super Inmersivo, puede variar según el juego.</string>
     <string name="vr_immersive_pos_factor_title">Factor de Movimiento Posicional</string>
+    <string name="vr_immersive_pos_factor_description">Ajusta cuánto afecta el movimiento hacia la izquierda/derecha/arriba/abajo a la cámara del juego (0 = desactivado)</string>
 </resources>

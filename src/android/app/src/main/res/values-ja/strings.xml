@@ -135,4 +135,5 @@
     <string name="vr_si_mode_register_offset_title">レジスターオフセット</string>
     <string name="vr_si_mode_register_offset_description">ビューに使用されるレジスタオフセットを設定します。Super Immersive Mode Profile 2を使用する場合、ゲームによって異なります。</string>
     <string name="vr_immersive_pos_factor_title">位置情報移動ファクター</string>
+    <string name="vr_immersive_pos_factor_description">「ゲームのカメラに左/右/上/下の移動がどれくらい影響を与えるかを調整します（0 = 無効）」</string>
     </resources>

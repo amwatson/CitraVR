@@ -273,4 +273,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_si_mode_register_offset_title">SpostamentoRegistro.</string>
     <string name="vr_si_mode_register_offset_description">Imposta l\'offset del registro utilizzato per la vista quando si utilizza il profilo 2 della modalità Super Immersive - varia in base al gioco.</string>
     <string name="vr_immersive_pos_factor_title">Fattore di Movimento Posizionale</string>
+    <string name="vr_immersive_pos_factor_description">Regola quanto il movimento destra/sinistra/su/giù influisce sulla telecamera del gioco (0 = disattivato)</string>
 </resources>

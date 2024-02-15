@@ -120,4 +120,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_si_mode_register_offset_description">Asettaa rekisterin siirtymän, jota käytetään näkymässä käytettäessä Super Immersive Mode Profiilia 2 - vaihtelee pelistä riippuen.</string>
     <string name="vr_immersive_pos_factor_title">Sijainnillisen Liikkeen Kerroin</string>
     <string name="vr_immersive_pos_factor_description">Säätää, kuinka paljon liike vasemmalle/oikealle/ylös/alas vaikuttaa pelikameraan (0 = pois käytöstä)</string>
+    <string name="vr_immersive_pos_game_scaler_title">Paikallisen Liikkeen Tekijän Kerroin</string>
 </resources>

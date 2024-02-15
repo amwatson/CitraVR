@@ -685,4 +685,5 @@
     <string name="vr_si_mode_register_offset_description">Устанавливает смещение регистра, используемого для вида при использовании профиля 2 режима Super Immersive Mode - варьируется в зависимости от игры.</string>
     <string name="vr_immersive_pos_factor_title">Фактор Позиционного Движения</string>
     <string name="vr_immersive_pos_factor_description">Регулирует, насколько движение влево/вправо/вверх/вниз влияет на игровую камеру (0 = отключено).</string>
+    <string name="vr_immersive_pos_game_scaler_title">Множитель фактора позиционного перемещения</string>
 </resources>

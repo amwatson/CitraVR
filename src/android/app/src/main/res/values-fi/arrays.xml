@@ -11,4 +11,18 @@
         <item>4</item>
     </integer-array>
 
+
+    <string-array name="vrImmersiveModeNames">
+        <item>Pois päältä</item>
+        <item>180 Asteen Immersiivinen (3DoF)</item>
+        <item>Super Immersive (6DoF) - Profiili 1</item>
+        <item>Super Immersive (6DoF) - Profiili 2</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
 </resources>

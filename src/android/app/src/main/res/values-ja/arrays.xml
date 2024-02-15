@@ -11,4 +11,18 @@
         <item>4</item>
     </integer-array>
 
+
+    <string-array name="vrImmersiveModeNames">
+        <item>オフ</item>
+        <item>180度の没入感（3DoF）</item>
+        <item>スーパーイマーシブ（6DoF）- プロファイル1</item>
+        <item>スーパーイマーシブ（6DoF）- プロファイル2</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
 </resources>

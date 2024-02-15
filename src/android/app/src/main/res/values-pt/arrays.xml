@@ -11,4 +11,18 @@
         <item>4</item>
     </integer-array>
 
+
+    <string-array name="vrImmersiveModeNames">
+        <item>Desligado</item>
+        <item>Imersão de 180 Graus (3DoF)</item>
+        <item>Super Imersivo (6DoF) - Perfil 1</item>
+        <item>Super Imersivo (6DoF) - Perfil 2</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
 </resources>

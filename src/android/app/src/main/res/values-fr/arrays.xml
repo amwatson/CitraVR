@@ -11,4 +11,18 @@
         <item>4</item>
     </integer-array>
 
+
+    <string-array name="vrImmersiveModeNames">
+        <item>Désactivé</item>
+        <item>Immersif à 180 degrés (3DoF)</item>
+        <item>Super Immersif (6DoF) - Profil 1</item>
+        <item>Super Immersif (6DoF) - Profil 2</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
 </resources>

@@ -132,4 +132,5 @@
     <string name="vr_notice_description2">一部分のゲームはうまく動作しません。CitralVR Game Compatibility Listを確認して、最も動作が良いゲームをチェックしてください。</string>
     <string name="vr_input_binding_subtitle">問題がありますか？ ゲームパッドゲイズモードを無効にするには、SelectボタンとStartボタンを同時に押してからやり直してください。</string>
     <string name="immersive_mode">没入モード</string>
+    <string name="vr_si_mode_register_offset_title">レジスターオフセット</string>
     </resources>

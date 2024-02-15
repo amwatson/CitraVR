@@ -681,4 +681,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_notice_description2">Algunos juegos simplemente no funcionarán bien. Asegúrate de revisar la Lista de Compatibilidad de Juegos CitraVR para ver cuáles son los juegos que mejor rendimiento tienen.</string>
     <string name="vr_input_binding_subtitle">¿Tienes problemas? Presiona Seleccionar + Iniciar para desactivar el Modo de mirada del Gamepad, y luego intenta de nuevo.</string>
     <string name="immersive_mode">Modo inmersivo</string>
+    <string name="vr_si_mode_register_offset_title">Desplazamiento del Registro</string>
 </resources>

@@ -270,4 +270,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_notice_description2">Alcuni giochi semplicemente non funzioneranno bene. Assicurati di controllare la lista di compatibilità dei giochi CitraVR per vedere quali giochi hanno le migliori prestazioni.</string>
     <string name="vr_input_binding_subtitle">Avere problemi? Premi Seleziona + Avvia per disattivare la modalità di controllo dello sguardo del gamepad, poi riprova.</string>
     <string name="immersive_mode">"Modalidade Imersiva"</string>
+    <string name="vr_si_mode_register_offset_title">SpostamentoRegistro.</string>
 </resources>

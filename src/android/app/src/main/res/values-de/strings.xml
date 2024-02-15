@@ -539,4 +539,5 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vr_notice_description2">Einige Spiele laufen einfach nicht gut. Stellen Sie sicher, dass Sie die CitraVR-Spielkompatibilitätsliste überprüfen, um zu sehen, welche Spiele am besten funktionieren.</string>
     <string name="vr_input_binding_subtitle">Problem beim Spielen? Drücke "Select + Start", um den Gamepad-Gaze-Modus zu deaktivieren, und versuche es dann erneut.</string>
     <string name="immersive_mode">Immersive Modus</string>
+    <string name="vr_si_mode_register_offset_title">Register Offset</string>
 </resources>

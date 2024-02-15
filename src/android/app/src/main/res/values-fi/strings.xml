@@ -117,4 +117,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_input_binding_subtitle">Koetko ongelmia? Paina Select + Start poistaaksesi Gamepad Gaze -tilan käytöstä ja yritä uudelleen.</string>
     <string name="immersive_mode">Immersiivinen Tila</string>
     <string name="vr_si_mode_register_offset_title">Rekisterin Siirtymä</string>
+    <string name="vr_si_mode_register_offset_description">Asettaa rekisterin siirtymän, jota käytetään näkymässä käytettäessä Super Immersive Mode Profiilia 2 - vaihtelee pelistä riippuen.</string>
 </resources>

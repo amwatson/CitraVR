@@ -186,4 +186,5 @@
     <string name="vr_input_binding_subtitle">Har du problemer? Trykk på Velg + Start for å deaktivere Gamepad Gaze Mode, og prøv igjen.</string>
     <string name="immersive_mode">Immersiv Modus</string>
     <string name="vr_si_mode_register_offset_title">Register Offset</string>
+    <string name="vr_si_mode_register_offset_description">Setter registerforskyvning som brukes for visningen når du bruker Super Immersive Mode Profile 2 - varierer etter spill.</string>
 </resources>

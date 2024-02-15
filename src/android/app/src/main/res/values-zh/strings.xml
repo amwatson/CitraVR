@@ -680,4 +680,5 @@
     <string name="vr_input_binding_subtitle">遇到问题了吗？按下“选择”和“开始”键来禁用游戏手柄凝视模式，然后再试一次。</string>
     <string name="immersive_mode">沉浸模式</string>
     <string name="vr_si_mode_register_offset_title">寄存器偏移</string>
+    <string name="vr_si_mode_register_offset_description">设置使用超级沉浸模式配置文件2时用于视图的寄存器偏移量-根据游戏而变化。</string>
 </resources>

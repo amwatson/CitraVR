@@ -133,4 +133,5 @@
     <string name="vr_input_binding_subtitle">問題がありますか？ ゲームパッドゲイズモードを無効にするには、SelectボタンとStartボタンを同時に押してからやり直してください。</string>
     <string name="immersive_mode">没入モード</string>
     <string name="vr_si_mode_register_offset_title">レジスターオフセット</string>
+    <string name="vr_si_mode_register_offset_description">ビューに使用されるレジスタオフセットを設定します。Super Immersive Mode Profile 2を使用する場合、ゲームによって異なります。</string>
     </resources>

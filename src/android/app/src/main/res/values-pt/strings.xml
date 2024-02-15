@@ -342,4 +342,5 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="vr_input_binding_subtitle">Com problemas? Pressione Select + Start para desativar o modo de olhar do Gamepad e tente novamente.</string>
     <string name="immersive_mode">Modo Imersivo</string>
     <string name="vr_si_mode_register_offset_title">Deslocamento do Registro</string>
+    <string name="vr_si_mode_register_offset_description">Define o deslocamento de registro usado para a visualização ao usar o Perfil 2 do Modo Super Imersivo - varia de acordo com o jogo.</string>
 </resources>

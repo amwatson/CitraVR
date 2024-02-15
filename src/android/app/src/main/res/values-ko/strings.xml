@@ -188,4 +188,5 @@
     <string name="vr_input_binding_subtitle">문제가 있나요? 게임패드 주시 모드를 비활성화하기 위해 선택 + 시작을 누르세요, 그리고 다시 시도해보세요.</string>
     <string name="immersive_mode">몰입 모드</string>
     <string name="vr_si_mode_register_offset_title">레지스터 오프셋</string>
+    <string name="vr_si_mode_register_offset_description">게임마다 다양한 Super Immersive Mode Profile 2를 사용할 때 뷰에 사용되는 레지스터 오프셋을 설정합니다.</string>
 </resources>

@@ -308,120 +308,7 @@ private:
                       .count());
         }
 
-        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
-
-        //////////////////////////////////////////////////
-        // Forward VR input to Android gamepad emulation
-        //////////////////////////////////////////////////
-
-        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 96 /* BUTTON_A */,
-                                   mInputStateFrame.mAButtonState, "a");
-        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 97 /* BUTTON_B */,
-                                   mInputStateFrame.mBButtonState, "b");
-        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 99 /* BUTTON_X */,
-                                   mInputStateFrame.mXButtonState, "x");
-        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
-                                   100 /* BUTTON_Y */, mInputStateFrame.mYButtonState, "y");
-        ForwardButtonStateIfNeeded(
-            jni, mActivityObject, mForwardVRInputMethodID, 102 /* BUTTON_L1 */,
-            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER], "l1");
-        ForwardButtonStateIfNeeded(
-            jni, mActivityObject, mForwardVRInputMethodID, 103 /* BUTTON_R1 */,
-            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER], "r1");
-
-        {
-            // Right is circlepad, left is leftstick/circlepad, dpad is whatever
-            // has thumbstick pressed.
-            const auto leftStickHand = InputStateFrame::LEFT_CONTROLLER;
-            const auto cStickHand    = InputStateFrame::RIGHT_CONTROLLER;
-
-            const auto& leftThumbrestTouchState =
-                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
-            const auto& rightThumbrestTouchState =
-                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
-            const int dpadHand =
-                leftThumbrestTouchState.currentState    ? InputStateFrame::RIGHT_CONTROLLER
-                : rightThumbrestTouchState.currentState ? InputStateFrame::LEFT_CONTROLLER
-                                                        : InputStateFrame::NUM_CONTROLLERS;
-
-            {
-                static constexpr float kThumbStickDirectionThreshold = 0.5f;
-                // Doing it this way helps ensure we don't leave the dpad
-                // pressed if the thumbstick is released while still
-                // pointing in the same direction.
-                // I hope this is right, I didn't test it very much.
-                static bool wasDpadLeft  = false;
-                static bool wasDpadRight = false;
-                static bool wasDpadUp    = false;
-                static bool wasDpadDown  = false;
-
-                const bool  hasDpad = dpadHand != InputStateFrame::NUM_CONTROLLERS;
-                const auto& dpadThumbstickState =
-                    mInputStateFrame.mThumbStickState[hasDpad ? dpadHand : leftStickHand];
-
-                if (hasDpad && dpadThumbstickState.currentState.y > kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
-                                        1);
-                    wasDpadUp = true;
-                } else if (wasDpadUp) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
-                                        0);
-                    wasDpadUp = false;
-                }
-                if (hasDpad &&
-                    dpadThumbstickState.currentState.y < -kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        20 /* DPAD_DOWN */, 1);
-                    wasDpadDown = true;
-                } else if (wasDpadDown) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        20 /* DPAD_DOWN */, 0);
-                    wasDpadDown = false;
-                }
-                if (hasDpad &&
-                    dpadThumbstickState.currentState.x < -kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        21 /* DPAD_LEFT */, 1);
-                    wasDpadLeft = true;
-                } else if (wasDpadLeft) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        21 /* DPAD_LEFT */, 0);
-                    wasDpadLeft = false;
-                }
-
-                if (hasDpad && dpadThumbstickState.currentState.x > kThumbStickDirectionThreshold) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        22 /* DPAD_RIGHT */, 1);
-                    wasDpadRight = true;
-                } else if (wasDpadRight) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
-                                        22 /* DPAD_RIGHT */, 0);
-                    wasDpadRight = false;
-                }
-            }
-
-            if (dpadHand != cStickHand) {
-                const auto cStickThumbstickState = mInputStateFrame.mThumbStickState[cStickHand];
-                if (cStickThumbstickState.currentState.y != 0 ||
-                    cStickThumbstickState.currentState.x != 0 ||
-                    cStickThumbstickState.changedSinceLastSync) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        cStickThumbstickState.currentState.x,
-                                        cStickThumbstickState.currentState.y, 0);
-                }
-            }
-            if (dpadHand != leftStickHand) {
-                const auto leftStickThumbstickState =
-                    mInputStateFrame.mThumbStickState[leftStickHand];
-                if (leftStickThumbstickState.currentState.y != 0 ||
-                    leftStickThumbstickState.currentState.x != 0 ||
-                    leftStickThumbstickState.changedSinceLastSync) {
-                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        leftStickThumbstickState.currentState.x,
-                                        leftStickThumbstickState.currentState.y, 1);
-                }
-            }
-        }
+        UpdateAndSendControllerInput(jni);
 
         ////////////////////////////////
         // XrWaitFrame()
@@ -774,6 +661,124 @@ private:
             XR_TYPE_FRAME_END_INFO,           nullptr,    frameState.predictedDisplayTime,
             XR_ENVIRONMENT_BLEND_MODE_OPAQUE, layerCount, layerHeaders.data()};
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
+    }
+
+    void UpdateAndSendControllerInput(JNIEnv* jni) {
+        assert(gOpenXr != nullptr);
+        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
+
+        //////////////////////////////////////////////////
+        // Forward VR input to Android gamepad emulation
+        //////////////////////////////////////////////////
+
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 96 /* BUTTON_A */,
+                                   mInputStateFrame.mAButtonState, "a");
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 97 /* BUTTON_B */,
+                                   mInputStateFrame.mBButtonState, "b");
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 99 /* BUTTON_X */,
+                                   mInputStateFrame.mXButtonState, "x");
+        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
+                                   100 /* BUTTON_Y */, mInputStateFrame.mYButtonState, "y");
+        ForwardButtonStateIfNeeded(
+            jni, mActivityObject, mForwardVRInputMethodID, 102 /* BUTTON_L1 */,
+            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER], "l1");
+        ForwardButtonStateIfNeeded(
+            jni, mActivityObject, mForwardVRInputMethodID, 103 /* BUTTON_R1 */,
+            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER], "r1");
+
+        {
+            // Right is circlepad, left is leftstick/circlepad, dpad is whatever
+            // has thumbstick pressed.
+            const auto leftStickHand = InputStateFrame::LEFT_CONTROLLER;
+            const auto cStickHand    = InputStateFrame::RIGHT_CONTROLLER;
+
+            const auto& leftThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
+            const auto& rightThumbrestTouchState =
+                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
+            const int dpadHand =
+                leftThumbrestTouchState.currentState    ? InputStateFrame::RIGHT_CONTROLLER
+                : rightThumbrestTouchState.currentState ? InputStateFrame::LEFT_CONTROLLER
+                                                        : InputStateFrame::NUM_CONTROLLERS;
+
+            {
+                static constexpr float kThumbStickDirectionThreshold = 0.5f;
+                // Doing it this way helps ensure we don't leave the dpad
+                // pressed if the thumbstick is released while still
+                // pointing in the same direction.
+                // I hope this is right, I didn't test it very much.
+                static bool wasDpadLeft  = false;
+                static bool wasDpadRight = false;
+                static bool wasDpadUp    = false;
+                static bool wasDpadDown  = false;
+
+                const bool  hasDpad = dpadHand != InputStateFrame::NUM_CONTROLLERS;
+                const auto& dpadThumbstickState =
+                    mInputStateFrame.mThumbStickState[hasDpad ? dpadHand : leftStickHand];
+
+                if (hasDpad && dpadThumbstickState.currentState.y > kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
+                                        1);
+                    wasDpadUp = true;
+                } else if (wasDpadUp) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
+                                        0);
+                    wasDpadUp = false;
+                }
+                if (hasDpad &&
+                    dpadThumbstickState.currentState.y < -kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        20 /* DPAD_DOWN */, 1);
+                    wasDpadDown = true;
+                } else if (wasDpadDown) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        20 /* DPAD_DOWN */, 0);
+                    wasDpadDown = false;
+                }
+                if (hasDpad &&
+                    dpadThumbstickState.currentState.x < -kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        21 /* DPAD_LEFT */, 1);
+                    wasDpadLeft = true;
+                } else if (wasDpadLeft) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        21 /* DPAD_LEFT */, 0);
+                    wasDpadLeft = false;
+                }
+
+                if (hasDpad && dpadThumbstickState.currentState.x > kThumbStickDirectionThreshold) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        22 /* DPAD_RIGHT */, 1);
+                    wasDpadRight = true;
+                } else if (wasDpadRight) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID,
+                                        22 /* DPAD_RIGHT */, 0);
+                    wasDpadRight = false;
+                }
+            }
+
+            if (dpadHand != cStickHand) {
+                const auto cStickThumbstickState = mInputStateFrame.mThumbStickState[cStickHand];
+                if (cStickThumbstickState.currentState.y != 0 ||
+                    cStickThumbstickState.currentState.x != 0 ||
+                    cStickThumbstickState.changedSinceLastSync) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
+                                        cStickThumbstickState.currentState.x,
+                                        cStickThumbstickState.currentState.y, 0);
+                }
+            }
+            if (dpadHand != leftStickHand) {
+                const auto leftStickThumbstickState =
+                    mInputStateFrame.mThumbStickState[leftStickHand];
+                if (leftStickThumbstickState.currentState.y != 0 ||
+                    leftStickThumbstickState.currentState.x != 0 ||
+                    leftStickThumbstickState.changedSinceLastSync) {
+                    jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
+                                        leftStickThumbstickState.currentState.x,
+                                        leftStickThumbstickState.currentState.y, 1);
+                }
+            }
+        }
     }
 
     void HandleSessionStateChanges(const XrSessionState state) {

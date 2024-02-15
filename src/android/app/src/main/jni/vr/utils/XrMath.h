@@ -84,6 +84,112 @@ public:
     }
 };
 
+class Matrixf
+{
+public:
+    static void Identity(XrVector4f mat[4]) {
+        mat[0] = {1.f, 0.f, 0.f, 0.f};
+        mat[1] = {0.f, 1.f, 0.f, 0.f};
+        mat[2] = {0.f, 0.f, 1.f, 0.f};
+        mat[3] = {0.f, 0.f, 0.f, 1.f};
+    }
+
+    static XrVector4f XrVector4f_Multiply(const XrVector4f mat[4], const XrVector4f &v)
+    {
+        XrVector4f out;
+        out.x = mat[0].x * v.x + mat[0].y * v.y + mat[0].z * v.z + mat[0].w * v.w;
+        out.y = mat[1].x * v.x + mat[1].y * v.y + mat[1].z * v.z + mat[1].w * v.w;
+        out.z = mat[2].x * v.x + mat[2].y * v.y + mat[2].z * v.z + mat[2].w * v.w;
+        out.w = mat[3].x * v.x + mat[3].y * v.y + mat[3].z * v.z + mat[3].w * v.w;
+        return out;
+    }
+
+    static XrVector3f XrVector3f_Multiply(const XrVector3f mat[3], const XrVector3f &v)
+    {
+        XrVector3f out;
+        out.x = mat[0].x * v.x + mat[0].y * v.y + mat[0].z * v.z;
+        out.y = mat[1].x * v.x + mat[1].y * v.y + mat[1].z * v.z;
+        out.z = mat[2].x * v.x + mat[2].y * v.y + mat[2].z * v.z;
+        return out;
+    }
+
+    // Returns a 3x3 minor of a 4x4 matrix.
+    static float ToMinor(const float *matrix, int r0, int r1, int r2, int c0, int c1, int c2) {
+        return matrix[4 * r0 + c0] *
+               (matrix[4 * r1 + c1] * matrix[4 * r2 + c2] - matrix[4 * r2 + c1] * matrix[4 * r1 + c2]) -
+               matrix[4 * r0 + c1] *
+               (matrix[4 * r1 + c0] * matrix[4 * r2 + c2] - matrix[4 * r2 + c0] * matrix[4 * r1 + c2]) +
+               matrix[4 * r0 + c2] *
+               (matrix[4 * r1 + c0] * matrix[4 * r2 + c1] - matrix[4 * r2 + c0] * matrix[4 * r1 + c1]);
+    }
+
+    static void ToInverse(const XrVector4f in[4], XrVector4f out[4]) {
+        float *matrix = (float*)in;
+        float *inv_mat = (float*)out;
+        const float rcpDet =
+                1.0f / (matrix[0] * ToMinor(matrix, 1, 2, 3, 1, 2, 3) -
+                        matrix[1] * ToMinor(matrix, 1, 2, 3, 0, 2, 3) +
+                        matrix[2] * ToMinor(matrix, 1, 2, 3, 0, 1, 3) -
+                        matrix[3] * ToMinor(matrix, 1, 2, 3, 0, 1, 2));
+
+        inv_mat[0] = ToMinor(matrix, 1, 2, 3, 1, 2, 3) * rcpDet;
+        inv_mat[1] = -ToMinor(matrix, 0, 2, 3, 1, 2, 3) * rcpDet;
+        inv_mat[2] = ToMinor(matrix, 0, 1, 3, 1, 2, 3) * rcpDet;
+        inv_mat[3] = -ToMinor(matrix, 0, 1, 2, 1, 2, 3) * rcpDet;
+        inv_mat[4] = -ToMinor(matrix, 1, 2, 3, 0, 2, 3) * rcpDet;
+        inv_mat[5] = ToMinor(matrix, 0, 2, 3, 0, 2, 3) * rcpDet;
+        inv_mat[6] = -ToMinor(matrix, 0, 1, 3, 0, 2, 3) * rcpDet;
+        inv_mat[7] = ToMinor(matrix, 0, 1, 2, 0, 2, 3) * rcpDet;
+        inv_mat[8] = ToMinor(matrix, 1, 2, 3, 0, 1, 3) * rcpDet;
+        inv_mat[9] = -ToMinor(matrix, 0, 2, 3, 0, 1, 3) * rcpDet;
+        inv_mat[10] = ToMinor(matrix, 0, 1, 3, 0, 1, 3) * rcpDet;
+        inv_mat[11] = -ToMinor(matrix, 0, 1, 2, 0, 1, 3) * rcpDet;
+        inv_mat[12] = -ToMinor(matrix, 1, 2, 3, 0, 1, 2) * rcpDet;
+        inv_mat[13] = ToMinor(matrix, 0, 2, 3, 0, 1, 2) * rcpDet;
+        inv_mat[14] = -ToMinor(matrix, 0, 1, 3, 0, 1, 2) * rcpDet;
+        inv_mat[15] = ToMinor(matrix, 0, 1, 2, 0, 1, 2) * rcpDet;
+    }
+
+    static void Projection(XrVector4f result[4], const float fov_x, const float fov_y,
+                                 const float nearZ, const float farZ) {
+        float *projectionMatrix = (float*)result;
+
+        float	xmin, xmax, ymin, ymax;
+        float	width, height, depth;
+
+
+        ymax = nearZ * tan( fov_y );
+        ymin = -ymax;
+
+        xmax = nearZ * tan( fov_x );
+        xmin = -xmax;
+
+        width = xmax - xmin;
+        height = ymax - ymin;
+        depth = farZ - nearZ;
+
+        projectionMatrix[0] = 2 * nearZ / width;
+        projectionMatrix[4] = 0;
+        projectionMatrix[8] = ( xmax + xmin ) / width;
+        projectionMatrix[12] = 0;
+
+        projectionMatrix[1] = 0;
+        projectionMatrix[5] = 2 * nearZ / height;
+        projectionMatrix[9] = ( ymax + ymin ) / height;
+        projectionMatrix[13] = 0;
+
+        projectionMatrix[2] = 0;
+        projectionMatrix[6] = 0;
+        projectionMatrix[10] = -( farZ + nearZ ) / depth;
+        projectionMatrix[14] = -2 * farZ * nearZ / depth;
+
+        projectionMatrix[3] = 0;
+        projectionMatrix[7] = 0;
+        projectionMatrix[11] = -1;
+        projectionMatrix[15] = 0;
+    }
+};
+
 class Quatf {
 public:
     static XrQuaternionf Identity() { return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f}; }
@@ -180,6 +286,65 @@ public:
             return XrQuaternionf{(forward.x + right.z) / s, (forward.y + up.z) / s, 0.25f * s,
                                  (up.z - forward.y) / s};
         }
+    }
+
+    static void ToRotationMatrix(const XrQuaternionf& q, float rotation[16]) {
+
+        float x2  = q.x + q.x;
+        float y2  = q.y + q.y;
+        float z2  = q.z + q.z;
+        float xx2 = q.x * x2;
+        float xy2 = q.x * y2;
+        float xz2 = q.x * z2;
+        float yy2 = q.y * y2;
+        float yz2 = q.y * z2;
+        float zz2 = q.z * z2;
+        float sx2 = q.w * x2;
+        float sy2 = q.w * y2;
+        float sz2 = q.w * z2;
+
+        float r[16] = {1 - (yy2 + zz2),  xy2 + sz2,        xz2 - sy2,        0.f, // column 0
+                       xy2 - sz2,        1 - (xx2 + zz2),  yz2 + sx2,        0.f, // column 1
+                       xz2 + sy2,        yz2 - sx2,        1 - (xx2 + yy2),  0.f, // column 2
+                       0.f,                0.f,                0.f,                1};// column 3
+
+        std::memcpy(rotation, r, sizeof(float ) * 16);
+    }
+
+    static void ToVectors(const XrQuaternionf& q, XrVector3f& forward,
+                          XrVector3f& right, XrVector3f& up) {
+        XrVector3f mat[3];
+        const float ww = q.w * q.w;
+        const float xx = q.x * q.x;
+        const float yy = q.y * q.y;
+        const float zz = q.z * q.z;
+
+        mat[0] = {
+                ww + xx - yy - zz,
+                2 * (q.x * q.y - q.w * q.z),
+                2 * (q.x * q.z + q.w * q.y)};
+
+        mat[1] = {
+                2 * (q.x * q.y + q.w * q.z),
+                ww - xx + yy - zz,
+                2 * (q.y * q.z - q.w * q.x)};
+
+        mat[2] = {
+                2 * (q.x * q.z - q.w * q.y),
+                2 * (q.y * q.z + q.w * q.x),
+                ww - xx - yy + zz};
+
+        XrVector3f glFlip[3] = {{0, 0, -1},
+                                 {1, 0, 0},
+                                 {0, 1, 0}};
+
+        XrVector3f f = Matrixf::XrVector3f_Multiply(mat, glFlip[0]);
+        XrVector3f r = Matrixf::XrVector3f_Multiply(mat, glFlip[1]);
+        XrVector3f u = Matrixf::XrVector3f_Multiply(mat, glFlip[2]);
+
+        forward = {-f.z, -f.x, f.y};
+        right = {-r.z, -r.x, r.y};
+        up = {-u.z, -u.x, u.y};
     }
 };
 

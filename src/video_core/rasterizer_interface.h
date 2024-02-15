@@ -82,5 +82,8 @@ public:
                                    [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
 
     virtual void SyncEntireState() {}
+
+    /// Set VR position data on the rasterizer
+    virtual void SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16]) {}
 };
 } // namespace VideoCore

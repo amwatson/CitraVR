@@ -285,21 +285,26 @@ void Config::ReadValues() {
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(sdl2_config->GetInteger(
-           "VR", "vr_cpu_level", 3));
-    Settings::values.vr_use_immersive_mode = sdl2_config->GetBoolean(
-        "VR", "vr_immersive_mode", false);
+            "VR", "vr_cpu_level", 3));
+    VRSettings::values.vr_immersive_mode = sdl2_config->GetInteger(
+            "VR", "vr_immersive_mode", 0);
+    Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;
+    VRSettings::values.vr_si_mode_register_offset = sdl2_config->GetInteger(
+            "VR", "vr_si_mode_register_offset", 0);
+    Settings::values.vr_si_mode_register_offset = VRSettings::values.vr_si_mode_register_offset;
+    VRSettings::values.vr_immersive_positional_factor = sdl2_config->GetInteger(
+            "VR", "vr_immersive_positional_factor", 0);
+    Settings::values.vr_immersive_positional_factor = VRSettings::values.vr_immersive_positional_factor;
+    VRSettings::values.vr_immersive_positional_game_scaler = sdl2_config->GetInteger(
+            "VR", "vr_immersive_positional_game_scaler", 0);
+    Settings::values.vr_immersive_positional_game_scaler = VRSettings::values.vr_immersive_positional_game_scaler;
 
-    if (Settings::values.vr_use_immersive_mode) {
+    if (Settings::values.vr_immersive_mode.GetValue() > 0) {
       LOG_INFO(Config, "VR immersive mode enabled");
 
       // no point rendering passthrough in immersive mode
       VRSettings::values.vr_environment =
         static_cast<uint32_t>(VRSettings::VREnvironmentType::VOID);
-      // We originally had two immersive modes, but I cut them down to fit in
-      // the shader map's bitfield.
-      VRSettings::values.vr_immersive_mode = 2;
-      // When immersive mode is enabled, only OpenGL is supported.
-      Settings::values.graphics_api = Settings::GraphicsAPI::OpenGL;
     }
 
     // Miscellaneous

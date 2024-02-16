@@ -287,6 +287,11 @@ public:
 
 private:
     void Frame(JNIEnv* jni) {
+
+        ////////////////////////////////
+        // Handle events/state-changes.
+        ////////////////////////////////
+
         PollEvents();
         HandleMessageQueueEvents();
         if (mIsStopRequested) { return; }
@@ -295,11 +300,15 @@ private:
             mFrameIndex = 0;
             return;
         }
+
+        ////////////////////////////////
+        // Increment the frame index.
+        ////////////////////////////////
+
         // Frame index starts at 1. I don't know why, we've always done this.
         // Doesn't actually matter, except to make the indices
         // consistent in traces
         mFrameIndex++;
-
         // Log time to first frame
         if (mFrameIndex == 1) {
             std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
@@ -308,7 +317,12 @@ private:
                       .count());
         }
 
-        UpdateAndSendControllerInput(jni);
+        ////////////////////////////////////////
+        // Update non-tracking-dependent-state.
+        ////////////////////////////////////////
+
+        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
+        ForwardControllerButtonsAndThumbSticksIfNeeded(jni, mInputStateFrame);
 
         ////////////////////////////////
         // XrWaitFrame()
@@ -495,6 +509,11 @@ private:
 
         if (mIsKeyboardActive) { mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
 
+        //////////////////////////////////////////////////
+        //  Handle the cursor and any
+        //  hand-tracked/layer-dependent input
+        //  interactions.
+        //////////////////////////////////////////////////
         {
             {
                 bool                    shouldRenderCursor = false;
@@ -672,28 +691,25 @@ private:
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
     }
 
-    void UpdateAndSendControllerInput(JNIEnv* jni) {
+    void ForwardControllerButtonsAndThumbSticksIfNeeded(JNIEnv* jni, const InputStateFrame& inputState) const {
         assert(gOpenXr != nullptr);
-        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
 
-        //////////////////////////////////////////////////
         // Forward VR input to Android gamepad emulation
-        //////////////////////////////////////////////////
 
         ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 96 /* BUTTON_A */,
-                                   mInputStateFrame.mAButtonState, "a");
+                                   inputState.mAButtonState, "a");
         ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 97 /* BUTTON_B */,
-                                   mInputStateFrame.mBButtonState, "b");
+                                   inputState.mBButtonState, "b");
         ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID, 99 /* BUTTON_X */,
-                                   mInputStateFrame.mXButtonState, "x");
+                                   inputState.mXButtonState, "x");
         ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
-                                   100 /* BUTTON_Y */, mInputStateFrame.mYButtonState, "y");
+                                   100 /* BUTTON_Y */, inputState.mYButtonState, "y");
         ForwardButtonStateIfNeeded(
             jni, mActivityObject, mForwardVRInputMethodID, 102 /* BUTTON_L1 */,
-            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER], "l1");
+            inputState.mSqueezeTriggerState[InputStateFrame::LEFT_CONTROLLER], "l1");
         ForwardButtonStateIfNeeded(
             jni, mActivityObject, mForwardVRInputMethodID, 103 /* BUTTON_R1 */,
-            mInputStateFrame.mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER], "r1");
+            inputState.mSqueezeTriggerState[InputStateFrame::RIGHT_CONTROLLER], "r1");
 
         {
             // Right is circlepad, left is leftstick/circlepad, dpad is whatever
@@ -702,9 +718,9 @@ private:
             const auto cStickHand    = InputStateFrame::RIGHT_CONTROLLER;
 
             const auto& leftThumbrestTouchState =
-                mInputStateFrame.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
+                inputState.mThumbrestTouchState[InputStateFrame::LEFT_CONTROLLER];
             const auto& rightThumbrestTouchState =
-                mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
+                inputState.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER];
             const int dpadHand =
                 leftThumbrestTouchState.currentState    ? InputStateFrame::RIGHT_CONTROLLER
                 : rightThumbrestTouchState.currentState ? InputStateFrame::LEFT_CONTROLLER
@@ -723,7 +739,7 @@ private:
 
                 const bool  hasDpad = dpadHand != InputStateFrame::NUM_CONTROLLERS;
                 const auto& dpadThumbstickState =
-                    mInputStateFrame.mThumbStickState[hasDpad ? dpadHand : leftStickHand];
+                    inputState.mThumbStickState[hasDpad ? dpadHand : leftStickHand];
 
                 if (hasDpad && dpadThumbstickState.currentState.y > kThumbStickDirectionThreshold) {
                     jni->CallVoidMethod(mActivityObject, mForwardVRInputMethodID, 19 /* DPAD_UP */,
@@ -767,7 +783,7 @@ private:
             }
 
             if (dpadHand != cStickHand) {
-                const auto cStickThumbstickState = mInputStateFrame.mThumbStickState[cStickHand];
+                const auto cStickThumbstickState = inputState.mThumbStickState[cStickHand];
                 if (cStickThumbstickState.currentState.y != 0 ||
                     cStickThumbstickState.currentState.x != 0 ||
                     cStickThumbstickState.changedSinceLastSync) {
@@ -778,7 +794,7 @@ private:
             }
             if (dpadHand != leftStickHand) {
                 const auto leftStickThumbstickState =
-                    mInputStateFrame.mThumbStickState[leftStickHand];
+                    inputState.mThumbStickState[leftStickHand];
                 if (leftStickThumbstickState.currentState.y != 0 ||
                     leftStickThumbstickState.currentState.x != 0 ||
                     leftStickThumbstickState.changedSinceLastSync) {

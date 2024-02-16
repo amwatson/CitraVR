@@ -90,7 +90,7 @@ public:
     /** Called on resume. Sets the surface in the native rendering library.
      * Overrides the normal surface passed by Citra
      */
-    void SetSurface() const;
+    void SetSurface(const jobject activityObject) const;
 
     /** Called once-per-frame. Populates the layer list to show the
      *  top and bottom panels as two separate layers.
@@ -138,7 +138,7 @@ public:
     void SetTopPanelFromThumbstick(const float thumbstickY);
 
 private:
-    int  Init(const XrSession& session);
+    int  Init(const XrSession& session, const jobject activityObject);
     void Shutdown();
 
     /** Creates the swapchain.
@@ -181,7 +181,6 @@ private:
     //============================
     // JNI objects
     JNIEnv* mEnv                = nullptr;
-    jobject mActivityObject     = nullptr;
     jclass  mVrGameSurfaceClass = nullptr;
     jobject mSurface            = nullptr;
 };

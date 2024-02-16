@@ -229,7 +229,6 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
     , mResolutionFactor(resolutionFactor)
     , mImmersiveMode(VRSettings::values.vr_immersive_mode)
     , mEnv(env)
-    , mActivityObject(activityObject)
 
 {
     if (mImmersiveMode > 0) {
@@ -237,7 +236,7 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
         mTopPanelFromWorld.position.z   = mLowerPanelFromWorld.position.z;
         mLowerPanelFromWorld.position.y = -1.0f;
     }
-    const int32_t initializationStatus = Init(session);
+    const int32_t initializationStatus = Init(session, activityObject);
     if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'", initializationStatus);
     }
@@ -245,14 +244,14 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
 
 GameSurfaceLayer::~GameSurfaceLayer() { Shutdown(); }
 
-void GameSurfaceLayer::SetSurface() const {
+void GameSurfaceLayer::SetSurface(const jobject activityObject) const {
     assert(mVrGameSurfaceClass != nullptr);
 
     const jmethodID setSurfaceMethodID =
         mEnv->GetStaticMethodID(mVrGameSurfaceClass, "setSurface",
                                 "(Lorg/citra/citra_emu/vr/VrActivity;Landroid/view/Surface;)V");
     if (setSurfaceMethodID == nullptr) { FAIL("Couldn't find setSurface()"); }
-    mEnv->CallStaticVoidMethod(mVrGameSurfaceClass, setSurfaceMethodID, mActivityObject, mSurface);
+    mEnv->CallStaticVoidMethod(mVrGameSurfaceClass, setSurfaceMethodID, activityObject, mSurface);
 }
 
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
@@ -455,14 +454,13 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
 }
 
 // Next error code: -2
-int32_t GameSurfaceLayer::Init(const XrSession& session) {
+int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityObject) {
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
     mVrGameSurfaceClass =
-        JniUtils::GetGlobalClassReference(mEnv, mActivityObject, gameSurfaceClassName.c_str());
+        JniUtils::GetGlobalClassReference(mEnv, activityObject, gameSurfaceClassName.c_str());
     BAIL_ON_COND(mVrGameSurfaceClass == nullptr, "No java Game Surface Layer class", -1);
     CreateSwapchain();
-    SetSurface();
-
+    SetSurface(activityObject);
     return 0;
 }
 

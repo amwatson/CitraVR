@@ -876,7 +876,7 @@ private:
                     gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
-                    mGameSurfaceLayer->SetSurface();
+                    mGameSurfaceLayer->SetSurface(mActivityObject);
                 }
             }
         } else if (state == XR_SESSION_STATE_STOPPING) {

@@ -30,15 +30,25 @@ License     :   Licensed under GPLv3 or any later version.
         }                                                                                          \
     } while (0)
 
-XrInstance instance;
+XrInstance instance = XR_NULL_HANDLE;
 void       OXR_CheckErrors(XrResult result, const char* function, bool failOnError) {
           if (XR_FAILED(result)) {
-              char errorBuffer[XR_MAX_RESULT_STRING_SIZE];
-              xrResultToString(instance, result, errorBuffer);
-              if (failOnError) {
-                  FAIL("OpenXR error: %s: %s\n", function, errorBuffer);
+              if (instance == XR_NULL_HANDLE) {
+                  if (failOnError) {
+                      FAIL("OpenXR error: %s: \"%s\" (error code 0x%x)", function, "Instance is null",
+                           result);
+            } else {
+                      ALOGV("OpenXR error: {}: \"{}\" (error code 0x%x)", function, "Instance is null",
+                            result);
+            }
         } else {
-                  ALOGV("OpenXR error: {}: {}\n", function, errorBuffer);
+                  char errorBuffer[XR_MAX_RESULT_STRING_SIZE];
+                  xrResultToString(instance, result, errorBuffer);
+                  if (failOnError) {
+                      FAIL("OpenXR error: %s: \"%s\" (error code 0x%x)", function, errorBuffer, result);
+            } else {
+                      ALOGV("OpenXR error: {}: \"{}\" (error code 0x%x)", function, errorBuffer, result);
+            }
         }
     }
 }
@@ -51,9 +61,6 @@ void       OXR_CheckErrors(XrResult result, const char* function, bool failOnErr
    ================================================================================
    */
 namespace {
-#define DECL_PFN(pfn) PFN_##pfn pfn = nullptr
-#define INIT_PFN(pfn) OXR(xrGetInstanceProcAddr(instance, #pfn, (PFN_xrVoidFunction*)(&pfn)))
-
 [[maybe_unused]] void XrEnumerateLayerProperties() {
     XrResult                          result;
     PFN_xrEnumerateApiLayerProperties xrEnumerateApiLayerProperties;

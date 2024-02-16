@@ -150,42 +150,17 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
 
 class VRApp {
 public:
-    VRApp(JavaVM* jvm, jobject activityObjectGlobalRef)
-        : mVm(jvm)
-        , mActivityObject(activityObjectGlobalRef)
-        , mIsStopRequested(false) {
-        assert(mVm != nullptr);
-        mThread = std::thread([this]() { MainLoop(); });
-    }
+    VRApp(jobject activityObjectGlobalRef)
+        : mActivityObject(activityObjectGlobalRef) {}
 
-    ~VRApp() {
-        assert(mVm != nullptr);
-        // Note: this is in most cases already going to be true by the time the
-        // destructor is called, because it is set to true in onStop()
-        mIsStopRequested = true;
-        ALOGI("Waiting for VRApp thread to join");
-        if (mThread.joinable()) { mThread.join(); }
-        ALOGI("VRApp thread joined");
-        JNIEnv* jni;
-        if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
-            // on most of the android systems, calling exit() isn't like the end
-            // of the world. The reapers get to it within a few seconds
-            ALOGD("{}() ERROR: could not attach to JVM", __FUNCTION__);
-            exit(0);
-        }
-        jni->DeleteGlobalRef(mActivityObject);
-    }
+    ~VRApp() { assert(mIsStopRequested); }
 
-    void MainLoop() {
+    void MainLoop(JNIEnv* jni) {
 
         //////////////////////////////////////////////////
         // Init
         //////////////////////////////////////////////////
 
-        JNIEnv* jni;
-        if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
-            FAIL("%s(): Could not attach to JVM", __FUNCTION__);
-        }
         Init(jni);
 
         //////////////////////////////////////////////////
@@ -195,25 +170,15 @@ public:
         while (!mIsStopRequested) { Frame(jni); }
 
         //////////////////////////////////////////////////
-        // Shutdown
+        // Exit
         //////////////////////////////////////////////////
 
         ALOGI("::MainLoop() exiting");
-
-        mVm->DetachCurrentThread();
     }
 
 private:
     void Init(JNIEnv* jni) {
-        // Gotta set this after the JNIEnv is attached, or else it'll be
-        // overwritten
-        prctl(PR_SET_NAME, (long)"CS::Main", 0, 0, 0);
-        if (gOpenXr == nullptr) {
-            gOpenXr           = std::make_unique<OpenXr>();
-            const int32_t ret = gOpenXr->Init(mVm, mActivityObject);
-            if (ret < 0) { FAIL("OpenXR::Init() failed: error code %d", ret); }
-        }
-        vr::gSession = gOpenXr->mSession;
+        assert(gOpenXr != nullptr);
         mInputStateStatic =
             std::make_unique<InputStateStatic>(OpenXr::GetInstance(), gOpenXr->mSession);
 
@@ -886,7 +851,8 @@ private:
         }
     }
 
-    void HandleSessionStateChangedEvent(JNIEnv *jni, const XrEventDataSessionStateChanged& newState) {
+    void HandleSessionStateChangedEvent(JNIEnv*                               jni,
+                                        const XrEventDataSessionStateChanged& newState) {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
@@ -1038,6 +1004,11 @@ private:
                     }
                     break;
                 }
+                case Message::Type::EXIT_NEEDED: {
+                    ALOGD("Received EXIT_NEEDED message");
+                    mIsStopRequested = true;
+                    break;
+                }
 
                 default:
                     ALOGE("Unknown message type: %d", message.mType);
@@ -1048,15 +1019,14 @@ private:
 
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
-    JavaVM*     mVm;
     jobject     mActivityObject;
 
-    std::atomic<bool> mIsStopRequested        = {false};
-    bool              mIsXrSessionActive      = false;
-    bool              mHasFocus               = false;
-    bool              mIsKeyboardActive       = false;
-    bool              mShouldShowErrorMessage = false;
-    bool              mIsEmulationPaused      = false;
+    bool mIsStopRequested        = false;
+    bool mIsXrSessionActive      = false;
+    bool mHasFocus               = false;
+    bool mIsKeyboardActive       = false;
+    bool mShouldShowErrorMessage = false;
+    bool mIsEmulationPaused      = false;
 
     std::unique_ptr<CursorLayer>      mCursorLayer;
     std::unique_ptr<UILayer>          mErrorMessageLayer;
@@ -1075,15 +1045,78 @@ private:
     jmethodID mOpenSettingsMethodID      = nullptr;
 };
 
+class VRAppThread {
+public:
+    VRAppThread(JavaVM* jvm, JNIEnv* jni, jobject activityObject)
+        : mVm(jvm)
+        , mActivityObjectGlobalRef(jni->NewGlobalRef(activityObject)) {
+        assert(jvm != nullptr);
+        assert(activityObject != nullptr);
+        mThread = std::thread([this]() {ThreadFn();});
+    }
+
+    ~VRAppThread() {
+        gMessageQueue.Post(Message(Message::Type::EXIT_NEEDED, 0));
+        // Note: this is in most cases already going to be true by the time the
+        // destructor is called, because it is set to true in onStop()
+        ALOGI("Waiting for VRAppThread to join");
+        if (mThread.joinable()) { mThread.join(); }
+        ALOGI("VRAppThread joined");
+    }
+
+private:
+    void ThreadFn() {
+     assert(mVm != nullptr);
+      ALOGI("VRAppThread: starting");
+      JNIEnv* jni = nullptr;
+      if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
+        FAIL("%s(): Could not attach to mVm", __FUNCTION__);
+      }
+      // Gotta set this after the JNIEnv is attached, or else it'll be
+      // overwritten
+      prctl(PR_SET_NAME, (long)"CVR::Main", 0, 0, 0);
+
+      ThreadFnJNI(jni);
+
+      mVm->DetachCurrentThread();
+      ALOGI("VRAppThread: exited");
+    }
+
+    // All operations assume that the JNIEnv is attached
+    void ThreadFnJNI(JNIEnv* jni) {
+        assert(jni != nullptr);
+        assert(mActivityObjectGlobalRef != nullptr);
+        if (gOpenXr == nullptr) {
+            gOpenXr           = std::make_unique<OpenXr>();
+            const int32_t ret = gOpenXr->Init(mVm, mActivityObjectGlobalRef);
+            if (ret < 0) { FAIL("OpenXR::Init() failed: error code %d", ret); }
+        }
+        vr::gSession = gOpenXr->mSession;
+
+        { std::make_unique<VRApp>(mActivityObjectGlobalRef)->MainLoop(jni); }
+
+        ALOGI("::MainLoop() exited");
+
+        gOpenXr->Shutdown();
+
+        jni->DeleteGlobalRef(mActivityObjectGlobalRef);
+        mActivityObjectGlobalRef = nullptr;
+    }
+
+    JavaVM*     mVm;
+    jobject     mActivityObjectGlobalRef;
+    std::thread mThread;
+};
+
 struct VRAppHandle {
-    VRAppHandle(VRApp* _p)
+    VRAppHandle(VRAppThread* _p)
         : p(_p) {}
     VRAppHandle(jlong _l)
         : l(_l) {}
 
     union {
-        VRApp* p = nullptr;
-        jlong  l;
+        VRAppThread* p = nullptr;
+        jlong        l;
     };
 };
 
@@ -1095,7 +1128,7 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
 
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
-    auto ret = VRAppHandle(new VRApp(jvm, env->NewGlobalRef(thiz))).l;
+    auto ret = VRAppHandle(new VRAppThread(jvm, env, thiz)).l;
     ALOGI("nativeOnCreate {}", ret);
     return ret;
 }
@@ -1105,11 +1138,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thi
 
     ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) { delete VRAppHandle(handle).p; }
-
-    // Even though OpenXR is created on a different thread, this
-    // should be ok because thread exit is a fence, and the delete waits to
-    // join.
-    if (gOpenXr != nullptr) { gOpenXr->Shutdown(); }
 }
 
 extern "C" JNIEXPORT jint JNICALL

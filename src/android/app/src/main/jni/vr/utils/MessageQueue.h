@@ -27,7 +27,8 @@ struct Message {
     // Note: Keep this in-sync with VrMessageQueue.java.
     enum Type {
         SHOW_KEYBOARD      = 0, // payload 0 = hide keyboard, 1 = show keyboard
-        SHOW_ERROR_MESSAGE = 1  // payload 0 = show error message, 1 = hide error message
+        SHOW_ERROR_MESSAGE = 1, // payload 0 = show error message, 1 = hide error message
+        EXIT_NEEDED        = 2  // payload ignored
     };
 
     Message() {}

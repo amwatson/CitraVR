@@ -466,6 +466,7 @@ int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityO
 
 void GameSurfaceLayer::Shutdown() {
     xrDestroySwapchain(mSwapchain.mHandle);
+    mSwapchain.mHandle = XR_NULL_HANDLE;
     mEnv->DeleteGlobalRef(mVrGameSurfaceClass);
 }
 

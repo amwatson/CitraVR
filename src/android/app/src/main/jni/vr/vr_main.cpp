@@ -352,38 +352,7 @@ private:
         // Re-initialize the reference spaces on the first frame so
         // it is in-sync with user
         if (mFrameIndex == 1) {
-
-            // Create a reference space with the forward direction from the
-            // starting frame.
-            {
-                const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-                                                        nullptr, XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                        XrMath::Posef::Identity()};
-                OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
-                                           &gOpenXr->mForwardDirectionSpace));
-            }
-
-            {
-                const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-                                                        nullptr, XR_REFERENCE_SPACE_TYPE_VIEW,
-                                                        XrMath::Posef::Identity()};
-                OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
-            }
-
-            // Get the pose of the local space.
-            XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
-            OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
-                              frameState.predictedDisplayTime, &lsl));
-
-            // Set the forward direction of the new space.
-            const XrPosef forwardDirectionPose = lsl.pose;
-
-            // Create a reference space with the same position and rotation as
-            // local.
-            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                    XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                    forwardDirectionPose};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
+          CreateRuntimeInitatedReferenceSpaces(frameState.predictedDisplayTime);
         }
 
         gOpenXr->headLocation = {XR_TYPE_SPACE_LOCATION};
@@ -804,6 +773,42 @@ private:
                 }
             }
         }
+    }
+
+    // Called whenever a session is started/resumed. Creates the head space based on the
+    // current pose of the HMD.
+    void CreateRuntimeInitatedReferenceSpaces(const XrTime predictedDisplayTime) const {
+      // Create a reference space with the forward direction from the
+      // starting frame.
+      {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+          nullptr, XR_REFERENCE_SPACE_TYPE_LOCAL,
+          XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci,
+              &gOpenXr->mForwardDirectionSpace));
+      }
+
+      {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+          nullptr, XR_REFERENCE_SPACE_TYPE_VIEW,
+          XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
+      }
+
+      // Get the pose of the local space.
+      XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
+      OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
+            predictedDisplayTime, &lsl));
+
+      // Set the forward direction of the new space.
+      const XrPosef forwardDirectionPose = lsl.pose;
+
+      // Create a reference space with the same position and rotation as
+      // local.
+      const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+        XR_REFERENCE_SPACE_TYPE_LOCAL,
+        forwardDirectionPose};
+      OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
     }
 
     void HandleSessionStateChanges(const XrSessionState state) {

@@ -466,7 +466,7 @@ private:
 
             XrCompositionLayerPassthroughFB passthroughLayer = {};
             mPassthroughLayer->Frame(passthroughLayer);
-            layers[layerCount++].Passthrough = passthroughLayer;
+            layers[layerCount++].mPassthrough = passthroughLayer;
         }
 
         mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount,

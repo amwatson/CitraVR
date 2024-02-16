@@ -38,5 +38,5 @@ License     :   Licensed under GPLv3 or any later version.
 union XrCompositionLayer {
     XrCompositionLayerQuad          mQuad;
     XrCompositionLayerCylinderKHR   mCylinder;
-    XrCompositionLayerPassthroughFB Passthrough;
+    XrCompositionLayerPassthroughFB mPassthrough;
 };

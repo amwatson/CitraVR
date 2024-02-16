@@ -389,31 +389,13 @@ private:
                                         : immersiveScaleFactor[2];
 
         {
-            const XrVector3f leftVec = {
-                gOpenXr->headLocation.pose.position.x -
-                    mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
-                        .pose.position.x,
-                gOpenXr->headLocation.pose.position.y -
-                    mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
-                        .pose.position.y,
-                gOpenXr->headLocation.pose.position.z -
-                    mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
-                        .pose.position.z,
-            };
-            const float      lengthLeft = XrMath::Vector3f::Length(leftVec);
-            const XrVector3f rightVec   = {
-                  gOpenXr->headLocation.pose.position.x -
-                      mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
-                          .pose.position.x,
-                  gOpenXr->headLocation.pose.position.y -
-                      mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
-                          .pose.position.y,
-                  gOpenXr->headLocation.pose.position.z -
-                      mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
-                          .pose.position.z,
-            };
-            const float lengthRight = XrMath::Vector3f::Length(rightVec);
-            const float length      = std::min(lengthLeft, lengthRight);
+            const float lengthLeft = XrMath::Vector3f::Length(
+                gOpenXr->headLocation.pose.position -
+                mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER].pose.position);
+            const float lengthRight = XrMath::Vector3f::Length(
+                gOpenXr->headLocation.pose.position -
+                mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER].pose.position);
+            const float length = std::min(lengthLeft, lengthRight);
 
             // This block is for testing which uinform offset is needed
             // for a given game to implement new super-immersive profiles if needed

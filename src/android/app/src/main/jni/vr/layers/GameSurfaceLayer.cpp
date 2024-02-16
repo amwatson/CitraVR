@@ -237,7 +237,7 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
         mTopPanelFromWorld.position.z   = mLowerPanelFromWorld.position.z;
         mLowerPanelFromWorld.position.y = -1.0f;
     }
-    const int32_t initializationStatus = Init(activityObject, position, session);
+    const int32_t initializationStatus = Init(session);
     if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'", initializationStatus);
     }
@@ -455,12 +455,10 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
 }
 
 // Next error code: -2
-int32_t GameSurfaceLayer::Init(const jobject     activityObject,
-                               const XrVector3f& position,
-                               const XrSession&  session) {
+int32_t GameSurfaceLayer::Init(const XrSession& session) {
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
     mVrGameSurfaceClass =
-        JniUtils::GetGlobalClassReference(mEnv, activityObject, gameSurfaceClassName.c_str());
+        JniUtils::GetGlobalClassReference(mEnv, mActivityObject, gameSurfaceClassName.c_str());
     BAIL_ON_COND(mVrGameSurfaceClass == nullptr, "No java Game Surface Layer class", -1);
     CreateSwapchain();
     SetSurface();

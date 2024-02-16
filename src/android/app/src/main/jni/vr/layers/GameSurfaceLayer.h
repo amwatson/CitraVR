@@ -138,7 +138,7 @@ public:
     void SetTopPanelFromThumbstick(const float thumbstickY);
 
 private:
-    int  Init(const jobject activityObject, const XrVector3f& position, const XrSession& session);
+    int  Init(const XrSession& session);
     void Shutdown();
 
     /** Creates the swapchain.

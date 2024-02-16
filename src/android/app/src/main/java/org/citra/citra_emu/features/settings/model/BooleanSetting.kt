@@ -14,11 +14,10 @@ enum class BooleanSetting(
     PLUGIN_LOADER("plugin_loader", Settings.SECTION_SYSTEM, false),
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
-    VR_EXTRA_PERFORMANCE_MODE("vr_extra_performance_mode", Settings.SECTION_VR, false),
-    VR_IMMERSIVE_MODE("vr_immersive_mode", Settings.SECTION_VR, false),
     VR_ROTATE_ANTICLOCKWISE("vr_rotate_anticlockwise", Settings.SECTION_VR, false),
-    VR_RENDER_RIGHT_WITH_LEFT("vr_render_right_with_left", Settings.SECTION_VR, false);
-    
+    VR_RENDER_RIGHT_WITH_LEFT("vr_render_right_with_left", Settings.SECTION_VR, false),
+    VR_EXTRA_PERFORMANCE_MODE("vr_extra_performance_mode", Settings.SECTION_VR, false);
+
     override var boolean: Boolean = defaultValue
 
     override val valueAsString: String

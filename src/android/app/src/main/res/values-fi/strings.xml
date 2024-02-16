@@ -115,4 +115,11 @@
 Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nämä nykimiset seuraavilla käynnistyksillä.</string>
     <string name="vr_notice_description2">Jotkin pelit eivät vain toimi hyvin. Muista tarkistaa CitraVR-pelien yhteensopivuusluettelo nähdäksesi, mitkä pelit toimivat parhaiten.</string>
     <string name="vr_input_binding_subtitle">Koetko ongelmia? Paina Select + Start poistaaksesi Gamepad Gaze -tilan käytöstä ja yritä uudelleen.</string>
+    <string name="immersive_mode">Immersiivinen Tila</string>
+    <string name="vr_si_mode_register_offset_title">Rekisterin Siirtymä</string>
+    <string name="vr_si_mode_register_offset_description">Asettaa rekisterin siirtymän, jota käytetään näkymässä käytettäessä Super Immersive Mode Profiilia 2 - vaihtelee pelistä riippuen.</string>
+    <string name="vr_immersive_pos_factor_title">Sijainnillisen Liikkeen Kerroin</string>
+    <string name="vr_immersive_pos_factor_description">Säätää, kuinka paljon liike vasemmalle/oikealle/ylös/alas vaikuttaa pelikameraan (0 = pois käytöstä)</string>
+    <string name="vr_immersive_pos_game_scaler_title">Paikallisen Liikkeen Tekijän Kerroin</string>
+    <string name="vr_immersive_pos_game_scaler_description">Säätää kuinka paljon liikkuminen vasemmalta/oikealta/ylös/alas vaikuttaa pelikameraan, joidenkin pelien vaatiessa suurempia arvoja, joten tämä kertoo Liike Kertoimen sijaintiin vaikuttavalta tekijältä.</string>
 </resources>

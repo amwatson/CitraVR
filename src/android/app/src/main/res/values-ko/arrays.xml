@@ -11,4 +11,18 @@
         <item>4</item>
     </integer-array>
 
+
+    <string-array name="vrImmersiveModeNames">
+        <item>끄기</item>
+        <item>180도 몰입형 (3도프)</item>
+        <item>슈퍼 몰입형 (6DoF) - 프로필 1</item>
+        <item>슈퍼 몰입형 (6DoF) - 프로필 2</item>
+    </string-array>
+
+    <integer-array name="vrImmersiveModeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
 </resources>

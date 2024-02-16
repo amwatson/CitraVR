@@ -678,6 +678,13 @@
 在着色器加载完成后，它们会被存储到设备上，从而避免了后续启动时的卡顿。</string>
     <string name="vr_notice_description2">有些游戏很难运行良好。请务必查阅 CitraVR 游戏兼容性列表，了解哪些游戏性能最佳。</string>
     <string name="vr_input_binding_subtitle">遇到问题了吗？按下“选择”和“开始”键来禁用游戏手柄凝视模式，然后再试一次。</string>
+    <string name="immersive_mode">沉浸模式</string>
+    <string name="vr_si_mode_register_offset_title">寄存器偏移</string>
+    <string name="vr_si_mode_register_offset_description">设置使用超级沉浸模式配置文件2时用于视图的寄存器偏移量-根据游戏而变化。</string>
+    <string name="vr_immersive_pos_factor_title">位置移动因素</string>
+    <string name="vr_immersive_pos_factor_description">调整左/右/上/下运动对游戏摄像机的影响程度（0 = 禁用）</string>
+    <string name="vr_immersive_pos_game_scaler_title">位置运动因子倍增器</string>
+    <string name="vr_immersive_pos_game_scaler_description">调整左/右/上/下的运动对游戏摄像机的影响程度，某些游戏需要更大的值，因此这个设置会将位置运动因子乘以一个标量。</string>
     <string name="vr_rotate_anticlockwise">将屏幕逆时针旋转90度</string>
     <string name="vr_rotate_anticlockwise_description">部分游戏需要你旋转3ds游戏机才能正常游玩，遇到这种情况可以打开这个选项</string>
     <string name="vr_render_right_with_left">使用左眼图像渲染右眼部分</string>

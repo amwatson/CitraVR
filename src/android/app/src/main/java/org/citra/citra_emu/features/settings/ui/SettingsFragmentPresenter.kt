@@ -759,7 +759,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.factor3d,
                     R.string.factor3d_description,
                     0,
-                    100,
+                    400,
                     "%",
                     IntSetting.STEREOSCOPIC_3D_DEPTH.key,
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()
@@ -1111,13 +1111,53 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.NEW_3DS.defaultValue
                 )
             )
+
+            add(HeaderSetting(R.string.vr_immersive_mode_title))
+
             add(
-                SwitchSetting(
-                    BooleanSetting.VR_IMMERSIVE_MODE,
-                    R.string.vr_immersive_mode_title,
+                SingleChoiceSetting(
+                    IntSetting.VR_IMMERSIVE_MODE,
+                    R.string.immersive_mode,
                     R.string.vr_immersive_mode_description,
-                    BooleanSetting.VR_IMMERSIVE_MODE.key,
-                    BooleanSetting.VR_IMMERSIVE_MODE.defaultValue
+                    R.array.vrImmersiveModeNames,
+                    R.array.vrImmersiveModeValues,
+                    IntSetting.VR_IMMERSIVE_MODE.key,
+                    IntSetting.VR_IMMERSIVE_MODE.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR,
+                        R.string.vr_immersive_pos_factor_title,
+                        R.string.vr_immersive_pos_factor_description,
+                        0,
+                        40,
+                        "x",
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR.key,
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR.defaultValue.toFloat()
+                )
+            )
+            add(
+                SingleChoiceSetting(
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_GAME_SCALER,
+                        R.string.vr_immersive_pos_game_scaler_title,
+                        R.string.vr_immersive_pos_game_scaler_description,
+                        R.array.vrPosFactorGameScalerNames,
+                        R.array.vrPosFactorGameScalerValues,
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_GAME_SCALER.key,
+                        IntSetting.VR_IMMERSIVE_POSITIONAL_GAME_SCALER.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                        IntSetting.VR_SI_MODE_REGISTER_OFFSET,
+                        R.string.vr_si_mode_register_offset_title,
+                        R.string.vr_si_mode_register_offset_description,
+                        0,
+                        92,
+                        "register",
+                        IntSetting.VR_SI_MODE_REGISTER_OFFSET.key,
+                        IntSetting.VR_SI_MODE_REGISTER_OFFSET.defaultValue.toFloat()
                 )
             )
             add(

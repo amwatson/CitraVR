@@ -186,4 +186,11 @@
     <string name="vr_notice_description">게임이나 레벨의 첫 플레이 중에 잠시 멈춤이나 오디오 끊김이 발생할 수 있습니다.셰이더가 로드된 후에는 이러한 끊김이 이후에 발생하는 실행에서 방지되도록 기기에 저장됩니다.</string>
     <string name="vr_notice_description2">일부 게임들은 잘 실행되지 않을 수 있습니다. 어떤 게임들이 가장 좋은 성능을 보이는지 확인하기 위해 CitraVR 게임 호환성 목록을 꼭 확인하세요.</string>
     <string name="vr_input_binding_subtitle">문제가 있나요? 게임패드 주시 모드를 비활성화하기 위해 선택 + 시작을 누르세요, 그리고 다시 시도해보세요.</string>
+    <string name="immersive_mode">몰입 모드</string>
+    <string name="vr_si_mode_register_offset_title">레지스터 오프셋</string>
+    <string name="vr_si_mode_register_offset_description">게임마다 다양한 Super Immersive Mode Profile 2를 사용할 때 뷰에 사용되는 레지스터 오프셋을 설정합니다.</string>
+    <string name="vr_immersive_pos_factor_title">위치 이동 요인</string>
+    <string name="vr_immersive_pos_factor_description">게임 카메라에 좌/우/상/하로 움직임이 얼마나 영향을 미치는지 조절합니다 (0 = 비활성화)</string>
+    <string name="vr_immersive_pos_game_scaler_title">위치 이동 요소 배수</string>
+    <string name="vr_immersive_pos_game_scaler_description">게임 카메라에 좌/우/위/아래로 이동이 얼마나 영향을 미치는지 조정합니다. 일부 게임에서는 더 큰 값이 필요할 수 있으므로 이 설정은 위치 이동 계수에 곱해집니다.</string>
 </resources>

@@ -680,4 +680,11 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 Después de que los shaders se carguen, se almacenan en el dispositivo, lo que evita estas interrupciones en futuros lanzamientos.</string>
     <string name="vr_notice_description2">Algunos juegos simplemente no funcionarán bien. Asegúrate de revisar la Lista de Compatibilidad de Juegos CitraVR para ver cuáles son los juegos que mejor rendimiento tienen.</string>
     <string name="vr_input_binding_subtitle">¿Tienes problemas? Presiona Seleccionar + Iniciar para desactivar el Modo de mirada del Gamepad, y luego intenta de nuevo.</string>
+    <string name="immersive_mode">Modo inmersivo</string>
+    <string name="vr_si_mode_register_offset_title">Desplazamiento del Registro</string>
+    <string name="vr_si_mode_register_offset_description">Establece el desplazamiento del registro utilizado para la vista al utilizar el Perfil 2 del Modo Super Inmersivo, puede variar según el juego.</string>
+    <string name="vr_immersive_pos_factor_title">Factor de Movimiento Posicional</string>
+    <string name="vr_immersive_pos_factor_description">Ajusta cuánto afecta el movimiento hacia la izquierda/derecha/arriba/abajo a la cámara del juego (0 = desactivado)</string>
+    <string name="vr_immersive_pos_game_scaler_title">Multiplicador del Factor de Movimiento Posicional</string>
+    <string name="vr_immersive_pos_game_scaler_description">Ajusta cuánto afecta el movimiento izquierda/derecha/arriba/abajo a la cámara del juego, algunos juegos requieren valores más grandes, por lo que esto multiplica el Factor de Movimiento Posicional.</string>
 </resources>

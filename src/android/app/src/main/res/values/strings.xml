@@ -696,6 +696,13 @@
     <string name="vr_notice_description">During your first playthrough of a game or level, you might experience brief pauses or audio stutters. \n\nAfter the shaders are loaded, they are stored to the device, preventing these stutters on subsequent launches. </string>
     <string name="vr_notice_description2">Some games just won\'t run well. Be sure to check the CitraVR Game Compatibility List to see which games perform best.</string>
     <string name="vr_input_binding_subtitle">\nHaving trouble? Press Select + Start to disable Gamepad Gaze Mode, then try again</string>
+    <string name="immersive_mode">Immersive Mode</string>
+    <string name="vr_si_mode_register_offset_title">Register Offset</string>
+    <string name="vr_si_mode_register_offset_description">Sets the register offset used for the view when using Super Immersive Mode Profile 2 - varies by game</string>
+    <string name="vr_immersive_pos_factor_title">Positional Movement Factor</string>
+    <string name="vr_immersive_pos_factor_description">Adjusts how much movement left/right/up/down affects the game camera (0 = disabled)</string>
+    <string name="vr_immersive_pos_game_scaler_title">Positional Movement Factor Multiplier</string>
+    <string name="vr_immersive_pos_game_scaler_description">Adjusts how much movement left/right/up/down affects the game camera, some games required larger values, so this multiplies the Positional Movement Factor</string>
     <string name="vr_rotate_anticlockwise">Turn the screen 90 degrees anticlockwise</string>
     <string name="vr_rotate_anticlockwise_description">Some game requires you rotate your 3ds machine. This option simulates it. </string>
     <string name="vr_render_right_with_left">Render right eye with left eye image</string>

@@ -35,8 +35,6 @@ void PicaGSConfigState::Init(const Pica::RegsInternal& regs, bool use_clip_plane
             }
         }
     }
-
-    use_vr_immersive_mode = Settings::values.vr_use_immersive_mode.GetValue();
 }
 
 void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,

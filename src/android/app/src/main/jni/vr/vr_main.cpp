@@ -186,7 +186,6 @@ public:
         if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
             FAIL("%s(): Could not attach to JVM", __FUNCTION__);
         }
-        mEnv = jni;
         Init(jni);
 
         //////////////////////////////////////////////////
@@ -305,8 +304,8 @@ private:
         // Handle events/state-changes.
         ////////////////////////////////
 
-        PollEvents();
-        HandleMessageQueueEvents();
+        PollEvents(jni);
+        HandleMessageQueueEvents(jni);
         if (mIsStopRequested) { return; }
         if (!mIsXrSessionActive) {
             // TODO should block here
@@ -887,7 +886,7 @@ private:
         }
     }
 
-    void HandleSessionStateChangedEvent(const XrEventDataSessionStateChanged& newState) {
+    void HandleSessionStateChangedEvent(JNIEnv *jni, const XrEventDataSessionStateChanged& newState) {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
@@ -899,12 +898,12 @@ private:
         switch (newState.state) {
             case XR_SESSION_STATE_FOCUSED:
                 ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mHasFocus && !mShouldShowErrorMessage) { ResumeEmulation(); }
+                if (!mHasFocus && !mShouldShowErrorMessage) { ResumeEmulation(jni); }
                 mHasFocus = true;
                 break;
             case XR_SESSION_STATE_VISIBLE:
                 ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mHasFocus) { PauseEmulation(); }
+                if (mHasFocus) { PauseEmulation(jni); }
                 mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
@@ -919,17 +918,19 @@ private:
         }
     }
 
-    void PauseEmulation() {
-        mEnv->CallVoidMethod(mActivityObject, mPauseGameMethodID);
+    void PauseEmulation(JNIEnv* jni) {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
         mIsEmulationPaused = true;
     }
 
-    void ResumeEmulation() {
-        mEnv->CallVoidMethod(mActivityObject, mResumeGameMethodID);
+    void ResumeEmulation(JNIEnv* jni) {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
         mIsEmulationPaused = false;
     }
 
-    void PollEvents() {
+    void PollEvents(JNIEnv* jni) {
         XrEventDataBuffer eventDataBuffer = {};
 
         // Process all pending messages.
@@ -960,7 +961,7 @@ private:
                         ALOGV("{}(): Received "
                               "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
                               __func__);
-                        HandleSessionStateChangedEvent(*ssce);
+                        HandleSessionStateChangedEvent(jni, *ssce);
                     } else {
                         ALOGE("{}(): Received "
                               "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
@@ -993,7 +994,7 @@ private:
         }
     }
 
-    void HandleMessageQueueEvents() {
+    void HandleMessageQueueEvents(JNIEnv* jni) {
         // Arbitrary limit to prevent the render thread from blocking too long
         // on a single frame. This may happen if the app is paused in an edge
         // case. We should try to avoid these cases as it will result in a
@@ -1027,12 +1028,12 @@ private:
                     mShouldShowErrorMessage = shouldShowErrorMessage;
                     if (mShouldShowErrorMessage && !mIsEmulationPaused) {
                         ALOGD("Pausing emulation due to error message");
-                        PauseEmulation();
+                        PauseEmulation(jni);
                         mIsEmulationPaused = true;
                     }
                     if (!mShouldShowErrorMessage && mIsEmulationPaused && mHasFocus) {
                         ALOGD("Resuming emulation after error message");
-                        ResumeEmulation();
+                        ResumeEmulation(jni);
                         mIsEmulationPaused = false;
                     }
                     break;
@@ -1047,7 +1048,6 @@ private:
 
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
-    JNIEnv*     mEnv;
     JavaVM*     mVm;
     jobject     mActivityObject;
 

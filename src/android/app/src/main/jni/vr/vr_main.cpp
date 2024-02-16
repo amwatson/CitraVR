@@ -177,14 +177,35 @@ public:
     }
 
     void MainLoop() {
+
+        //////////////////////////////////////////////////
+        // Init
+        //////////////////////////////////////////////////
+
         JNIEnv* jni;
         if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
             FAIL("%s(): Could not attach to JVM", __FUNCTION__);
         }
         mEnv = jni;
+        Init(jni);
 
-        ALOGI("VR Extra Performance Mode: {}",
-              VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
+        //////////////////////////////////////////////////
+        // Frame loop
+        //////////////////////////////////////////////////
+
+        while (!mIsStopRequested) { Frame(jni); }
+
+        //////////////////////////////////////////////////
+        // Shutdown
+        //////////////////////////////////////////////////
+
+        ALOGI("::MainLoop() exiting");
+
+        mVm->DetachCurrentThread();
+    }
+
+private:
+    void Init(JNIEnv* jni) {
         // Gotta set this after the JNIEnv is attached, or else it'll be
         // overwritten
         prctl(PR_SET_NAME, (long)"CS::Main", 0, 0, 0);
@@ -214,6 +235,9 @@ public:
 
         // Create the game surface layer.
         {
+            ALOGI("VR Extra Performance Mode: {}",
+                  VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
+
             const uint32_t defaultResolutionFactor =
                 GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);
             const uint32_t resolutionFactorFromPreferences = VRSettings::values.resolution_factor;
@@ -273,19 +297,8 @@ public:
         mOpenSettingsMethodID =
             jni->GetMethodID(jni->GetObjectClass(mActivityObject), "openSettingsMenu", "()V");
         if (mOpenSettingsMethodID == nullptr) { FAIL("could not get openSettingsMenuMethodID"); }
-
-        //////////////////////////////////////////////////
-        // Frame loop
-        //////////////////////////////////////////////////
-
-        while (!mIsStopRequested) { Frame(jni); }
-
-        ALOGI("::MainLoop() exiting");
-
-        mVm->DetachCurrentThread();
     }
 
-private:
     void Frame(JNIEnv* jni) {
 
         ////////////////////////////////

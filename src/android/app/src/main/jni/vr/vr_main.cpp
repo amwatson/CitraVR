@@ -1052,7 +1052,7 @@ public:
         , mActivityObjectGlobalRef(jni->NewGlobalRef(activityObject)) {
         assert(jvm != nullptr);
         assert(activityObject != nullptr);
-        mThread = std::thread([this]() {ThreadFn();});
+        mThread = std::thread([this]() { ThreadFn(); });
     }
 
     ~VRAppThread() {
@@ -1066,20 +1066,20 @@ public:
 
 private:
     void ThreadFn() {
-     assert(mVm != nullptr);
-      ALOGI("VRAppThread: starting");
-      JNIEnv* jni = nullptr;
-      if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
-        FAIL("%s(): Could not attach to mVm", __FUNCTION__);
-      }
-      // Gotta set this after the JNIEnv is attached, or else it'll be
-      // overwritten
-      prctl(PR_SET_NAME, (long)"CVR::Main", 0, 0, 0);
+        assert(mVm != nullptr);
+        ALOGI("VRAppThread: starting");
+        JNIEnv* jni = nullptr;
+        if (mVm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
+            FAIL("%s(): Could not attach to mVm", __FUNCTION__);
+        }
+        // Gotta set this after the JNIEnv is attached, or else it'll be
+        // overwritten
+        prctl(PR_SET_NAME, (long)"CVR::Main", 0, 0, 0);
 
-      ThreadFnJNI(jni);
+        ThreadFnJNI(jni);
 
-      mVm->DetachCurrentThread();
-      ALOGI("VRAppThread: exited");
+        mVm->DetachCurrentThread();
+        ALOGI("VRAppThread: exited");
     }
 
     // All operations assume that the JNIEnv is attached

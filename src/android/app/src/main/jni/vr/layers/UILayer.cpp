@@ -249,8 +249,10 @@ void UILayer::Shutdown() {
     mSwapchain.mHeight = 0;
     mEnv->DeleteGlobalRef(mVrUILayerClass);
     mVrUILayerClass = nullptr;
-    mEnv->DeleteGlobalRef(mVrUILayerObject);
-    mVrUILayerClass = nullptr;
+    // These steps are not strictly necessary for app shutdown, as references are cleaned up when
+    // the JVM is destroyed, but memory-saving if this class is destroyed/re-initialized at runtime.
+    mEnv->DeleteLocalRef(mVrUILayerObject);
+    mVrUILayerObject = nullptr;
 }
 
 int UILayer::CreateSwapchain() {

@@ -39,6 +39,7 @@ add_library(citra-android SHARED
     vr/layers/PassthroughLayer.cpp
     vr/layers/UILayer.cpp
     vr/utils/JniUtils.cpp
+    vr/utils/JniClassNames.cpp
     vr/utils/MessageQueue.cpp
 )
 

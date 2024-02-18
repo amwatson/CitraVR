@@ -167,7 +167,8 @@ UILayer::UILayer(const std::string& className, const XrVector3f&& position,
     , mEnv(env) {
     const int32_t initializationStatus = Init(className, activityObject, position, session);
     if (initializationStatus < 0) {
-        FAIL("Could not initialize UILayer(%s) -- error '%d'", className.c_str(), initializationStatus);
+        FAIL("Could not initialize UILayer(%s) -- error '%d'", className.c_str(),
+             initializationStatus);
     }
 }
 

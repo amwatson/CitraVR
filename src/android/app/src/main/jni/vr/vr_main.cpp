@@ -21,6 +21,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "vr_settings.h"
 
 #include "utils/Common.h"
+#include "utils/JniClassNames.h"
 #include "utils/MessageQueue.h"
 #include "utils/SyspropUtils.h"
 #include "utils/XrMath.h"
@@ -1126,6 +1127,7 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
     // time to first frame.
     gOnCreateStartTime = std::chrono::steady_clock::now();
 
+    VR::JNI::InitJNI(env, thiz);
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     auto ret = VRAppHandle(new VRAppThread(jvm, env, thiz)).l;
@@ -1138,6 +1140,7 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thi
 
     ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) { delete VRAppHandle(handle).p; }
+    VR::JNI::CleanupJNI(env);
 }
 
 extern "C" JNIEXPORT jint JNICALL

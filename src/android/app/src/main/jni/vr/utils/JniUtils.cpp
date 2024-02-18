@@ -12,74 +12,39 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include "JniUtils.h"
 
+#include "JniClassNames.h"
 #include "LogUtils.h"
 
-jclass JniUtils::GetGlobalClassReference(JNIEnv* jni, jobject activityObject,
+jclass JniUtils::GetGlobalClassReference(JNIEnv* env, jobject activityObject,
                                          const std::string& className) {
-    // First, get the class object of the activity to get its class loader
-    const jclass activityClass = jni->GetObjectClass(activityObject);
-    if (activityClass == nullptr) {
-        ALOGE("Failed to get activity class");
+    // Convert dot ('.') to slash ('/') in class name (Java uses dots, JNI uses slashes for class
+    // names)
+    std::string correctedClassName = className;
+    std::replace(correctedClassName.begin(), correctedClassName.end(), '.', '/');
+
+    // Convert std::string to jstring
+    jstring classNameJString = env->NewStringUTF(correctedClassName.c_str());
+
+    // Use the global class loader to find the class
+    jclass clazz = static_cast<jclass>(env->CallObjectMethod(
+        VR::JniGlobalRef::gClassLoader, VR::JniGlobalRef::gFindClassMethodID, classNameJString));
+    if (clazz == nullptr) {
+        // Class not found
+        ALOGE("Class not found: %s", correctedClassName.c_str());
         return nullptr;
     }
 
-    // Get the getClassLoader method ID
-    const jmethodID getClassLoaderMethod =
-        jni->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-    if (getClassLoaderMethod == nullptr) {
-        ALOGE("Failed to get getClassLoader method ID");
-        return nullptr;
+    // Clean up the local reference to the class name jstring
+    env->DeleteLocalRef(classNameJString);
+
+    // Check for exceptions and handle them. This is crucial to prevent crashes due to uncaught
+    // exceptions.
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr; // Class not found or other issue
     }
 
-    // Call getClassLoader of the activity object to obtain the class loader
-    const jobject classLoaderObject = jni->CallObjectMethod(activityObject, getClassLoaderMethod);
-    if (classLoaderObject == nullptr) {
-        ALOGE("Failed to get class loader object");
-        return nullptr;
-    }
-
-    // Get the class loader class
-    const jclass classLoaderClass = jni->FindClass("java/lang/ClassLoader");
-    if (classLoaderClass == nullptr) {
-        ALOGE("Failed to get class loader class");
-        return nullptr;
-    }
-
-    // Get the findClass method ID from the class loader class
-    const jmethodID findClassMethod =
-        jni->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (findClassMethod == nullptr) {
-        ALOGE("Failed to get findClass method ID");
-        return nullptr;
-    }
-
-    // Convert the class name string to a jstring
-    const jstring javaClassName = jni->NewStringUTF(className.c_str());
-    if (javaClassName == nullptr) {
-        ALOGE("Failed to convert class name to jstring");
-        return nullptr;
-    }
-
-    // Call findClass on the class loader object with the class name
-    const jclass classToFind = static_cast<jclass>(
-        jni->CallObjectMethod(classLoaderObject, findClassMethod, javaClassName));
-
-    // Clean up local references
-    jni->DeleteLocalRef(activityClass);
-    jni->DeleteLocalRef(classLoaderObject);
-    jni->DeleteLocalRef(classLoaderClass);
-    jni->DeleteLocalRef(javaClassName);
-
-    if (classToFind == nullptr) {
-        // Handle error (Class not found)
-        return nullptr;
-    }
-
-    // Create a global reference to the class
-    const jclass globalClassRef = reinterpret_cast<jclass>(jni->NewGlobalRef(classToFind));
-
-    // Clean up the local reference of the class
-    jni->DeleteLocalRef(classToFind);
-
-    return globalClassRef;
+    // Return a global reference to the class
+    return static_cast<jclass>(env->NewGlobalRef(clazz));
 }

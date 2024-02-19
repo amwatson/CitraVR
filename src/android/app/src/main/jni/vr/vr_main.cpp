@@ -145,7 +145,6 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
 
 } // anonymous namespace
 
-
 //-----------------------------------------------------------------------------
 // VRApp
 
@@ -156,6 +155,10 @@ public:
 
     ~VRApp() { assert(mIsStopRequested); }
 
+private:
+    class AppState;
+
+public:
     void MainLoop(JNIEnv* jni) {
 
         //////////////////////////////////////////////////
@@ -168,18 +171,19 @@ public:
         // Frame loop
         //////////////////////////////////////////////////
 
-        while (!mIsStopRequested) {
-          // Handle events/state-changes.
-          PollEvents(jni);
-          HandleMessageQueueEvents(jni);
-          if (mIsStopRequested) { break; }
-          if (!mIsXrSessionActive) {
-            // TODO should block here
-            mFrameIndex = 0;
-            continue;
-          }
+        while (true) {
+            // Handle events/state-changes.
+            const AppState appState = HandleEvents(jni);
 
-          Frame(jni);
+            if (appState.mIsStopRequested) { break; }
+            if (!appState.mIsXrSessionActive) {
+                // TODO should block here
+                mFrameIndex = 0;
+                continue;
+            }
+
+            Frame(jni, appState);
+            mLastAppState = appState;
         }
 
         //////////////////////////////////////////////////
@@ -190,6 +194,13 @@ public:
     }
 
 private:
+    AppState HandleEvents(JNIEnv* jni) {
+        AppState newState = mLastAppState;
+        OXRPollEvents(jni, newState);
+        HandleMessageQueueEvents(jni, newState);
+        return newState;
+    }
+
     void Init(JNIEnv* jni) {
         assert(gOpenXr != nullptr);
         mInputStateStatic =
@@ -276,7 +287,7 @@ private:
         if (mOpenSettingsMethodID == nullptr) { FAIL("could not get openSettingsMenuMethodID"); }
     }
 
-    void Frame(JNIEnv* jni) {
+    void Frame(JNIEnv* jni, const AppState& appState) {
 
         ////////////////////////////////
         // Increment the frame index.
@@ -453,18 +464,18 @@ private:
                                      showLowerPanel);
 
             // If active, the keyboard layer is in front of the game surface.
-            if (mIsKeyboardActive) {
+            if (appState.mIsKeyboardActive) {
                 mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
             }
 
             // If visible, error messsage appears in front of all other panels.
-            if (mShouldShowErrorMessage) {
+            if (appState.mShouldShowErrorMessage) {
                 mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
             }
 
             // Cursor visibility will depend on hit-test but will be in front
             // of all other panels. This is because precedence lines up with depth order.
-            HandleCursorLayer(jni, layers, layerCount);
+            HandleCursorLayer(jni, appState, layers, layerCount);
         }
 
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
@@ -638,8 +649,8 @@ private:
     /** Handle the cursor and any hand-tracked/layer-dependent input
      *  interactions.
      **/
-    void HandleCursorLayer(JNIEnv* jni, std::vector<XrCompositionLayer>& layers,
-                           uint32_t& layerCount) const {
+    void HandleCursorLayer(JNIEnv* jni, const AppState& appState,
+                           std::vector<XrCompositionLayer>& layers, uint32_t& layerCount) const {
 
         bool                    shouldRenderCursor = false;
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
@@ -674,14 +685,14 @@ private:
 
                 // Hit-test panels in order of priority (and known depth)
 
-                if (mShouldShowErrorMessage) {
+                if (appState.mShouldShowErrorMessage) {
                     shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
                     if (triggerState.changedSinceLastSync) {
                         mErrorMessageLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
                 } else { // Don't test for cursor intersection if error message is shown
-                    if (mIsKeyboardActive) {
+                    if (appState.mIsKeyboardActive) {
                         shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
                             start, end, cursorPos2d, cursorPose3d);
                         if (triggerState.changedSinceLastSync) {
@@ -793,7 +804,7 @@ private:
 #endif
     }
 
-    void HandleSessionStateChanges(const XrSessionState state) {
+    void HandleSessionStateChanges(const XrSessionState state, AppState& newAppState) {
         if (state == XR_SESSION_STATE_READY) {
             assert(mIsXrSessionActive == false);
 
@@ -805,11 +816,11 @@ private:
             XrResult result;
             OXR(result = xrBeginSession(gOpenXr->mSession, &sbi));
 
-            mIsXrSessionActive = (result == XR_SUCCESS);
+            newAppState.mIsXrSessionActive = (result == XR_SUCCESS);
 
             // Set session state once we have entered VR mode and have a valid
             // session object.
-            if (mIsXrSessionActive) {
+            if (newAppState.mIsXrSessionActive) {
                 PFN_xrPerfSettingsSetPerformanceLevelEXT pfnPerfSettingsSetPerformanceLevelEXT =
                     NULL;
                 OXR(xrGetInstanceProcAddr(
@@ -847,11 +858,12 @@ private:
         } else if (state == XR_SESSION_STATE_STOPPING) {
             assert(mIsXrSessionActive);
             OXR(xrEndSession(gOpenXr->mSession));
-            mIsXrSessionActive = false;
+            newAppState.mIsXrSessionActive = false;
         }
     }
 
     void HandleSessionStateChangedEvent(JNIEnv*                               jni,
+                                        AppState&                             newAppState,
                                         const XrEventDataSessionStateChanged& newState) {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
@@ -864,20 +876,26 @@ private:
         switch (newState.state) {
             case XR_SESSION_STATE_FOCUSED:
                 ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mHasFocus && !mShouldShowErrorMessage) { ResumeEmulation(jni); }
-                mHasFocus = true;
+                if (!mLastAppState.mHasFocus && !mLastAppState.mShouldShowErrorMessage) {
+                    ResumeEmulation(jni);
+                    newAppState.mIsEmulationPaused = false;
+                }
+                newAppState.mHasFocus = true;
                 break;
             case XR_SESSION_STATE_VISIBLE:
                 ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mHasFocus) { PauseEmulation(jni); }
-                mHasFocus = false;
+                if (mLastAppState.mHasFocus) {
+                    PauseEmulation(jni);
+                    newAppState.mIsEmulationPaused = true;
+                }
+                newAppState.mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
             case XR_SESSION_STATE_STOPPING:
-                HandleSessionStateChanges(newState.state);
+                HandleSessionStateChanges(newState.state, newAppState);
                 break;
             case XR_SESSION_STATE_EXITING:
-                mIsStopRequested = true;
+                newAppState.mIsStopRequested = true;
                 break;
             default:
                 break;
@@ -887,16 +905,14 @@ private:
     void PauseEmulation(JNIEnv* jni) {
         assert(jni != nullptr);
         jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
-        mIsEmulationPaused = true;
     }
 
     void ResumeEmulation(JNIEnv* jni) {
         assert(jni != nullptr);
         jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
-        mIsEmulationPaused = false;
     }
 
-    void PollEvents(JNIEnv* jni) {
+    void OXRPollEvents(JNIEnv* jni, AppState& newAppState) {
         XrEventDataBuffer eventDataBuffer = {};
 
         // Process all pending messages.
@@ -927,7 +943,7 @@ private:
                         ALOGV("{}(): Received "
                               "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
                               __func__);
-                        HandleSessionStateChangedEvent(jni, *ssce);
+                        HandleSessionStateChangedEvent(jni, newAppState, *ssce);
                     } else {
                         ALOGE("{}(): Received "
                               "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
@@ -960,7 +976,7 @@ private:
         }
     }
 
-    void HandleMessageQueueEvents(JNIEnv* jni) {
+    void HandleMessageQueueEvents(JNIEnv* jni, AppState& newAppState) {
         // Arbitrary limit to prevent the render thread from blocking too long
         // on a single frame. This may happen if the app is paused in an edge
         // case. We should try to avoid these cases as it will result in a
@@ -976,37 +992,39 @@ private:
             switch (message.mType) {
                 case Message::Type::SHOW_KEYBOARD: {
                     const bool shouldShowKeyboard = message.mPayload == 1;
-                    if (shouldShowKeyboard != mIsKeyboardActive) {
-                        ALOGD("Keyboard status changed: {} -> {}", mIsKeyboardActive,
+                    if (shouldShowKeyboard != mLastAppState.mIsKeyboardActive) {
+                        ALOGD("Keyboard status changed: {} -> {}", mLastAppState.mIsKeyboardActive,
                               shouldShowKeyboard);
                     }
 
                     ALOGD("Received SHOW_KEYBOARD message: {}, state change {} -> {}",
-                          shouldShowKeyboard, mIsKeyboardActive, shouldShowKeyboard);
-                    mIsKeyboardActive = shouldShowKeyboard;
+                          shouldShowKeyboard, mLastAppState.mIsKeyboardActive, shouldShowKeyboard);
+                    newAppState.mIsKeyboardActive = shouldShowKeyboard;
 
                     break;
                 }
                 case Message::Type::SHOW_ERROR_MESSAGE: {
                     const bool shouldShowErrorMessage = message.mPayload == 1;
                     ALOGD("Received SHOW_ERROR_MESSAGE message: {}, state change {} -> {}",
-                          shouldShowErrorMessage, mShouldShowErrorMessage, shouldShowErrorMessage);
-                    mShouldShowErrorMessage = shouldShowErrorMessage;
-                    if (mShouldShowErrorMessage && !mIsEmulationPaused) {
+                          shouldShowErrorMessage, mLastAppState.mShouldShowErrorMessage,
+                          shouldShowErrorMessage);
+                    newAppState.mShouldShowErrorMessage = shouldShowErrorMessage;
+                    if (newAppState.mShouldShowErrorMessage && !newAppState.mIsEmulationPaused) {
                         ALOGD("Pausing emulation due to error message");
                         PauseEmulation(jni);
-                        mIsEmulationPaused = true;
+                        newAppState.mIsEmulationPaused = true;
                     }
-                    if (!mShouldShowErrorMessage && mIsEmulationPaused && mHasFocus) {
+                    if (!newAppState.mShouldShowErrorMessage && newAppState.mIsEmulationPaused &&
+                        newAppState.mHasFocus) {
                         ALOGD("Resuming emulation after error message");
                         ResumeEmulation(jni);
-                        mIsEmulationPaused = false;
+                        newAppState.mIsEmulationPaused = false;
                     }
                     break;
                 }
                 case Message::Type::EXIT_NEEDED: {
                     ALOGD("Received EXIT_NEEDED message");
-                    mIsStopRequested = true;
+                    newAppState.mIsStopRequested = true;
                     break;
                 }
 
@@ -1021,12 +1039,19 @@ private:
     std::thread mThread;
     jobject     mActivityObject;
 
-    bool mIsStopRequested        = false;
-    bool mIsXrSessionActive      = false;
-    bool mHasFocus               = false;
-    bool mIsKeyboardActive       = false;
-    bool mShouldShowErrorMessage = false;
-    bool mIsEmulationPaused      = false;
+    class AppState {
+    public:
+        bool mIsKeyboardActive       = false;
+        bool mShouldShowErrorMessage = false;
+        bool mIsEmulationPaused      = false;
+
+        bool mIsStopRequested   = false;
+        bool mIsXrSessionActive = false;
+        bool mHasFocus          = false;
+    };
+
+    // App state from previous frame.
+    AppState mLastAppState;
 
     std::unique_ptr<CursorLayer>      mCursorLayer;
     std::unique_ptr<UILayer>          mErrorMessageLayer;

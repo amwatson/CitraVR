@@ -299,6 +299,10 @@ void Config::ReadValues() {
             "VR", "vr_immersive_positional_game_scaler", 0);
     Settings::values.vr_immersive_positional_game_scaler = VRSettings::values.vr_immersive_positional_game_scaler;
 
+    VRSettings::values.vr_immersive_eye_indicator = sdl2_config->GetString(
+            "VR", "vr_immersive_eye_indicator", "");
+    Settings::values.vr_immersive_eye_indicator = VRSettings::values.vr_immersive_eye_indicator;
+
     if (Settings::values.vr_immersive_mode.GetValue() > 0) {
       LOG_INFO(Config, "VR immersive mode enabled");
 

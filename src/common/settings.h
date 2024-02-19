@@ -560,6 +560,7 @@ struct Values {
     Setting<u32> vr_si_mode_register_offset{-1, "vr_si_mode_register_offset"};
     Setting<u32> vr_immersive_positional_factor{0, "vr_immersive_positional_factor"};
     Setting<u32> vr_immersive_positional_game_scaler{0, "vr_immersive_positional_game_scaler"};
+    Setting<std::string> vr_immersive_eye_indicator{"", "vr_immersive_eye_indicator"};
 };
 
 extern Values values;

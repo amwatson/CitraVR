@@ -1160,6 +1160,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         IntSetting.VR_SI_MODE_REGISTER_OFFSET.defaultValue.toFloat()
                 )
             )
+            add(
+                StringInputSetting(
+                    StringSetting.VR_IMMMERSIVE_EYE_INDICATOR,
+                    R.string.vr_vr_immersive_eye_indicator_title,
+                    R.string.vr_vr_immersive_eye_indicator_description,
+                    ""
+                )
+            )
         }
     }
 }

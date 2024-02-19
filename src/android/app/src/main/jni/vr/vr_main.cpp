@@ -392,12 +392,12 @@ private:
                          -MATH_FLOAT_PI / 8.0f) ||
                     // If in "super immersive" mode then put controller next to head in order to
                     // disable the mode temporarily
-                    (VRSettings::values.vr_immersive_mode > 2 && length < 0.2)) {
+                    (VRSettings::values.vr_immersive_mode >= 2 && length < 0.2)) {
                     XrVector4f identity[4] = {};
                     XrMath::Matrixf::Identity(identity);
                     immersiveModeFactor = 1.0f;
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-                        1, immersiveModeFactor, -1, (float*)identity);
+                        1, immersiveModeFactor, -1, 0.f, Common::Vec3f(), (float*)identity);
                 } else {
                     XrVector4f transform[4] = {};
                     XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
@@ -413,20 +413,21 @@ private:
                         invertedOrientation, gOpenXr->headLocation.pose.position);
 
                     const float gamePosScaler =
-                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler);
-                    inv_transform[3].x = -position.x *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
-                    inv_transform[3].y = -position.y *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
-                    inv_transform[3].z = -position.z *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
+                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+                        VRSettings::values.vr_immersive_positional_factor;
+
+                    inv_transform[3].x = -position.x * gamePosScaler;
+                    inv_transform[3].y = -position.y * gamePosScaler;
+                    inv_transform[3].z = -position.z * gamePosScaler;
+
+                    XrVector3f forward, right, up;
+                    XrMath::Quatf::ToVectors(invertedOrientation,
+                                             forward, right, up);
+                    Common::Vec3f rightVector = {right.y, -right.z, right.x};
 
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
                         VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset,
-                        (float*)inv_transform);
+                        -gamePosScaler, rightVector, (float*)inv_transform);
                     showLowerPanel = false;
                 }
             }

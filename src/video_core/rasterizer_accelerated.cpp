@@ -22,6 +22,8 @@ static Common::Vec3f LightColor(const Pica::LightingRegs::LightColor& color) {
     return Common::Vec3u{color.r, color.g, color.b} / 255.0f;
 }
 
+constexpr float VR_IPD  = 0.065f;
+
 RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::OutputVertex& v,
                                                       bool flip_quaternion) {
     position[0] = v.pos.x.ToFloat32();
@@ -859,7 +861,7 @@ void RasterizerAccelerated::SyncClipPlane() {
     }
 }
 
-void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16])
+void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const Common::Vec3f& rightVector, const float inv_view[16])
 {
     if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveModeFactor)
     {
@@ -869,7 +871,9 @@ void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const floa
 
     vr_uoffset = uoffset;
     vr_immersive_mode = vrImmersiveMode;
-    std::memcpy(vr_view, view, sizeof(float) * 16);
+    vr_game_pos_scaler = gamePosScaler;
+    vr_right_vector = rightVector;
+    std::memcpy(vr_inv_view, inv_view, sizeof(float) * 16);
 }
 
 static void MatrixTranspose(float m[16], const float src[16]) {
@@ -917,6 +921,7 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
                 }
                 break;
             case 3:
+            case 4:
                 viewMatrixIndex = Settings::values.vr_si_mode_register_offset.GetValue();
                 break;
             case 9:
@@ -932,29 +937,92 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
         {
             if (matrixMode == 2)
             {
-                f[viewMatrixIndex][0] = vr_view[0];
-                f[viewMatrixIndex][1] = vr_view[4];
-                f[viewMatrixIndex][2] = vr_view[8];
-                f[viewMatrixIndex + 1][0] = vr_view[1];
-                f[viewMatrixIndex + 1][1] = vr_view[5];
-                f[viewMatrixIndex + 1][2] = vr_view[9];
-                f[viewMatrixIndex + 2][0] = vr_view[2];
-                f[viewMatrixIndex + 2][1] = vr_view[6];
-                f[viewMatrixIndex + 2][2] = vr_view[10];
+                f[viewMatrixIndex][0] = vr_inv_view[0];
+                f[viewMatrixIndex][1] = vr_inv_view[4];
+                f[viewMatrixIndex][2] = vr_inv_view[8];
+                f[viewMatrixIndex + 1][0] = vr_inv_view[1];
+                f[viewMatrixIndex + 1][1] = vr_inv_view[5];
+                f[viewMatrixIndex + 1][2] = vr_inv_view[9];
+                f[viewMatrixIndex + 2][0] = vr_inv_view[2];
+                f[viewMatrixIndex + 2][1] = vr_inv_view[6];
+                f[viewMatrixIndex + 2][2] = vr_inv_view[10];
             }
-            else if (matrixMode >= 3)
+            else if (matrixMode == 3)
             {
                 float v[16], v2[16], v3[16];
                 MatrixTranspose(v, &f[viewMatrixIndex].x);
-                std::memcpy(v2, vr_view, sizeof(float) * 16);
+                std::memcpy(v2, vr_inv_view, sizeof(float) * 16);
                 v2[12] = v2[13] = v2[14] = 0.f;
                 MatrixMultiply(v3, v2, v);
+
                 MatrixTranspose(&f[viewMatrixIndex].x, v3);
+
+                // This following part is an improvement on just using the default stereo separation provided by the 3DS
+                // The problem with the default is it doesn't work correctly when rotating the headset, whereas the following approach
+                // applies a left/right separation from an (almost) centered camera POV. If vr_immersive_eye_indicator
+                // is defined, then it will set an ingame depth scale of only 1%, and then use a defined vr uniform register
+                // to identify if the left or right eye is being drawn and apply appropriate stereo separation
+                // The pair of values (e.g "87,2") represents the index of the Vec4f in the vs pica uniforms and the
+                // index into that Vec4 of the value that is -ve for left ete and +ve for right eye
+                // Finding these values is easier to do using a desktop build of Citra
+                if (!Settings::values.vr_immersive_eye_indicator.GetValue().empty())
+                {
+                    std::string vr_immersive_eye_indicator = Settings::values.vr_immersive_eye_indicator.GetValue();
+
+                    static auto split = [=](const char *str, char c = ',')
+                    {
+                        std::vector<int> result;
+                        do
+                        {
+                            const char *begin = str;
+                            while(*str != c && *str)
+                                str++;
+                            result.push_back(atoi(std::string(begin, str).c_str()));
+                        } while (0 != *str++);
+                        return result;
+                    };
+
+                    //Register and Index are comma separated, like: "87,2"
+                    std::vector<int> values = split(vr_immersive_eye_indicator.c_str());
+                    if (values.size() == 2)
+                    {
+                        int mode = 0;//values[0];
+                        int reg = values[0];
+                        int index = values[1];
+
+                        if (mode >= 0 && mode <= 1 &&
+                            reg >= 0 && reg < vs_uniforms.uniforms.f.size() &&
+                            index >= 0 && index <= 3)
+                        {
+                            bool isLeftEye = (f[reg][index] < 0.f);
+                            switch (mode)
+                            {
+                                case 0:
+                                    f[viewMatrixIndex][3] +=
+                                            vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
+                                            (Settings::values.factor_3d.GetValue() / 100.0f);
+                                    break;
+                                case 1:
+                                    //THIS MODE ISN'T CURRENTLY USED
+                                    f[viewMatrixIndex][3] +=
+                                            vr_right_vector.x * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
+                                            (Settings::values.factor_3d.GetValue() / 100.0f);
+                                    f[viewMatrixIndex + 1][3] +=
+                                            vr_right_vector.y * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
+                                            (Settings::values.factor_3d.GetValue() / 100.0f);
+                                    f[viewMatrixIndex + 2][3] +=
+                                            vr_right_vector.z * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
+                                            (Settings::values.factor_3d.GetValue() / 100.0f);
+                                    break;
+                            }
+                        }
+                    }
+                }
             }
 
-            f[viewMatrixIndex][3] += vr_view[12];
-            f[viewMatrixIndex + 1][3] += vr_view[13];
-            f[viewMatrixIndex + 2][3] += vr_view[14];
+            f[viewMatrixIndex][3] += vr_inv_view[12];
+            f[viewMatrixIndex + 1][3] += vr_inv_view[13];
+            f[viewMatrixIndex + 2][3] += vr_inv_view[14];
         }
     }
 }

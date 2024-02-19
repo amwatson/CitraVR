@@ -85,7 +85,9 @@ Handler::Handler(Core::Timing& timing, u64 override_init_time) : timing(timing) 
                                              std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
     timing.ScheduleEvent(0, update_time_event, 0, 0);
 
-    float slidestate = Settings::values.factor_3d.GetValue() / 100.0f;
+    float slidestate = Settings::values.vr_immersive_eye_indicator.GetValue().empty() ?
+            Settings::values.factor_3d.GetValue() / 100.0f :
+            1.0f;
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
 
     // TODO(PabloMK7)

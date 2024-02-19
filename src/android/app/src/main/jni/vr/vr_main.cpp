@@ -145,6 +145,10 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
 
 } // anonymous namespace
 
+
+//-----------------------------------------------------------------------------
+// VRApp
+
 class VRApp {
 public:
     VRApp(jobject activityObjectGlobalRef)
@@ -164,7 +168,19 @@ public:
         // Frame loop
         //////////////////////////////////////////////////
 
-        while (!mIsStopRequested) { Frame(jni); }
+        while (!mIsStopRequested) {
+          // Handle events/state-changes.
+          PollEvents(jni);
+          HandleMessageQueueEvents(jni);
+          if (mIsStopRequested) { break; }
+          if (!mIsXrSessionActive) {
+            // TODO should block here
+            mFrameIndex = 0;
+            continue;
+          }
+
+          Frame(jni);
+        }
 
         //////////////////////////////////////////////////
         // Exit
@@ -261,19 +277,6 @@ private:
     }
 
     void Frame(JNIEnv* jni) {
-
-        ////////////////////////////////
-        // Handle events/state-changes.
-        ////////////////////////////////
-
-        PollEvents(jni);
-        HandleMessageQueueEvents(jni);
-        if (mIsStopRequested) { return; }
-        if (!mIsXrSessionActive) {
-            // TODO should block here
-            mFrameIndex = 0;
-            return;
-        }
 
         ////////////////////////////////
         // Increment the frame index.
@@ -1042,6 +1045,9 @@ private:
     jmethodID mOpenSettingsMethodID      = nullptr;
 };
 
+//-----------------------------------------------------------------------------
+// VRApp
+
 class VRAppThread {
 public:
     VRAppThread(JavaVM* jvm, JNIEnv* jni, jobject activityObject)
@@ -1117,6 +1123,9 @@ struct VRAppHandle {
     };
 };
 
+//-----------------------------------------------------------------------------
+// JNI functions
+
 extern "C" JNIEXPORT jlong JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz) {
     // Log the creat start time, which will be used to calculate the total
@@ -1130,7 +1139,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
     ALOGI("nativeOnCreate {}", ret);
     return ret;
 }
-
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
 
@@ -1138,7 +1146,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thi
     if (handle != 0) { delete VRAppHandle(handle).p; }
     VR::JNI::CleanupJNI(env);
 }
-
 extern "C" JNIEXPORT jint JNICALL
 Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env, jclass clazz) {
     return static_cast<jint>(VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
@@ -1148,7 +1155,6 @@ Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(JNIEnv* en
     const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }
-
 extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_utils_VrMessageQueue_nativePost(
     JNIEnv* env, jobject thiz, jint message_type, jlong payload) {
     ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type, payload);

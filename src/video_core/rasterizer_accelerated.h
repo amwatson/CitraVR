@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "common/vector_math.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/shader_uniforms.h"
@@ -31,7 +30,7 @@ public:
 
     void SyncEntireState() override;
 
-    void SetVRData(const int32_t  &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const Common::Vec3f& rightVector, const float inv_view[16]) override;
+    void SetVRData(const int32_t  &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const float inv_view[16]) override;
 
 protected:
     /// Sync fixed-function pipeline state
@@ -176,11 +175,9 @@ protected:
     u32             vr_uoffset = 0;
     u32             vr_immersive_mode;
     float           vr_game_pos_scaler = 0.f;
-    Common::Vec3f   vr_right_vector = {};
     float           vr_inv_view[16] = {};
 
 public:
-
     void ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator::VSPicaUniformData &vs_uniforms);
 };
 

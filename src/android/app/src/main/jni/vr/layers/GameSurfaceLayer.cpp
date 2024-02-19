@@ -431,13 +431,13 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
     XrVector3f forward, up, right;
     XrMath::Quatf::ToVectors(headPose.orientation, forward, right, up);
 
-    panelPosition.z += superImmersiveRadius * (forward.x * 0.4f);
-    panelPosition.y -= superImmersiveRadius * (forward.z * 0.4f);
-    panelPosition.x += superImmersiveRadius * (forward.y * 0.4f);
+    panelPosition.z += superImmersiveRadius * (forward.x * 0.43f);
+    panelPosition.y -= superImmersiveRadius * (forward.z * 0.43f);
+    panelPosition.x += superImmersiveRadius * (forward.y * 0.43f);
 
-    panelPosition.z += up.x / 12.f;
-    panelPosition.y -= up.z / 12.f;
-    panelPosition.x += up.y / 12.f;
+    panelPosition.z += up.x / 16.f;
+    panelPosition.y -= up.z / 16.f;
+    panelPosition.x += up.y / 16.f;
 
     return XrPosef{headPose.orientation, panelPosition};
 }

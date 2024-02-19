@@ -397,7 +397,7 @@ private:
                     XrMath::Matrixf::Identity(identity);
                     immersiveModeFactor = 1.0f;
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-                        1, immersiveModeFactor, -1, 0.f, Common::Vec3f(), (float*)identity);
+                        1, immersiveModeFactor, -1, 0.f, (float*)identity);
                 } else {
                     XrVector4f transform[4] = {};
                     XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
@@ -420,14 +420,9 @@ private:
                     inv_transform[3].y = -position.y * gamePosScaler;
                     inv_transform[3].z = -position.z * gamePosScaler;
 
-                    XrVector3f forward, right, up;
-                    XrMath::Quatf::ToVectors(invertedOrientation,
-                                             forward, right, up);
-                    Common::Vec3f rightVector = {right.y, -right.z, right.x};
-
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
                         VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset,
-                        -gamePosScaler, rightVector, (float*)inv_transform);
+                        -gamePosScaler, (float*)inv_transform);
                     showLowerPanel = false;
                 }
             }

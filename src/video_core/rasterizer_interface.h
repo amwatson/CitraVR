@@ -85,6 +85,6 @@ public:
     virtual void SyncEntireState() {}
 
     /// Set VR position data on the rasterizer
-    virtual void SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const Common::Vec3f& rightVector, const float inv_view[16]) {}
+    virtual void SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const float inv_view[16]) {}
 };
 } // namespace VideoCore

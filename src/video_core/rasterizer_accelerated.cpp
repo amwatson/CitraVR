@@ -861,7 +861,7 @@ void RasterizerAccelerated::SyncClipPlane() {
     }
 }
 
-void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const Common::Vec3f& rightVector, const float inv_view[16])
+void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const float inv_view[16])
 {
     if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveModeFactor)
     {
@@ -872,7 +872,6 @@ void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const floa
     vr_uoffset = uoffset;
     vr_immersive_mode = vrImmersiveMode;
     vr_game_pos_scaler = gamePosScaler;
-    vr_right_vector = rightVector;
     std::memcpy(vr_inv_view, inv_view, sizeof(float) * 16);
 }
 
@@ -960,62 +959,22 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
                 // This following part is an improvement on just using the default stereo separation provided by the 3DS
                 // The problem with the default is it doesn't work correctly when rotating the headset, whereas the following approach
                 // applies a left/right separation from an (almost) centered camera POV. If vr_immersive_eye_indicator
-                // is defined, then it will set an ingame depth scale of only 1%, and then use a defined vr uniform register
+                // is defined, then it will set an depth scale of only 0.1%, and then use a defined vr uniform register
                 // to identify if the left or right eye is being drawn and apply appropriate stereo separation
-                // The pair of values (e.g "87,2") represents the index of the Vec4f in the vs pica uniforms and the
-                // index into that Vec4 of the value that is -ve for left ete and +ve for right eye
-                // Finding these values is easier to do using a desktop build of Citra
+                // The pair of values (e.g "87,2") represents the offset of the Vec4f in the vs pica uniforms and the
+                // index into that Vec4 of the value that is check for: -ve for left eye and +ve for right eye
+                // Finding these offset/index values is easier to do using a desktop build of Citra in a debugger
                 if (!Settings::values.vr_immersive_eye_indicator.GetValue().empty())
                 {
-                    std::string vr_immersive_eye_indicator = Settings::values.vr_immersive_eye_indicator.GetValue();
+                    const std::string vr_immersive_eye_indicator = Settings::values.vr_immersive_eye_indicator.GetValue();
+                    const int reg = atoi(vr_immersive_eye_indicator.substr(0, vr_immersive_eye_indicator.find_first_of(',')).c_str());
+                    const int index = atoi(vr_immersive_eye_indicator.substr(vr_immersive_eye_indicator.find_first_of(',')+1).c_str());
 
-                    static auto split = [=](const char *str, char c = ',')
+                    if (reg >= 0 && reg < vs_uniforms.uniforms.f.size() &&
+                        index >= 0 && index <= 3)
                     {
-                        std::vector<int> result;
-                        do
-                        {
-                            const char *begin = str;
-                            while(*str != c && *str)
-                                str++;
-                            result.push_back(atoi(std::string(begin, str).c_str()));
-                        } while (0 != *str++);
-                        return result;
-                    };
-
-                    //Register and Index are comma separated, like: "87,2"
-                    std::vector<int> values = split(vr_immersive_eye_indicator.c_str());
-                    if (values.size() == 2)
-                    {
-                        int mode = 0;//values[0];
-                        int reg = values[0];
-                        int index = values[1];
-
-                        if (mode >= 0 && mode <= 1 &&
-                            reg >= 0 && reg < vs_uniforms.uniforms.f.size() &&
-                            index >= 0 && index <= 3)
-                        {
-                            bool isLeftEye = (f[reg][index] < 0.f);
-                            switch (mode)
-                            {
-                                case 0:
-                                    f[viewMatrixIndex][3] +=
-                                            vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
-                                            (Settings::values.factor_3d.GetValue() / 100.0f);
-                                    break;
-                                case 1:
-                                    //THIS MODE ISN'T CURRENTLY USED
-                                    f[viewMatrixIndex][3] +=
-                                            vr_right_vector.x * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
-                                            (Settings::values.factor_3d.GetValue() / 100.0f);
-                                    f[viewMatrixIndex + 1][3] +=
-                                            vr_right_vector.y * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
-                                            (Settings::values.factor_3d.GetValue() / 100.0f);
-                                    f[viewMatrixIndex + 2][3] +=
-                                            vr_right_vector.z * -vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f) *
-                                            (Settings::values.factor_3d.GetValue() / 100.0f);
-                                    break;
-                            }
-                        }
+                        const bool isLeftEye = (f[reg][index] < 0.f);
+                        f[viewMatrixIndex][3] += vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f);
                     }
                 }
             }

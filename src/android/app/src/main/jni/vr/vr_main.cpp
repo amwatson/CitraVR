@@ -48,10 +48,6 @@ License     :   Licensed under GPLv3 or any later version.
 #define ALOG_INPUT_VERBOSE(...)
 #endif
 
-#define DECL_PFN(pfn) PFN_##pfn pfn = nullptr
-#define INIT_PFN(pfn)                                                                              \
-    OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), #pfn, (PFN_xrVoidFunction*)(&pfn)))
-
 // Used by Citra core to set a higher priority to the non-VR render thread.
 namespace vr {
 XrSession  gSession     = XR_NULL_HANDLE;

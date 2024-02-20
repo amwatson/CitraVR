@@ -30,7 +30,7 @@ jclass JniUtils::GetGlobalClassReference(JNIEnv* env, jobject activityObject,
         VR::JniGlobalRef::gClassLoader, VR::JniGlobalRef::gFindClassMethodID, classNameJString));
     if (clazz == nullptr) {
         // Class not found
-        ALOGE("Class not found: %s", correctedClassName.c_str());
+        ALOGE("Class not found: {}", correctedClassName.c_str());
         return nullptr;
     }
 

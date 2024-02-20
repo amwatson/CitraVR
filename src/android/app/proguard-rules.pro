@@ -28,4 +28,5 @@
 -keep class org.citra.citra_emu.vr.ui.VrUILayer { *; }
 -keep class org.citra.citra_emu.vr.ui.VrKeyboardLayer { *; }
 -keep class org.citra.citra_emu.vr.ui.VrErrorMessageLayer { *; }
+-keep class org.citra.citra_emu.vr.ui.VrRibbonLayer { *; }
 -keepattributes SourceFile,LineNumberTable

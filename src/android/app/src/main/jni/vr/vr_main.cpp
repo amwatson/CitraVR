@@ -143,6 +143,40 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
     }
 }
 
+// Called whenever a session is started/resumed. Creates the head space based on the
+// current pose of the HMD.
+void CreateRuntimeInitatedReferenceSpaces(const XrTime predictedDisplayTime) {
+    // Create a reference space with the forward direction from the
+    // starting frame.
+    {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                                XR_REFERENCE_SPACE_TYPE_LOCAL,
+                                                XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mForwardDirectionSpace));
+    }
+
+    {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                                XR_REFERENCE_SPACE_TYPE_VIEW,
+                                                XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
+    }
+
+    // Get the pose of the local space.
+    XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
+    OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace, predictedDisplayTime,
+                      &lsl));
+
+    // Set the forward direction of the new space.
+    const XrPosef forwardDirectionPose = lsl.pose;
+
+    // Create a reference space with the same position and rotation as
+    // local.
+    const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                            XR_REFERENCE_SPACE_TYPE_LOCAL, forwardDirectionPose};
+    OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
+}
+
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
@@ -239,17 +273,21 @@ private:
                 XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->mSession, resolutionFactor);
         }
 
-        // Create the cursor layer.
-        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
-
-        mErrorMessageLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
-            XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
+        mRibbonLayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrRibbonLayer", XrVector3f{0, -0.75f, -1.51f},
+            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject, gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
             XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
+
+        mErrorMessageLayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
+            XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
+
+        // Create the cursor layer.
+        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -451,6 +489,9 @@ private:
                 layers[layerCount++].mPassthrough = passthroughLayer;
             }
 
+            mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+
+
             // Game surface (upper and lower panels) are in front of the passthrough layer.
             mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount,
                                      gOpenXr->headLocation.pose, immersiveModeFactor,
@@ -602,41 +643,6 @@ private:
                 }
             }
         }
-    }
-
-    // Called whenever a session is started/resumed. Creates the head space based on the
-    // current pose of the HMD.
-    void CreateRuntimeInitatedReferenceSpaces(const XrTime predictedDisplayTime) const {
-        // Create a reference space with the forward direction from the
-        // starting frame.
-        {
-            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                    XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                    XrMath::Posef::Identity()};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mForwardDirectionSpace));
-        }
-
-        {
-            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                    XR_REFERENCE_SPACE_TYPE_VIEW,
-                                                    XrMath::Posef::Identity()};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
-        }
-
-        // Get the pose of the local space.
-        XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
-        OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
-                          predictedDisplayTime, &lsl));
-
-        // Set the forward direction of the new space.
-        const XrPosef forwardDirectionPose = lsl.pose;
-
-        // Create a reference space with the same position and rotation as
-        // local.
-        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                forwardDirectionPose};
-        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
     }
 
     /** Handle the cursor and any hand-tracked/layer-dependent input
@@ -798,22 +804,22 @@ private:
     }
 
     AppState HandleEvents(JNIEnv* jni) const {
-      AppState newState = mLastAppState;
-      OXRPollEvents(jni, newState);
-      HandleMessageQueueEvents(jni, newState);
-      return newState;
+        AppState newState = mLastAppState;
+        OXRPollEvents(jni, newState);
+        HandleMessageQueueEvents(jni, newState);
+        return newState;
     }
 
     void HandleStateChanges(JNIEnv* jni, const AppState& newState) const {
-      if (newState.mIsEmulationPaused != mLastAppState.mIsEmulationPaused) {
-        ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
-            newState.mIsEmulationPaused);
-        if (newState.mIsEmulationPaused) {
-          PauseEmulation(jni);
-        } else {
-          ResumeEmulation(jni);
+        if (newState.mIsEmulationPaused != mLastAppState.mIsEmulationPaused) {
+            ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
+                  newState.mIsEmulationPaused);
+            if (newState.mIsEmulationPaused) {
+                PauseEmulation(jni);
+            } else {
+                ResumeEmulation(jni);
+            }
         }
-      }
     }
 
     void OXRPollEvents(JNIEnv* jni, AppState& newAppState) const {
@@ -881,8 +887,8 @@ private:
     }
 
     void OXRHandleSessionStateChangedEvent(JNIEnv*                               jni,
-                                        AppState&                             newAppState,
-                                        const XrEventDataSessionStateChanged& newState) const {
+                                           AppState&                             newAppState,
+                                           const XrEventDataSessionStateChanged& newState) const {
         static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
         if (newState.state != lastState) {
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
@@ -901,9 +907,7 @@ private:
                 break;
             case XR_SESSION_STATE_VISIBLE:
                 ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mLastAppState.mHasFocus) {
-                    newAppState.mIsEmulationPaused = true;
-                }
+                if (mLastAppState.mHasFocus) { newAppState.mIsEmulationPaused = true; }
                 newAppState.mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
@@ -1066,6 +1070,7 @@ private:
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
     std::unique_ptr<UILayer>          mKeyboardLayer;
+    std::unique_ptr<UILayer>          mRibbonLayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame                   mInputStateFrame;

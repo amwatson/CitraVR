@@ -174,8 +174,8 @@ public:
         while (true) {
             // Handle events/state-changes.
             const AppState appState = HandleEvents(jni);
-
             if (appState.mIsStopRequested) { break; }
+            HandleStateChanges(jni, appState);
             if (!appState.mIsXrSessionActive) {
                 // TODO should block here
                 mFrameIndex = 0;
@@ -194,13 +194,6 @@ public:
     }
 
 private:
-    AppState HandleEvents(JNIEnv* jni) {
-        AppState newState = mLastAppState;
-        OXRPollEvents(jni, newState);
-        HandleMessageQueueEvents(jni, newState);
-        return newState;
-    }
-
     void Init(JNIEnv* jni) {
         assert(gOpenXr != nullptr);
         mInputStateStatic =
@@ -804,7 +797,128 @@ private:
 #endif
     }
 
-    void HandleSessionStateChanges(const XrSessionState state, AppState& newAppState) {
+    AppState HandleEvents(JNIEnv* jni) const {
+      AppState newState = mLastAppState;
+      OXRPollEvents(jni, newState);
+      HandleMessageQueueEvents(jni, newState);
+      return newState;
+    }
+
+    void HandleStateChanges(JNIEnv* jni, const AppState& newState) const {
+      if (newState.mIsEmulationPaused != mLastAppState.mIsEmulationPaused) {
+        ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
+            newState.mIsEmulationPaused);
+        if (newState.mIsEmulationPaused) {
+          PauseEmulation(jni);
+        } else {
+          ResumeEmulation(jni);
+        }
+      }
+    }
+
+    void OXRPollEvents(JNIEnv* jni, AppState& newAppState) const {
+        XrEventDataBuffer eventDataBuffer = {};
+
+        // Process all pending messages.
+        for (;;) {
+            XrEventDataBaseHeader* baseEventHeader = (XrEventDataBaseHeader*)(&eventDataBuffer);
+            baseEventHeader->type                  = XR_TYPE_EVENT_DATA_BUFFER;
+            baseEventHeader->next                  = NULL;
+            XrResult r;
+            OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
+            if (r != XR_SUCCESS) { break; }
+
+            switch (baseEventHeader->type) {
+                case XR_TYPE_EVENT_DATA_EVENTS_LOST:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_EVENTS_LOST "
+                          "event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+                    const XrEventDataSessionStateChanged* ssce =
+                        (XrEventDataSessionStateChanged*)(baseEventHeader);
+                    if (ssce != nullptr) {
+                        ALOGV("{}(): Received "
+                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
+                              __func__);
+                        OXRHandleSessionStateChangedEvent(jni, newAppState, *ssce);
+                    } else {
+                        ALOGE("{}(): Received "
+                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
+                              __func__);
+                    }
+                } break;
+                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
+                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                        (XrEventDataPerfSettingsEXT*)(baseEventHeader);
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
+                          "subdomain {} : level {} -> level {}",
+                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
+                } break;
+                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING "
+                          "event",
+                          __func__);
+                    break;
+                default:
+                    ALOGV("{}(): Unknown event", __func__);
+                    break;
+            }
+        }
+    }
+
+    void OXRHandleSessionStateChangedEvent(JNIEnv*                               jni,
+                                        AppState&                             newAppState,
+                                        const XrEventDataSessionStateChanged& newState) const {
+        static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
+        if (newState.state != lastState) {
+            ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
+                  "session={} time={}",
+                  __func__, XrSessionStateToString(lastState),
+                  XrSessionStateToString(newState.state), newState.session, newState.time);
+        }
+        lastState = newState.state;
+        switch (newState.state) {
+            case XR_SESSION_STATE_FOCUSED:
+                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
+                if (!mLastAppState.mHasFocus && !mLastAppState.mShouldShowErrorMessage) {
+                    newAppState.mIsEmulationPaused = false;
+                }
+                newAppState.mHasFocus = true;
+                break;
+            case XR_SESSION_STATE_VISIBLE:
+                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
+                if (mLastAppState.mHasFocus) {
+                    newAppState.mIsEmulationPaused = true;
+                }
+                newAppState.mHasFocus = false;
+                break;
+            case XR_SESSION_STATE_READY:
+            case XR_SESSION_STATE_STOPPING:
+                OXRHandleSessionStateChanges(newState.state, newAppState);
+                break;
+            case XR_SESSION_STATE_EXITING:
+                newAppState.mIsStopRequested = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    void OXRHandleSessionStateChanges(const XrSessionState state, AppState& newAppState) const {
         if (state == XR_SESSION_STATE_READY) {
             assert(mIsXrSessionActive == false);
 
@@ -862,121 +976,7 @@ private:
         }
     }
 
-    void HandleSessionStateChangedEvent(JNIEnv*                               jni,
-                                        AppState&                             newAppState,
-                                        const XrEventDataSessionStateChanged& newState) {
-        static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
-        if (newState.state != lastState) {
-            ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
-                  "session={} time={}",
-                  __func__, XrSessionStateToString(lastState),
-                  XrSessionStateToString(newState.state), newState.session, newState.time);
-        }
-        lastState = newState.state;
-        switch (newState.state) {
-            case XR_SESSION_STATE_FOCUSED:
-                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mLastAppState.mHasFocus && !mLastAppState.mShouldShowErrorMessage) {
-                    ResumeEmulation(jni);
-                    newAppState.mIsEmulationPaused = false;
-                }
-                newAppState.mHasFocus = true;
-                break;
-            case XR_SESSION_STATE_VISIBLE:
-                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mLastAppState.mHasFocus) {
-                    PauseEmulation(jni);
-                    newAppState.mIsEmulationPaused = true;
-                }
-                newAppState.mHasFocus = false;
-                break;
-            case XR_SESSION_STATE_READY:
-            case XR_SESSION_STATE_STOPPING:
-                HandleSessionStateChanges(newState.state, newAppState);
-                break;
-            case XR_SESSION_STATE_EXITING:
-                newAppState.mIsStopRequested = true;
-                break;
-            default:
-                break;
-        }
-    }
-
-    void PauseEmulation(JNIEnv* jni) {
-        assert(jni != nullptr);
-        jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
-    }
-
-    void ResumeEmulation(JNIEnv* jni) {
-        assert(jni != nullptr);
-        jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
-    }
-
-    void OXRPollEvents(JNIEnv* jni, AppState& newAppState) {
-        XrEventDataBuffer eventDataBuffer = {};
-
-        // Process all pending messages.
-        for (;;) {
-            XrEventDataBaseHeader* baseEventHeader = (XrEventDataBaseHeader*)(&eventDataBuffer);
-            baseEventHeader->type                  = XR_TYPE_EVENT_DATA_BUFFER;
-            baseEventHeader->next                  = NULL;
-            XrResult r;
-            OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
-            if (r != XR_SUCCESS) { break; }
-
-            switch (baseEventHeader->type) {
-                case XR_TYPE_EVENT_DATA_EVENTS_LOST:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_EVENTS_LOST "
-                          "event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-                    const XrEventDataSessionStateChanged* ssce =
-                        (XrEventDataSessionStateChanged*)(baseEventHeader);
-                    if (ssce != nullptr) {
-                        ALOGV("{}(): Received "
-                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
-                              __func__);
-                        HandleSessionStateChangedEvent(jni, newAppState, *ssce);
-                    } else {
-                        ALOGE("{}(): Received "
-                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
-                              __func__);
-                    }
-                } break;
-                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
-                        (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
-                          "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
-                } break;
-                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING "
-                          "event",
-                          __func__);
-                    break;
-                default:
-                    ALOGV("{}(): Unknown event", __func__);
-                    break;
-            }
-        }
-    }
-
-    void HandleMessageQueueEvents(JNIEnv* jni, AppState& newAppState) {
+    void HandleMessageQueueEvents(JNIEnv* jni, AppState& newAppState) const {
         // Arbitrary limit to prevent the render thread from blocking too long
         // on a single frame. This may happen if the app is paused in an edge
         // case. We should try to avoid these cases as it will result in a
@@ -1011,13 +1011,11 @@ private:
                     newAppState.mShouldShowErrorMessage = shouldShowErrorMessage;
                     if (newAppState.mShouldShowErrorMessage && !newAppState.mIsEmulationPaused) {
                         ALOGD("Pausing emulation due to error message");
-                        PauseEmulation(jni);
                         newAppState.mIsEmulationPaused = true;
                     }
                     if (!newAppState.mShouldShowErrorMessage && newAppState.mIsEmulationPaused &&
                         newAppState.mHasFocus) {
                         ALOGD("Resuming emulation after error message");
-                        ResumeEmulation(jni);
                         newAppState.mIsEmulationPaused = false;
                     }
                     break;
@@ -1033,6 +1031,16 @@ private:
                     break;
             }
         }
+    }
+
+    void PauseEmulation(JNIEnv* jni) const {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
+    }
+
+    void ResumeEmulation(JNIEnv* jni) const {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
     }
 
     uint64_t    mFrameIndex = 0;

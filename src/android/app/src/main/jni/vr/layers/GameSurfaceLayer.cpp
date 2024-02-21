@@ -30,7 +30,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float defaultLowerPanelScaleFactor = 0.75f;
+constexpr float defaultLowerPanelScaleFactor = 0.75f * 0.75f;
 constexpr float superImmersiveRadius         = 0.5f;
 
 /** Used to translate texture coordinates into the corresponding coordinates

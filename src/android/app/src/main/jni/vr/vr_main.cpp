@@ -210,13 +210,12 @@ public:
             const AppState appState = HandleEvents(jni);
             if (appState.mIsStopRequested) { break; }
             HandleStateChanges(jni, appState);
-            if (!appState.mIsXrSessionActive) {
+            if (appState.mIsXrSessionActive) {
+                Frame(jni, appState);
+            } else {
                 // TODO should block here
                 mFrameIndex = 0;
-                continue;
             }
-
-            Frame(jni, appState);
             mLastAppState = appState;
         }
 
@@ -275,7 +274,8 @@ private:
 
         mRibbonLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrRibbonLayer", XrVector3f{0, -0.75f, -1.51f},
-            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject, gOpenXr->mSession);
+            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
+            gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
@@ -490,7 +490,6 @@ private:
             }
 
             mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
-
 
             // Game surface (upper and lower panels) are in front of the passthrough layer.
             mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount,
@@ -939,6 +938,7 @@ private:
             // Set session state once we have entered VR mode and have a valid
             // session object.
             if (newAppState.mIsXrSessionActive) {
+                ALOGI("{}(): Entered XR_SESSION_STATE_READY", __func__);
                 PFN_xrPerfSettingsSetPerformanceLevelEXT pfnPerfSettingsSetPerformanceLevelEXT =
                     NULL;
                 OXR(xrGetInstanceProcAddr(
@@ -975,6 +975,7 @@ private:
             }
         } else if (state == XR_SESSION_STATE_STOPPING) {
             assert(mIsXrSessionActive);
+            ALOGI("{}(): Entered XR_SESSION_STATE_STOPPING", __func__);
             OXR(xrEndSession(gOpenXr->mSession));
             newAppState.mIsXrSessionActive = false;
         }

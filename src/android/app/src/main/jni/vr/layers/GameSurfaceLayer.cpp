@@ -375,8 +375,8 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         layer.pose                             = mLowerPanelFromWorld;
         const auto scale           = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
                                                             defaultLowerPanelScaleFactor, mResolutionFactor);
-        layer.size.width           = scale.x * defaultLowerPanelScaleFactor;
-        layer.size.height          = scale.y * defaultLowerPanelScaleFactor;
+        layer.size.width           = scale.x;
+        layer.size.height          = scale.y;
         layers[layerCount++].mQuad = layer;
     }
 }

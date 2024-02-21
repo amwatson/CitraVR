@@ -65,10 +65,35 @@ License     :   Licensed under GPLv3 or any later version.
 /*
 ================================================================================
 
+ Panel
+
+================================================================================
+*/
+
+class Panel {
+public:
+    Panel(const XrPosef& pose, const float width, const float height, const float scaleFactor)
+        : mPanelFromWorld(pose)
+        , mWidth(width)
+        , mHeight(height)
+        , mScaleFactor(scaleFactor) {}
+    void  Transform(const XrVector2f& point2d, XrVector2f& result) const;
+    float AspectRatio() const { return (2.0f * mWidth) / mHeight; }
+
+    XrPosef     mPanelFromWorld;
+    const float mWidth;
+    const float mHeight;
+    const float mScaleFactor;
+};
+
+/*
+================================================================================
+
  GameSurfaceLayer
 
 ================================================================================
 */
+
 class GameSurfaceLayer {
 
 public:
@@ -159,12 +184,12 @@ private:
     const XrSession mSession;
     Swapchain       mSwapchain;
 
-    XrPosef mTopPanelFromWorld;
-    XrPosef mLowerPanelFromWorld;
-
     // Density scale for surface. Citra's auto-scale sets this as the internal
     // resolution.
     const uint32_t mResolutionFactor;
+
+    Panel mTopPanel;
+    Panel mLowerPanel;
 
     // EXPERIMENTAL: When true, the top screen + its extents
     // (previously-unseen parts of the scene) are projected onto a 275-degree

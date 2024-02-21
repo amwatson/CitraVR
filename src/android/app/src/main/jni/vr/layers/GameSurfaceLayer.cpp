@@ -30,41 +30,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float defaultLowerPanelScaleFactor = 0.75f * 0.75f;
-constexpr float superImmersiveRadius         = 0.5f;
-
-/** Used to translate texture coordinates into the corresponding coordinates
- * on the Android Activity Window.
- *
- * EmulationActivity still thinks its window
- * (invisible) shows the game surface, so when we forward touch events to
- * corresponding coordinates on the window, it will be as if the user touched
- * the game surface.
- */
-class AndroidWindowSpace {
-public:
-    AndroidWindowSpace(const float widthInDp, const float heightInDp)
-        : mWidthInDp(widthInDp)
-        , mHeightInDp(heightInDp) {}
-    float Width() const { return mWidthInDp; }
-    float Height() const { return mHeightInDp; }
-
-    // "DP" refers to display pixels, which are the same as Android's
-    // "density-independent pixels" (dp).
-    const float mWidthInDp  = 0;
-    const float mHeightInDp = 0;
-
-    // given a 2D point in worldspace 'point2d', returns the transformed
-    // coordinate in DP, written to 'result'
-    void Transform(const XrVector2f& point2d, XrVector2f& result) const {
-        const float width  = static_cast<float>(Width());
-        const float height = static_cast<float>(Height());
-
-        result.x = (point2d.x * width) + (width / 2.0f);
-        // Android has a flipped vertical axis from OpenXR
-        result.y = ((1.0f - point2d.y) * height) - (height / 2.0f);
-    }
-};
+constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
+constexpr float kSuperImmersiveRadius         = 0.5f;
 
 //-----------------------------------------------------------------------------
 // Local sysprops
@@ -169,13 +136,12 @@ XrQuaternionf CalculatePanelRotation(const XrVector3f& windowPosition,
     return XrMath::Quatf::FromThreeVectors(forward, up, right);
 }
 
-bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t panelWidth,
-                                 const uint32_t panelHeight, const XrVector2f& scaleFactor,
+bool GetRayIntersectionWithPanel(const Panel& panel, const XrVector2f& scaleFactor,
                                  const XrVector3f& start, const XrVector3f& end,
                                  XrVector2f& result2d, XrPosef& result3d)
 
 {
-    const XrPosef    worldFromPanel = XrMath::Posef::Inverted(panelFromWorld);
+    const XrPosef    worldFromPanel = XrMath::Posef::Inverted(panel.mPanelFromWorld);
     const XrVector3f localStart     = XrMath::Posef::Transform(worldFromPanel, start);
     const XrVector3f localEnd       = XrMath::Posef::Transform(worldFromPanel, end);
     // Note: assumes layer lies in the XZ plane
@@ -187,17 +153,16 @@ bool GetRayIntersectionWithPanel(const XrPosef& panelFromWorld, const uint32_t p
         return false;
     }
     result3d.position    = start + (end - start) * tan;
-    result3d.orientation = panelFromWorld.orientation;
+    result3d.orientation = panel.mPanelFromWorld.orientation;
 
     const XrVector2f result2dNDC = {
         (localStart.x + (localEnd.x - localStart.x) * tan) / (scaleFactor.x),
         (localStart.y + (localEnd.y - localStart.y) * tan) / (scaleFactor.y)};
 
-    const AndroidWindowSpace androidSpace(panelWidth, panelHeight);
-    androidSpace.Transform(result2dNDC, result2d);
-    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 &&
-                            result2d.x < androidSpace.Width() && result2d.y < androidSpace.Height();
-    result2d.y += androidSpace.Height();
+    panel.Transform(result2dNDC, result2d);
+    const bool isInBounds = result2d.x >= 0 && result2d.y >= 0 && result2d.x < panel.mWidth &&
+                            result2d.y < panel.mHeight;
+    result2d.y += panel.mHeight;
 
     if (!isInBounds) { return false; }
 
@@ -221,21 +186,27 @@ XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
 
 } // anonymous namespace
 
+void Panel::Transform(const XrVector2f& point2d, XrVector2f& result) const {
+
+    result.x = (point2d.x * mWidth) + (mWidth / 2.0f);
+    // Android has a flipped vertical axis from OpenXR
+    result.y = ((1.0f - point2d.y) * mHeight) - (mHeight / 2.0f);
+}
+
 GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, jobject activityObject,
                                    const XrSession& session, const uint32_t resolutionFactor)
     : mSession(session)
-    , mTopPanelFromWorld(CreateTopPanelFromWorld(position))
-    , mLowerPanelFromWorld(CreateLowerPanelFromWorld(mTopPanelFromWorld))
     , mResolutionFactor(resolutionFactor)
+    , mTopPanel(CreateTopPanelFromWorld(position),
+                (SURFACE_WIDTH_UNSCALED * mResolutionFactor) / 2.0,
+                (SURFACE_HEIGHT_UNSCALED * mResolutionFactor) / 2.0, 1.0f)
+    , mLowerPanel(CreateLowerPanelFromWorld(mTopPanel.mPanelFromWorld),
+                  (SURFACE_WIDTH_UNSCALED * mResolutionFactor) / 2.0,
+                  (SURFACE_HEIGHT_UNSCALED * mResolutionFactor) / 2.0, kDefaultLowerPanelScaleFactor)
     , mImmersiveMode(VRSettings::values.vr_immersive_mode)
     , mEnv(env)
 
 {
-    if (mImmersiveMode > 0) {
-        ALOGI("Using VR immersive mode {}", mImmersiveMode);
-        mTopPanelFromWorld.position.z   = mLowerPanelFromWorld.position.z;
-        mLowerPanelFromWorld.position.y = -1.0f;
-    }
     const int32_t initializationStatus = Init(session, activityObject);
     if (initializationStatus < 0) {
         FAIL("Could not initialize GameSurfaceLayer -- error '%d'", initializationStatus);
@@ -257,18 +228,13 @@ void GameSurfaceLayer::SetSurface(const jobject activityObject) const {
 void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
                              uint32_t& layerCount, const XrPosef& headPose,
                              const float& immersiveModeFactor, const bool showLowerPanel) {
-    const uint32_t panelWidth  = mSwapchain.mWidth / 2;
-    const uint32_t panelHeight = mSwapchain.mHeight / 2;
-    const double   aspectRatio =
-        static_cast<double>(2 * panelWidth) / static_cast<double>(panelHeight);
-
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
     const bool         useCylinder       = (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
     if (useCylinder) {
         // Create the Top Display Panel (Curved display)
         for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
-            XrPosef topPanelFromWorld = mTopPanelFromWorld;
+            XrPosef topPanelFromWorld = mTopPanel.mPanelFromWorld;
             if (mImmersiveMode > 1 && !showLowerPanel) {
                 topPanelFromWorld = GetTopPanelFromHeadPose(eye, headPose);
             }
@@ -288,15 +254,15 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // covered by the texture. Together, they control the
             // scale of the texture.
             const float radius =
-                (mImmersiveMode < 2 || showLowerPanel) ? GetRadiusSysprop() : superImmersiveRadius;
+                (mImmersiveMode < 2 || showLowerPanel) ? GetRadiusSysprop() : kSuperImmersiveRadius;
 
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain               = mSwapchain.mHandle;
-            layer.subImage.imageRect.offset.x      = eye == 0 ? 0 : panelWidth;
+            layer.subImage.imageRect.offset.x      = eye == 0 ? 0 : mTopPanel.mWidth;
             layer.subImage.imageRect.offset.y      = 0;
-            layer.subImage.imageRect.extent.width  = panelWidth;
-            layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
+            layer.subImage.imageRect.extent.width  = mTopPanel.mWidth;
+            layer.subImage.imageRect.extent.height = mTopPanel.mHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex         = 0;
             layer.pose                             = topPanelFromWorld;
             layer.pose.position.z += (mImmersiveMode < 2) ? radius : 0.0f;
@@ -306,7 +272,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
                                  : GameSurfaceLayer::DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES *
                                        immersiveModeFactor) *
                 MATH_FLOAT_PI / 180.0f;
-            layer.aspectRatio              = -aspectRatio;
+            layer.aspectRatio              = -static_cast<double>(mTopPanel.AspectRatio());
             layers[layerCount++].mCylinder = layer;
         }
     } else {
@@ -325,17 +291,17 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-            layer.subImage.swapchain               = mSwapchain.mHandle;
-            layer.subImage.imageRect.offset.x      = (eye == 0 ? 0 : panelWidth) + cropHoriz / 2;
-            layer.subImage.imageRect.offset.y      = 0;
-            layer.subImage.imageRect.extent.width  = panelWidth - cropHoriz;
-            layer.subImage.imageRect.extent.height = panelHeight - verticalBorderTex;
+            layer.subImage.swapchain          = mSwapchain.mHandle;
+            layer.subImage.imageRect.offset.x = (eye == 0 ? 0 : mTopPanel.mWidth) + cropHoriz / 2;
+            layer.subImage.imageRect.offset.y = 0;
+            layer.subImage.imageRect.extent.width  = mTopPanel.mWidth - cropHoriz;
+            layer.subImage.imageRect.extent.height = mTopPanel.mHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex         = 0;
-            layer.pose                             = mTopPanelFromWorld;
+            layer.pose                             = mTopPanel.mPanelFromWorld;
             // Scale to get the desired density within the visible area (if we
             // want).
-            const auto scale  = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight, 1.0f,
-                                                       mResolutionFactor);
+            const auto scale  = GetDensityScaleForSize(mTopPanel.mWidth - cropHoriz,
+                                                       -mTopPanel.mHeight, 1.0f, mResolutionFactor);
             layer.size.width  = scale.x;
             layer.size.height = scale.y;
 
@@ -364,17 +330,21 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
 
         layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-        layer.subImage.swapchain          = mSwapchain.mHandle;
-        layer.subImage.imageRect.offset.x = (cropHoriz / 2) / immersiveModeFactor +
-                                            panelWidth * (0.5f - (0.5f / immersiveModeFactor));
+        layer.subImage.swapchain = mSwapchain.mHandle;
+        layer.subImage.imageRect.offset.x =
+            (cropHoriz / 2) / immersiveModeFactor +
+            mLowerPanel.mWidth * (0.5f - (0.5f / immersiveModeFactor));
         layer.subImage.imageRect.offset.y =
-            panelHeight + verticalBorderTex + panelHeight * (0.5f - (0.5f / immersiveModeFactor));
-        layer.subImage.imageRect.extent.width  = (panelWidth - cropHoriz) / immersiveModeFactor;
-        layer.subImage.imageRect.extent.height = panelHeight / immersiveModeFactor;
+            mLowerPanel.mHeight + verticalBorderTex +
+            mLowerPanel.mHeight * (0.5f - (0.5f / immersiveModeFactor));
+        layer.subImage.imageRect.extent.width =
+            (mLowerPanel.mWidth - cropHoriz) / immersiveModeFactor;
+        layer.subImage.imageRect.extent.height = mLowerPanel.mHeight / immersiveModeFactor;
         layer.subImage.imageArrayIndex         = 0;
-        layer.pose                             = mLowerPanelFromWorld;
-        const auto scale           = GetDensityScaleForSize(panelWidth - cropHoriz, -panelHeight,
-                                                            defaultLowerPanelScaleFactor, mResolutionFactor);
+        layer.pose                             = mLowerPanel.mPanelFromWorld;
+        const auto scale =
+            GetDensityScaleForSize(mLowerPanel.mWidth - cropHoriz, -mLowerPanel.mHeight,
+                                   mLowerPanel.mScaleFactor, mResolutionFactor);
         layer.size.width           = scale.x;
         layer.size.height          = scale.y;
         layers[layerCount++].mQuad = layer;
@@ -387,30 +357,25 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(const XrVector3f& sta
                                                            XrPosef&          result3d) const
 
 {
-    const uint32_t panelWidth  = mSwapchain.mWidth / 2;
-    const uint32_t panelHeight = mSwapchain.mHeight / 2;
-    const auto     scale = GetDensityScaleForSize(panelWidth, panelHeight, 1.0f, mResolutionFactor);
-    return ::GetRayIntersectionWithPanel(mTopPanelFromWorld, panelWidth, panelHeight, scale, start,
-                                         end, result2d, result3d);
+    const auto scale = GetDensityScaleForSize(mTopPanel.mWidth, mTopPanel.mHeight,
+                                              mTopPanel.mScaleFactor, mResolutionFactor);
+    return ::GetRayIntersectionWithPanel(mTopPanel, scale, start, end, result2d, result3d);
 }
 
 bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                                    const XrVector3f& end,
                                                    XrVector2f&       result2d,
                                                    XrPosef&          result3d) const {
-    const uint32_t   panelWidth  = mSwapchain.mWidth / 2;
-    const uint32_t   panelHeight = mSwapchain.mHeight / 2;
-    const XrVector2f scale       = GetDensityScaleForSize(
-              panelWidth, panelHeight, defaultLowerPanelScaleFactor, mResolutionFactor);
-    return ::GetRayIntersectionWithPanel(mLowerPanelFromWorld, panelWidth, panelHeight, scale,
-                                         start, end, result2d, result3d);
+    const XrVector2f scale = GetDensityScaleForSize(mLowerPanel.mWidth, mLowerPanel.mHeight,
+                                                    mLowerPanel.mScaleFactor, mResolutionFactor);
+    return ::GetRayIntersectionWithPanel(mLowerPanel, scale, start, end, result2d, result3d);
 }
 
 void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPosition) {
 
     static const XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
     const float             sphereRadius = XrMath::Vector3f::Length(
-                    mTopPanelFromWorld.position - viewerPosition); // Set the initial distance of the
+                    mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
 
     // window from the viewer
     const XrVector3f windowUpDirection{0, 1, 0}; // Y is up
@@ -422,7 +387,7 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     if (windowPosition.y < 0) { return; }
     if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
-    mTopPanelFromWorld = XrPosef{windowRotation, windowPosition};
+    mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
 XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose) {
@@ -431,9 +396,9 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
     XrVector3f forward, up, right;
     XrMath::Quatf::ToVectors(headPose.orientation, forward, right, up);
 
-    panelPosition.z += superImmersiveRadius * (forward.x * 0.4f);
-    panelPosition.y -= superImmersiveRadius * (forward.z * 0.4f);
-    panelPosition.x += superImmersiveRadius * (forward.y * 0.4f);
+    panelPosition.z += kSuperImmersiveRadius * (forward.x * 0.4f);
+    panelPosition.y -= kSuperImmersiveRadius * (forward.z * 0.4f);
+    panelPosition.x += kSuperImmersiveRadius * (forward.y * 0.4f);
 
     panelPosition.z += up.x / 12.f;
     panelPosition.y -= up.z / 12.f;
@@ -447,14 +412,20 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
     static constexpr float kDepthSpeed = 0.05f;
     static constexpr float kMaxDepth   = -10.0f;
 
-    mTopPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
-    mTopPanelFromWorld.position.z =
-        std::min(mTopPanelFromWorld.position.z, mLowerPanelFromWorld.position.z);
-    mTopPanelFromWorld.position.z = std::max(mTopPanelFromWorld.position.z, kMaxDepth);
+    mTopPanel.mPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
+    mTopPanel.mPanelFromWorld.position.z =
+        std::min(mTopPanel.mPanelFromWorld.position.z, mLowerPanel.mPanelFromWorld.position.z);
+    mTopPanel.mPanelFromWorld.position.z =
+        std::max(mTopPanel.mPanelFromWorld.position.z, kMaxDepth);
 }
 
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityObject) {
+    if (mImmersiveMode > 0) {
+        ALOGI("Using VR immersive mode {}", mImmersiveMode);
+        mTopPanel.mPanelFromWorld.position.z   = mLowerPanel.mPanelFromWorld.position.z;
+        mLowerPanel.mPanelFromWorld.position.y = -1.0f;
+    }
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
     mVrGameSurfaceClass =
         JniUtils::GetGlobalClassReference(mEnv, activityObject, gameSurfaceClassName.c_str());

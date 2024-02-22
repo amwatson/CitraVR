@@ -290,7 +290,7 @@ void Config::ReadValues() {
             "VR", "vr_immersive_mode", 0);
     Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;
     VRSettings::values.vr_si_mode_register_offset = sdl2_config->GetInteger(
-            "VR", "vr_si_mode_register_offset", 0);
+            "VR", "vr_si_mode_register_offset", -1);
     Settings::values.vr_si_mode_register_offset = VRSettings::values.vr_si_mode_register_offset;
     VRSettings::values.vr_immersive_positional_factor = sdl2_config->GetInteger(
             "VR", "vr_immersive_positional_factor", 0);

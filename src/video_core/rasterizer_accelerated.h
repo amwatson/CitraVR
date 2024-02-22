@@ -177,6 +177,13 @@ protected:
     float           vr_game_pos_scaler = 0.f;
     float           vr_inv_view[16] = {};
 
+    struct HeuristicResult
+    {
+        int32_t view_matrixregister = -1;
+        int32_t eye_indicator_register = -1;
+        int32_t eye_indicator_reg_index = -1;
+    } vr_heuristic;
+
 public:
     void ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator::VSPicaUniformData &vs_uniforms);
 };

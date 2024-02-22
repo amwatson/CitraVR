@@ -217,7 +217,7 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // TODO(xperia64): How the 3D Slider is updated by the HID module needs to be RE'd
     // and possibly moved to its own Core::Timing event.
-    mem->pad.sliderstate_3d = Settings::values.vr_immersive_eye_indicator.GetValue().empty() ?
+    mem->pad.sliderstate_3d = Settings::values.vr_immersive_mode.GetValue() < 3 ?
             (Settings::values.factor_3d.GetValue() / 100.0f) :
             0.1f;
     system.Kernel().GetSharedPageHandler().Set3DSlider(mem->pad.sliderstate_3d);

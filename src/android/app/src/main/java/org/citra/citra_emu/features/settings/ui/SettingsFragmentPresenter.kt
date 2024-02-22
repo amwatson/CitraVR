@@ -1153,7 +1153,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         IntSetting.VR_SI_MODE_REGISTER_OFFSET,
                         R.string.vr_si_mode_register_offset_title,
                         R.string.vr_si_mode_register_offset_description,
-                        0,
+                        -1,
                         92,
                         "register",
                         IntSetting.VR_SI_MODE_REGISTER_OFFSET.key,
@@ -1163,8 +1163,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(
                 StringInputSetting(
                     StringSetting.VR_IMMMERSIVE_EYE_INDICATOR,
-                    R.string.vr_vr_immersive_eye_indicator_title,
-                    R.string.vr_vr_immersive_eye_indicator_description,
+                    R.string.vr_immersive_eye_indicator_title,
+                    R.string.vr_immersive_eye_indicator_description,
                     ""
                 )
             )

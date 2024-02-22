@@ -30,8 +30,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
-constexpr float kSuperImmersiveRadius         = 0.5f;
+constexpr float kSuperImmersiveRadius = 0.5f;
 
 //-----------------------------------------------------------------------------
 // Local sysprops
@@ -92,20 +91,51 @@ float GetCentralAngleSysprop() {
 //-----------------------------------------------------------------------------
 // Panel math
 
-/** Create the pose for the lower panel.
- *    - Below the center
- *    - Rotated 45 degrees away from viewer
- *    - Half the distance away from viewer as top panel
+/** Define the space of the top panel.
+ *
+ * @param position The position of the panel in world space.
+ * @param surfaceWidth The width of the swapchain surface.
+ * @param surfaceHeight The height of the swapchain surface.
+ *
  */
-XrPosef CreateLowerPanelFromWorld(const XrPosef& topPanelFromWorld) {
+Panel CreateTopPanel(const XrVector3f& position, const float surfaceWidth,
+                     const float surfaceHeight) {
+    // Half the surface width because the panel is rendered in stereo, and each eye gets half the
+    // total width.
+    const float panelWidth = surfaceWidth / 2.0f;
+    // Half the surface height because the surface is divided in half between the upper and lower
+    // panels (See GameSurfaceLayer.h for more info about how the surface is divided).
+    const float panelHeight = surfaceHeight / 2.0f;
 
-    constexpr float kLowerPanelYOffset  = -0.75f;
-    XrPosef         lowerPanelFromWorld = topPanelFromWorld;
+    return Panel(XrPosef{XrMath::Quatf::Identity(), position}, panelWidth, panelHeight, 1.0f);
+}
+
+/** Define the space of the lower panel.
+ *    - Below the top panel
+ *    - Rotated 45 degrees away from viewer
+ *    - 1.5m away from viewer
+ *    - Scaled down to 75%^2 of the top panel's size
+ *      - Note: this is an arbitrary scale constant, chosen
+ *        because the scale (supposed to be .75) was incorrectly
+ *        squared when I did the ribbon positioning math.
+ *
+ *    Note: all values are chosen to be aesthetically pleasing and can be modified.
+ */
+Panel CreateLowerPanelFromTopPanel(const Panel& topPanel) {
+    // Note: the fact that two constants are 0.75 is purely coincidental.
+    constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
+    constexpr float kLowerPanelYOffsetInMeters    = -0.75f;
+    constexpr float kLowerPanelZOffsetInMeters    = -1.5f;
     // Pitch the lower panel away from the viewer 45 degrees
-    lowerPanelFromWorld.orientation = XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f);
-    lowerPanelFromWorld.position.y += kLowerPanelYOffset;
-    lowerPanelFromWorld.position.z = -1.5f;
-    return lowerPanelFromWorld;
+    constexpr float kLowerPanelPitchInRadians  = -MATH_FLOAT_PI / 4.0f;
+
+    XrPosef lowerPanelFromWorld = topPanel.mPanelFromWorld;
+    lowerPanelFromWorld.orientation =
+        XrMath::Quatf::FromEuler(0.0f, kLowerPanelPitchInRadians, 0.0f);
+    lowerPanelFromWorld.position.y += kLowerPanelYOffsetInMeters;
+    lowerPanelFromWorld.position.z = kLowerPanelZOffsetInMeters;
+    return Panel(lowerPanelFromWorld, topPanel.mWidth, topPanel.mHeight,
+                 kDefaultLowerPanelScaleFactor);
 }
 
 XrVector3f CalculatePanelPosition(const XrVector3f& viewerPosition,
@@ -180,10 +210,6 @@ XrVector2f GetDensityScaleForSize(const int32_t  texWidth,
            scaleFactor;
 }
 
-XrPosef CreateTopPanelFromWorld(const XrVector3f& position) {
-    return XrPosef{XrMath::Quatf::Identity(), position};
-}
-
 } // anonymous namespace
 
 void Panel::Transform(const XrVector2f& point2d, XrVector2f& result) const {
@@ -197,12 +223,10 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
                                    const XrSession& session, const uint32_t resolutionFactor)
     : mSession(session)
     , mResolutionFactor(resolutionFactor)
-    , mTopPanel(CreateTopPanelFromWorld(position),
-                (SURFACE_WIDTH_UNSCALED * mResolutionFactor) / 2.0,
-                (SURFACE_HEIGHT_UNSCALED * mResolutionFactor) / 2.0, 1.0f)
-    , mLowerPanel(CreateLowerPanelFromWorld(mTopPanel.mPanelFromWorld),
-                  (SURFACE_WIDTH_UNSCALED * mResolutionFactor) / 2.0,
-                  (SURFACE_HEIGHT_UNSCALED * mResolutionFactor) / 2.0, kDefaultLowerPanelScaleFactor)
+    , mTopPanel(CreateTopPanel(position,
+                               (SURFACE_WIDTH_UNSCALED * mResolutionFactor),
+                               (SURFACE_HEIGHT_UNSCALED * mResolutionFactor)))
+    , mLowerPanel(CreateLowerPanelFromTopPanel(mTopPanel))
     , mImmersiveMode(VRSettings::values.vr_immersive_mode)
     , mEnv(env)
 

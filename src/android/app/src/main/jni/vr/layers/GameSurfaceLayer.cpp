@@ -127,7 +127,7 @@ Panel CreateLowerPanelFromTopPanel(const Panel& topPanel) {
     constexpr float kLowerPanelYOffsetInMeters    = -0.75f;
     constexpr float kLowerPanelZOffsetInMeters    = -1.5f;
     // Pitch the lower panel away from the viewer 45 degrees
-    constexpr float kLowerPanelPitchInRadians  = -MATH_FLOAT_PI / 4.0f;
+    constexpr float kLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f;
 
     XrPosef lowerPanelFromWorld = topPanel.mPanelFromWorld;
     lowerPanelFromWorld.orientation =
@@ -212,12 +212,28 @@ XrVector2f GetDensityScaleForSize(const int32_t  texWidth,
 
 } // anonymous namespace
 
+/*
+================================================================================
+
+ Panel
+
+================================================================================
+*/
+
 void Panel::Transform(const XrVector2f& point2d, XrVector2f& result) const {
 
     result.x = (point2d.x * mWidth) + (mWidth / 2.0f);
     // Android has a flipped vertical axis from OpenXR
     result.y = ((1.0f - point2d.y) * mHeight) - (mHeight / 2.0f);
 }
+
+/*
+================================================================================
+
+ GameSurfaceLayer
+
+================================================================================
+*/
 
 GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, jobject activityObject,
                                    const XrSession& session, const uint32_t resolutionFactor)

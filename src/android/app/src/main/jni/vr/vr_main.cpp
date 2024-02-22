@@ -697,9 +697,10 @@ private:
                             mKeyboardLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                         }
                     } else {
+                        // No dialogs/popups that should impede normal cursor interaction with
+                        // applicable panels
                         shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                             start, end, cursorPos2d, cursorPose3d);
-                        ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x, cursorPos2d.y);
                         if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
                             jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
                                                 cursorPos2d.x, cursorPos2d.y, 0);
@@ -713,6 +714,14 @@ private:
                             jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
                                                 cursorPos2d.x, cursorPos2d.y, 2);
                         }
+                        if (!shouldRenderCursor) {
+                            shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
+                                start, end, cursorPos2d, cursorPose3d);
+                            if (triggerState.changedSinceLastSync) {
+                                mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                            }
+                        }
+
                         if (!shouldRenderCursor) {
                             // Handling this here means L2/R2 are liable to
                             // be slightly out of sync with the other
@@ -774,6 +783,7 @@ private:
         }
 
         if (shouldRenderCursor) {
+            ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x, cursorPos2d.y);
             XrCompositionLayerQuad quadLayer = {};
             mCursorLayer->Frame(gOpenXr->mLocalSpace, quadLayer, cursorPose3d, scaleFactor,
                                 cursorType);

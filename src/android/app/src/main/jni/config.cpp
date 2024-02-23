@@ -292,9 +292,12 @@ void Config::ReadValues() {
     VRSettings::values.vr_si_mode_register_offset = sdl2_config->GetInteger(
             "VR", "vr_si_mode_register_offset", -1);
     Settings::values.vr_si_mode_register_offset = VRSettings::values.vr_si_mode_register_offset;
-    VRSettings::values.vr_immersive_positional_factor = sdl2_config->GetInteger(
-            "VR", "vr_immersive_positional_factor", 0);
-    Settings::values.vr_immersive_positional_factor = VRSettings::values.vr_immersive_positional_factor;
+
+    // For immersive modes we use the factor_3d value as a camera movement factor
+    // which means it affects stereo separation and positional movement
+    // We have to divide this by 10 or the numbers are too big
+    VRSettings::values.vr_factor_3d = sdl2_config->GetInteger(
+            "Renderer", "factor_3d", 100) / 10;
     VRSettings::values.vr_immersive_positional_game_scaler = sdl2_config->GetInteger(
             "VR", "vr_immersive_positional_game_scaler", 0);
     Settings::values.vr_immersive_positional_game_scaler = VRSettings::values.vr_immersive_positional_game_scaler;

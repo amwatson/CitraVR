@@ -413,8 +413,8 @@ private:
                         invertedOrientation, gOpenXr->headLocation.pose.position);
 
                     const float gamePosScaler =
-                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
-                        VRSettings::values.vr_immersive_positional_factor;
+                            powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+                                    VRSettings::values.vr_factor_3d;
 
                     inv_transform[3].x = -position.x * gamePosScaler;
                     inv_transform[3].y = -position.y * gamePosScaler;

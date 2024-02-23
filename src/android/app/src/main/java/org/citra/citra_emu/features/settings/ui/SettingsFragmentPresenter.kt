@@ -1126,18 +1126,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
-                SliderSetting(
-                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR,
-                        R.string.vr_immersive_pos_factor_title,
-                        R.string.vr_immersive_pos_factor_description,
-                        0,
-                        40,
-                        "x",
-                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR.key,
-                        IntSetting.VR_IMMERSIVE_POSITIONAL_FACTOR.defaultValue.toFloat()
-                )
-            )
-            add(
                 SingleChoiceSetting(
                         IntSetting.VR_IMMERSIVE_POSITIONAL_GAME_SCALER,
                         R.string.vr_immersive_pos_game_scaler_title,

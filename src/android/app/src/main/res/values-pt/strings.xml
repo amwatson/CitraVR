@@ -343,8 +343,6 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="immersive_mode">Modo Imersivo</string>
     <string name="vr_si_mode_register_offset_title">Deslocamento do Registro</string>
     <string name="vr_si_mode_register_offset_description">Define o deslocamento de registro usado para a visualização ao usar o Perfil 2 do Modo Super Imersivo - varia de acordo com o jogo.</string>
-    <string name="vr_immersive_pos_factor_title">Fator de Movimento Posicional.</string>
-    <string name="vr_immersive_pos_factor_description">Ajusta o quanto o movimento para esquerda/direita/cima/baixo afeta a câmera do jogo (0 = desativado).</string>
     <string name="vr_immersive_pos_game_scaler_title">Fator de Multiplicação do Fator de Movimento Posicional</string>
     <string name="vr_immersive_pos_game_scaler_description">Ajusta o quanto o movimento para a esquerda/direita/cima/baixo afeta a câmera do jogo, alguns jogos exigem valores maiores, então isso multiplica o Fator de Movimento Posicional.</string>
 </resources>

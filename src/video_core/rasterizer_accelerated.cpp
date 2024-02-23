@@ -1151,41 +1151,45 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
             }
             else if (matrixMode == 3)
             {
+                // First apply the view transformation matrix to the right location
                 float v[16], v2[16], v3[16];
                 MatrixTranspose(v, &f[viewMatrixIndex].x);
                 std::memcpy(v2, vr_inv_view, sizeof(float) * 16);
                 v2[12] = v2[13] = v2[14] = 0.f;
                 MatrixMultiply(v3, v2, v);
-
                 MatrixTranspose(&f[viewMatrixIndex].x, v3);
 
                 // This following part is an improvement on just using the default stereo separation provided by the 3DS
                 // The problem with the default is it doesn't work correctly when rotating the headset, whereas the following approach
-                // applies a left/right separation from an (almost) centered camera POV. If vr_immersive_eye_indicator
-                // is defined, then it will set an depth scale of only 0.1%, and then use a defined vr uniform register
+                // applies a left/right separation from an (almost) centered camera POV.
+                // This profile mode will set a depth scale of only 0.1%, and then use a defined vr uniform register
                 // to identify if the left or right eye is being drawn and apply appropriate stereo separation
+                //
                 // The pair of values (e.g "87,2") represents the offset of the Vec4f in the vs pica uniforms and the
                 // index into that Vec4 of the value that is check for: -ve for left eye and +ve for right eye
-                // Finding these offset/index values is easier to do using a desktop build of Citra in a debugger
-                //
-                // This config should now be redundant due to the heuristic search for the right registers
-                // but is still available to set if it fails to work for a game and someone identifies the appropriate values
+                float eye_indicator_register = vr_heuristic.eye_indicator_register;
+                float eye_indicator_reg_index = vr_heuristic.eye_indicator_reg_index;
+                //If the user _has_ defined this (unlikely!) then use the config setting
                 if (!findLeftRightEyeIndicator)
                 {
+                    // Finding these offset/index values manually is easier to do using a desktop build of Citra in a debugger
+                    // however the heuristic search appears to do a very good job of this so it is unlikely people
+                    // will need to find and specify this config, but is still available to set if it fails to work for
+                    // a game and someone identifies the appropriate values
                     const std::string vr_immersive_eye_indicator = Settings::values.vr_immersive_eye_indicator.GetValue();
-                    vr_heuristic.eye_indicator_register = atoi(vr_immersive_eye_indicator.substr(0, vr_immersive_eye_indicator.find_first_of(',')).c_str());
-                    vr_heuristic.eye_indicator_reg_index = atoi(vr_immersive_eye_indicator.substr(vr_immersive_eye_indicator.find_first_of(',')+1).c_str());
+                    eye_indicator_register = atoi(vr_immersive_eye_indicator.substr(0, vr_immersive_eye_indicator.find_first_of(',')).c_str());
+                    eye_indicator_reg_index = atoi(vr_immersive_eye_indicator.substr(vr_immersive_eye_indicator.find_first_of(',')+1).c_str());
                 }
 
                 //If we found/know a viable register/index, then use it for left/right eye logic
-                if (vr_heuristic.eye_indicator_register != -1 &&
-                        vr_heuristic.eye_indicator_reg_index != -1 &&
-                        vr_heuristic.eye_indicator_register < vs_uniforms.uniforms.f.size() &&
-                        (vr_heuristic.eye_indicator_register < viewMatrixIndex ||
-                            vr_heuristic.eye_indicator_register > viewMatrixIndex + 3) &&
-                        f[vr_heuristic.eye_indicator_register][vr_heuristic.eye_indicator_reg_index] != 0.0f)
+                if (eye_indicator_register != -1 &&
+                        eye_indicator_reg_index != -1 &&
+                        eye_indicator_register < vs_uniforms.uniforms.f.size() &&
+                        (eye_indicator_register < viewMatrixIndex ||
+                            eye_indicator_register > viewMatrixIndex + 3) &&
+                        f[eye_indicator_register][eye_indicator_reg_index] != 0.0f)
                 {
-                    const bool isLeftEye = (f[vr_heuristic.eye_indicator_register][vr_heuristic.eye_indicator_reg_index] < 0.f);
+                    const bool isLeftEye = (f[eye_indicator_register][eye_indicator_reg_index] < 0.f);
                     f[viewMatrixIndex][3] +=
                             vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f);
                 }

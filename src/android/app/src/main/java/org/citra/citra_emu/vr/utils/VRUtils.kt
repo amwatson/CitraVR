@@ -21,6 +21,10 @@ object VRUtils {
 
     }
 
+    enum class Hotkey(val button: Int) {
+        CLOSE_GAME(org.citra.citra_emu.features.hotkeys.Hotkey.CLOSE_GAME.button);
+    }
+
     val hotKeys = listOf(
         Settings.HOTKEY_CLOSE_GAME
     )

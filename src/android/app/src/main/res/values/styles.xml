@@ -37,4 +37,9 @@
         <item name="colorControlNormal">@color/citra_primary</item>
     </style>
 
+    <style name="VrRibbonButtonStyle" parent="@style/VrKeyboardButtonStyle">
+        <item name="android:background">@drawable/vr_ribbon_button</item>
+        <item name="android:textColor">#bfffffff</item>
+        <item name="android:textAlignment">center</item>
+    </style>
 </resources>

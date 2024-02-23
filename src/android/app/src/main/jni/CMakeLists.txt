@@ -28,6 +28,7 @@ add_library(citra-android SHARED
     ndk_motion.cpp
     ndk_motion.h
     system_save_game.cpp
+    native_log.cpp
     # VR-specific
     vr/OpenXR.cpp
     vr/gl/Egl.cpp

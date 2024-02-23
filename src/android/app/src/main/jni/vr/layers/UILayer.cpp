@@ -163,7 +163,7 @@ UILayer::UILayer(const std::string& className, const XrVector3f&& position,
                  const XrQuaternionf&& orientation, JNIEnv* env, jobject activityObject,
                  const XrSession& session)
     : mSession(session)
-    , mPanelFromWorld(XrPosef{XrMath::Quatf::Identity(), position})
+    , mPanelFromWorld(XrPosef{orientation, position})
     , mEnv(env) {
     const int32_t initializationStatus = Init(className, activityObject, position, session);
     if (initializationStatus < 0) {

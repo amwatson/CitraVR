@@ -48,10 +48,6 @@ License     :   Licensed under GPLv3 or any later version.
 #define ALOG_INPUT_VERBOSE(...)
 #endif
 
-#define DECL_PFN(pfn) PFN_##pfn pfn = nullptr
-#define INIT_PFN(pfn)                                                                              \
-    OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), #pfn, (PFN_xrVoidFunction*)(&pfn)))
-
 // Used by Citra core to set a higher priority to the non-VR render thread.
 namespace vr {
 XrSession  gSession     = XR_NULL_HANDLE;
@@ -147,7 +143,44 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
     }
 }
 
+// Called whenever a session is started/resumed. Creates the head space based on the
+// current pose of the HMD.
+void CreateRuntimeInitatedReferenceSpaces(const XrTime predictedDisplayTime) {
+    // Create a reference space with the forward direction from the
+    // starting frame.
+    {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                                XR_REFERENCE_SPACE_TYPE_LOCAL,
+                                                XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mForwardDirectionSpace));
+    }
+
+    {
+        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                                XR_REFERENCE_SPACE_TYPE_VIEW,
+                                                XrMath::Posef::Identity()};
+        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
+    }
+
+    // Get the pose of the local space.
+    XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
+    OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace, predictedDisplayTime,
+                      &lsl));
+
+    // Set the forward direction of the new space.
+    const XrPosef forwardDirectionPose = lsl.pose;
+
+    // Create a reference space with the same position and rotation as
+    // local.
+    const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
+                                            XR_REFERENCE_SPACE_TYPE_LOCAL, forwardDirectionPose};
+    OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
+}
+
 } // anonymous namespace
+
+//-----------------------------------------------------------------------------
+// VRApp
 
 class VRApp {
 public:
@@ -156,6 +189,10 @@ public:
 
     ~VRApp() { assert(mIsStopRequested); }
 
+private:
+    class AppState;
+
+public:
     void MainLoop(JNIEnv* jni) {
 
         //////////////////////////////////////////////////
@@ -168,7 +205,19 @@ public:
         // Frame loop
         //////////////////////////////////////////////////
 
-        while (!mIsStopRequested) { Frame(jni); }
+        while (true) {
+            // Handle events/state-changes.
+            const AppState appState = HandleEvents(jni);
+            if (appState.mIsStopRequested) { break; }
+            HandleStateChanges(jni, appState);
+            if (appState.mIsXrSessionActive) {
+                Frame(jni, appState);
+            } else {
+                // TODO should block here
+                mFrameIndex = 0;
+            }
+            mLastAppState = appState;
+        }
 
         //////////////////////////////////////////////////
         // Exit
@@ -223,17 +272,22 @@ private:
                 XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->mSession, resolutionFactor);
         }
 
-        // Create the cursor layer.
-        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
-
-        mErrorMessageLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
-            XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
+        mRibbonLayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrRibbonLayer", XrVector3f{0, -0.75f, -1.51f},
+            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
+            gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
             XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
+
+        mErrorMessageLayer = std::make_unique<UILayer>(
+            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
+            XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
+
+        // Create the cursor layer.
+        mCursorLayer = std::make_unique<CursorLayer>(gOpenXr->mSession);
 
         //////////////////////////////////////////////////
         // Intialize JNI methods
@@ -264,20 +318,7 @@ private:
         if (mOpenSettingsMethodID == nullptr) { FAIL("could not get openSettingsMenuMethodID"); }
     }
 
-    void Frame(JNIEnv* jni) {
-
-        ////////////////////////////////
-        // Handle events/state-changes.
-        ////////////////////////////////
-
-        PollEvents(jni);
-        HandleMessageQueueEvents(jni);
-        if (mIsStopRequested) { return; }
-        if (!mIsXrSessionActive) {
-            // TODO should block here
-            mFrameIndex = 0;
-            return;
-        }
+    void Frame(JNIEnv* jni, const AppState& appState) {
 
         ////////////////////////////////
         // Increment the frame index.
@@ -444,24 +485,26 @@ private:
                 layers[layerCount++].mPassthrough = passthroughLayer;
             }
 
+            mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+
             // Game surface (upper and lower panels) are in front of the passthrough layer.
             mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount,
                                      gOpenXr->headLocation.pose, immersiveModeFactor,
                                      showLowerPanel);
 
             // If active, the keyboard layer is in front of the game surface.
-            if (mIsKeyboardActive) {
+            if (appState.mIsKeyboardActive) {
                 mKeyboardLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
             }
 
             // If visible, error messsage appears in front of all other panels.
-            if (mShouldShowErrorMessage) {
+            if (appState.mShouldShowErrorMessage) {
                 mErrorMessageLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
             }
 
             // Cursor visibility will depend on hit-test but will be in front
             // of all other panels. This is because precedence lines up with depth order.
-            HandleCursorLayer(jni, layers, layerCount);
+            HandleCursorLayer(jni, appState, layers, layerCount);
         }
 
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
@@ -597,46 +640,11 @@ private:
         }
     }
 
-    // Called whenever a session is started/resumed. Creates the head space based on the
-    // current pose of the HMD.
-    void CreateRuntimeInitatedReferenceSpaces(const XrTime predictedDisplayTime) const {
-        // Create a reference space with the forward direction from the
-        // starting frame.
-        {
-            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                    XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                    XrMath::Posef::Identity()};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mForwardDirectionSpace));
-        }
-
-        {
-            const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                    XR_REFERENCE_SPACE_TYPE_VIEW,
-                                                    XrMath::Posef::Identity()};
-            OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mViewSpace));
-        }
-
-        // Get the pose of the local space.
-        XrSpaceLocation lsl = {XR_TYPE_SPACE_LOCATION};
-        OXR(xrLocateSpace(gOpenXr->mForwardDirectionSpace, gOpenXr->mLocalSpace,
-                          predictedDisplayTime, &lsl));
-
-        // Set the forward direction of the new space.
-        const XrPosef forwardDirectionPose = lsl.pose;
-
-        // Create a reference space with the same position and rotation as
-        // local.
-        const XrReferenceSpaceCreateInfo sci = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO, nullptr,
-                                                XR_REFERENCE_SPACE_TYPE_LOCAL,
-                                                forwardDirectionPose};
-        OXR(xrCreateReferenceSpace(gOpenXr->mSession, &sci, &gOpenXr->mHeadSpace));
-    }
-
     /** Handle the cursor and any hand-tracked/layer-dependent input
      *  interactions.
      **/
-    void HandleCursorLayer(JNIEnv* jni, std::vector<XrCompositionLayer>& layers,
-                           uint32_t& layerCount) const {
+    void HandleCursorLayer(JNIEnv* jni, const AppState& appState,
+                           std::vector<XrCompositionLayer>& layers, uint32_t& layerCount) const {
 
         bool                    shouldRenderCursor = false;
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
@@ -671,23 +679,24 @@ private:
 
                 // Hit-test panels in order of priority (and known depth)
 
-                if (mShouldShowErrorMessage) {
+                if (appState.mShouldShowErrorMessage) {
                     shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
                     if (triggerState.changedSinceLastSync) {
                         mErrorMessageLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
                 } else { // Don't test for cursor intersection if error message is shown
-                    if (mIsKeyboardActive) {
+                    if (appState.mIsKeyboardActive) {
                         shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
                             start, end, cursorPos2d, cursorPose3d);
                         if (triggerState.changedSinceLastSync) {
                             mKeyboardLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                         }
                     } else {
+                        // No dialogs/popups that should impede normal cursor interaction with
+                        // applicable panels
                         shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                             start, end, cursorPos2d, cursorPose3d);
-                        ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x, cursorPos2d.y);
                         if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
                             jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
                                                 cursorPos2d.x, cursorPos2d.y, 0);
@@ -701,6 +710,14 @@ private:
                             jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
                                                 cursorPos2d.x, cursorPos2d.y, 2);
                         }
+                        if (!shouldRenderCursor) {
+                            shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
+                                start, end, cursorPos2d, cursorPose3d);
+                            if (triggerState.changedSinceLastSync) {
+                                mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                            }
+                        }
+
                         if (!shouldRenderCursor) {
                             // Handling this here means L2/R2 are liable to
                             // be slightly out of sync with the other
@@ -762,6 +779,7 @@ private:
         }
 
         if (shouldRenderCursor) {
+            ALOG_INPUT_VERBOSE("Cursor 2D coords: {} {}", cursorPos2d.x, cursorPos2d.y);
             XrCompositionLayerQuad quadLayer = {};
             mCursorLayer->Frame(gOpenXr->mLocalSpace, quadLayer, cursorPose3d, scaleFactor,
                                 cursorType);
@@ -790,7 +808,126 @@ private:
 #endif
     }
 
-    void HandleSessionStateChanges(const XrSessionState state) {
+    AppState HandleEvents(JNIEnv* jni) const {
+        AppState newState = mLastAppState;
+        OXRPollEvents(jni, newState);
+        HandleMessageQueueEvents(jni, newState);
+        return newState;
+    }
+
+    void HandleStateChanges(JNIEnv* jni, const AppState& newState) const {
+        if (newState.mIsEmulationPaused != mLastAppState.mIsEmulationPaused) {
+            ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
+                  newState.mIsEmulationPaused);
+            if (newState.mIsEmulationPaused) {
+                PauseEmulation(jni);
+            } else {
+                ResumeEmulation(jni);
+            }
+        }
+    }
+
+    void OXRPollEvents(JNIEnv* jni, AppState& newAppState) const {
+        XrEventDataBuffer eventDataBuffer = {};
+
+        // Process all pending messages.
+        for (;;) {
+            XrEventDataBaseHeader* baseEventHeader = (XrEventDataBaseHeader*)(&eventDataBuffer);
+            baseEventHeader->type                  = XR_TYPE_EVENT_DATA_BUFFER;
+            baseEventHeader->next                  = NULL;
+            XrResult r;
+            OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
+            if (r != XR_SUCCESS) { break; }
+
+            switch (baseEventHeader->type) {
+                case XR_TYPE_EVENT_DATA_EVENTS_LOST:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_EVENTS_LOST "
+                          "event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+                    const XrEventDataSessionStateChanged* ssce =
+                        (XrEventDataSessionStateChanged*)(baseEventHeader);
+                    if (ssce != nullptr) {
+                        ALOGV("{}(): Received "
+                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
+                              __func__);
+                        OXRHandleSessionStateChangedEvent(jni, newAppState, *ssce);
+                    } else {
+                        ALOGE("{}(): Received "
+                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
+                              __func__);
+                    }
+                } break;
+                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
+                          __func__);
+                    break;
+                case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
+                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                        (XrEventDataPerfSettingsEXT*)(baseEventHeader);
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
+                          "subdomain {} : level {} -> level {}",
+                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
+                } break;
+                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
+                    ALOGV("{}(): Received "
+                          "XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING "
+                          "event",
+                          __func__);
+                    break;
+                default:
+                    ALOGV("{}(): Unknown event", __func__);
+                    break;
+            }
+        }
+    }
+
+    void OXRHandleSessionStateChangedEvent(JNIEnv*                               jni,
+                                           AppState&                             newAppState,
+                                           const XrEventDataSessionStateChanged& newState) const {
+        static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
+        if (newState.state != lastState) {
+            ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
+                  "session={} time={}",
+                  __func__, XrSessionStateToString(lastState),
+                  XrSessionStateToString(newState.state), newState.session, newState.time);
+        }
+        lastState = newState.state;
+        switch (newState.state) {
+            case XR_SESSION_STATE_FOCUSED:
+                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
+                if (!mLastAppState.mHasFocus && !mLastAppState.mShouldShowErrorMessage) {
+                    newAppState.mIsEmulationPaused = false;
+                }
+                newAppState.mHasFocus = true;
+                break;
+            case XR_SESSION_STATE_VISIBLE:
+                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
+                if (mLastAppState.mHasFocus) { newAppState.mIsEmulationPaused = true; }
+                newAppState.mHasFocus = false;
+                break;
+            case XR_SESSION_STATE_READY:
+            case XR_SESSION_STATE_STOPPING:
+                OXRHandleSessionStateChanges(newState.state, newAppState);
+                break;
+            case XR_SESSION_STATE_EXITING:
+                newAppState.mIsStopRequested = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    void OXRHandleSessionStateChanges(const XrSessionState state, AppState& newAppState) const {
         if (state == XR_SESSION_STATE_READY) {
             assert(mIsXrSessionActive == false);
 
@@ -802,11 +939,12 @@ private:
             XrResult result;
             OXR(result = xrBeginSession(gOpenXr->mSession, &sbi));
 
-            mIsXrSessionActive = (result == XR_SUCCESS);
+            newAppState.mIsXrSessionActive = (result == XR_SUCCESS);
 
             // Set session state once we have entered VR mode and have a valid
             // session object.
-            if (mIsXrSessionActive) {
+            if (newAppState.mIsXrSessionActive) {
+                ALOGI("{}(): Entered XR_SESSION_STATE_READY", __func__);
                 PFN_xrPerfSettingsSetPerformanceLevelEXT pfnPerfSettingsSetPerformanceLevelEXT =
                     NULL;
                 OXR(xrGetInstanceProcAddr(
@@ -843,121 +981,13 @@ private:
             }
         } else if (state == XR_SESSION_STATE_STOPPING) {
             assert(mIsXrSessionActive);
+            ALOGI("{}(): Entered XR_SESSION_STATE_STOPPING", __func__);
             OXR(xrEndSession(gOpenXr->mSession));
-            mIsXrSessionActive = false;
+            newAppState.mIsXrSessionActive = false;
         }
     }
 
-    void HandleSessionStateChangedEvent(JNIEnv*                               jni,
-                                        const XrEventDataSessionStateChanged& newState) {
-        static XrSessionState lastState = XR_SESSION_STATE_UNKNOWN;
-        if (newState.state != lastState) {
-            ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
-                  "session={} time={}",
-                  __func__, XrSessionStateToString(lastState),
-                  XrSessionStateToString(newState.state), newState.session, newState.time);
-        }
-        lastState = newState.state;
-        switch (newState.state) {
-            case XR_SESSION_STATE_FOCUSED:
-                ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mHasFocus && !mShouldShowErrorMessage) { ResumeEmulation(jni); }
-                mHasFocus = true;
-                break;
-            case XR_SESSION_STATE_VISIBLE:
-                ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mHasFocus) { PauseEmulation(jni); }
-                mHasFocus = false;
-                break;
-            case XR_SESSION_STATE_READY:
-            case XR_SESSION_STATE_STOPPING:
-                HandleSessionStateChanges(newState.state);
-                break;
-            case XR_SESSION_STATE_EXITING:
-                mIsStopRequested = true;
-                break;
-            default:
-                break;
-        }
-    }
-
-    void PauseEmulation(JNIEnv* jni) {
-        assert(jni != nullptr);
-        jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
-        mIsEmulationPaused = true;
-    }
-
-    void ResumeEmulation(JNIEnv* jni) {
-        assert(jni != nullptr);
-        jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
-        mIsEmulationPaused = false;
-    }
-
-    void PollEvents(JNIEnv* jni) {
-        XrEventDataBuffer eventDataBuffer = {};
-
-        // Process all pending messages.
-        for (;;) {
-            XrEventDataBaseHeader* baseEventHeader = (XrEventDataBaseHeader*)(&eventDataBuffer);
-            baseEventHeader->type                  = XR_TYPE_EVENT_DATA_BUFFER;
-            baseEventHeader->next                  = NULL;
-            XrResult r;
-            OXR(r = xrPollEvent(gOpenXr->mInstance, &eventDataBuffer));
-            if (r != XR_SUCCESS) { break; }
-
-            switch (baseEventHeader->type) {
-                case XR_TYPE_EVENT_DATA_EVENTS_LOST:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_EVENTS_LOST "
-                          "event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-                    const XrEventDataSessionStateChanged* ssce =
-                        (XrEventDataSessionStateChanged*)(baseEventHeader);
-                    if (ssce != nullptr) {
-                        ALOGV("{}(): Received "
-                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED",
-                              __func__);
-                        HandleSessionStateChangedEvent(jni, *ssce);
-                    } else {
-                        ALOGE("{}(): Received "
-                              "XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: nullptr",
-                              __func__);
-                    }
-                } break;
-                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED event",
-                          __func__);
-                    break;
-                case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
-                        (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
-                          "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
-                } break;
-                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING "
-                          "event",
-                          __func__);
-                    break;
-                default:
-                    ALOGV("{}(): Unknown event", __func__);
-                    break;
-            }
-        }
-    }
-
-    void HandleMessageQueueEvents(JNIEnv* jni) {
+    void HandleMessageQueueEvents(JNIEnv* jni, AppState& newAppState) const {
         // Arbitrary limit to prevent the render thread from blocking too long
         // on a single frame. This may happen if the app is paused in an edge
         // case. We should try to avoid these cases as it will result in a
@@ -973,37 +1003,37 @@ private:
             switch (message.mType) {
                 case Message::Type::SHOW_KEYBOARD: {
                     const bool shouldShowKeyboard = message.mPayload == 1;
-                    if (shouldShowKeyboard != mIsKeyboardActive) {
-                        ALOGD("Keyboard status changed: {} -> {}", mIsKeyboardActive,
+                    if (shouldShowKeyboard != mLastAppState.mIsKeyboardActive) {
+                        ALOGD("Keyboard status changed: {} -> {}", mLastAppState.mIsKeyboardActive,
                               shouldShowKeyboard);
                     }
 
                     ALOGD("Received SHOW_KEYBOARD message: {}, state change {} -> {}",
-                          shouldShowKeyboard, mIsKeyboardActive, shouldShowKeyboard);
-                    mIsKeyboardActive = shouldShowKeyboard;
+                          shouldShowKeyboard, mLastAppState.mIsKeyboardActive, shouldShowKeyboard);
+                    newAppState.mIsKeyboardActive = shouldShowKeyboard;
 
                     break;
                 }
                 case Message::Type::SHOW_ERROR_MESSAGE: {
                     const bool shouldShowErrorMessage = message.mPayload == 1;
                     ALOGD("Received SHOW_ERROR_MESSAGE message: {}, state change {} -> {}",
-                          shouldShowErrorMessage, mShouldShowErrorMessage, shouldShowErrorMessage);
-                    mShouldShowErrorMessage = shouldShowErrorMessage;
-                    if (mShouldShowErrorMessage && !mIsEmulationPaused) {
+                          shouldShowErrorMessage, mLastAppState.mShouldShowErrorMessage,
+                          shouldShowErrorMessage);
+                    newAppState.mShouldShowErrorMessage = shouldShowErrorMessage;
+                    if (newAppState.mShouldShowErrorMessage && !newAppState.mIsEmulationPaused) {
                         ALOGD("Pausing emulation due to error message");
-                        PauseEmulation(jni);
-                        mIsEmulationPaused = true;
+                        newAppState.mIsEmulationPaused = true;
                     }
-                    if (!mShouldShowErrorMessage && mIsEmulationPaused && mHasFocus) {
+                    if (!newAppState.mShouldShowErrorMessage && newAppState.mIsEmulationPaused &&
+                        newAppState.mHasFocus) {
                         ALOGD("Resuming emulation after error message");
-                        ResumeEmulation(jni);
-                        mIsEmulationPaused = false;
+                        newAppState.mIsEmulationPaused = false;
                     }
                     break;
                 }
                 case Message::Type::EXIT_NEEDED: {
                     ALOGD("Received EXIT_NEEDED message");
-                    mIsStopRequested = true;
+                    newAppState.mIsStopRequested = true;
                     break;
                 }
 
@@ -1014,22 +1044,40 @@ private:
         }
     }
 
+    void PauseEmulation(JNIEnv* jni) const {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
+    }
+
+    void ResumeEmulation(JNIEnv* jni) const {
+        assert(jni != nullptr);
+        jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
+    }
+
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
     jobject     mActivityObject;
 
-    bool mIsStopRequested        = false;
-    bool mIsXrSessionActive      = false;
-    bool mHasFocus               = false;
-    bool mIsKeyboardActive       = false;
-    bool mShouldShowErrorMessage = false;
-    bool mIsEmulationPaused      = false;
+    class AppState {
+    public:
+        bool mIsKeyboardActive       = false;
+        bool mShouldShowErrorMessage = false;
+        bool mIsEmulationPaused      = false;
+
+        bool mIsStopRequested   = false;
+        bool mIsXrSessionActive = false;
+        bool mHasFocus          = false;
+    };
+
+    // App state from previous frame.
+    AppState mLastAppState;
 
     std::unique_ptr<CursorLayer>      mCursorLayer;
     std::unique_ptr<UILayer>          mErrorMessageLayer;
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
     std::unique_ptr<UILayer>          mKeyboardLayer;
+    std::unique_ptr<UILayer>          mRibbonLayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame                   mInputStateFrame;
@@ -1041,6 +1089,9 @@ private:
     jmethodID mPauseGameMethodID         = nullptr;
     jmethodID mOpenSettingsMethodID      = nullptr;
 };
+
+//-----------------------------------------------------------------------------
+// VRApp
 
 class VRAppThread {
 public:
@@ -1117,6 +1168,9 @@ struct VRAppHandle {
     };
 };
 
+//-----------------------------------------------------------------------------
+// JNI functions
+
 extern "C" JNIEXPORT jlong JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz) {
     // Log the creat start time, which will be used to calculate the total
@@ -1130,7 +1184,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
     ALOGI("nativeOnCreate {}", ret);
     return ret;
 }
-
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
 
@@ -1138,7 +1191,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thi
     if (handle != 0) { delete VRAppHandle(handle).p; }
     VR::JNI::CleanupJNI(env);
 }
-
 extern "C" JNIEXPORT jint JNICALL
 Java_org_citra_citra_1emu_vr_utils_VRUtils_getHMDType(JNIEnv* env, jclass clazz) {
     return static_cast<jint>(VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr()));
@@ -1148,7 +1200,6 @@ Java_org_citra_citra_1emu_vr_utils_VRUtils_getDefaultResolutionFactor(JNIEnv* en
     const VRSettings::HMDType hmdType = VRSettings::HmdTypeFromStr(VRSettings::GetHMDTypeStr());
     return GetDefaultGameResolutionFactorForHmd(hmdType);
 }
-
 extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_utils_VrMessageQueue_nativePost(
     JNIEnv* env, jobject thiz, jint message_type, jlong payload) {
     ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type, payload);

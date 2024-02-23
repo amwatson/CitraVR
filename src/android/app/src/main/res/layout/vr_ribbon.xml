@@ -73,13 +73,12 @@
                     android:layout_height="0dp"
                     android:layout_weight="1" />
 
-                <ImageButton
-                    android:id="@+id/buttonHome"
+                <Button
+                    android:id="@+id/buttonStart"
+                    style="@style/VrRibbonButtonStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:background="@null"
-                    android:src="@drawable/button_home" />
+                    android:text="@string/button_start" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -87,11 +86,27 @@
                     android:layout_weight="1" />
 
                 <Button
-                    android:id="@+id/buttonStart"
+                    android:id="@+id/buttonExit"
                     style="@style/VrRibbonButtonStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/button_start" />
+                  android:text="@string/emulation_close_game" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="3" />
+
+
+                <Button
+                    android:id="@+id/buttonNextMenu"
+                    style="@style/VrRibbonButtonStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                  android:text=">" />
+
+
+
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

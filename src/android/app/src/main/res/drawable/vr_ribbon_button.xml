@@ -1,0 +1,6 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pressed state -->
+    <item android:state_pressed="true" android:drawable="@drawable/vr_ribbon_button_pressed"/>
+    <!-- Default state -->
+    <item android:drawable="@drawable/vr_ribbon_button_default"/>
+</selector>

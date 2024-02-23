@@ -43,7 +43,7 @@
                 android:layout_width="900dp"
                 android:layout_height="675dp"
                 android:layout_marginTop="10dp"
-                android:background="@android:color/transparent"
+                android:background="#093A60"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />

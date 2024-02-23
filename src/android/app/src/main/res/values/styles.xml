@@ -38,9 +38,8 @@
     </style>
 
     <style name="VrRibbonButtonStyle" parent="@style/VrKeyboardButtonStyle">
-        <item name="android:alpha">0.5</item>
         <item name="android:background">@drawable/vr_ribbon_button</item>
-        <item name="android:textColor">@color/vr_ribbon_button_text_color</item>
+        <item name="android:textColor">#bfffffff</item>
         <item name="android:textAlignment">center</item>
     </style>
 </resources>

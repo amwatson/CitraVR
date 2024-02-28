@@ -26,5 +26,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
                 else NativeLibrary.ButtonState.RELEASED)
             false
         }
+        window?.findViewById<Button>(R.id.buttonExit)?.setOnTouchListener { _, motionEvent ->
+            activity.quitToMenu()
+            false
+        }
     }
 }

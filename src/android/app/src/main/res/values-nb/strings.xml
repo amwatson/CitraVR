@@ -187,8 +187,6 @@
     <string name="immersive_mode">Immersiv Modus</string>
     <string name="vr_si_mode_register_offset_title">Register Offset</string>
     <string name="vr_si_mode_register_offset_description">Setter registerforskyvning som brukes for visningen når du bruker Super Immersive Mode Profile 2 - varierer etter spill.</string>
-    <string name="vr_immersive_pos_factor_title">Posisjonell Bevegelsesfaktor</string>
-    <string name="vr_immersive_pos_factor_description">Justerer hvor mye bevegelse venstre/høyre/opp/ned påvirker spilkameraet (0 = deaktivert)</string>
     <string name="vr_immersive_pos_game_scaler_title">Posisjonell Bevegelsesfaktor Multiplikator</string>
     <string name="vr_immersive_pos_game_scaler_description">Justerer hvor mye bevegelse venstre/høyre/opp/ned påvirker spillekameraet, noen spill krever større verdier, så dette multipliserer den posisjonelle bevegelsesfaktoren.</string>
 </resources>

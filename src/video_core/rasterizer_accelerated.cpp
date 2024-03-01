@@ -8,6 +8,8 @@
 #include "video_core/pica/pica_core.h"
 #include "video_core/rasterizer_accelerated.h"
 
+#include <set>
+
 namespace VideoCore {
 
 using Pica::f24;
@@ -21,6 +23,8 @@ static Common::Vec4f ColorRGBA8(const u32 color) {
 static Common::Vec3f LightColor(const Pica::LightingRegs::LightColor& color) {
     return Common::Vec3u{color.r, color.g, color.b} / 255.0f;
 }
+
+constexpr float VR_IPD  = 0.065f;
 
 RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::OutputVertex& v,
                                                       bool flip_quaternion) {
@@ -859,7 +863,7 @@ void RasterizerAccelerated::SyncClipPlane() {
     }
 }
 
-void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16])
+void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const float inv_view[16])
 {
     if (vs_uniform_block_data.data.vr_immersive_mode_factor != immersiveModeFactor)
     {
@@ -869,7 +873,8 @@ void RasterizerAccelerated::SetVRData(const int32_t &vrImmersiveMode, const floa
 
     vr_uoffset = uoffset;
     vr_immersive_mode = vrImmersiveMode;
-    std::memcpy(vr_view, view, sizeof(float) * 16);
+    vr_game_pos_scaler = gamePosScaler;
+    std::memcpy(vr_inv_view, inv_view, sizeof(float) * 16);
 }
 
 static void MatrixTranspose(float m[16], const float src[16]) {
@@ -924,37 +929,275 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
                 viewMatrixIndex = vr_uoffset;
                 break;
             default:
-                viewMatrixIndex = -1;
-                break;
+                return;
+        }
+
+        const bool findLeftRightEyeIndicator = Settings::values.vr_immersive_eye_indicator.GetValue().empty();
+
+        /*
+         * The following section is a "heuristic" algorithm that guesses (pretty well actually!) both the number of the
+         * register for the view transformation matrix and also the left/right eye indicator register based on a bunch of
+         * characteristics I gathered by looking at the register values for a few games. If it gets it wrong, then it is
+         * still possible to supply your own values using the config options, but the default now should be using this
+         * "auto-detect" routine.
+         */
+        if (viewMatrixIndex == -1 && mode >= 3)
+        {
+            struct regscore
+            {
+                regscore() {
+                    neg = pos = 0;
+                    score = bonus = 0.f;
+                }
+                int neg;
+                int pos;
+                std::set<float> values;
+                float score;
+                float bonus;
+            };
+
+            //static array to keep track of the way the data changes in each register location
+            static regscore regscores[96 * 4];
+            static regscore regscores2[96];
+
+            // use a counter to ignore the first number of
+            // times through here, as a lot of these will
+            // just be things like intro videos etc
+            static int counter = 0;
+            constexpr int start = 5000;
+            constexpr int stop = 250000;
+            constexpr float EPSILON = 0.00001f;
+            auto between = [=](float l, float v, float r) { return v <= r && v >= l; };
+            static int identityMatrix[16] = {
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
+            };
+
+            if (++counter > start)
+            {
+                //Stop collecting after a period of time as we should have a good hit by now
+                //we don't want to waste precious CPU
+                if (counter < stop)
+                {
+                    for (int r = 0; r < 96; ++r)
+                    {
+                        /*
+                         * This block does the scoring for the possible view matrix register
+                         */
+                        if (r <= 91)
+                        {
+                            //Check that all the values are between -1 and 1
+                            //don't include values that might be positional and values in the final 4x4 row
+                            bool valid = true;
+                            for (int i = 0; i < 3 && valid; ++i) {
+                                for (int j = 0; j < 3 && valid; ++j) {
+                                    valid = between(-1.f, f[r + i][j], 1.f);
+                                }
+                            }
+
+                            //only proceed to score if register could legitimately be a view matrix
+                            if (valid) {
+                                regscores2[r].score += 1;
+
+                                //bonus point if register appear to be an identity matrix
+                                bool isIdentity = true;
+                                for (int i = 0; i < 3 && isIdentity; ++i) {
+                                    for (int j = 0; j < 3 && isIdentity; ++j) {
+                                        isIdentity = (int)std::roundf(f[r + i][j]) == identityMatrix[i * 4 + j];
+                                    }
+                                }
+                                if (isIdentity) {
+                                    regscores2[r].score += 1;
+                                }
+
+                                //another bonus point if the absolute position values in the matrix are bigger than 1
+                                if (fabsf(f[r].w) > 1.f && fabsf(f[r+1].w) > 1.f && fabsf(f[r+2].w) > 1.f) {
+                                    regscores2[r].score += 1;
+                                }
+
+                                //another bonus point if the last position contains 0, 1, 2, 3 or 0, 0, 0, 1
+                                if ((f[r + 3].x == 0.f && f[r + 3].y == 0.f && f[r + 3].z == 0.f &&
+                                     f[r + 3].w == 1.f) ||
+                                    (f[r + 3].x == 0.f && f[r + 3].y == 1.f && f[r + 3].z == 2.f &&
+                                     f[r + 3].w == 3.f))
+                                {
+                                    regscores2[r].score += 1;
+                                }
+
+                                //Certain values in the register should never be exactly 0
+                                if (f[r].x == 0.f || f[r + 1].y == 0.f || f[r + 2].z == 0.f) {
+                                    regscores2[r].score -= 2;
+                                }
+
+                                // final bonus point if register is a commonly occuring one
+                                if (r == 90 || r == 4 || r == 8) {
+                                    regscores2[r].score += 1;
+                                }
+                            } else {
+                                //Not possibly a view matrix, subtract a point as punishment, but don't go below 0
+                                if (regscores2[r].score > 0)
+                                    regscores2[r].score -= 1;
+                            }
+                        }
+
+                        /*
+                         * This block does the scoring for the possible left/right eye indicator register, typical characteristics
+                         * of that register are:
+                         *   * Its value has a more or less equal number of negative and positive values over time
+                         *   * It is a small number greater than almost 0 and less than 0.1
+                         *   * It only has a small amount of variance in its values (rounded to 5dp)
+                         *   * Frequently selected registers get a small bonus, as they then become more likely to be the correct ones
+                         */
+                        for (int i = 0; i <= 3; ++i)
+                        {
+                            float value = fabsf(f[r][i]);
+
+                            auto &regscore = regscores[r * 4 + i];
+
+                            if (value < 0.1f && value > EPSILON)
+                            {
+                                if (f[r][i] < 0.f)
+                                {
+                                    regscore.neg++;
+                                }
+                                else
+                                {
+                                    regscore.pos++;
+                                }
+
+                                //Store the value rounded, we are looking for the register with the least variance
+                                regscore.values.insert(
+                                        floorf(value * 10000) / 10000);
+                            }
+
+                            // recalc score
+                            if (regscore.neg > 0 &&
+                                    regscore.pos > 0 &&
+                                    regscore.values.size() > 0)
+                            {
+                                int max = std::max<int>(regscore.neg,
+                                                        regscore.pos);
+                                int min = std::min<int>(regscore.neg,
+                                                        regscore.pos);
+                                regscore.score =
+                                        ((min * 1000.0f) /
+                                         (float) (max *
+                                                 regscore.values.size())) *
+                                        ((float) (min + max) / (counter - start));
+
+                                //If this register has only seen 1 or two legit values, then punish it
+                                if (regscore.values.size() < 2)
+                                {
+                                    regscore.score /= 10.0f;
+                                }
+
+                                //Add on any bonuses this register has received
+                                regscore.score += regscore.bonus;
+                            }
+                        }
+                    }
+
+                    //Now find the highest scoring registers/index
+                    float topscore = 0.f;
+                    float mat_topscore = 0.f;
+                    for (int r = 0; r < 96; ++r)
+                    {
+                        if (regscores2[r].score > mat_topscore) {
+                            vr_heuristic.view_matrixregister = r;
+                            mat_topscore = regscores2[r].score;
+                        }
+
+                        for (int i = 0; i <= 3; ++i)
+                        {
+                            if (regscores[r * 4 + i].score > topscore)
+                            {
+                                vr_heuristic.eye_indicator_register = r;
+                                vr_heuristic.eye_indicator_reg_index = i;
+                                topscore = regscores[r * 4 + i].score;
+                            }
+                        }
+                    }
+
+                    if (mat_topscore != 0.f) {
+                        regscores2[vr_heuristic.view_matrixregister].score += 0.05f; // small perk for being selected
+                    }
+
+                    if (topscore != 0.0f)
+                    {
+                        regscores[vr_heuristic.eye_indicator_register * 4 +
+                                  vr_heuristic.eye_indicator_reg_index].bonus += 0.001f; // small perk for being selected
+                    }
+                }
+
+                viewMatrixIndex = vr_heuristic.view_matrixregister;
+            }
         }
 
         if (viewMatrixIndex != -1 && vs_uniforms.uniforms.f.size() > viewMatrixIndex)
         {
             if (matrixMode == 2)
             {
-                f[viewMatrixIndex][0] = vr_view[0];
-                f[viewMatrixIndex][1] = vr_view[4];
-                f[viewMatrixIndex][2] = vr_view[8];
-                f[viewMatrixIndex + 1][0] = vr_view[1];
-                f[viewMatrixIndex + 1][1] = vr_view[5];
-                f[viewMatrixIndex + 1][2] = vr_view[9];
-                f[viewMatrixIndex + 2][0] = vr_view[2];
-                f[viewMatrixIndex + 2][1] = vr_view[6];
-                f[viewMatrixIndex + 2][2] = vr_view[10];
+                f[viewMatrixIndex][0] = vr_inv_view[0];
+                f[viewMatrixIndex][1] = vr_inv_view[4];
+                f[viewMatrixIndex][2] = vr_inv_view[8];
+                f[viewMatrixIndex + 1][0] = vr_inv_view[1];
+                f[viewMatrixIndex + 1][1] = vr_inv_view[5];
+                f[viewMatrixIndex + 1][2] = vr_inv_view[9];
+                f[viewMatrixIndex + 2][0] = vr_inv_view[2];
+                f[viewMatrixIndex + 2][1] = vr_inv_view[6];
+                f[viewMatrixIndex + 2][2] = vr_inv_view[10];
             }
-            else if (matrixMode >= 3)
+            else if (matrixMode == 3)
             {
+                // First apply the view transformation matrix to the right location
                 float v[16], v2[16], v3[16];
                 MatrixTranspose(v, &f[viewMatrixIndex].x);
-                std::memcpy(v2, vr_view, sizeof(float) * 16);
+                std::memcpy(v2, vr_inv_view, sizeof(float) * 16);
                 v2[12] = v2[13] = v2[14] = 0.f;
                 MatrixMultiply(v3, v2, v);
                 MatrixTranspose(&f[viewMatrixIndex].x, v3);
+
+                // This following part is an improvement on just using the default stereo separation provided by the 3DS
+                // The problem with the default is it doesn't work correctly when rotating the headset, whereas the following approach
+                // applies a left/right separation from an (almost) centered camera POV.
+                // This profile mode will set a depth scale of only 0.1%, and then use a defined vr uniform register
+                // to identify if the left or right eye is being drawn and apply appropriate stereo separation
+                //
+                // The pair of values (e.g "87,2") represents the offset of the Vec4f in the vs pica uniforms and the
+                // index into that Vec4 of the value that is check for: -ve for left eye and +ve for right eye
+                float eye_indicator_register = vr_heuristic.eye_indicator_register;
+                float eye_indicator_reg_index = vr_heuristic.eye_indicator_reg_index;
+                //If the user _has_ defined this (unlikely!) then use the config setting
+                if (!findLeftRightEyeIndicator)
+                {
+                    // Finding these offset/index values manually is easier to do using a desktop build of Citra in a debugger
+                    // however the heuristic search appears to do a very good job of this so it is unlikely people
+                    // will need to find and specify this config, but is still available to set if it fails to work for
+                    // a game and someone identifies the appropriate values
+                    const std::string vr_immersive_eye_indicator = Settings::values.vr_immersive_eye_indicator.GetValue();
+                    eye_indicator_register = atoi(vr_immersive_eye_indicator.substr(0, vr_immersive_eye_indicator.find_first_of(',')).c_str());
+                    eye_indicator_reg_index = atoi(vr_immersive_eye_indicator.substr(vr_immersive_eye_indicator.find_first_of(',')+1).c_str());
+                }
+
+                //If we found/know a viable register/index, then use it for left/right eye logic
+                if (eye_indicator_register != -1 &&
+                        eye_indicator_reg_index != -1 &&
+                        eye_indicator_register < vs_uniforms.uniforms.f.size() &&
+                        (eye_indicator_register < viewMatrixIndex ||
+                            eye_indicator_register > viewMatrixIndex + 3) &&
+                        f[eye_indicator_register][eye_indicator_reg_index] != 0.0f)
+                {
+                    const bool isLeftEye = (f[eye_indicator_register][eye_indicator_reg_index] < 0.f);
+                    f[viewMatrixIndex][3] +=
+                            vr_game_pos_scaler * (isLeftEye ? -1 : 1) * (VR_IPD / 2.f);
+                }
             }
 
-            f[viewMatrixIndex][3] += vr_view[12];
-            f[viewMatrixIndex + 1][3] += vr_view[13];
-            f[viewMatrixIndex + 2][3] += vr_view[14];
+            f[viewMatrixIndex][3] += vr_inv_view[12];
+            f[viewMatrixIndex + 1][3] += vr_inv_view[13];
+            f[viewMatrixIndex + 2][3] += vr_inv_view[14];
         }
     }
 }

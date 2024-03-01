@@ -541,8 +541,6 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="immersive_mode">Immersive Modus</string>
     <string name="vr_si_mode_register_offset_title">Register Offset</string>
     <string name="vr_si_mode_register_offset_description">Legt den Registerversatz fest, der für die Ansicht verwendet wird, wenn Super Immersive Mode Profil 2 verwendet wird - variiert je nach Spiel.</string>
-    <string name="vr_immersive_pos_factor_title">Positionsfaktor für die Bewegung</string>
-    <string name="vr_immersive_pos_factor_description">Stellt ein, wie stark die Bewegung nach links/rechts/oben/unten die Kameraperspektive im Spiel beeinflusst (0 = deaktiviert).</string>
     <string name="vr_immersive_pos_game_scaler_title">Positionale Bewegungsfaktor-Verstärker</string>
     <string name="vr_immersive_pos_game_scaler_description">Stellt ein, wie stark sich die Bewegung nach links/rechts/hoch/runter auf die Spielkamera auswirkt. Manche Spiele erfordern größere Werte, daher multipliziert dies den Positionsfaktor für die Bewegung.</string>
 </resources>

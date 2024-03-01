@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <functional>
+#include <common/vector_math.h>
 #include "common/common_types.h"
 
 namespace Pica {
@@ -84,6 +85,6 @@ public:
     virtual void SyncEntireState() {}
 
     /// Set VR position data on the rasterizer
-    virtual void SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float view[16]) {}
+    virtual void SetVRData(const int32_t &vrImmersiveMode, const float& immersiveModeFactor, int uoffset, const float& gamePosScaler, const float inv_view[16]) {}
 };
 } // namespace VideoCore

@@ -87,7 +87,7 @@ Handler::Handler(Core::Timing& timing, u64 override_init_time) : timing(timing) 
 
     float slidestate = Settings::values.vr_immersive_mode.GetValue() < 3 ?
             Settings::values.factor_3d.GetValue() / 100.0f :
-            0.1f;
+            0.01f;
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
 
     // TODO(PabloMK7)

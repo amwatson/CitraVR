@@ -219,7 +219,7 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
     // and possibly moved to its own Core::Timing event.
     mem->pad.sliderstate_3d = Settings::values.vr_immersive_mode.GetValue() < 3 ?
             (Settings::values.factor_3d.GetValue() / 100.0f) :
-            0.1f;
+            0.01f;
     system.Kernel().GetSharedPageHandler().Set3DSlider(mem->pad.sliderstate_3d);
 
     // Reschedule recurrent event

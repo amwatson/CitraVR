@@ -75,7 +75,7 @@ std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
-const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.8f};
+const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.4f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID forwardVRInputMethodID, const int androidButtonCode,

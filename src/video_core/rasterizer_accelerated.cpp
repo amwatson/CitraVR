@@ -941,7 +941,7 @@ void RasterizerAccelerated::ApplyVRDataToPicaVSUniforms(Pica::Shader::Generator:
          * still possible to supply your own values using the config options, but the default now should be using this
          * "auto-detect" routine.
          */
-        if (viewMatrixIndex == -1)
+        if (viewMatrixIndex == -1 && mode >= 3)
         {
             struct regscore
             {

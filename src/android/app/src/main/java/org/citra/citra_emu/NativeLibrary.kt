@@ -220,14 +220,6 @@ object NativeLibrary {
         val title: String
         val message: String
         when (error) {
-            CoreError.ErrorSystemFiles -> {
-                title = emulationActivity.getString(R.string.system_archive_not_found)
-                message = emulationActivity.getString(
-                    R.string.system_archive_not_found_message,
-                    details.ifEmpty { emulationActivity.getString(R.string.system_archive_general) }
-                )
-            }
-
             CoreError.ErrorSavestate -> {
                 title = emulationActivity.getString(R.string.save_load_error)
                 message = details
@@ -410,7 +402,6 @@ object NativeLibrary {
             const val ErrorLoader = 4
             const val ErrorLoader_ErrorEncrypted = 5
             const val ErrorLoader_ErrorInvalidFormat = 6
-            const val ErrorSystemFiles = 7
             const val ShutdownRequested = 11
             const val ErrorUnknown = 12
 
@@ -629,7 +620,6 @@ object NativeLibrary {
         }
 
     enum class CoreError {
-        ErrorSystemFiles,
         ErrorSavestate,
         ErrorUnknown
     }

@@ -76,16 +76,6 @@ class HomeSettingsFragment : Fragment() {
                 R.drawable.ic_settings,
                 { SettingsActivity.launch(requireContext(), SettingsFile.FILE_NAME_CONFIG, "") }
             ),
-            /*HomeSetting(
-                R.string.system_files,
-                R.string.system_files_description,
-                R.drawable.ic_system_update,
-                {
-                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
-                    parentFragmentManager.primaryNavigationFragment?.findNavController()
-                        ?.navigate(R.id.action_homeSettingsFragment_to_systemFilesFragment)
-                }
-            ),*/
             HomeSetting(
                 R.string.install_game_content,
                 R.string.install_game_content_description,

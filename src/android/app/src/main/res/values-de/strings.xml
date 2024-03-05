@@ -83,24 +83,6 @@
     <string name="input_message_analog_only">Diese Eingabe muss an einen Gamepad-Analogstick oder das Steuerkreuz gebunden sein!</string>
     <string name="input_message_button_only">Diese Eingabe muss an einen Gamepad-Knopf gebunden sein!</string>
 
-    <!-- System files strings -->
-    <string name="system_files">Systemdateien</string>
-    <string name="download_system_files">Systemdateien herunterladen</string>
-    <string name="system_type">Systemtyp</string>
-    <string name="download">Download</string>
-    <string name="start">Start</string>
-    <string name="system_type_minimal">Minimal</string>
-    <string name="system_type_new_3ds">New 3DS</string>
-    <string name="downloading_files">Dateien werden heruntergeladen...</string>
-    <string name="downloading_files_description">Bitte nicht die App schließen.</string>
-    <string name="download_failed">Download fehlgeschlagen</string>
-    <string name="download_success">Download abgeschlossen!</string>
-    <string name="download_cancelled">Download abgebrochen</string>
-    <string name="cancelling">Abbrechen...</string>
-    <string name="home_menu">HOME-Menü</string>
-    <string name="home_menu_warning">Systemdatei-Warnung</string>
-    <string name="home_menu_warning_description">Aufgrund der langsamen Zugriffsgeschwindigkeit von Android auf CitraVRs Dateien, kann das Herunterladen mehrerer Versionen von Systemdateien das Laden von Spielen, Speicherständen und der Spieleliste erheblich verlangsamen. Laden Sie nur die Dateien herunter, die Sie benötigen, um Probleme mit den Ladezeiten zu vermeiden.</string>
-
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Knöpfe</string>
     <string name="button">Knopf</string>
@@ -545,4 +527,6 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vr_immersive_pos_factor_description">Stellt ein, wie stark die Bewegung nach links/rechts/oben/unten die Kameraperspektive im Spiel beeinflusst (0 = deaktiviert).</string>
     <string name="vr_immersive_pos_game_scaler_title">Positionale Bewegungsfaktor-Verstärker</string>
     <string name="vr_immersive_pos_game_scaler_description">Stellt ein, wie stark sich die Bewegung nach links/rechts/hoch/runter auf die Spielkamera auswirkt. Manche Spiele erfordern größere Werte, daher multipliziert dies den Positionsfaktor für die Bewegung.</string>
+    <string name="cancelling">Abbruch...</string>
+    <string name="start">Start</string>
 </resources>

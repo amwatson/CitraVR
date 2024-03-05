@@ -116,33 +116,6 @@
     <string name="input_message_analog_only">Данный элемент управления должен быть привязан к аналоговому стику или крестовине геймпада!</string>
     <string name="input_message_button_only">Данный элемент управления должен быть привязан к кнопке геймпада!</string>
 
-    <!-- System files strings -->
-    <string name="system_files">Системные файлы</string>
-    <string name="system_files_description">Загрузка системных файлов для получения файлов Mii, запуска меню HOME и другое</string>
-    <string name="download_system_files">Загрузка системных файлов</string>
-    <string name="boot_home_menu">Запуск меню HOME</string>
-    <string name="system_type">Тип системы</string>
-    <string name="download">Скачать</string>
-    <string name="start">Запустить</string>
-    <string name="keys_missing">В CitraVR отсутствуют ключи для загрузки системных файлов.</string>
-    <string name="how_to_get_keys"><![CDATA[<a href=\"https://citra-emu.org/wiki/aes-keys/\">Как получить ключи?</a>]]></string>
-    <string name="show_home_apps">Показывать приложения меню HOME в списке игр</string>
-    <string name="run_system_setup">Запускать настройку системы при загрузке меню HOME</string>
-    <string name="system_type_minimal">Минимальный</string>
-    <string name="system_type_old_3ds">Старая модель 3DS</string>
-    <string name="system_type_new_3ds">Новая модель 3DS</string>
-    <string name="downloading_files">Загрузка файлов...</string>
-    <string name="downloading_files_description">Пожалуйста, не закрывайте приложение.</string>
-    <string name="download_failed">Ошибка загрузки</string>
-    <string name="download_failed_description">Пожалуйста, проверьте соединение с Интернет и повторите попытку.</string>
-    <string name="download_success">Загрузка завершена!</string>
-    <string name="download_cancelled">Загрузка отменена.</string>
-    <string name="download_cancelled_description">Пожалуйста, повторно запустите загрузку, чтобы избежать ошибок из-за неполных системных файлов.</string>
-    <string name="cancelling">Отмена...</string>
-    <string name="home_menu">Меню HOME</string>
-    <string name="home_menu_warning">Предупреждение о системных файлах</string>
-    <string name="home_menu_warning_description">Используемый в Android фреймворк SAF замедляет доступ к файлам CitraVR, поэтому скачивание нескольких версий системных файлов может существенно снизить скорость загрузки игр, сохранений и списка игр. Во избежание проблем со скоростью загрузки скачивайте только необходимые файлы.</string>
-
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Кнопки</string>
     <string name="button">Кнопка</string>
@@ -687,4 +660,6 @@
     <string name="vr_immersive_pos_factor_description">Регулирует, насколько движение влево/вправо/вверх/вниз влияет на игровую камеру (0 = отключено).</string>
     <string name="vr_immersive_pos_game_scaler_title">Множитель фактора позиционного перемещения</string>
     <string name="vr_immersive_pos_game_scaler_description">Настройка определяет, насколько движение влево/вправо/вверх/вниз влияет на камеру игры; в некоторых играх требуются большие значения, поэтому это умножает фактор перемещения положения.</string>
+    <string name="cancelling">Отмена...</string>
+    <string name="start">Начать</string>
 </resources>

@@ -117,34 +117,6 @@
     <string name="input_message_analog_only">Cette commande doit être rattachée à un stick analogique de manette ou à un axe de la croix directionnelle !</string>
     <string name="input_message_button_only">Cette commande doit être rattachée à un bouton de manette !</string>
 
-    <!-- System files strings -->
-    <string name="system_files">Fichiers système</string>
-    <string name="system_files_description">Téléchargez les fichiers système pour obtenir des fichiers Mii, démarrer le menu HOME, et plus encore.</string>
-    <string name="download_system_files">Télécharger les fichiers système</string>
-    <string name="boot_home_menu">Démarrer le menu HOME</string>
-    <string name="system_type">Type de système</string>
-    <string name="download">Télécharger</string>
-    <string name="start">Démarrer</string>
-    <string name="keys_missing">CitraVR ne dispose pas des clés nécessaires pour télécharger les fichiers système.</string>
-    <string name="how_to_get_keys"><![CDATA[<a href=\"https://citra-emu.org/wiki/aes-keys/\">Comment obtenir des clés ?</a>]]></string>
-    <string name="show_home_apps">Afficher les applications du menu HOME dans la liste des jeux</string>
-    <string name="run_system_setup">Exécuter la configuration système lorsque le menu HOME est lancé</string>
-    <string name="system_type_minimal">Minimal</string>
-    <string name="system_type_old_3ds">Old 3DS</string>
-    <string name="system_type_new_3ds">New 3DS</string>
-    <string name="downloading_files">Téléchargement des fichiers...</string>
-    <string name="downloading_files_description">Veuillez ne pas fermer l\'application.</string>
-    <string name="download_failed">Échec du téléchargement
- </string>
-    <string name="download_failed_description">Veuillez vous assurer que vous êtes connecté à Internet et réessayez.</string>
-    <string name="download_success">Téléchargement terminé !</string>
-    <string name="download_cancelled">Téléchargement annulé</string>
-    <string name="download_cancelled_description">Veuillez redémarrer le téléchargement pour éviter des problèmes avec des fichiers système incomplets.</string>
-    <string name="cancelling">Annulation...</string>
-    <string name="home_menu">Menu HOME</string>
-    <string name="home_menu_warning">Avertissement sur les fichiers système</string>
-    <string name="home_menu_warning_description">En raison de la lenteur du framework d\'accès au stockage d\'Android pour accéder aux fichiers de CitraVR, le téléchargement de plusieurs versions de fichiers système peut considérablement ralentir le chargement des jeux, des états de sauvegarde et de la liste des jeux. Téléchargez uniquement les fichiers dont vous avez besoin pour éviter tout problème de vitesse de chargement.</string>
-
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Boutons</string>
     <string name="button">Bouton</string>
@@ -687,4 +659,6 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_immersive_pos_factor_description">Ajuste la mesure dans laquelle le mouvement gauche/droite/haut/bas affecte la caméra du jeu (0 = désactivé).</string>
     <string name="vr_immersive_pos_game_scaler_title">Multiplicateur du Facteur de Mouvement Positionnel</string>
     <string name="vr_immersive_pos_game_scaler_description">Ajuste la façon dont le mouvement gauche/droite/haut/bas affecte la caméra du jeu, certains jeux nécessitent des valeurs plus grandes, donc cela multiplie le facteur de mouvement positionnel.</string>
+    <string name="cancelling">Annulation...</string>
+    <string name="start">Commencer</string>
 </resources>

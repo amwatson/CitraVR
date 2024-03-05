@@ -110,24 +110,6 @@
     <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
 
-    <!-- System files strings -->
-    <string name="system_files">Arquivos do Sistema</string>
-    <string name="boot_home_menu">Iniciar o MENU INICIAL</string>
-    <string name="system_type">Tipo de sistema</string>
-    <string name="download">Baixar</string>
-    <string name="show_home_apps">Mostrar aplicativos do MENU INICIAL na lista de jogos</string>
-    <string name="system_type_old_3ds">3DS Antigo</string>
-    <string name="system_type_new_3ds">Novo 3DS</string>
-    <string name="downloading_files">Baixando arquivos...</string>
-    <string name="downloading_files_description">Por favor, não feche o aplicativo.</string>
-    <string name="download_failed">Falha no download</string>
-    <string name="download_failed_description">Por favor, certifique-se de que está conectado à internet e tente novamente.</string>
-    <string name="download_success">Download Completo!</string>
-    <string name="download_cancelled">Download Cancelado</string>
-    <string name="download_cancelled_description">Por favor, reinicie o download para evitar problemas com arquivos do sistema incompletos.</string>
-    <string name="cancelling">Cancelando...</string>
-    <string name="home_menu">MENU INICIAL</string>
-    <string name="home_menu_warning">Aviso de Arquivos do Sistema</string>
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Botões</string>
     <!-- Core settings strings -->
@@ -347,4 +329,6 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="vr_immersive_pos_factor_description">Ajusta o quanto o movimento para esquerda/direita/cima/baixo afeta a câmera do jogo (0 = desativado).</string>
     <string name="vr_immersive_pos_game_scaler_title">Fator de Multiplicação do Fator de Movimento Posicional</string>
     <string name="vr_immersive_pos_game_scaler_description">Ajusta o quanto o movimento para a esquerda/direita/cima/baixo afeta a câmera do jogo, alguns jogos exigem valores maiores, então isso multiplica o Fator de Movimento Posicional.</string>
+    <string name="cancelling">Cancelando...</string>
+    <string name="start">Iniciar</string>
 </resources>

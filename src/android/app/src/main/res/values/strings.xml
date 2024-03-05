@@ -130,36 +130,11 @@
     <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
 
-    <!-- System files strings -->
-    <string name="system_files">System Files</string>
-    <string name="system_files_description">Download system files to get Mii files, boot the HOME menu, and more</string>
-    <string name="download_system_files">Download System Files</string>
-    <string name="boot_home_menu">Boot the HOME Menu</string>
-    <string name="system_type">System Type</string>
-    <string name="download">Download</string>
-    <string name="start">Start</string>
-    <string name="keys_missing">CitraVR is missing keys to download system files.</string>
-    <string name="how_to_get_keys"><![CDATA[<a href="https://citra-emu.org/wiki/aes-keys/">How to get keys?</a>]]></string>
-    <string name="show_home_apps">Show HOME menu apps in games list</string>
-    <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
-    <string name="system_type_minimal">Minimal</string>
-    <string name="system_type_old_3ds">Old 3DS</string>
-    <string name="system_type_new_3ds">New 3DS</string>
-    <string name="downloading_files">Downloading Files…</string>
-    <string name="downloading_files_description">Please do not close the app.</string>
-    <string name="download_failed">Download Failed</string>
-    <string name="download_failed_description">Please make sure you are connected to the internet and try again.</string>
-    <string name="download_success">Download Complete!</string>
-    <string name="download_cancelled">Download Cancelled</string>
-    <string name="download_cancelled_description">Please restart the download to prevent issues with having incomplete system files.</string>
-    <string name="cancelling">Cancelling…</string>
-    <string name="home_menu">HOME Menu</string>
-    <string name="home_menu_warning">System Files Warning</string>
-    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing CitraVR\'s files, downloading multiple versions of system files can dramatically slow down loading for games, save states, and the games list. Only download the files that you require to avoid any issues with loading speeds.</string>
-
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
     <string name="button">Button</string>
+    <string name="cancelling">Cancelling...</string>
+    <string name="start">Start</string>
 
     <!-- Core settings strings -->
     <string name="cpu_jit">CPU JIT</string>

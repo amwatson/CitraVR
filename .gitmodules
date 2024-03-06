@@ -91,6 +91,3 @@
 [submodule "oaknut"]
 	path = externals/oaknut
 	url = https://github.com/merryhime/oaknut.git
-[submodule "externals/openxr-sdk-src"]
-	path = externals/openxr-sdk-src
-	url = https://github.com/amwatson/OpenXR-SDK-Source

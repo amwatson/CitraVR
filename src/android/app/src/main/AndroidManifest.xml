@@ -40,7 +40,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- (1/2) These two sections allow us to avoid pulling Oculus SDK's libopenxr_loader into our app and use the Apache-licensed OpenXR loader instead.
+    <!-- This section allows us to avoid pulling Oculus SDK's libopenxr_loader into our app and use the Apache-licensed OpenXR loader instead.
       Khronos' loader will pull in the Oculus implementation from "libopenxr_forwardloader.oculus.so",
       which is a system library resident on the OS image and therefore falls under the GPL "system libraries" exception. -->
     <uses-permission android:name="org.khronos.openxr.permission.OPENXR_SYSTEM" />
@@ -64,15 +64,6 @@
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true">
-
-
-        <!-- (2/2) Allows us to avoid pulling Oculus SDK's libopenxr_loader into our
-        app and use the Apache-licensed OpenXR loader directly. This line (along
-        with System.LoadLibrary in VrActivity.java) is needed to correctly open
-          the system library. -->
-        <uses-native-library
-            android:name="libopenxr_forwardloader.oculus.so"
-            android:required="false" />
 
         <meta-data android:name="android.game_mode_config"
             android:resource="@xml/game_mode_config" />

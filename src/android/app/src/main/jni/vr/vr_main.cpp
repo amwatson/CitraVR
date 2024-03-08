@@ -75,7 +75,7 @@ std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
-const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.8f};
+const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.4f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
                                      jmethodID forwardVRInputMethodID, const int androidButtonCode,
@@ -433,12 +433,12 @@ private:
                          -MATH_FLOAT_PI / 8.0f) ||
                     // If in "super immersive" mode then put controller next to head in order to
                     // disable the mode temporarily
-                    (VRSettings::values.vr_immersive_mode > 2 && length < 0.2)) {
+                    (VRSettings::values.vr_immersive_mode >= 2 && length < 0.2)) {
                     XrVector4f identity[4] = {};
                     XrMath::Matrixf::Identity(identity);
                     immersiveModeFactor = 1.0f;
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-                        1, immersiveModeFactor, -1, (float*)identity);
+                        1, immersiveModeFactor, -1, 0.f, (float*)identity);
                 } else {
                     XrVector4f transform[4] = {};
                     XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
@@ -454,20 +454,16 @@ private:
                         invertedOrientation, gOpenXr->headLocation.pose.position);
 
                     const float gamePosScaler =
-                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler);
-                    inv_transform[3].x = -position.x *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
-                    inv_transform[3].y = -position.y *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
-                    inv_transform[3].z = -position.z *
-                                         VRSettings::values.vr_immersive_positional_factor *
-                                         gamePosScaler;
+                            powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+                                    VRSettings::values.vr_factor_3d;
+
+                    inv_transform[3].x = -position.x * gamePosScaler;
+                    inv_transform[3].y = -position.y * gamePosScaler;
+                    inv_transform[3].z = -position.z * gamePosScaler;
 
                     Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
                         VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset,
-                        (float*)inv_transform);
+                        -gamePosScaler, (float*)inv_transform);
                     showLowerPanel = false;
                 }
             }

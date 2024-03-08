@@ -453,9 +453,9 @@
 
     <string-array name="vrImmersiveModeNames">
         <item>Off</item>
-        <item>180 Degree Immersive (3DoF)</item>
-        <item>Super Immersive (6DoF) - Profile 1</item>
-        <item>Super Immersive (6DoF) - Profile 2</item>
+        <item>180 Degree Wrap-Around Immersive (3DoF)</item>
+        <item>"Super Immersive (6DoF) - Profile 1 (Ocarina of Time &#038; Majora's Mask)"</item>
+        <item>Super Immersive (6DoF) - Profile 2 (All other games)</item>
     </string-array>
 
     <integer-array name="vrImmersiveModeValues">

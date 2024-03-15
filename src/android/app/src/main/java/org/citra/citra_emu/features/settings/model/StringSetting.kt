@@ -15,7 +15,8 @@ enum class StringSetting(
     CAMERA_OUTER_LEFT_NAME("camera_outer_left_name", Settings.SECTION_CAMERA, "ndk"),
     CAMERA_OUTER_LEFT_CONFIG("camera_outer_left_config", Settings.SECTION_CAMERA, "_back"),
     CAMERA_OUTER_RIGHT_NAME("camera_outer_right_name", Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_OUTER_RIGHT_CONFIG("camera_outer_right_config", Settings.SECTION_CAMERA, "_back");
+    CAMERA_OUTER_RIGHT_CONFIG("camera_outer_right_config", Settings.SECTION_CAMERA, "_back"),
+    VR_IMMMERSIVE_EYE_INDICATOR("vr_immersive_eye_indicator", Settings.SECTION_VR, "");
 
     override var string: String = defaultValue
 

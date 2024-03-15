@@ -683,10 +683,10 @@
     <string name="vr_notice_description2">Some games just won\'t run well. Be sure to check the CitraVR Game Compatibility List to see which games perform best.</string>
     <string name="vr_input_binding_subtitle">\nHaving trouble? Press Select + Start to disable Gamepad Gaze Mode, then try again</string>
     <string name="immersive_mode">Immersive Mode</string>
-    <string name="vr_si_mode_register_offset_title">Register Offset</string>
-    <string name="vr_si_mode_register_offset_description">Sets the register offset used for the view when using Super Immersive Mode Profile 2 - varies by game</string>
-    <string name="vr_immersive_pos_factor_title">Positional Movement Factor</string>
-    <string name="vr_immersive_pos_factor_description">Adjusts how much movement left/right/up/down affects the game camera (0 = disabled)</string>
-    <string name="vr_immersive_pos_game_scaler_title">Positional Movement Factor Multiplier</string>
-    <string name="vr_immersive_pos_game_scaler_description">Adjusts how much movement left/right/up/down affects the game camera, some games required larger values, so this multiplies the Positional Movement Factor</string>
+    <string name="vr_si_mode_register_offset_title">Register Offset [Optional]</string>
+    <string name="vr_si_mode_register_offset_description">[default: -1 = use auto-detect] CAUTION: Sets the register offset used for the view when using Super Immersive Mode Profile 2</string>
+    <string name="vr_immersive_eye_indicator_title">Eye Indicator Register [Optional]</string>
+    <string name="vr_immersive_eye_indicator_description">[Leave blank for auto-detect] CAUTION: Sets the register and index offset used for identifying which eye is being drawn e.g 87,2</string>
+    <string name="vr_immersive_pos_game_scaler_title">Depth Factor Multiplier</string>
+    <string name="vr_immersive_pos_game_scaler_description">Adjusts how much the depth slider affects the game camera (movement/separation), some games require smaller/larger values, so this multiplier adjusts how much movement the depth setting causes</string>
 </resources>

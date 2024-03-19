@@ -8,8 +8,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
         android:layout_margin="5dp"
+        android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -22,91 +22,67 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/frame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/vr_menu_background"
             android:backgroundTint="#011627"
-            android:padding="50dp"
+            android:paddingHorizontal="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <FrameLayout
-                android:layout_width="1000dp"
-                android:layout_height="0dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <FrameLayout
-                android:id="@+id/lowerPanelPlaceHolder"
-                android:layout_width="900dp"
-                android:layout_height="675dp"
-                android:layout_marginTop="10dp"
-                android:background="#093A60"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/panelHolder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <include layout="@layout/vr_ribbon_main_panel" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
-                android:layout_width="100dp"
-                android:layout_height="400dp"
-                android:layout_gravity="center"
-                android:layout_marginStart="50dp"
-                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:layout_marginEnd="150dp"
+                android:layout_marginBottom="18dp"
                 android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="@+id/lowerPanelPlaceHolder"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/lowerPanelPlaceHolder"
-                app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
-
-                <Button
-                    android:id="@+id/buttonSelect"
-                    style="@style/VrRibbonButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:text="@string/button_select" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/panelHolder">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <Button
-                    android:id="@+id/buttonStart"
-                    style="@style/VrRibbonButtonStyle"
-                    android:layout_width="match_parent"
+                    android:layout_width="500dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/button_start" />
+                    android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+                    <Button
+                        android:id="@+id/buttonPrevMenu"
+                        style="@style/VrRibbonButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:paddingVertical="8dp"
+                        android:text="&lt;" />
 
-                <Button
-                    android:id="@+id/buttonExit"
-                    style="@style/VrRibbonButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                  android:text="@string/emulation_close_game" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="3" />
-
-
-                <Button
-                    android:id="@+id/buttonNextMenu"
-                    style="@style/VrRibbonButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                  android:text=">" />
-
-
-
+                    <Button
+                        android:id="@+id/buttonNextMenu"
+                        style="@style/VrRibbonButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:paddingVertical="8dp"
+                        android:text="&gt;" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

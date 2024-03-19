@@ -8,6 +8,8 @@
 #include "video_core/pica/pica_core.h"
 #include "video_core/rasterizer_accelerated.h"
 
+#include <set>
+
 namespace VideoCore {
 
 using Pica::f24;

@@ -67,6 +67,10 @@
 namespace {
 
 ANativeWindow* s_surf;
+// VR-SPECIFIC:
+// false when using VR mode, as the surface is allocated by the OpenXR swapchain.
+// True otherwise.
+bool s_should_release_surface = true;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
@@ -290,8 +294,9 @@ extern "C" {
 
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
                                                             [[maybe_unused]] jobject obj,
-                                                            jobject surf) {
+                                                            jobject surf, jboolean should_release_surface) {
     s_surf = ANativeWindow_fromSurface(env, surf);
+    s_should_release_surface = should_release_surface;
 
     if (window) {
         window->OnSurfaceChanged(s_surf);
@@ -307,7 +312,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
-    ANativeWindow_release(s_surf);
+
+    if (s_should_release_surface) {
+        ANativeWindow_release(s_surf);
+    }
     s_surf = nullptr;
     if (window) {
         window->OnSurfaceChanged(s_surf);

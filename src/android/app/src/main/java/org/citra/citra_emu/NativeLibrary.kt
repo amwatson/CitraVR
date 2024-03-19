@@ -124,7 +124,7 @@ object NativeLibrary {
     external fun run(path: String)
 
     // Surface Handling
-    external fun surfaceChanged(surf: Surface)
+    external fun surfaceChanged(surf: Surface, shouldReleaseSurface: Boolean)
     external fun surfaceDestroyed()
     external fun doFrame()
 

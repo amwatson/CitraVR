@@ -1,9 +1,11 @@
 package org.citra.citra_emu.vr.utils
 
+import android.app.Activity
 import android.view.KeyEvent
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.vr.VrActivity
 
 object VRUtils {
     val hMDType: Int
@@ -80,6 +82,11 @@ object VRUtils {
       else -> -1
     }
   }
+
+    @JvmStatic
+    fun isVR(mainActivity: Activity?) : Boolean {
+        return mainActivity is VrActivity
+    }
 
     const val PREF_RELEASE_VERSION_NAME_LAUNCH_CURRENT = "VR_ReleaseVersionName_LaunchCurrent"
     const val PREF_RELEASE_VERSION_NAME_LAUNCH_PREV = "VR_ReleaseVersionName_LaunchPrev"

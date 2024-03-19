@@ -67,7 +67,7 @@ import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.utils.VRUtils
 
 class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.FrameCallback {
     private val preferences: SharedPreferences
@@ -165,7 +165,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             return
         }
 
-        if (activity !is VrActivity) {
+        if (!VRUtils.isVR(activity)) {
             Log.debug("[EmulationFragment] non-VR mode: adding surface callback");
             binding.surfaceEmulation.holder.addCallback(this)
         } else {
@@ -420,7 +420,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     fun surfaceCreated(surface : Surface) {
         Log.debug("[EmulationFragment] Surface created");
-        emulationState.newSurface(surface)
+        emulationState.newSurface(surface, VRUtils.isVR(emulationActivity))
     }
 
     private fun togglePause() {
@@ -873,7 +873,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         Log.debug("[EmulationFragment] Surface changed. Resolution: " + width + "x" + height)
-        emulationState.newSurface(holder.surface)
+        emulationState.newSurface(holder.surface, !VRUtils.isVR(emulationActivity))
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -924,6 +924,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private class EmulationState(private val gamePath: String) {
         private var state: State
         private var surface: Surface? = null
+        private var isVrSurface : Boolean = false;
 
         init {
             // Starting state is stopped.
@@ -999,8 +1000,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         // Surface callbacks
         @Synchronized
-        fun newSurface(surface: Surface?) {
+        fun newSurface(surface: Surface?, isVrSurface: Boolean) {
             this.surface = surface
+            this.isVrSurface = isVrSurface
             if (this.surface != null) {
                 runWithValidSurface()
             }
@@ -1012,6 +1014,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 Log.warning("[EmulationFragment] clearSurface called, but surface already null.")
             } else {
                 surface = null
+                isVrSurface = false
                 Log.debug("[EmulationFragment] Surface destroyed.")
                 when (state) {
                     State.RUNNING -> {
@@ -1031,7 +1034,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         private fun runWithValidSurface() {
-            NativeLibrary.surfaceChanged(surface!!)
+            NativeLibrary.surfaceChanged(surface!!, isVrSurface)
             when (state) {
                 State.STOPPED -> {
                     Thread({

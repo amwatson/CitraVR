@@ -36,11 +36,14 @@
                 android:id="@+id/panelHolder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="1050dp"
+                android:minHeight="685dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <include layout="@layout/vr_ribbon_main_panel" />
+                <include layout="@layout/vr_ribbon_position_panel" android:visibility="gone" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -69,7 +72,7 @@
                         android:layout_weight="1"
                         android:minHeight="0dp"
                         android:padding="0dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="12dp"
                         android:text="&lt;" />
 
                     <Button
@@ -80,7 +83,7 @@
                         android:layout_weight="1"
                         android:minHeight="0dp"
                         android:padding="0dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="12dp"
                         android:text="&gt;" />
                 </LinearLayout>
             </LinearLayout>

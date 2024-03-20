@@ -1,17 +1,31 @@
 package org.citra.citra_emu.vr.ui
 
 import android.view.KeyEvent
-import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
 
 class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribbon) {
+
+    enum class MenuType(val resId: Int) {
+        MAIN( R.id.main_panel),
+        POSITION(R.id.position_panel)
+    }
+    private var menuTypeCurrent : MenuType = MenuType.MAIN
+
        override fun onSurfaceCreated() {
         super.onSurfaceCreated()
         initializeMainView()
+    }
+
+    fun switchMenus(menuTypeNew: MenuType) {
+        if (menuTypeNew == menuTypeCurrent)
+            return
+        window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.GONE
+        menuTypeCurrent = menuTypeNew
+        window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.VISIBLE
     }
 
     fun initializeMainView() {
@@ -48,8 +62,15 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
             false
         }
 
-        window?.findViewById<Button>(R.id.buttonNextMenu)?.setOnTouchListener { _, motionEvent ->
+        window?.findViewById<Button>(R.id.buttonNextMenu)?.setOnClickListener{ _ ->
+            val nextIdx = (menuTypeCurrent.ordinal + 1) % MenuType.values().size
+            switchMenus(MenuType.values()[nextIdx])
+            false
+        }
 
+        window?.findViewById<Button>(R.id.buttonPrevMenu)?.setOnClickListener { _ ->
+            val prevIdx = (menuTypeCurrent.ordinal - 1 + MenuType.values().size) % MenuType.values().size
+            switchMenus(MenuType.values()[prevIdx])
             false
         }
     }

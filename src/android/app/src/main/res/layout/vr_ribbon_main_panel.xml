@@ -1,68 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_panel"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-        <FrameLayout
-            android:layout_width="1000dp"
-            android:layout_height="0dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <FrameLayout
+        android:layout_width="1000dp"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <FrameLayout
-            android:id="@+id/lowerPanelPlaceHolder"
-            android:layout_width="900dp"
-            android:layout_height="675dp"
-            android:layout_marginTop="18dp"
-            android:background="#093A60"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <FrameLayout
+        android:id="@+id/lowerPanelPlaceHolder"
+        android:layout_width="900dp"
+        android:layout_height="675dp"
+        android:layout_marginTop="18dp"
+        android:background="#093A60"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="400dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="50dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@+id/lowerPanelPlaceHolder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/lowerPanelPlaceHolder"
+        app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
+
+        <Button
+            android:id="@+id/buttonSelect"
+            style="@style/VrRibbonButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/button_select" />
 
         <LinearLayout
-            android:layout_width="100dp"
-            android:layout_height="400dp"
-            android:layout_gravity="center"
-            android:layout_marginStart="50dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="@+id/lowerPanelPlaceHolder"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/lowerPanelPlaceHolder"
-            app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <Button
-                android:id="@+id/buttonSelect"
-                style="@style/VrRibbonButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/button_select" />
+        <Button
+            android:id="@+id/buttonStart"
+            style="@style/VrRibbonButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_start" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <Button
-                android:id="@+id/buttonStart"
-                style="@style/VrRibbonButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/button_start" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <Button
-                android:id="@+id/buttonExit"
-                style="@style/VrRibbonButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/emulation_close_game" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/buttonExit"
+            style="@style/VrRibbonButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/emulation_close_game" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

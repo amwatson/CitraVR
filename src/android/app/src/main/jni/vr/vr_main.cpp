@@ -207,7 +207,7 @@ public:
 
         while (true) {
             // Handle events/state-changes.
-            const AppState appState = HandleEvents(jni);
+            AppState appState = HandleEvents(jni);
             if (appState.mIsStopRequested) { break; }
             HandleStateChanges(jni, appState);
             if (appState.mIsXrSessionActive) {
@@ -385,7 +385,7 @@ private:
         // Super Immersive Mode update and computation.
         //////////////////////////////////////////////////
 
-        bool  showLowerPanel      = true;
+        bool  showLowerPanel      = appState.ShouldShowLowerPanel();
         float immersiveModeFactor = (VRSettings::values.vr_immersive_mode < 2)
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
@@ -454,8 +454,8 @@ private:
                         invertedOrientation, gOpenXr->headLocation.pose.position);
 
                     const float gamePosScaler =
-                            powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
-                                    VRSettings::values.vr_factor_3d;
+                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+                        VRSettings::values.vr_factor_3d;
 
                     inv_transform[3].x = -position.x * gamePosScaler;
                     inv_transform[3].y = -position.y * gamePosScaler;
@@ -815,14 +815,18 @@ private:
         return newState;
     }
 
-    void HandleStateChanges(JNIEnv* jni, const AppState& newState) const {
-        if (newState.mIsEmulationPaused != mLastAppState.mIsEmulationPaused) {
+    void HandleStateChanges(JNIEnv* jni, AppState& newState) const {
+        const bool shouldPauseEmulation = !newState.mHasFocus || newState.mShouldShowErrorMessage ||
+                                          newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU;
+        if (shouldPauseEmulation != mLastAppState.mIsEmulationPaused) {
             ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
                   newState.mIsEmulationPaused);
-            if (newState.mIsEmulationPaused) {
+            if (shouldPauseEmulation) {
                 PauseEmulation(jni);
+                newState.mIsEmulationPaused = true;
             } else {
                 ResumeEmulation(jni);
+                newState.mIsEmulationPaused = false;
             }
         }
     }
@@ -905,14 +909,10 @@ private:
         switch (newState.state) {
             case XR_SESSION_STATE_FOCUSED:
                 ALOGV("{}(): Received XR_SESSION_STATE_FOCUSED event", __func__);
-                if (!mLastAppState.mHasFocus && !mLastAppState.mShouldShowErrorMessage) {
-                    newAppState.mIsEmulationPaused = false;
-                }
                 newAppState.mHasFocus = true;
                 break;
             case XR_SESSION_STATE_VISIBLE:
                 ALOGV("{}(): Received XR_SESSION_STATE_VISIBLE event", __func__);
-                if (mLastAppState.mHasFocus) { newAppState.mIsEmulationPaused = true; }
                 newAppState.mHasFocus = false;
                 break;
             case XR_SESSION_STATE_READY:
@@ -1022,18 +1022,23 @@ private:
                     newAppState.mShouldShowErrorMessage = shouldShowErrorMessage;
                     if (newAppState.mShouldShowErrorMessage && !newAppState.mIsEmulationPaused) {
                         ALOGD("Pausing emulation due to error message");
-                        newAppState.mIsEmulationPaused = true;
                     }
                     if (!newAppState.mShouldShowErrorMessage && newAppState.mIsEmulationPaused &&
                         newAppState.mHasFocus) {
                         ALOGD("Resuming emulation after error message");
-                        newAppState.mIsEmulationPaused = false;
                     }
                     break;
                 }
                 case Message::Type::EXIT_NEEDED: {
                     ALOGD("Received EXIT_NEEDED message");
                     newAppState.mIsStopRequested = true;
+                    break;
+                }
+                case Message::Type::CHANGE_LOWER_MENU: {
+                    newAppState.mLowerMenuType = static_cast<LowerMenuType>(message.mPayload);
+                    ALOGI("Received CHANGE_LOWER_MENU message: {}, state change {} -> {}",
+                          message.mPayload, mLastAppState.mLowerMenuType,
+                          newAppState.mLowerMenuType);
                     break;
                 }
 
@@ -1060,6 +1065,12 @@ private:
 
     class AppState {
     public:
+        bool ShouldShowLowerPanel() const {
+            return mLowerMenuType == LowerMenuType::MAIN_MENU;
+        }
+
+        LowerMenuType mLowerMenuType = LowerMenuType::MAIN_MENU;
+
         bool mIsKeyboardActive       = false;
         bool mShouldShowErrorMessage = false;
         bool mIsEmulationPaused      = false;

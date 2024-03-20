@@ -4,7 +4,9 @@ object VrMessageQueue {
         // Keep consistent with MessageQueue.h
         enum class MessageType(val jniVal: Int) {
                 SHOW_KEYBOARD(0),
-                SHOW_ERROR_MESSAGE(1)
+                SHOW_ERROR_MESSAGE(1),
+                EXIT_NEEDED(2),
+                CHANGE_LOWER_MENU(3)
             }
         @JvmStatic
         fun post(messageType: MessageType, payload: Long) {

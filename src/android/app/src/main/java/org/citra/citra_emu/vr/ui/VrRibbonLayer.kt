@@ -6,6 +6,7 @@ import android.widget.Button
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
+import org.citra.citra_emu.vr.utils.VrMessageQueue
 
 class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribbon) {
 
@@ -26,6 +27,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.GONE
         menuTypeCurrent = menuTypeNew
         window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.VISIBLE
+        if (menuTypeCurrent == MenuType.MAIN)
+            VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
+        else if (menuTypeCurrent == MenuType.POSITION)
+            VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
     }
 
     fun initializeMainView() {
@@ -62,15 +67,23 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
             false
         }
 
-        window?.findViewById<Button>(R.id.buttonNextMenu)?.setOnClickListener{ _ ->
+        val btnNext = window?.findViewById<Button>(R.id.buttonNextMenu)
+        val btnPrev = window?.findViewById<Button>(R.id.buttonPrevMenu)
+        btnNext?.setOnClickListener{ _ ->
             val nextIdx = (menuTypeCurrent.ordinal + 1) % MenuType.values().size
             switchMenus(MenuType.values()[nextIdx])
+            if ((nextIdx + 1) >= MenuType.values().size)
+                btnNext.visibility = View.INVISIBLE
+            btnPrev?.visibility = View.VISIBLE
             false
         }
 
-        window?.findViewById<Button>(R.id.buttonPrevMenu)?.setOnClickListener { _ ->
+        btnPrev?.setOnClickListener { _ ->
             val prevIdx = (menuTypeCurrent.ordinal - 1 + MenuType.values().size) % MenuType.values().size
             switchMenus(MenuType.values()[prevIdx])
+            if ((prevIdx - 1) <= 0)
+                btnPrev.visibility = View.INVISIBLE
+            btnNext?.visibility = View.VISIBLE
             false
         }
     }

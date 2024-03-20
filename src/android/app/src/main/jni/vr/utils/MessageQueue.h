@@ -15,6 +15,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <cstdint>
 
+enum LowerMenuType : uint16_t { MAIN_MENU = 0, POSITIONAL_MENU = 1 };
+
 /**
  * Message class
  *
@@ -28,7 +30,8 @@ struct Message {
     enum Type {
         SHOW_KEYBOARD      = 0, // payload 0 = hide keyboard, 1 = show keyboard
         SHOW_ERROR_MESSAGE = 1, // payload 0 = show error message, 1 = hide error message
-        EXIT_NEEDED        = 2  // payload ignored
+        EXIT_NEEDED        = 2, // payload ignored
+        CHANGE_LOWER_MENU  = 3  // payload indicates menu ID
     };
 
     Message() {}

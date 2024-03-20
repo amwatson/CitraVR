@@ -450,8 +450,7 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
     panelPosition.y -= up.z / 25.f;
     panelPosition.x += up.y / 25.f;
 
-    if (mImmersiveMode == 3)
-    {
+    if (mImmersiveMode == 3) {
         panelPosition.z += right.x * (0.065f / 2.f) * (1 - 2.f * eye);
         panelPosition.y -= right.z * (0.065f / 2.f) * (1 - 2.f * eye);
         panelPosition.x += right.y * (0.065f / 2.f) * (1 - 2.f * eye);

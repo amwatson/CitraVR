@@ -419,12 +419,12 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 
 void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPosition) {
 
-    static const XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
+    static constexpr XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
     const float             sphereRadius = XrMath::Vector3f::Length(
                     mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
 
     // window from the viewer
-    const XrVector3f windowUpDirection{0, 1, 0}; // Y is up
+    static constexpr XrVector3f windowUpDirection{0, 1, 0}; // Y is up
 
     const XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);

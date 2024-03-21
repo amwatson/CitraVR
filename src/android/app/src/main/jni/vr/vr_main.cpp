@@ -650,7 +650,10 @@ private:
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
         XrVector2f              cursorPos2d        = {0, 0};
         float                   scaleFactor        = 0.01f;
-        CursorLayer::CursorType cursorType         = appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL : CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
+        CursorLayer::CursorType cursorType =
+            appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU
+                ? CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL
+                : CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
 
         [[maybe_unused]] const auto nonPreferredController =
             mInputStateFrame.mPreferredHand == InputStateFrame::LEFT_CONTROLLER
@@ -660,10 +663,15 @@ private:
         // unless neither controller is available.
         assert(mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand] ||
                !mInputStateFrame.mIsHandActive[nonPreferredController]);
-
         {
             const bool isPreferredControllerActive =
                 mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand];
+
+            static bool sIsLowerPanelBeingPositioned = false;
+
+            sIsLowerPanelBeingPositioned &=
+                appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
+                isPreferredControllerActive;
             if (isPreferredControllerActive) {
                 const XrPosef pose =
                     mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose;
@@ -676,6 +684,8 @@ private:
                 const XrVector3f end = XrMath::Posef::Transform(
                     mInputStateFrame.mHandPositions[mInputStateFrame.mPreferredHand].pose,
                     XrVector3f{0, 0, -3.5f});
+
+                sIsLowerPanelBeingPositioned &= triggerState.currentState > 0;
 
                 // Hit-test panels in order of priority (and known depth)
 
@@ -696,6 +706,7 @@ private:
                 }
                 // No dialogs/popups that should impede normal cursor interaction with
                 // applicable panels
+
                 if (!shouldRenderCursor && appState.ShouldShowLowerPanel()) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
@@ -713,13 +724,14 @@ private:
                                             cursorPos2d.x, cursorPos2d.y, 2);
                     }
                 }
+
                 if (!shouldRenderCursor) {
                     shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
                     if (shouldRenderCursor && triggerState.changedSinceLastSync) {
                         mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
-                    if (shouldRenderCursor &&
+                    if ((shouldRenderCursor || sIsLowerPanelBeingPositioned) &&
                         appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         triggerState.currentState) {
 
@@ -730,28 +742,15 @@ private:
                             mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
                         if (std::abs(thumbstickState.currentState.y) >
                             kThumbStickDirectionThreshold) {
-                            const XrPosef lowerPanelPose = mGameSurfaceLayer->SetLowerPanelFromThumbstick(
-                                thumbstickState.currentState.y);
+                            const XrPosef lowerPanelPose =
+                                mGameSurfaceLayer->SetLowerPanelFromThumbstick(
+                                    thumbstickState.currentState.y);
                             mRibbonLayer->SetPanelWithPose(lowerPanelPose);
+                            sIsLowerPanelBeingPositioned = true;
                         }
                     }
                 }
-
-                if (!shouldRenderCursor) {
-                    // Handling this here means L2/R2 are liable to
-                    // be slightly out of sync with the other
-                    // buttons (which are handled before
-                    // WaitFrame()). We'll see if that ends up being
-                    // a problem for any games.
-                    ForwardButtonStateIfNeeded(
-                        jni, mActivityObject, mForwardVRInputMethodID, 104 /* BUTTON_L2 */,
-                        mInputStateFrame.mIndexTriggerState[InputStateFrame::LEFT_CONTROLLER],
-                        "l2");
-                    ForwardButtonStateIfNeeded(
-                        jni, mActivityObject, mForwardVRInputMethodID, 105 /* BUTTON_R2 */,
-                        mInputStateFrame.mIndexTriggerState[InputStateFrame::RIGHT_CONTROLLER],
-                        "r2");
-                }
+                if (sIsLowerPanelBeingPositioned) { shouldRenderCursor = true; }
 
                 // Hit test the top panel if positional menu is active.
                 if (!shouldRenderCursor &&
@@ -777,6 +776,22 @@ private:
                                 thumbstickState.currentState.y);
                         }
                     }
+                }
+
+                if (!shouldRenderCursor) {
+                    // Handling this here means L2/R2 are liable to
+                    // be slightly out of sync with the other
+                    // buttons (which are handled before
+                    // WaitFrame()). We'll see if that ends up being
+                    // a problem for any games.
+                    ForwardButtonStateIfNeeded(
+                        jni, mActivityObject, mForwardVRInputMethodID, 104 /* BUTTON_L2 */,
+                        mInputStateFrame.mIndexTriggerState[InputStateFrame::LEFT_CONTROLLER],
+                        "l2");
+                    ForwardButtonStateIfNeeded(
+                        jni, mActivityObject, mForwardVRInputMethodID, 105 /* BUTTON_R2 */,
+                        mInputStateFrame.mIndexTriggerState[InputStateFrame::RIGHT_CONTROLLER],
+                        "r2");
                 }
 
                 // Add a scale factor so the cursor doesn't scale as

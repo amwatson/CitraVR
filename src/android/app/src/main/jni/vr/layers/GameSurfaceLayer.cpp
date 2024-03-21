@@ -30,8 +30,8 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float kSuperImmersiveRadius = 0.5f;
-
+constexpr float kSuperImmersiveRadius          = 0.5f;
+constexpr float kDistanceBetweenPanelsInMeters = 0.75f;
 //-----------------------------------------------------------------------------
 // Local sysprops
 
@@ -124,7 +124,7 @@ Panel CreateTopPanel(const XrVector3f& position, const float surfaceWidth,
 Panel CreateLowerPanelFromTopPanel(const Panel& topPanel, const float resolutionFactor) {
     // Note: the fact that two constants are 0.75 is purely coincidental.
     constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
-    constexpr float kLowerPanelYOffsetInMeters    = -0.75f;
+    constexpr float kLowerPanelYOffsetInMeters    = -kDistanceBetweenPanelsInMeters;
     constexpr float kLowerPanelZOffsetInMeters    = -1.5f;
     // Pitch the lower panel away from the viewer 45 degrees
     constexpr float kLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f;
@@ -420,8 +420,8 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPosition) {
 
     static constexpr XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
-    const float             sphereRadius = XrMath::Vector3f::Length(
-                    mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
+    const float                 sphereRadius = XrMath::Vector3f::Length(
+                        mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
 
     // window from the viewer
     static constexpr XrVector3f windowUpDirection{0, 1, 0}; // Y is up
@@ -430,17 +430,21 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
     const XrQuaternionf windowRotation =
         CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
-    if (windowPosition.y < 0) { return; }
+    if (windowPosition.y <
+        (mLowerPanel.mPanelFromWorld.position.y + kDistanceBetweenPanelsInMeters)) {
+        return;
+    }
     if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
-void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
-    static constexpr float kDepthSpeed = 0.05f;
-    static constexpr float kMaxDepth   = -10.0f;
+static constexpr float kThumbstickSpeed = 0.05f;
 
-    mTopPanel.mPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
+void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
+    static constexpr float kMaxDepth = -10.0f;
+
+    mTopPanel.mPanelFromWorld.position.z -= (thumbstickY * kThumbstickSpeed);
     mTopPanel.mPanelFromWorld.position.z =
         std::min(mTopPanel.mPanelFromWorld.position.z, mLowerPanel.mPanelFromWorld.position.z);
     mTopPanel.mPanelFromWorld.position.z =
@@ -448,14 +452,14 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
 }
 
 XrPosef GameSurfaceLayer::SetLowerPanelFromThumbstick(const float thumbstickY) {
-    static constexpr float kDepthSpeed = 0.05f;
-    static constexpr float kMaxDepth   = -10.0f;
+    static constexpr float kMinY = -3.0f;
 
-    mLowerPanel.mPanelFromWorld.position.y += (thumbstickY * kDepthSpeed);
+    mLowerPanel.mPanelFromWorld.position.y += (thumbstickY * kThumbstickSpeed);
     mLowerPanel.mPanelFromWorld.position.y =
-        std::min(mLowerPanel.mPanelFromWorld.position.y, mTopPanel.mPanelFromWorld.position.y);
+        std::min(mLowerPanel.mPanelFromWorld.position.y,
+                 mTopPanel.mPanelFromWorld.position.y - kDistanceBetweenPanelsInMeters);
     mLowerPanel.mPanelFromWorld.position.y =
-        std::max(mLowerPanel.mPanelFromWorld.position.y, kMaxDepth);
+        std::max(mLowerPanel.mPanelFromWorld.position.y, kMinY);
 
     return mLowerPanel.mPanelFromWorld;
 }

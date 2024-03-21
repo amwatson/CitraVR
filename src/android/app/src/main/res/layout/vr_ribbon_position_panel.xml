@@ -2,15 +2,39 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/position_panel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="1000dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Press and hold trigger on panel to move it"
+            android:textAlignment="center"
+            android:textColor="@color/citra_onBackground" />
+
+        <androidx.appcompat.widget.AppCompatToggleButton
+            android:id="@+id/toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lock Horizontal Axis"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

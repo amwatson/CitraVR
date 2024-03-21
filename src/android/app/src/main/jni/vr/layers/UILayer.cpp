@@ -325,3 +325,5 @@ int UILayer::CreateSwapchain() {
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
     mEnv->CallIntMethod(mVrUILayerObject, mSendClickToUIMethodID, pos2d.x, pos2d.y, type);
 }
+
+void UILayer::SetPanelWithPose(const XrPosef& pose) { mPanelFromWorld = pose; }

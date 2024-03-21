@@ -123,6 +123,8 @@ public:
      */
     void SendClickToUI(const XrVector2f& pos2d, const int type);
 
+    void SetPanelWithPose(const XrPosef& pose);
+
 private:
     int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
              const XrSession& session);

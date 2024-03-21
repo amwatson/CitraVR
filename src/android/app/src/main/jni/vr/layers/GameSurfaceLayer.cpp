@@ -436,6 +436,30 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
+void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
+    static constexpr float kDepthSpeed = 0.05f;
+    static constexpr float kMaxDepth   = -10.0f;
+
+    mTopPanel.mPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
+    mTopPanel.mPanelFromWorld.position.z =
+        std::min(mTopPanel.mPanelFromWorld.position.z, mLowerPanel.mPanelFromWorld.position.z);
+    mTopPanel.mPanelFromWorld.position.z =
+        std::max(mTopPanel.mPanelFromWorld.position.z, kMaxDepth);
+}
+
+XrPosef GameSurfaceLayer::SetLowerPanelFromThumbstick(const float thumbstickY) {
+    static constexpr float kDepthSpeed = 0.05f;
+    static constexpr float kMaxDepth   = -10.0f;
+
+    mLowerPanel.mPanelFromWorld.position.y += (thumbstickY * kDepthSpeed);
+    mLowerPanel.mPanelFromWorld.position.y =
+        std::min(mLowerPanel.mPanelFromWorld.position.y, mTopPanel.mPanelFromWorld.position.y);
+    mLowerPanel.mPanelFromWorld.position.y =
+        std::max(mLowerPanel.mPanelFromWorld.position.y, kMaxDepth);
+
+    return mLowerPanel.mPanelFromWorld;
+}
+
 XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose) {
     XrVector3f panelPosition = headPose.position;
 
@@ -460,17 +484,6 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
 }
 
 // based on thumbstick, modify the depth of the top panel
-void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
-    static constexpr float kDepthSpeed = 0.05f;
-    static constexpr float kMaxDepth   = -10.0f;
-
-    mTopPanel.mPanelFromWorld.position.z -= (thumbstickY * kDepthSpeed);
-    mTopPanel.mPanelFromWorld.position.z =
-        std::min(mTopPanel.mPanelFromWorld.position.z, mLowerPanel.mPanelFromWorld.position.z);
-    mTopPanel.mPanelFromWorld.position.z =
-        std::max(mTopPanel.mPanelFromWorld.position.z, kMaxDepth);
-}
-
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityObject) {
     if (mImmersiveMode > 0) {

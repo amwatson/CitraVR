@@ -158,18 +158,19 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool    GetRayIntersectionWithPanel(const XrVector3f& start,
-                                        const XrVector3f& end,
-                                        XrVector2f&       result2d,
-                                        XrPosef&          result3d) const;
-    bool    GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
-                                                const XrVector3f& end,
-                                                XrVector2f&       result2d,
-                                                XrPosef&          result3d) const;
-    void    SetTopPanelFromController(const XrVector3f& controllerPosition);
-    XrPosef GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
-
+    bool GetRayIntersectionWithPanel(const XrVector3f& start,
+                                     const XrVector3f& end,
+                                     XrVector2f&       result2d,
+                                     XrPosef&          result3d) const;
+    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
+                                             const XrVector3f& end,
+                                             XrVector2f&       result2d,
+                                             XrPosef&          result3d) const;
+    void SetTopPanelFromController(const XrVector3f& controllerPosition);
     void SetTopPanelFromThumbstick(const float thumbstickY);
+    XrPosef SetLowerPanelFromThumbstick(const float thumbstickY);
+
+    XrPosef GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
 
 private:
     int  Init(const XrSession& session, const jobject activityObject);

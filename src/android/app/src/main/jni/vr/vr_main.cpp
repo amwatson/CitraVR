@@ -650,7 +650,7 @@ private:
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
         XrVector2f              cursorPos2d        = {0, 0};
         float                   scaleFactor        = 0.01f;
-        CursorLayer::CursorType cursorType         = CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
+        CursorLayer::CursorType cursorType         = appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL : CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
 
         [[maybe_unused]] const auto nonPreferredController =
             mInputStateFrame.mPreferredHand == InputStateFrame::LEFT_CONTROLLER
@@ -685,86 +685,100 @@ private:
                     if (triggerState.changedSinceLastSync) {
                         mErrorMessageLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
-                } else { // Don't test for cursor intersection if error message is shown
-                    if (appState.mIsKeyboardActive) {
-                        shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
-                            start, end, cursorPos2d, cursorPose3d);
-                        if (triggerState.changedSinceLastSync) {
-                            mKeyboardLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
-                        }
-                    } else {
-                        // No dialogs/popups that should impede normal cursor interaction with
-                        // applicable panels
-                        shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
-                            start, end, cursorPos2d, cursorPose3d);
-                        if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 0);
-                        } else if (triggerState.changedSinceLastSync &&
-                                   triggerState.currentState == 1) {
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 1);
-                        } else if (triggerState.currentState == 1 &&
-                                   !triggerState.changedSinceLastSync) {
-
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 2);
-                        }
-                        if (!shouldRenderCursor) {
-                            shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
-                                start, end, cursorPos2d, cursorPose3d);
-                            if (triggerState.changedSinceLastSync) {
-                                mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
-                            }
-                        }
-
-                        if (!shouldRenderCursor) {
-                            // Handling this here means L2/R2 are liable to
-                            // be slightly out of sync with the other
-                            // buttons (which are handled before
-                            // WaitFrame()). We'll see if that ends up being
-                            // a problem for any games.
-                            ForwardButtonStateIfNeeded(
-                                jni, mActivityObject, mForwardVRInputMethodID, 104 /* BUTTON_L2 */,
-                                mInputStateFrame
-                                    .mIndexTriggerState[InputStateFrame::LEFT_CONTROLLER],
-                                "l2");
-                            ForwardButtonStateIfNeeded(
-                                jni, mActivityObject, mForwardVRInputMethodID, 105 /* BUTTON_R2 */,
-                                mInputStateFrame
-                                    .mIndexTriggerState[InputStateFrame::RIGHT_CONTROLLER],
-                                "r2");
-                        }
+                }
+                // Don't test for cursor intersection if error message is shown
+                if (!shouldRenderCursor && appState.mIsKeyboardActive) {
+                    shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
+                        start, end, cursorPos2d, cursorPose3d);
+                    if (triggerState.changedSinceLastSync) {
+                        mKeyboardLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
+                }
+                // No dialogs/popups that should impede normal cursor interaction with
+                // applicable panels
+                if (!shouldRenderCursor && appState.ShouldShowLowerPanel()) {
+                    shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
+                        start, end, cursorPos2d, cursorPose3d);
+                    if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
+                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                            cursorPos2d.x, cursorPos2d.y, 0);
+                    } else if (triggerState.changedSinceLastSync &&
+                               triggerState.currentState == 1) {
+                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                            cursorPos2d.x, cursorPos2d.y, 1);
+                    } else if (triggerState.currentState == 1 &&
+                               !triggerState.changedSinceLastSync) {
 
-                    // Hit test the top panel
-                    if (!shouldRenderCursor) {
-                        shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
-                            start, end, cursorPos2d, cursorPose3d);
-                        // If top panel is hit, trigger controls the
-                        // position/rotation
-                        if (shouldRenderCursor && triggerState.currentState) {
-                            // null out X component -- screen should stay
-                            // center
-                            mGameSurfaceLayer->SetTopPanelFromController(
-                                XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
-                            // If trigger is pressed, thumbstick controls
-                            // the depth
-                            const XrActionStateVector2f& thumbstickState =
-                                mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
+                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                            cursorPos2d.x, cursorPos2d.y, 2);
+                    }
+                }
+                if (!shouldRenderCursor) {
+                    shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
+                        start, end, cursorPos2d, cursorPose3d);
+                    if (shouldRenderCursor && triggerState.changedSinceLastSync) {
+                        mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                    }
+                    if (shouldRenderCursor &&
+                        appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
+                        triggerState.currentState) {
 
-                            static constexpr float kThumbStickDirectionThreshold = 0.5f;
-                            if (std::abs(thumbstickState.currentState.y) >
-                                kThumbStickDirectionThreshold) {
-                                mGameSurfaceLayer->SetTopPanelFromThumbstick(
-                                    thumbstickState.currentState.y);
-                            }
-                        }
-                        if (shouldRenderCursor) {
-                            cursorType = CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL;
+                        static constexpr float kThumbStickDirectionThreshold = 0.5f;
+                        // If trigger is pressed, thumbstick controls
+                        // the depth
+                        const XrActionStateVector2f& thumbstickState =
+                            mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
+                        if (std::abs(thumbstickState.currentState.y) >
+                            kThumbStickDirectionThreshold) {
+                            const XrPosef lowerPanelPose = mGameSurfaceLayer->SetLowerPanelFromThumbstick(
+                                thumbstickState.currentState.y);
+                            mRibbonLayer->SetPanelWithPose(lowerPanelPose);
                         }
                     }
                 }
+
+                if (!shouldRenderCursor) {
+                    // Handling this here means L2/R2 are liable to
+                    // be slightly out of sync with the other
+                    // buttons (which are handled before
+                    // WaitFrame()). We'll see if that ends up being
+                    // a problem for any games.
+                    ForwardButtonStateIfNeeded(
+                        jni, mActivityObject, mForwardVRInputMethodID, 104 /* BUTTON_L2 */,
+                        mInputStateFrame.mIndexTriggerState[InputStateFrame::LEFT_CONTROLLER],
+                        "l2");
+                    ForwardButtonStateIfNeeded(
+                        jni, mActivityObject, mForwardVRInputMethodID, 105 /* BUTTON_R2 */,
+                        mInputStateFrame.mIndexTriggerState[InputStateFrame::RIGHT_CONTROLLER],
+                        "r2");
+                }
+
+                // Hit test the top panel if positional menu is active.
+                if (!shouldRenderCursor &&
+                    appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU) {
+                    shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
+                        start, end, cursorPos2d, cursorPose3d);
+                    // If top panel is hit, trigger controls the
+                    // position/rotation
+                    if (shouldRenderCursor && triggerState.currentState) {
+                        // null out X component -- screen should stay
+                        // center
+                        mGameSurfaceLayer->SetTopPanelFromController(
+                            XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
+                        // If trigger is pressed, thumbstick controls
+                        // the depth
+                        const XrActionStateVector2f& thumbstickState =
+                            mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
+
+                        static constexpr float kThumbStickDirectionThreshold = 0.5f;
+                        if (std::abs(thumbstickState.currentState.y) >
+                            kThumbStickDirectionThreshold) {
+                            mGameSurfaceLayer->SetTopPanelFromThumbstick(
+                                thumbstickState.currentState.y);
+                        }
+                    }
+                }
+
                 // Add a scale factor so the cursor doesn't scale as
                 // quickly as the panel(s) with distance. This may be
                 // mildly  unsettling, but it helps to ensure the cursor
@@ -1065,9 +1079,7 @@ private:
 
     class AppState {
     public:
-        bool ShouldShowLowerPanel() const {
-            return mLowerMenuType == LowerMenuType::MAIN_MENU;
-        }
+        bool ShouldShowLowerPanel() const { return mLowerMenuType == LowerMenuType::MAIN_MENU; }
 
         LowerMenuType mLowerMenuType = LowerMenuType::MAIN_MENU;
 

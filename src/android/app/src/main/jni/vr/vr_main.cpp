@@ -385,7 +385,7 @@ private:
         // Super Immersive Mode update and computation.
         //////////////////////////////////////////////////
 
-        bool  showLowerPanel      = appState.ShouldShowLowerPanel();
+        bool  showLowerPanel      = true;
         float immersiveModeFactor = (VRSettings::values.vr_immersive_mode < 2)
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
@@ -668,6 +668,7 @@ private:
                 mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand];
 
             static bool sIsLowerPanelBeingPositioned = false;
+            const bool wasLowerPanelBeingPositioned   = sIsLowerPanelBeingPositioned;
 
             sIsLowerPanelBeingPositioned &=
                 appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
@@ -707,21 +708,36 @@ private:
                 // No dialogs/popups that should impede normal cursor interaction with
                 // applicable panels
 
-                if (!shouldRenderCursor && appState.ShouldShowLowerPanel()) {
+                // Lock ribbon in place when placement is complete
+                const bool needRibbonUpdate = !sIsLowerPanelBeingPositioned && wasLowerPanelBeingPositioned;
+                if (needRibbonUpdate) {
+                  mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
+                }
+
+                if (!shouldRenderCursor) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
-                    if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
-                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                            cursorPos2d.x, cursorPos2d.y, 0);
-                    } else if (triggerState.changedSinceLastSync &&
-                               triggerState.currentState == 1) {
-                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                            cursorPos2d.x, cursorPos2d.y, 1);
-                    } else if (triggerState.currentState == 1 &&
-                               !triggerState.changedSinceLastSync) {
+                    if ((shouldRenderCursor || sIsLowerPanelBeingPositioned) &&
+                        appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
+                        triggerState.currentState) {
+                        mGameSurfaceLayer->SetLowerPanelFromController(
+                            XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
 
-                        jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                            cursorPos2d.x, cursorPos2d.y, 2);
+                            sIsLowerPanelBeingPositioned = true;
+                    } else if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
+                        if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
+                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                cursorPos2d.x, cursorPos2d.y, 0);
+                        } else if (triggerState.changedSinceLastSync &&
+                                   triggerState.currentState == 1) {
+                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                cursorPos2d.x, cursorPos2d.y, 1);
+                        } else if (triggerState.currentState == 1 &&
+                                   !triggerState.changedSinceLastSync) {
+
+                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
+                                                cursorPos2d.x, cursorPos2d.y, 2);
+                        }
                     }
                 }
 
@@ -740,13 +756,13 @@ private:
                         // the depth
                         const XrActionStateVector2f& thumbstickState =
                             mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
+
                         if (std::abs(thumbstickState.currentState.y) >
                             kThumbStickDirectionThreshold) {
                             const XrPosef lowerPanelPose =
                                 mGameSurfaceLayer->SetLowerPanelFromThumbstick(
                                     thumbstickState.currentState.y);
                             mRibbonLayer->SetPanelWithPose(lowerPanelPose);
-                            sIsLowerPanelBeingPositioned = true;
                         }
                     }
                 }

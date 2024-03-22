@@ -439,6 +439,28 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
+void GameSurfaceLayer::SetLowerPanelFromController(const XrVector3f& controllerPosition) {
+
+    static constexpr XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
+    const float                 sphereRadius = XrMath::Vector3f::Length(
+                        mLowerPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
+
+    // window from the viewer
+    static constexpr XrVector3f windowUpDirection{0, 1, 0}; // Y is up
+
+    const XrVector3f windowPosition =
+        CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
+    const XrQuaternionf windowRotation =
+        CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
+    if (windowPosition.y >
+        (mTopPanel.mPanelFromWorld.position.y - kDistanceBetweenPanelsInMeters)) {
+        return;
+    }
+    if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
+
+    mLowerPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
+}
+
 static constexpr float kThumbstickSpeed = 0.05f;
 
 void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {

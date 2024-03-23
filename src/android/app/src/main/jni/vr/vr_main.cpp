@@ -429,7 +429,7 @@ private:
                     // If in normal immersive mode then look down for the lower panel to reveal
                     // itself (for some reason the Roll function returns pitch)
                     (VRSettings::values.vr_immersive_mode == 1 &&
-                     XrMath::Quatf::GetRollInRadians(gOpenXr->headLocation.pose.orientation) <
+                     XrMath::Quatf::GetPitchInRadians(gOpenXr->headLocation.pose.orientation) <
                          -MATH_FLOAT_PI / 8.0f) ||
                     // If in "super immersive" mode then put controller next to head in order to
                     // disable the mode temporarily

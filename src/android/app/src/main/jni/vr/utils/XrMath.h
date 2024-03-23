@@ -20,7 +20,11 @@ License     :   Licensed under GPLv3 or any later version.
 #endif
 
 #ifndef MATH_FLOAT_TWOPI
-#define MATH_FLOAT_TWOPI MATH_FLOAT_PI * 2.0f
+#define MATH_FLOAT_TWOPI (MATH_FLOAT_PI * 2.0f)
+#endif
+
+#ifndef MATH_FLOAT_EPSILON
+#define MATH_FLOAT_EPSILON 0.00001f
 #endif
 
 static inline XrVector2f operator*(const XrVector2f& lhs, const float rhs) {
@@ -43,6 +47,12 @@ static inline XrVector3f operator*(const float lhs, const XrVector3f& rhs) {
     return XrVector3f{lhs * rhs.x, lhs * rhs.y, lhs * rhs.z};
 }
 
+static inline bool operator==(const XrVector3f& lhs, const XrVector3f& rhs) {
+    return std::fabs(lhs.x - rhs.x) < MATH_FLOAT_EPSILON &&
+           std::fabs(lhs.y - rhs.y) < MATH_FLOAT_EPSILON &&
+           std::fabs(lhs.z - rhs.z) < MATH_FLOAT_EPSILON;
+}
+
 static inline XrQuaternionf operator*(const XrQuaternionf& lhs, const XrQuaternionf& rhs) {
     XrQuaternionf result;
     result.x = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
@@ -53,8 +63,6 @@ static inline XrQuaternionf operator*(const XrQuaternionf& lhs, const XrQuaterni
 }
 
 namespace XrMath {
-
-static constexpr float kEpsilon = 0.00001f;
 
 static inline float SafeRcpSqrt(const float x) {
     return (x >= std::numeric_limits<float>::min()) ? 1.0f / sqrtf(x)
@@ -189,60 +197,76 @@ class Quatf {
 public:
     static XrQuaternionf Identity() { return XrQuaternionf{0.0f, 0.0f, 0.0f, 1.0f}; }
 
-    // Given a yaw (Y-axis), pitch (X-axis) and roll (Z-axis) in radians, create
+    // Create a quaternion from an axis and angle, return a normalized quaternion
+    // representing the rotation.
+    static XrQuaternionf FromAxisAngle(const XrVector3f& axis, const float angleInRadians) {
+        // Ensure the axis is normalized.
+        const float      magnitude = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+        const XrVector3f normalizedAxis = {axis.x / magnitude, axis.y / magnitude,
+                                           axis.z / magnitude};
+
+        const float halfAngle    = angleInRadians * 0.5f;
+        const float sinHalfAngle = sinf(halfAngle);
+        const float cosHalfAngle = cosf(halfAngle);
+
+        return XrQuaternionf{
+            normalizedAxis.x * sinHalfAngle, // x
+            normalizedAxis.y * sinHalfAngle, // y
+            normalizedAxis.z * sinHalfAngle, // z
+            cosHalfAngle                     // w
+        };
+    }
+
+    // Given a pitch (X-axis), yaw (Y-axis), and roll (Z-axis) in radians, create
     // a quaternion representing the same rotation
-    static XrQuaternionf FromEuler(const float yawInRadians, const float pitchInRadians,
+    static XrQuaternionf FromEuler(const float pitchInRadians, const float yawInRadians,
                                    const float rollInRadians) {
-        // Calculate half angles
-        const float halfPitch = pitchInRadians * 0.5f;
-        const float halfYaw   = yawInRadians * 0.5f;
-        const float halfRoll  = rollInRadians * 0.5f;
-
-        // Calculate sin and cos for each half angle
-        const float sinPitch = std::sin(halfPitch);
-        const float cosPitch = std::cos(halfPitch);
-        const float sinYaw   = std::sin(halfYaw);
-        const float cosYaw   = std::cos(halfYaw);
-        const float sinRoll  = std::sin(halfRoll);
-        const float cosRoll  = std::cos(halfRoll);
-
         // Create quaternions for each rotation
-        const XrQuaternionf qx = {sinPitch, 0.0f, 0.0f, cosPitch};
-        const XrQuaternionf qy = {0.0f, sinYaw, 0.0f, cosYaw};
-        const XrQuaternionf qz = {0.0f, 0.0f, sinRoll, cosRoll};
+        const XrQuaternionf qx = FromAxisAngle({1.0f, 0.0f, 0.0f}, pitchInRadians);
+        const XrQuaternionf qy = FromAxisAngle({0.0f, 1.0f, 0.0f}, yawInRadians);
+        const XrQuaternionf qz = FromAxisAngle({0.0f, 0.0f, 1.0f}, rollInRadians);
 
         // Rotation order: roll * pitch * yaw
         return qz * qx * qy;
     }
 
-    // Yaw (around Y-axis)
-    static float GetYawInRadians(const XrQuaternionf& q) {
-        assert(IsNormalized(q));
-        return atan2f(2.0f * (q.x * q.y + q.w * q.z),
-                      q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
-    }
-
     // Pitch (around X-axis)
     static float GetPitchInRadians(const XrQuaternionf& q) {
         assert(IsNormalized(q));
-        return asinf(-2.0f * (q.x * q.z - q.w * q.y));
+        const float sinp = 2.0f * (q.w * q.x + q.y * q.z);
+        const float cosp = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+        return atan2f(sinp, cosp);
+    }
+
+    // Yaw (around Y-axis)
+    static float GetYawInRadians(const XrQuaternionf& q) {
+        assert(IsNormalized(q));
+        const float sinp = 2.0f * (q.w * q.y - q.z * q.x);
+        // Check for gimbal lock.
+        if (fabsf(sinp) >= 1.0f)
+            // Return 90 degrees if out-of-range.
+            return copysignf(MATH_FLOAT_PI / 2.0f, sinp);
+        else
+            return asinf(sinp);
     }
 
     // Roll (around Z-axis)
     static float GetRollInRadians(const XrQuaternionf& q) {
         assert(IsNormalized(q));
-        return atan2f(2.0f * (q.y * q.z + q.w * q.x),
-                      q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z);
+        const float sinr = 2.0f * (q.w * q.z + q.x * q.y);
+        const float cosr = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+        return atan2f(sinr, cosr);
     }
 
     [[maybe_unused]] static bool IsNormalized(const XrQuaternionf& q) {
-        return fabs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1.0f) < kEpsilon;
+        return fabs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1.0f) < MATH_FLOAT_EPSILON;
     }
 
     static XrQuaternionf Inverted(const XrQuaternionf& q) {
         assert(IsNormalized(q));
         return XrQuaternionf{-q.x, -q.y, -q.z, q.w};
     }
+
     // Formula: v' = q * v * q*
     // Where q* is the conjugate of q
     static XrVector3f Rotate(const XrQuaternionf& q, const XrVector3f& _v) {

@@ -434,7 +434,7 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
         (mLowerPanel.mPanelFromWorld.position.y + kDistanceBetweenPanelsInMeters)) {
         return;
     }
-    if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
+    if (XrMath::Quatf::GetPitchInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
@@ -456,7 +456,7 @@ void GameSurfaceLayer::SetLowerPanelFromController(const XrVector3f& controllerP
         (mTopPanel.mPanelFromWorld.position.y - kDistanceBetweenPanelsInMeters)) {
         return;
     }
-    if (XrMath::Quatf::GetYawInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
+    if (XrMath::Quatf::GetPitchInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
     mLowerPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }

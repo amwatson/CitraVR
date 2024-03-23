@@ -274,12 +274,12 @@ private:
 
         mRibbonLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrRibbonLayer", XrVector3f{0, -0.75f, -1.51f},
-            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
+            XrMath::Quatf::FromEuler(-MATH_FLOAT_PI / 4.0f, 0.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
             "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
-            XrMath::Quatf::FromEuler(0.0f, -MATH_FLOAT_PI / 4.0f, 0.0f), jni, mActivityObject,
+            XrMath::Quatf::FromEuler(-MATH_FLOAT_PI / 4.0f, 0.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
 
         mErrorMessageLayer = std::make_unique<UILayer>(
@@ -427,7 +427,7 @@ private:
                 Core::System::GetInstance().GPU().Renderer().Rasterizer()) {
                 if (VRSettings::values.vr_immersive_mode == 0 ||
                     // If in normal immersive mode then look down for the lower panel to reveal
-                    // itself (for some reason the Roll function returns pitch)
+                    // itself
                     (VRSettings::values.vr_immersive_mode == 1 &&
                      XrMath::Quatf::GetPitchInRadians(gOpenXr->headLocation.pose.orientation) <
                          -MATH_FLOAT_PI / 8.0f) ||
@@ -668,7 +668,7 @@ private:
                 mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand];
 
             static bool sIsLowerPanelBeingPositioned = false;
-            const bool wasLowerPanelBeingPositioned   = sIsLowerPanelBeingPositioned;
+            const bool  wasLowerPanelBeingPositioned = sIsLowerPanelBeingPositioned;
 
             sIsLowerPanelBeingPositioned &=
                 appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
@@ -709,9 +709,10 @@ private:
                 // applicable panels
 
                 // Lock ribbon in place when placement is complete
-                const bool needRibbonUpdate = !sIsLowerPanelBeingPositioned && wasLowerPanelBeingPositioned;
+                const bool needRibbonUpdate =
+                    !sIsLowerPanelBeingPositioned && wasLowerPanelBeingPositioned;
                 if (needRibbonUpdate) {
-                  mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
+                    mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
                 }
 
                 if (!shouldRenderCursor) {
@@ -723,7 +724,7 @@ private:
                         mGameSurfaceLayer->SetLowerPanelFromController(
                             XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
 
-                            sIsLowerPanelBeingPositioned = true;
+                        sIsLowerPanelBeingPositioned = true;
                     } else if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
                         if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
                             jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
@@ -1110,8 +1111,6 @@ private:
 
     class AppState {
     public:
-        bool ShouldShowLowerPanel() const { return mLowerMenuType == LowerMenuType::MAIN_MENU; }
-
         LowerMenuType mLowerMenuType = LowerMenuType::MAIN_MENU;
 
         bool mIsKeyboardActive       = false;

@@ -78,7 +78,8 @@ public:
         , mPanelFromWorld(pose)
         , mWidth(width)
         , mHeight(height)
-        , mScaleFactor(scaleFactor) {}
+        , mScaleFactor(scaleFactor)
+        , mInitialPose(pose) {}
     Panel(const XrPosef& pose, const float width, const float height, const float scaleFactor)
         : Panel(pose, width, height, scaleFactor, {0, 0}, {width, height}) {}
 
@@ -89,10 +90,11 @@ public:
         XrVector2f mMin;
         XrVector2f mMax;
     } mClickBounds;
-    XrPosef     mPanelFromWorld;
-    const float mWidth;
-    const float mHeight;
-    const float mScaleFactor;
+    XrPosef       mPanelFromWorld;
+    const float   mWidth;
+    const float   mHeight;
+    const float   mScaleFactor;
+    const XrPosef mInitialPose;
 };
 
 /*
@@ -158,19 +160,19 @@ public:
      *
      * Note: assumes viewer is looking down the -Z axis.
      */
-    bool GetRayIntersectionWithPanel(const XrVector3f& start,
-                                     const XrVector3f& end,
-                                     XrVector2f&       result2d,
-                                     XrPosef&          result3d) const;
-    bool GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
-                                             const XrVector3f& end,
-                                             XrVector2f&       result2d,
-                                             XrPosef&          result3d) const;
-    void SetTopPanelFromController(const XrVector3f& controllerPosition);
-    void SetTopPanelFromThumbstick(const float thumbstickY);
-    XrPosef SetLowerPanelFromThumbstick(const float thumbstickY);
-    void SetLowerPanelFromController(const XrVector3f& controllerPosition);
-    XrPosef GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
+    bool           GetRayIntersectionWithPanel(const XrVector3f& start,
+                                               const XrVector3f& end,
+                                               XrVector2f&       result2d,
+                                               XrPosef&          result3d) const;
+    bool           GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,
+                                                       const XrVector3f& end,
+                                                       XrVector2f&       result2d,
+                                                       XrPosef&          result3d) const;
+    void           SetTopPanelFromController(const XrVector3f& controllerPosition);
+    void           SetTopPanelFromThumbstick(const float thumbstickY);
+    XrPosef        SetLowerPanelFromThumbstick(const float thumbstickY);
+    void           SetLowerPanelFromController(const XrVector3f& controllerPosition);
+    XrPosef        GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
     const XrPosef& GetLowerPanelPose() const { return mLowerPanel.mPanelFromWorld; }
 
 private:

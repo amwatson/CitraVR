@@ -30,8 +30,10 @@ License     :   Licensed under GPLv3 or any later version.
 
 namespace {
 
-constexpr float kSuperImmersiveRadius          = 0.5f;
-constexpr float kDistanceBetweenPanelsInMeters = 0.75f;
+constexpr float kSuperImmersiveRadius            = 0.5f;
+constexpr float kDistanceBetweenPanelsInMeters   = 0.75f;
+constexpr float kInitialLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f; // -45 degrees in radians
+
 //-----------------------------------------------------------------------------
 // Local sysprops
 
@@ -124,17 +126,16 @@ Panel CreateTopPanel(const XrVector3f& position, const float surfaceWidth,
 Panel CreateLowerPanelFromTopPanel(const Panel& topPanel, const float resolutionFactor) {
     // Note: the fact that two constants are 0.75 is purely coincidental.
     constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
-    constexpr float kLowerPanelYOffsetInMeters    = -kDistanceBetweenPanelsInMeters;
-    constexpr float kLowerPanelZOffsetInMeters    = -1.5f;
+    constexpr float kLowerPanelYOffsetInMeters    = -0.75f;
+    constexpr float kLowerPanelZOffsetInMeters    = 0.5f;
     // Pitch the lower panel away from the viewer 45 degrees
-    constexpr float kLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f;
-    const float     cropHoriz                 = 90.0f * resolutionFactor;
+    const float cropHoriz = 90.0f * resolutionFactor;
 
     XrPosef lowerPanelFromWorld = topPanel.mPanelFromWorld;
     lowerPanelFromWorld.orientation =
-        XrMath::Quatf::FromEuler(0.0f, kLowerPanelPitchInRadians, 0.0f);
+        XrMath::Quatf::FromEuler(kInitialLowerPanelPitchInRadians, 0, 0);
     lowerPanelFromWorld.position.y += kLowerPanelYOffsetInMeters;
-    lowerPanelFromWorld.position.z = kLowerPanelZOffsetInMeters;
+    lowerPanelFromWorld.position.z += kLowerPanelZOffsetInMeters;
     return Panel(lowerPanelFromWorld, topPanel.mWidth, topPanel.mHeight,
                  kDefaultLowerPanelScaleFactor, XrVector2f{cropHoriz / 2.0f, 0.0f},
                  XrVector2f{topPanel.mWidth - cropHoriz / 2.0f, topPanel.mHeight});
@@ -419,46 +420,75 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 
 void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPosition) {
 
-    static constexpr XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
+    static constexpr XrVector3f viewerPosition{0.0f, 0.0f, 0.0f}; // Set viewer position
     const float                 sphereRadius = XrMath::Vector3f::Length(
                         mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
 
     // window from the viewer
-    static constexpr XrVector3f windowUpDirection{0, 1, 0}; // Y is up
+    static constexpr XrVector3f windowUpDirection{0.0f, 1.0f, 0.0f}; // Y is up
 
     const XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
     const XrQuaternionf windowRotation =
         CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
-    if (windowPosition.y <
-        (mLowerPanel.mPanelFromWorld.position.y + kDistanceBetweenPanelsInMeters)) {
+    if (XrMath::Vector3f::LengthSq(windowPosition - mLowerPanel.mPanelFromWorld.position) <
+        XrMath::Vector3f::LengthSq(mTopPanel.mInitialPose.position -
+                                   mLowerPanel.mInitialPose.position)) {
         return;
     }
+
     if (XrMath::Quatf::GetPitchInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
+// Goal is to rotate the lower panel to face the user, but with an initial bias of 45 degrees.
+// The result is the lower panel being slightly tilted away from the user compared to the top panel,
+// but comfortably readable at any angle.
+// The rotational offset is done so that the top+bottom text comfortably fit into the user's FOV
+// at high angles, so the user isn't craning their neck while reclining.
 void GameSurfaceLayer::SetLowerPanelFromController(const XrVector3f& controllerPosition) {
+    constexpr XrVector3f viewerPosition{0.0f, 0.0f, 0.0f};    // Viewer position at origin
+    constexpr XrVector3f windowUpDirection{0.0f, 1.0f, 0.0f}; // Y is up
+    constexpr float      pitchAdjustmentFactor = 0.5f;
 
-    static constexpr XrVector3f viewerPosition{0, 0, 0}; // Set viewer position
-    const float                 sphereRadius = XrMath::Vector3f::Length(
-                        mLowerPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
+    // Calculate sphere radius based on panel position to viewer
+    const float sphereRadius =
+        XrMath::Vector3f::Length(mLowerPanel.mPanelFromWorld.position - viewerPosition);
 
-    // window from the viewer
-    static constexpr XrVector3f windowUpDirection{0, 1, 0}; // Y is up
-
+    // Calculate new window position based on controller and sphere radius
     const XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
-    const XrQuaternionf windowRotation =
-        CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
-    if (windowPosition.y >
-        (mTopPanel.mPanelFromWorld.position.y - kDistanceBetweenPanelsInMeters)) {
+
+    // Limit vertical range to prevent the window from being too close to the viewer or the top
+    // panel.
+    if (windowPosition.z >= -0.5f ||
+        XrMath::Vector3f::LengthSq(mTopPanel.mPanelFromWorld.position - windowPosition) <
+            XrMath::Vector3f::LengthSq(mTopPanel.mInitialPose.position -
+                                       mLowerPanel.mInitialPose.position)) {
         return;
     }
-    if (XrMath::Quatf::GetPitchInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
 
-    mLowerPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
+    // Calculate the base rotation of the panel to face the user
+    const XrQuaternionf baseRotation =
+        CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
+
+    // Calculate pitch adjustment based on vertical displacement from initial position
+    const float verticalDisplacement = windowPosition.y - mLowerPanel.mInitialPose.position.y;
+    // Arbitrary factor, chosen based on what change-in-pitch felt best
+    // A higher factor will make the window pitch more aggressively
+    const float pitchAdjustment = verticalDisplacement * pitchAdjustmentFactor;
+    // Clamp the new pitch to reasonable bounds (-45 to 90 degrees)
+    const float newPitchRadians =
+        std::clamp(-std::abs(kInitialLowerPanelPitchInRadians + pitchAdjustment),
+                   kInitialLowerPanelPitchInRadians, MATH_FLOAT_PI / 2.0f);
+
+    // Construct a quaternion for the pitch adjustment
+    const XrQuaternionf pitchAdjustmentQuat =
+        XrMath::FromAxisAngle({1.0f, 0.0f, 0.0f}, newPitchRadians / 2.0f);
+
+    // Combine the base rotation with the pitch adjustment
+    mLowerPanel.mPanelFromWorld = {baseRotation * pitchAdjustmentQuat, windowPosition};
 }
 
 static constexpr float kThumbstickSpeed = 0.05f;

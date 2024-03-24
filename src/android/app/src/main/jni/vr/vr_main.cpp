@@ -98,6 +98,22 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
     }
 }
 
+void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
+                              jmethodID                   sendClickToWindowMethodID,
+                              const XrActionStateBoolean& triggerState,
+                              const XrVector2f&           cursorPos2d) {
+    if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
+        jni->CallVoidMethod(activityObject, sendClickToWindowMethodID, cursorPos2d.x, cursorPos2d.y,
+                            0);
+    } else if (triggerState.changedSinceLastSync && triggerState.currentState == 1) {
+        jni->CallVoidMethod(activityObject, sendClickToWindowMethodID, cursorPos2d.x, cursorPos2d.y,
+                            1);
+    } else if (triggerState.currentState == 1 && !triggerState.changedSinceLastSync) {
+        jni->CallVoidMethod(activityObject, sendClickToWindowMethodID, cursorPos2d.x, cursorPos2d.y,
+                            2);
+    }
+}
+
 [[maybe_unused]] const char* XrSessionStateToString(const XrSessionState state) {
     switch (state) {
         case XR_SESSION_STATE_UNKNOWN:
@@ -652,7 +668,7 @@ private:
         float                   scaleFactor        = 0.01f;
         CursorLayer::CursorType cursorType =
             appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU
-                ? CursorLayer::CursorType::CURSOR_TYPE_TOP_PANEL
+                ? CursorLayer::CursorType::CURSOR_TYPE_POSITIONAL_MENU
                 : CursorLayer::CursorType::CURSOR_TYPE_NORMAL;
 
         [[maybe_unused]] const auto nonPreferredController =
@@ -690,6 +706,7 @@ private:
 
                 // Hit-test panels in order of priority (and known depth)
 
+                // 1. Error message layer
                 if (appState.mShouldShowErrorMessage) {
                     shouldRenderCursor = mErrorMessageLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
@@ -697,7 +714,8 @@ private:
                         mErrorMessageLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
                 }
-                // Don't test for cursor intersection if error message is shown
+
+                // 2. Keyboard layer
                 if (!shouldRenderCursor && appState.mIsKeyboardActive) {
                     shouldRenderCursor = mKeyboardLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
@@ -715,6 +733,7 @@ private:
                     mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
                 }
 
+                // 3. Lower panel
                 if (!shouldRenderCursor) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
@@ -726,50 +745,21 @@ private:
 
                         sIsLowerPanelBeingPositioned = true;
                     } else if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
-                        if (triggerState.currentState == 0 && triggerState.changedSinceLastSync) {
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 0);
-                        } else if (triggerState.changedSinceLastSync &&
-                                   triggerState.currentState == 1) {
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 1);
-                        } else if (triggerState.currentState == 1 &&
-                                   !triggerState.changedSinceLastSync) {
-
-                            jni->CallVoidMethod(mActivityObject, mSendClickToWindowMethodID,
-                                                cursorPos2d.x, cursorPos2d.y, 2);
-                        }
+                        SendTriggerStateToWindow(jni, mActivityObject, mSendClickToWindowMethodID,
+                                                 triggerState, cursorPos2d);
                     }
                 }
 
+                // 4. Ribbon layer
                 if (!shouldRenderCursor) {
                     shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
                     if (shouldRenderCursor && triggerState.changedSinceLastSync) {
                         mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
-                    if ((shouldRenderCursor || sIsLowerPanelBeingPositioned) &&
-                        appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
-                        triggerState.currentState) {
-
-                        static constexpr float kThumbStickDirectionThreshold = 0.5f;
-                        // If trigger is pressed, thumbstick controls
-                        // the depth
-                        const XrActionStateVector2f& thumbstickState =
-                            mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
-
-                        if (std::abs(thumbstickState.currentState.y) >
-                            kThumbStickDirectionThreshold) {
-                            const XrPosef lowerPanelPose =
-                                mGameSurfaceLayer->SetLowerPanelFromThumbstick(
-                                    thumbstickState.currentState.y);
-                            mRibbonLayer->SetPanelWithPose(lowerPanelPose);
-                        }
-                    }
                 }
-                if (sIsLowerPanelBeingPositioned) { shouldRenderCursor = true; }
 
-                // Hit test the top panel if positional menu is active.
+                // 5. Hit test the top panel if positional menu is active.
                 if (!shouldRenderCursor &&
                     appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
@@ -822,6 +812,7 @@ private:
                     scaleFactor = 0.01f + 0.003f * distance;
                 }
             }
+            if (sIsLowerPanelBeingPositioned) { shouldRenderCursor = true; }
         }
 
         if (shouldRenderCursor) {

@@ -31,7 +31,6 @@ License     :   Licensed under GPLv3 or any later version.
 namespace {
 
 constexpr float kSuperImmersiveRadius            = 0.5f;
-constexpr float kDistanceBetweenPanelsInMeters   = 0.75f;
 constexpr float kInitialLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f; // -45 degrees in radians
 
 //-----------------------------------------------------------------------------
@@ -485,7 +484,7 @@ void GameSurfaceLayer::SetLowerPanelFromController(const XrVector3f& controllerP
 
     // Construct a quaternion for the pitch adjustment
     const XrQuaternionf pitchAdjustmentQuat =
-        XrMath::FromAxisAngle({1.0f, 0.0f, 0.0f}, newPitchRadians / 2.0f);
+        XrMath::Quatf::FromAxisAngle({1.0f, 0.0f, 0.0f}, newPitchRadians / 2.0f);
 
     // Combine the base rotation with the pitch adjustment
     mLowerPanel.mPanelFromWorld = {baseRotation * pitchAdjustmentQuat, windowPosition};
@@ -501,19 +500,6 @@ void GameSurfaceLayer::SetTopPanelFromThumbstick(const float thumbstickY) {
         std::min(mTopPanel.mPanelFromWorld.position.z, mLowerPanel.mPanelFromWorld.position.z);
     mTopPanel.mPanelFromWorld.position.z =
         std::max(mTopPanel.mPanelFromWorld.position.z, kMaxDepth);
-}
-
-XrPosef GameSurfaceLayer::SetLowerPanelFromThumbstick(const float thumbstickY) {
-    static constexpr float kMinY = -3.0f;
-
-    mLowerPanel.mPanelFromWorld.position.y += (thumbstickY * kThumbstickSpeed);
-    mLowerPanel.mPanelFromWorld.position.y =
-        std::min(mLowerPanel.mPanelFromWorld.position.y,
-                 mTopPanel.mPanelFromWorld.position.y - kDistanceBetweenPanelsInMeters);
-    mLowerPanel.mPanelFromWorld.position.y =
-        std::max(mLowerPanel.mPanelFromWorld.position.y, kMinY);
-
-    return mLowerPanel.mPanelFromWorld;
 }
 
 XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose) {

@@ -37,7 +37,7 @@ public:
     /** The type of cursor to render.
      *  Determines the color of the cursor.
      **/
-    enum class CursorType { CURSOR_TYPE_NORMAL, CURSOR_TYPE_TOP_PANEL, NUM_CURSOR_TYPES };
+    enum class CursorType { CURSOR_TYPE_NORMAL, CURSOR_TYPE_POSITIONAL_MENU, NUM_CURSOR_TYPES };
     /**
      * @param session a valid XR Session
      */

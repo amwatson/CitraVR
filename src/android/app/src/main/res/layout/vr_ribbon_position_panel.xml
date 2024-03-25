@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/position_panel"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:theme="@style/Theme.Material3.DayNight"
+    >
 
     <FrameLayout
         android:layout_width="1000dp"
@@ -35,35 +37,24 @@
         app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
 
         <Button
-            android:id="@+id/buttonSelect"
+            android:id="@+id/btnReset"
             style="@style/VrRibbonButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
-            android:text="@string/button_select" />
+            android:text="Reset" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/buttonStart"
-            style="@style/VrRibbonButtonStyle"
-            android:layout_width="match_parent"
+        <ToggleButton
+            android:id="@+id/horizontalAxisToggle"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_start" />
+            android:text="Lock Horizontal Axis"
+            />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/buttonExit"
-            style="@style/VrRibbonButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/emulation_close_game" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

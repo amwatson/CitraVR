@@ -18,6 +18,11 @@ License     :   Licensed under GPLv3 or any later version.
 #define NUM_EYES 2 // this will never change, it just helps people know what we mean.
 #endif
 
+// closest (to view origin) z-depth to put a panel
+#ifndef Z_MAX
+#define Z_MAX -0.5f
+#endif
+
 #define BAIL_ON_COND(cond, errorStr, returnCode)                                                   \
     do {                                                                                           \
         if (cond) {                                                                                \

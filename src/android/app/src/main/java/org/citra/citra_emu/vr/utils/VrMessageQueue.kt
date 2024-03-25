@@ -6,7 +6,9 @@ object VrMessageQueue {
                 SHOW_KEYBOARD(0),
                 SHOW_ERROR_MESSAGE(1),
                 EXIT_NEEDED(2),
-                CHANGE_LOWER_MENU(3)
+                CHANGE_LOWER_MENU(3),
+                CHANGE_LOCK_HORIZONTAL_AXIS(4),
+                RESET_PANEL_POSITIONS(5)
             }
         @JvmStatic
         fun post(messageType: MessageType, payload: Long) {

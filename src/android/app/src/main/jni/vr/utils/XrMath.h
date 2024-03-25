@@ -90,6 +90,10 @@ public:
     static XrVector3f Cross(const XrVector3f& a, const XrVector3f& b) {
         return XrVector3f{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
     }
+
+    static float Dot(const XrVector3f& a, const XrVector3f& b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
 };
 
 class Matrixf {

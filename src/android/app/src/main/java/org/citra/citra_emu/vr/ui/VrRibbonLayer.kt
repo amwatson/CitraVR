@@ -3,6 +3,7 @@ package org.citra.citra_emu.vr.ui
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
+import android.widget.ToggleButton
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
@@ -11,14 +12,16 @@ import org.citra.citra_emu.vr.utils.VrMessageQueue
 class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribbon) {
 
     enum class MenuType(val resId: Int) {
-        MAIN( R.id.main_panel),
+        MAIN(R.id.main_panel),
         POSITION(R.id.position_panel)
     }
-    private var menuTypeCurrent : MenuType = MenuType.MAIN
 
-       override fun onSurfaceCreated() {
+    private var menuTypeCurrent: MenuType = MenuType.MAIN
+
+    override fun onSurfaceCreated() {
         super.onSurfaceCreated()
-        initializeMainView()
+        initializeMainPanel()
+        initializePositionalPanel()
     }
 
     fun switchMenus(menuTypeNew: MenuType) {
@@ -33,19 +36,37 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
             VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
     }
 
-    fun initializeMainView() {
+    private fun initializePositionalPanel() {
+        val horizontalLockToggle = window?.findViewById<ToggleButton>(R.id.horizontalAxisToggle)
+        horizontalLockToggle?.setOnCheckedChangeListener { _, isChecked ->
+            VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOCK_HORIZONTAL_AXIS, if (isChecked) 1 else 0)
+        }
+        val btnReset = window?.findViewById<Button>(R.id.btnReset)
+        btnReset?.setOnClickListener { _ ->
+            VrMessageQueue.post(VrMessageQueue.MessageType.RESET_PANEL_POSITIONS, 0)
+            false
+        }
+
+        horizontalLockToggle?.isChecked = true;
+        VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOCK_HORIZONTAL_AXIS, if (horizontalLockToggle?.isChecked == true) 1 else 0)
+    }
+
+    private fun initializeMainPanel() {
         window?.findViewById<Button>(R.id.buttonSelect)?.setOnTouchListener { _, motionEvent ->
             val action: Int = when (motionEvent.action) {
                 KeyEvent.ACTION_DOWN -> {
                     // Normal key events.
                     NativeLibrary.ButtonState.PRESSED
                 }
+
                 KeyEvent.ACTION_UP -> NativeLibrary.ButtonState.RELEASED
                 else -> return@setOnTouchListener false
             }
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice,
+            NativeLibrary.onGamePadEvent(
+                NativeLibrary.TouchScreenDevice,
                 NativeLibrary.ButtonType.BUTTON_SELECT,
-                action)
+                action
+            )
             false
         }
         window?.findViewById<Button>(R.id.buttonStart)?.setOnTouchListener { _, motionEvent ->
@@ -54,12 +75,15 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
                     // Normal key events.
                     NativeLibrary.ButtonState.PRESSED
                 }
+
                 KeyEvent.ACTION_UP -> NativeLibrary.ButtonState.RELEASED
                 else -> return@setOnTouchListener false
             }
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice,
+            NativeLibrary.onGamePadEvent(
+                NativeLibrary.TouchScreenDevice,
                 NativeLibrary.ButtonType.BUTTON_START,
-                action)
+                action
+            )
             false
         }
         window?.findViewById<Button>(R.id.buttonExit)?.setOnTouchListener { _, motionEvent ->
@@ -69,7 +93,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
 
         val btnNext = window?.findViewById<Button>(R.id.buttonNextMenu)
         val btnPrev = window?.findViewById<Button>(R.id.buttonPrevMenu)
-        btnNext?.setOnClickListener{ _ ->
+        btnNext?.setOnClickListener { _ ->
             val nextIdx = (menuTypeCurrent.ordinal + 1) % MenuType.values().size
             switchMenus(MenuType.values()[nextIdx])
             if ((nextIdx + 1) >= MenuType.values().size)
@@ -79,7 +103,8 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         }
 
         btnPrev?.setOnClickListener { _ ->
-            val prevIdx = (menuTypeCurrent.ordinal - 1 + MenuType.values().size) % MenuType.values().size
+            val prevIdx =
+                (menuTypeCurrent.ordinal - 1 + MenuType.values().size) % MenuType.values().size
             switchMenus(MenuType.values()[prevIdx])
             if ((prevIdx - 1) <= 0)
                 btnPrev.visibility = View.INVISIBLE

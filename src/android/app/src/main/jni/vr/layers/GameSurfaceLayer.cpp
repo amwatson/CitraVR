@@ -419,25 +419,23 @@ bool GameSurfaceLayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 
 void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPosition) {
 
-    static constexpr XrVector3f viewerPosition{0.0f, 0.0f, 0.0f}; // Set viewer position
-    const float                 sphereRadius = XrMath::Vector3f::Length(
-                        mTopPanel.mPanelFromWorld.position - viewerPosition); // Set the initial distance of the
+    constexpr XrVector3f viewerPosition{0.0f, 0.0f, 0.0f};    // Set viewer position
+    constexpr XrVector3f windowUpDirection{0.0f, 1.0f, 0.0f}; // Y is up
 
-    // window from the viewer
-    static constexpr XrVector3f windowUpDirection{0.0f, 1.0f, 0.0f}; // Y is up
-
-    const XrVector3f windowPosition =
+    // Set the initial distance of the window from the viewer.
+    const float sphereRadius =
+        XrMath::Vector3f::Length(mTopPanel.mPanelFromWorld.position - viewerPosition);
+    XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
-    const XrQuaternionf windowRotation =
-        CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
+    if (windowPosition.z >= -0.5f) { return; }
     if (XrMath::Vector3f::LengthSq(windowPosition - mLowerPanel.mPanelFromWorld.position) <
         XrMath::Vector3f::LengthSq(mTopPanel.mInitialPose.position -
                                    mLowerPanel.mInitialPose.position)) {
         return;
     }
 
-    if (XrMath::Quatf::GetPitchInRadians(windowRotation) > MATH_FLOAT_PI / 3.0f) { return; }
-
+    const XrQuaternionf windowRotation =
+        CalculatePanelRotation(windowPosition, viewerPosition, windowUpDirection);
     mTopPanel.mPanelFromWorld = XrPosef{windowRotation, windowPosition};
 }
 
@@ -523,6 +521,12 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
     }
 
     return XrPosef{headPose.orientation, panelPosition};
+}
+
+void GameSurfaceLayer::ResetPanelPositions() {
+
+        mTopPanel.mPanelFromWorld   = mTopPanel.mInitialPose;
+        mLowerPanel.mPanelFromWorld = mLowerPanel.mInitialPose;
 }
 
 // based on thumbstick, modify the depth of the top panel

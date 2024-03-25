@@ -229,6 +229,12 @@ public:
             if (appState.mIsXrSessionActive) {
                 Frame(jni, appState);
             } else {
+                // FIXME: currently, the way this is set up, some messages can be discarded if they
+                // aren't processed on the next frame.
+                // This currently requires that all AppState state-related events be handled in
+                // HandleStateChanges. and not in the frame for 100% correctness (consequence is
+                // losing messages on unmount). This is possibly solved by handling MessageQueue
+                // events inside the frame call.
                 // TODO should block here
                 mFrameIndex = 0;
             }
@@ -741,7 +747,8 @@ private:
                         appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         triggerState.currentState) {
                         mGameSurfaceLayer->SetLowerPanelFromController(
-                            XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
+                            {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
+                             cursorPose3d.position.y, cursorPose3d.position.z});
 
                         sIsLowerPanelBeingPositioned = true;
                     } else if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
@@ -759,7 +766,7 @@ private:
                     }
                 }
 
-                // 5. Hit test the top panel if positional menu is active.
+                // 5. Top panel (only if positional menu is active)
                 if (!shouldRenderCursor &&
                     appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanelTopPanel(
@@ -769,8 +776,9 @@ private:
                     if (shouldRenderCursor && triggerState.currentState) {
                         // null out X component -- screen should stay
                         // center
-                        mGameSurfaceLayer->SetTopPanelFromController(
-                            XrVector3f{0, cursorPose3d.position.y, cursorPose3d.position.z});
+                        mGameSurfaceLayer->SetTopPanelFromController(XrVector3f{
+                            appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
+                            cursorPose3d.position.y, cursorPose3d.position.z});
                         // If trigger is pressed, thumbstick controls
                         // the depth
                         const XrActionStateVector2f& thumbstickState =
@@ -853,18 +861,35 @@ private:
     }
 
     void HandleStateChanges(JNIEnv* jni, AppState& newState) const {
-        const bool shouldPauseEmulation = !newState.mHasFocus || newState.mShouldShowErrorMessage ||
-                                          newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU;
-        if (shouldPauseEmulation != mLastAppState.mIsEmulationPaused) {
-            ALOGI("State change: Emulation paused: {} -> {}", mLastAppState.mIsEmulationPaused,
-                  newState.mIsEmulationPaused);
-            if (shouldPauseEmulation) {
-                PauseEmulation(jni);
-                newState.mIsEmulationPaused = true;
-            } else {
-                ResumeEmulation(jni);
-                newState.mIsEmulationPaused = false;
+        {
+            const bool shouldPauseEmulation =
+                !newState.mHasFocus || newState.mShouldShowErrorMessage ||
+                newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU;
+            if (shouldPauseEmulation != mLastAppState.mIsEmulationPaused) {
+                ALOGI("State change: Emulation paused: {} -> {} (F={}, E={}, MP={})",
+                      mLastAppState.mIsEmulationPaused, shouldPauseEmulation, newState.mHasFocus,
+                      newState.mShouldShowErrorMessage,
+                      newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? "P"
+                      : newState.mLowerMenuType == LowerMenuType::MAIN_MENU     ? "M"
+                                                                                : "U");
+                if (shouldPauseEmulation) {
+                    PauseEmulation(jni);
+                    newState.mIsEmulationPaused = true;
+                } else {
+                    ResumeEmulation(jni);
+                    newState.mIsEmulationPaused = false;
+                }
             }
+        }
+
+        if (newState.mNumPanelResets > mLastAppState.mNumPanelResets) {
+            mGameSurfaceLayer->ResetPanelPositions();
+            mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
+        }
+
+        if (newState.mIsHorizontalAxisLocked && !mLastAppState.mIsHorizontalAxisLocked) {
+            mGameSurfaceLayer->ResetPanelPositions();
+            mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
         }
     }
 
@@ -1073,12 +1098,23 @@ private:
                 }
                 case Message::Type::CHANGE_LOWER_MENU: {
                     newAppState.mLowerMenuType = static_cast<LowerMenuType>(message.mPayload);
-                    ALOGI("Received CHANGE_LOWER_MENU message: {}, state change {} -> {}",
+                    ALOGD("Received CHANGE_LOWER_MENU message: {}, state change {} -> {}",
                           message.mPayload, mLastAppState.mLowerMenuType,
                           newAppState.mLowerMenuType);
                     break;
                 }
-
+                case Message::Type::CHANGE_LOCK_HORIZONTAL_AXIS: {
+                    ALOGD("Received CHANGE_LOCK_HORIZONTAL_AXIS message: {}, state change {} -> {}",
+                          message.mPayload, mLastAppState.mIsHorizontalAxisLocked,
+                          message.mPayload == 1);
+                    newAppState.mIsHorizontalAxisLocked = message.mPayload == 1;
+                    break;
+                }
+                case Message::Type::RESET_PANEL_POSITIONS: {
+                    ALOGD("Received RESET_PANEL_POSITIONS message");
+                    newAppState.mNumPanelResets++;
+                    break;
+                }
                 default:
                     ALOGE("Unknown message type: %d", message.mType);
                     break;
@@ -1102,7 +1138,9 @@ private:
 
     class AppState {
     public:
-        LowerMenuType mLowerMenuType = LowerMenuType::MAIN_MENU;
+        LowerMenuType mLowerMenuType          = LowerMenuType::MAIN_MENU;
+        int32_t       mNumPanelResets         = 0;
+        bool          mIsHorizontalAxisLocked = true;
 
         bool mIsKeyboardActive       = false;
         bool mShouldShowErrorMessage = false;

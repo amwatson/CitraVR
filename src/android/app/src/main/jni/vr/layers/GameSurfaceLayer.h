@@ -170,10 +170,10 @@ public:
                                                        XrPosef&          result3d) const;
     void           SetTopPanelFromController(const XrVector3f& controllerPosition);
     void           SetTopPanelFromThumbstick(const float thumbstickY);
-    XrPosef        SetLowerPanelFromThumbstick(const float thumbstickY);
     void           SetLowerPanelFromController(const XrVector3f& controllerPosition);
     XrPosef        GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
     const XrPosef& GetLowerPanelPose() const { return mLowerPanel.mPanelFromWorld; }
+    void ResetPanelPositions();
 
 private:
     int  Init(const XrSession& session, const jobject activityObject);

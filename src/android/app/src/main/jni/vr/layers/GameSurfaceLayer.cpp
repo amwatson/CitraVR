@@ -429,8 +429,8 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
     if (windowPosition.z >= -0.5f) { return; }
     if (XrMath::Vector3f::LengthSq(
-          XrVector3f {windowPosition.x, windowPosition.y, mTopPanel.mInitialPose.position.z}
-                            - mLowerPanel.mPanelFromWorld.position) <
+            XrVector3f{windowPosition.x, windowPosition.y, mTopPanel.mInitialPose.position.z} -
+            mLowerPanel.mPanelFromWorld.position) <
         XrMath::Vector3f::LengthSq(mTopPanel.mInitialPose.position -
                                    mLowerPanel.mInitialPose.position)) {
         return;
@@ -527,8 +527,8 @@ XrPosef GameSurfaceLayer::GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& h
 
 void GameSurfaceLayer::ResetPanelPositions() {
 
-        mTopPanel.mPanelFromWorld   = mTopPanel.mInitialPose;
-        mLowerPanel.mPanelFromWorld = mLowerPanel.mInitialPose;
+    mTopPanel.mPanelFromWorld   = mTopPanel.mInitialPose;
+    mLowerPanel.mPanelFromWorld = mLowerPanel.mInitialPose;
 }
 
 // based on thumbstick, modify the depth of the top panel

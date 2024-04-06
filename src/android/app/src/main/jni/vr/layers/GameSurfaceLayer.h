@@ -173,7 +173,7 @@ public:
     void           SetLowerPanelFromController(const XrVector3f& controllerPosition);
     XrPosef        GetTopPanelFromHeadPose(uint32_t eye, const XrPosef& headPose);
     const XrPosef& GetLowerPanelPose() const { return mLowerPanel.mPanelFromWorld; }
-    void ResetPanelPositions();
+    void           ResetPanelPositions();
 
 private:
     int  Init(const XrSession& session, const jobject activityObject);

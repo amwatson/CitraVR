@@ -1,5 +1,7 @@
 package org.citra.citra_emu.vr.ui
 
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
@@ -8,6 +10,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
 import org.citra.citra_emu.vr.utils.VrMessageQueue
+import org.citra.citra_emu.utils.Log
 
 class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribbon) {
 
@@ -20,6 +23,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
 
     override fun onSurfaceCreated() {
         super.onSurfaceCreated()
+        initializeLeftMenu()
         initializeMainPanel()
         initializePositionalPanel()
     }
@@ -34,6 +38,24 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
             VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
         else if (menuTypeCurrent == MenuType.POSITION)
             VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
+    }
+
+    private fun initializeLeftMenu() {
+      val radioGroup = window?.findViewById<RadioGroup>(R.id.vertical_tab)
+        radioGroup?.setOnCheckedChangeListener { group, checkedId ->
+          // Loop through all radio buttons in the group
+          for (i in 0 until group.childCount) {
+            val btn = group.getChildAt(i) as RadioButton
+            if (btn.id == checkedId) {
+              // This button is checked, change the background accordingly
+              btn.background = activity?.getDrawable(
+              R.drawable.vr_ribbon_button_pressed)
+            } else {
+              // This button is not checked, revert to the default background
+              btn.background = activity?.getDrawable(R.drawable.vr_ribbon_button_default)
+            }
+          }
+        }
     }
 
     private fun initializePositionalPanel() {

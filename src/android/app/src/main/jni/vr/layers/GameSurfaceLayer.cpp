@@ -428,7 +428,9 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
     if (windowPosition.z >= -0.5f) { return; }
-    if (XrMath::Vector3f::LengthSq(windowPosition - mLowerPanel.mPanelFromWorld.position) <
+    if (XrMath::Vector3f::LengthSq(
+          XrVector3f {windowPosition.x, windowPosition.y, mTopPanel.mInitialPose.position.z}
+                            - mLowerPanel.mPanelFromWorld.position) <
         XrMath::Vector3f::LengthSq(mTopPanel.mInitialPose.position -
                                    mLowerPanel.mInitialPose.position)) {
         return;

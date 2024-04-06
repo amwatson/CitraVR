@@ -23,7 +23,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/frame"
-            android:layout_width="wrap_content"
+            android:layout_width="1300dp"
             android:layout_height="wrap_content"
             android:background="@drawable/vr_menu_background"
             android:backgroundTint="#011627"
@@ -31,6 +31,48 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
+            <LinearLayout
+                android:layout_width="150dp"
+                android:layout_height="400dp"
+                android:orientation="horizontal"
+                android:layout_marginEnd="30dp"
+                app:layout_constraintBottom_toBottomOf="@+id/frame"
+                app:layout_constraintEnd_toStartOf="@+id/panelHolder"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <RadioGroup
+                    android:id="@+id/vertical_tab"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+                    <RadioButton
+                        android:id="@+id/menu_main"
+                        style="@style/VrRibbonButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:button="@null"
+                        android:clipToOutline="true"
+                        android:text="Main" />
+                    <RadioButton
+                        android:id="@+id/menu_positional"
+                        style="@style/VrRibbonButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:button="@null"
+                        android:clipToOutline="true"
+                        android:text="Position" />
+
+                    <RadioButton
+                        android:id="@+id/menu_stats"
+                        style="@style/VrRibbonButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:button="@null"
+                        android:clipToOutline="true"
+                        android:text="Stats" />
+                </RadioGroup>
+            </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/panelHolder"
@@ -43,7 +85,10 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <include layout="@layout/vr_ribbon_main_panel" />
-                <include layout="@layout/vr_ribbon_position_panel" android:visibility="gone" />
+
+                <include
+                    layout="@layout/vr_ribbon_position_panel"
+                    android:visibility="gone" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

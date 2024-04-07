@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/vr_menu_background"
             android:backgroundTint="#011627"
-            android:paddingHorizontal="50dp"
+            android:padding="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">

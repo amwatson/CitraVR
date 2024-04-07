@@ -125,6 +125,8 @@ public:
 
     void SetPanelWithPose(const XrPosef& pose);
 
+    bool IsMenuBackgroundSelected() const;
+
 private:
     int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
              const XrSession& session);
@@ -154,7 +156,8 @@ private:
     // the decorView representing an entire window, it's important to accont for
     // the x, y offset of the view within the window, in case there are things
     // like window decorations or status bars.
-    jmethodID mGetBoundsMethodID     = nullptr;
-    jmethodID mSendClickToUIMethodID = nullptr;
-    jmethodID mSetSurfaceMethodId    = nullptr;
+    jmethodID mGetBoundsMethodID                = nullptr;
+    jmethodID mSendClickToUIMethodID            = nullptr;
+    jmethodID mSetSurfaceMethodId               = nullptr;
+    jmethodID mIsMenuBackgroundSelectedMethodId = nullptr;
 };

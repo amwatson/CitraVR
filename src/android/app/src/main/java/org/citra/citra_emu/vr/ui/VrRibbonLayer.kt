@@ -28,6 +28,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         initializePositionalPanel()
     }
 
+    // Used in positional menu to know when background is selected, but not the buttons,
+    // in which case, move the panel.
+    private var isMenuBackgroundSelected = false
+
   fun switchMenus(menuTypeNew: MenuType) {
     if (menuTypeNew == menuTypeCurrent)
       return
@@ -38,6 +42,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
         else if (menuTypeCurrent == MenuType.POSITION)
           VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
+  }
+
+  fun isMenuBackgroundSelected(): Boolean {
+    return isMenuBackgroundSelected
   }
 
   private fun initializeLeftMenu() {
@@ -77,6 +85,19 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
 
     horizontalLockToggle?.isChecked = true;
     VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOCK_HORIZONTAL_AXIS, if (horizontalLockToggle?.isChecked == true) 1 else 0)
+
+      window?.findViewById<View>(R.id.frame)?.setOnTouchListener { _, motionEvent ->
+        /// set isMenuBackgroundSelected based on the motionEvent
+        when (motionEvent.action) {
+          KeyEvent.ACTION_DOWN -> {
+            isMenuBackgroundSelected = true
+          }
+          KeyEvent.ACTION_UP -> {
+            isMenuBackgroundSelected = false
+          }
+        }
+          false
+      }
   }
 
   private fun initializeMainPanel() {

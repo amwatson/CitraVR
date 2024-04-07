@@ -407,7 +407,7 @@ private:
         // Super Immersive Mode update and computation.
         //////////////////////////////////////////////////
 
-        bool  showLowerPanel      = true;
+        bool  showLowerPanel      = appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU;
         float immersiveModeFactor = (VRSettings::values.vr_immersive_mode < 2)
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
@@ -526,7 +526,7 @@ private:
 
             // Cursor visibility will depend on hit-test but will be in front
             // of all other panels. This is because precedence lines up with depth order.
-            HandleCursorLayer(jni, appState, layers, layerCount);
+            HandleCursorLayer(jni, appState, showLowerPanel, layers, layerCount);
         }
 
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
@@ -665,7 +665,7 @@ private:
     /** Handle the cursor and any hand-tracked/layer-dependent input
      *  interactions.
      **/
-    void HandleCursorLayer(JNIEnv* jni, const AppState& appState,
+    void HandleCursorLayer(JNIEnv* jni, const AppState& appState, const bool showLowerPanel,
                            std::vector<XrCompositionLayer>& layers, uint32_t& layerCount) const {
 
         bool                    shouldRenderCursor = false;
@@ -690,7 +690,6 @@ private:
                 mInputStateFrame.mIsHandActive[mInputStateFrame.mPreferredHand];
 
             static bool sIsLowerPanelBeingPositioned = false;
-            const bool  wasLowerPanelBeingPositioned = sIsLowerPanelBeingPositioned;
 
             sIsLowerPanelBeingPositioned &=
                 appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
@@ -732,26 +731,11 @@ private:
                 // No dialogs/popups that should impede normal cursor interaction with
                 // applicable panels
 
-                // Lock ribbon in place when placement is complete
-                const bool needRibbonUpdate =
-                    !sIsLowerPanelBeingPositioned && wasLowerPanelBeingPositioned;
-                if (needRibbonUpdate) {
-                    mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
-                }
-
                 // 3. Lower panel
-                if (!shouldRenderCursor) {
+                if (!shouldRenderCursor && showLowerPanel) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
-                    if ((shouldRenderCursor || sIsLowerPanelBeingPositioned) &&
-                        appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
-                        triggerState.currentState) {
-                        mGameSurfaceLayer->SetLowerPanelFromController(
-                            {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
-                             cursorPose3d.position.y, cursorPose3d.position.z});
-
-                        sIsLowerPanelBeingPositioned = true;
-                    } else if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
+                    if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
                         SendTriggerStateToWindow(jni, mActivityObject, mSendClickToWindowMethodID,
                                                  triggerState, cursorPos2d);
                     }
@@ -763,6 +747,18 @@ private:
                         start, end, cursorPos2d, cursorPose3d);
                     if (shouldRenderCursor && triggerState.changedSinceLastSync) {
                         mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                    }
+                    if (appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
+                        (sIsLowerPanelBeingPositioned ||
+                         (shouldRenderCursor && mRibbonLayer->IsMenuBackgroundSelected())) &&
+                        triggerState.currentState) {
+
+                        mGameSurfaceLayer->SetLowerPanelFromController(
+                            {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
+                             cursorPose3d.position.y, cursorPose3d.position.z});
+                        mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
+
+                        sIsLowerPanelBeingPositioned = true;
                     }
                 }
 

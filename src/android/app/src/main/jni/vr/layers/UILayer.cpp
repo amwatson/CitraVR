@@ -162,8 +162,8 @@ XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeigh
 UILayer::UILayer(const std::string& className, const XrVector3f&& position,
                  const XrQuaternionf&& orientation, JNIEnv* env, jobject activityObject,
                  const XrSession& session)
-    : mSession(session)
-    , mPanelFromWorld(XrPosef{orientation, position})
+    : mPanelFromWorld(XrPosef{orientation, position})
+    , mSession(session)
     , mEnv(env) {
     const int32_t initializationStatus = Init(className, activityObject, position, session);
     if (initializationStatus < 0) {
@@ -214,7 +214,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          scale, start, end, result2d, result3d);
 }
 
-// Next error code: -9
+// Next error code: -8
 int32_t UILayer::Init(const std::string& className, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
     mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject, className.c_str());
@@ -238,16 +238,7 @@ int32_t UILayer::Init(const std::string& className, const jobject activityObject
 
     BAIL_ON_COND(mSendClickToUIMethodID == nullptr, "could not find sendClickToUI()", -6);
 
-    if (className == "org/citra/citra_emu/vr/ui/VrRibbonLayer") {
-        ALOGD("UILayer: using companion class");
-
-        mIsMenuBackgroundSelectedMethodId =
-            mEnv->GetMethodID(mVrUILayerClass, "isMenuBackgroundSelected", "()Z");
-        BAIL_ON_COND(mIsMenuBackgroundSelectedMethodId == nullptr,
-                     "could not find isMenuBackgroundSelected()", -7);
-    }
-
-    BAIL_ON_ERR(CreateSwapchain(), -8);
+    BAIL_ON_ERR(CreateSwapchain(), -7);
 
     return 0;
 }
@@ -336,7 +327,3 @@ void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
 }
 
 void UILayer::SetPanelWithPose(const XrPosef& pose) { mPanelFromWorld = pose; }
-
-bool UILayer::IsMenuBackgroundSelected() const {
-    return mEnv->CallBooleanMethod(mVrUILayerObject, mIsMenuBackgroundSelectedMethodId);
-}

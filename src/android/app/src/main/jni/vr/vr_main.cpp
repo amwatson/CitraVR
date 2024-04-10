@@ -17,6 +17,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include "layers/CursorLayer.h"
 #include "layers/GameSurfaceLayer.h"
 #include "layers/PassthroughLayer.h"
+#include "layers/RibbonLayer.h"
 #include "layers/UILayer.h"
 #include "vr_settings.h"
 
@@ -294,8 +295,8 @@ private:
                 XrVector3f{0, 0, -2.0f}, jni, mActivityObject, gOpenXr->mSession, resolutionFactor);
         }
 
-        mRibbonLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrRibbonLayer", XrVector3f{0, -0.75f, -1.51f},
+        mRibbonLayer = std::make_unique<RibbonLayer>(
+            XrVector3f{0, -0.75f, -1.51f},
             XrMath::Quatf::FromEuler(-MATH_FLOAT_PI / 4.0f, 0.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
 
@@ -753,10 +754,10 @@ private:
                          (shouldRenderCursor && mRibbonLayer->IsMenuBackgroundSelected())) &&
                         triggerState.currentState) {
 
-                        mGameSurfaceLayer->SetLowerPanelFromController(
+                        mRibbonLayer->SetPanelFromController(
                             {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
                              cursorPose3d.position.y, cursorPose3d.position.z});
-                        mRibbonLayer->SetPanelWithPose(mGameSurfaceLayer->GetLowerPanelPose());
+                        mGameSurfaceLayer->SetLowerPanelWithPose(mRibbonLayer->GetPose());
 
                         sIsLowerPanelBeingPositioned = true;
                     }
@@ -1155,7 +1156,7 @@ private:
     std::unique_ptr<GameSurfaceLayer> mGameSurfaceLayer;
     std::unique_ptr<PassthroughLayer> mPassthroughLayer;
     std::unique_ptr<UILayer>          mKeyboardLayer;
-    std::unique_ptr<UILayer>          mRibbonLayer;
+    std::unique_ptr<RibbonLayer>      mRibbonLayer;
 
     std::unique_ptr<InputStateStatic> mInputStateStatic;
     InputStateFrame                   mInputStateFrame;

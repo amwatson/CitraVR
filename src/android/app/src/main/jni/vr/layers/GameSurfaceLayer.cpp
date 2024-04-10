@@ -593,3 +593,7 @@ void GameSurfaceLayer::CreateSwapchain() {
     mSwapchain.mWidth  = xsci.width;
     mSwapchain.mHeight = xsci.height;
 }
+
+void GameSurfaceLayer::SetLowerPanelWithPose(const XrPosef& pose) {
+    mLowerPanel.mPanelFromWorld = pose;
+}

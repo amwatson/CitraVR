@@ -125,7 +125,11 @@ public:
 
     void SetPanelWithPose(const XrPosef& pose);
 
-    bool IsMenuBackgroundSelected() const;
+protected:
+    jobject GetVrUILayerObject() const { return mVrUILayerObject; }
+    jclass  GetVrUILayerClass() const { return mVrUILayerClass; }
+    JNIEnv* GetEnv() const { return mEnv; }
+    XrPosef mPanelFromWorld;
 
 private:
     int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
@@ -139,8 +143,6 @@ private:
 
     const XrSession mSession;
     Swapchain       mSwapchain;
-
-    XrPosef mPanelFromWorld;
 
     //============================
     // JNI objects
@@ -156,8 +158,7 @@ private:
     // the decorView representing an entire window, it's important to accont for
     // the x, y offset of the view within the window, in case there are things
     // like window decorations or status bars.
-    jmethodID mGetBoundsMethodID                = nullptr;
-    jmethodID mSendClickToUIMethodID            = nullptr;
-    jmethodID mSetSurfaceMethodId               = nullptr;
-    jmethodID mIsMenuBackgroundSelectedMethodId = nullptr;
+    jmethodID mGetBoundsMethodID     = nullptr;
+    jmethodID mSendClickToUIMethodID = nullptr;
+    jmethodID mSetSurfaceMethodId    = nullptr;
 };

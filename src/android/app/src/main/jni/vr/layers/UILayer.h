@@ -65,8 +65,10 @@ class UILayer {
 
 public:
     /** Constructor.
-     * @param className: the class name of the Java class representing the UI layer.
+     * @param classObject: the class object of the Java class representing the UI layer.
      *        This class should subclass org.citra.citra_emu.ui.VrUILayer.
+     *        We do it this way because after the v4 update with quest v64, FindClass() returns
+     *        null on the JNI threads (even with the original classloader).
      * @param position: position of the layer
      * @param orientation: orientation of the layer
      * @param jni: the JNI environment. Should be attached to the current thread
@@ -74,7 +76,7 @@ public:
      * the class information for UILayer
      * @param session a valid XrSession
      */
-    UILayer(const std::string& className, const XrVector3f&& position,
+    UILayer(const jclass classObject, const XrVector3f&& position,
             const XrQuaternionf&& orientation, JNIEnv* jni, jobject activityObject,
             const XrSession& session);
     ~UILayer();
@@ -132,8 +134,8 @@ protected:
     XrPosef mPanelFromWorld;
 
 private:
-    int Init(const std::string& className, const jobject activityObject, const XrVector3f& position,
-             const XrSession& session);
+    int  Init(const jclass classObject, const jobject activityObject, const XrVector3f& position,
+              const XrSession& session);
     void Shutdown();
 
     /** Creates the swapchain.

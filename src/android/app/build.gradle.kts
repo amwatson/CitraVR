@@ -149,7 +149,7 @@ android {
     productFlavors {
         create("canary") {
             dimension = "version"
-            applicationIdSuffix = ".canary"
+            applicationIdSuffix = ".playtest"
         }
 
         create("nightly") {

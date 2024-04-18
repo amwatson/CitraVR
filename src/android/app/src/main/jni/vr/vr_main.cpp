@@ -301,12 +301,12 @@ private:
             gOpenXr->mSession);
 
         mKeyboardLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrKeyboardLayer", XrVector3f{0, -0.4f, -0.5f},
+            VR::JniGlobalRef::gVrKeyboardLayerClass, XrVector3f{0, -0.4f, -0.5f},
             XrMath::Quatf::FromEuler(-MATH_FLOAT_PI / 4.0f, 0.0f, 0.0f), jni, mActivityObject,
             gOpenXr->mSession);
 
         mErrorMessageLayer = std::make_unique<UILayer>(
-            "org/citra/citra_emu/vr/ui/VrErrorMessageLayer", XrVector3f{0, -0.1f, -1.0f},
+            VR::JniGlobalRef::gVrErrorMessageLayerClass, XrVector3f{0, -0.1f, -1.0f},
             XrQuaternionf{0, 0, 0, 1}, jni, mActivityObject, gOpenXr->mSession);
 
         // Create the cursor layer.
@@ -1256,7 +1256,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
     // time to first frame.
     gOnCreateStartTime = std::chrono::steady_clock::now();
 
-    VR::JNI::InitJNI(env, thiz);
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     auto ret = VRAppHandle(new VRAppThread(jvm, env, thiz)).l;

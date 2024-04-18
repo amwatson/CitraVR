@@ -13,6 +13,7 @@
 #include "jni/applets/swkbd.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/id_cache.h"
+#include "vr/utils/JniClassNames.h"
 
 #include <jni.h>
 
@@ -254,6 +255,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     SoftwareKeyboard::InitJNI(env);
     Camera::StillImage::InitJNI(env);
     AndroidStorage::InitJNI(env, s_native_library_class);
+    VR::JNI::InitJNI(env);
 
     return JNI_VERSION;
 }

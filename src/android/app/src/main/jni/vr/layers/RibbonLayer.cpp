@@ -1,5 +1,6 @@
 #include "RibbonLayer.h"
 
+#include "../utils/JniClassNames.h"
 #include "../utils/LogUtils.h"
 #include "../utils/XrMath.h"
 
@@ -38,8 +39,8 @@ XrQuaternionf CalculatePanelRotation(const XrVector3f& windowPosition,
 
 RibbonLayer::RibbonLayer(const XrVector3f&& position, const XrQuaternionf&& orientation,
                          JNIEnv* jni, jobject activityObject, const XrSession& session)
-    : UILayer("org/citra/citra_emu/vr/ui/VrRibbonLayer", std::move(position),
-              std::move(orientation), jni, activityObject, session)
+    : UILayer(VR::JniGlobalRef::gVrRibbonLayerClass, std::move(position), std::move(orientation),
+              jni, activityObject, session)
     , mInitialPose({orientation, position}) {
     mIsMenuBackgroundSelectedMethodId =
         jni->GetMethodID(GetVrUILayerClass(), "isMenuBackgroundSelected", "()Z");

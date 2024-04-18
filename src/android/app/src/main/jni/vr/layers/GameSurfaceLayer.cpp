@@ -425,7 +425,7 @@ void GameSurfaceLayer::SetTopPanelFromController(const XrVector3f& controllerPos
     // Set the initial distance of the window from the viewer.
     const float sphereRadius =
         XrMath::Vector3f::Length(mTopPanel.mPanelFromWorld.position - viewerPosition);
-    XrVector3f windowPosition =
+    const XrVector3f windowPosition =
         CalculatePanelPosition(viewerPosition, controllerPosition, sphereRadius);
     if (windowPosition.z >= -0.5f) { return; }
     if (XrMath::Vector3f::LengthSq(windowPosition - mLowerPanel.mPanelFromWorld.position) <

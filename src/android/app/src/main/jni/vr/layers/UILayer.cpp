@@ -159,16 +159,15 @@ XrVector2f GetDensityScaleForSize(const int32_t texWidth, const int32_t texHeigh
 
 } // anonymous namespace
 
-UILayer::UILayer(const std::string& className, const XrVector3f&& position,
+UILayer::UILayer(const jclass classObject, const XrVector3f&& position,
                  const XrQuaternionf&& orientation, JNIEnv* env, jobject activityObject,
                  const XrSession& session)
     : mPanelFromWorld(XrPosef{orientation, position})
     , mSession(session)
     , mEnv(env) {
-    const int32_t initializationStatus = Init(className, activityObject, position, session);
+    const int32_t initializationStatus = Init(classObject, activityObject, position, session);
     if (initializationStatus < 0) {
-        FAIL("Could not initialize UILayer(%s) -- error '%d'", className.c_str(),
-             initializationStatus);
+        FAIL("Could not initialize %s() -- error '%d'", __FUNCTION__, initializationStatus);
     }
 }
 
@@ -215,10 +214,9 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
 }
 
 // Next error code: -8
-int32_t UILayer::Init(const std::string& className, const jobject activityObject,
+int32_t UILayer::Init(const jclass classObject, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
-    mVrUILayerClass = JniUtils::GetGlobalClassReference(mEnv, activityObject, className.c_str());
-    BAIL_ON_COND(mVrUILayerClass == nullptr, "No java UI Layer class", -1);
+    mVrUILayerClass = classObject;
 
     jmethodID vrUILayerConstructor =
         mEnv->GetMethodID(mVrUILayerClass, "<init>", "(Lorg/citra/citra_emu/vr/VrActivity;)V");

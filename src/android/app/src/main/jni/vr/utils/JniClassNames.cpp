@@ -6,42 +6,36 @@
 
 namespace VR {
 namespace JniGlobalRef {
-jmethodID gFindClassMethodID = nullptr;
-jobject   gClassLoader       = nullptr;
+jclass gVrKeyboardLayerClass     = nullptr;
+jclass gVrErrorMessageLayerClass = nullptr;
+jclass gVrRibbonLayerClass       = nullptr;
 } // namespace JniGlobalRef
 } // namespace VR
 
-void VR::JNI::InitJNI(JNIEnv* jni, jobject activityObject) {
+void VR::JNI::InitJNI(JNIEnv* jni) {
     assert(jni != nullptr);
-    const jclass activityClass = jni->GetObjectClass(activityObject);
-    if (activityClass == nullptr) { FAIL("Failed to get activity class"); }
 
-    // Get the getClassLoader method ID
-    const jmethodID getClassLoaderMethod =
-        jni->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-    if (getClassLoaderMethod == nullptr) { FAIL("Failed to get getClassLoader method ID"); }
+    VR::JniGlobalRef::gVrKeyboardLayerClass = static_cast<jclass>(
+        jni->NewGlobalRef(jni->FindClass("org/citra/citra_emu/vr/ui/VrKeyboardLayer")));
+    if (VR::JniGlobalRef::gVrKeyboardLayerClass == nullptr) {
+        FAIL("Could not find VrKeyboardLayer class");
+    }
+    VR::JniGlobalRef::gVrErrorMessageLayerClass = static_cast<jclass>(
+        jni->NewGlobalRef(jni->FindClass("org/citra/citra_emu/vr/ui/VrErrorMessageLayer")));
+    if (VR::JniGlobalRef::gVrErrorMessageLayerClass == nullptr) {
+        FAIL("Could not find VrErrorMessageLayer class");
+    }
 
-    // Call getClassLoader of the activity object to obtain the class loader
-    const jobject classLoaderObject = jni->CallObjectMethod(activityObject, getClassLoaderMethod);
-    if (classLoaderObject == nullptr) { FAIL("Failed to get class loader object"); }
-
-    JniGlobalRef::gClassLoader = jni->NewGlobalRef(classLoaderObject);
-
-    // Step 3: Cache the findClass method ID
-    jclass classLoaderClass = jni->FindClass("java/lang/ClassLoader");
-    if (classLoaderClass == nullptr) { FAIL("Failed to find class loader class"); }
-    JniGlobalRef::gFindClassMethodID =
-        jni->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (JniGlobalRef::gFindClassMethodID == nullptr) { FAIL("Failed to get findClass method ID"); }
-
-    // Cleanup local references
-    jni->DeleteLocalRef(activityClass);
-    jni->DeleteLocalRef(classLoaderClass);
+    VR::JniGlobalRef::gVrRibbonLayerClass = static_cast<jclass>(
+        jni->NewGlobalRef(jni->FindClass("org/citra/citra_emu/vr/ui/VrRibbonLayer")));
+    if (VR::JniGlobalRef::gVrRibbonLayerClass == nullptr) {
+        FAIL("Could not find VrRibbonLayer class");
+    }
 }
 
 void VR::JNI::CleanupJNI(JNIEnv* jni) {
     assert(jni != nullptr);
-    if (JniGlobalRef::gClassLoader != nullptr) { jni->DeleteGlobalRef(JniGlobalRef::gClassLoader); }
-    JniGlobalRef::gClassLoader       = nullptr;
-    JniGlobalRef::gFindClassMethodID = nullptr;
+    VR::JniGlobalRef::gVrKeyboardLayerClass     = nullptr;
+    VR::JniGlobalRef::gVrErrorMessageLayerClass = nullptr;
+    VR::JniGlobalRef::gVrRibbonLayerClass       = nullptr;
 }

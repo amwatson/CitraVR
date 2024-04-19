@@ -246,7 +246,6 @@ void UILayer::Shutdown() {
     mSwapchain.mHandle = XR_NULL_HANDLE;
     mSwapchain.mWidth  = 0;
     mSwapchain.mHeight = 0;
-    mEnv->DeleteGlobalRef(mVrUILayerClass);
     mVrUILayerClass = nullptr;
     // These steps are not strictly necessary for app shutdown, as references are cleaned up when
     // the JVM is destroyed, but memory-saving if this class is destroyed/re-initialized at runtime.

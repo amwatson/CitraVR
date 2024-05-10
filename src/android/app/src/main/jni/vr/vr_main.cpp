@@ -1264,7 +1264,9 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
 }
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
-
+    // Ensures a clean exit. This is currently not needed for proper cleanup, but may avoid the
+    // crash on program switch some have reported.
+    exit(0);
     ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) { delete VRAppHandle(handle).p; }
     VR::JNI::CleanupJNI(env);

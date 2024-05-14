@@ -204,7 +204,7 @@ public:
     VRApp(jobject activityObjectGlobalRef)
         : mActivityObject(activityObjectGlobalRef) {}
 
-    ~VRApp() { assert(mIsStopRequested); }
+    ~VRApp() { assert(mLastAppState.mIsStopRequested); }
 
 private:
     class AppState;
@@ -962,7 +962,7 @@ private:
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
                   "session={} time={}",
                   __func__, XrSessionStateToString(lastState),
-                  XrSessionStateToString(newState.state), newState.session, newState.time);
+                  XrSessionStateToString(newState.state), (void *)newState.session, newState.time);
         }
         lastState = newState.state;
         switch (newState.state) {
@@ -988,7 +988,7 @@ private:
 
     void OXRHandleSessionStateChanges(const XrSessionState state, AppState& newAppState) const {
         if (state == XR_SESSION_STATE_READY) {
-            assert(mIsXrSessionActive == false);
+            assert(mLastAppState.mIsXrSessionActive == false);
 
             XrSessionBeginInfo sbi           = {};
             sbi.type                         = XR_TYPE_SESSION_BEGIN_INFO;
@@ -1039,7 +1039,7 @@ private:
                 }
             }
         } else if (state == XR_SESSION_STATE_STOPPING) {
-            assert(mIsXrSessionActive);
+            assert(mLastAppState.mIsXrSessionActive);
             ALOGI("{}(): Entered XR_SESSION_STATE_STOPPING", __func__);
             OXR(xrEndSession(gOpenXr->mSession));
             newAppState.mIsXrSessionActive = false;

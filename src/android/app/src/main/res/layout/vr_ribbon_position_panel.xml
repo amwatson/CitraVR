@@ -98,7 +98,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:drawableStart="@drawable/ic_settings_ethernet"
+                    android:drawableStart="@drawable/ic_vr_adjust_depth"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
                     android:text="Move the thumbstick forward to extend deeper or pull backward to bring closer."

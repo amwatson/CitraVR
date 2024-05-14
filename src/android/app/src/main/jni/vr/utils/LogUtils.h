@@ -27,6 +27,11 @@ License     :   Licensed under GPLv3 or any later version.
 #define ALOGV(...) LOG_TRACE(VR, __VA_ARGS__)
 #define ALOGD(...) LOG_DEBUG(VR, __VA_ARGS__)
 
+// Use these for logging before logging system is initialized
+#define ANDROID_ONLY_LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define ANDROID_ONLY_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define ANDROID_ONLY_LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+
 #define FAIL(...)                                                                                  \
     do {                                                                                           \
         __android_log_print(ANDROID_LOG_FATAL, LOG_TAG, __VA_ARGS__);                              \

@@ -22,6 +22,7 @@
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
 #include "network/network_settings.h"
+#include "vr/utils/LogUtils.h"
 #include "vr/vr_settings.h"
 #include "vr/utils/LogUtils.h"
 
@@ -43,7 +44,7 @@ bool Config::LoadINI(const std::string& default_contents, bool retry) {
     const std::string& location = this->sdl2_config_loc;
     if (sdl2_config == nullptr || sdl2_config->ParseError() < 0) {
         if (retry) {
-            LOG_WARNING(Config, "Failed to load {}. Creating file from defaults...", location);
+            ANDROID_ONLY_LOGW("Failed to load %s. Creating file from defaults...", location.c_str());
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, location, default_contents);
             std::string ini_buffer;
@@ -53,10 +54,10 @@ bool Config::LoadINI(const std::string& default_contents, bool retry) {
 
             return LoadINI(default_contents, false);
         }
-        LOG_ERROR(Config, "Failed.");
+        ANDROID_ONLY_LOGE("Failed.");
         return false;
     }
-    LOG_INFO(Config, "Successfully loaded {}", location);
+    ANDROID_ONLY_LOGI("Successfully loaded %s", location.c_str());
     return true;
 }
 
@@ -274,7 +275,7 @@ void Config::ReadValues() {
     // be used to determine per-hmd settings in the config
     {
       const std::string hmdTypeStr = VRSettings::GetHMDTypeStr();
-      LOG_INFO(Config, "HMD type: {}", hmdTypeStr.c_str());
+      ANDROID_ONLY_LOGI("HMD type: %s", hmdTypeStr.c_str());
       VRSettings::values.hmd_type = VRSettings::HmdTypeFromStr(hmdTypeStr);
     }
     VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ?
@@ -307,7 +308,7 @@ void Config::ReadValues() {
     Settings::values.vr_immersive_eye_indicator = VRSettings::values.vr_immersive_eye_indicator;
 
     if (Settings::values.vr_immersive_mode.GetValue() > 0) {
-      LOG_INFO(Config, "VR immersive mode enabled");
+      ANDROID_ONLY_LOGI("VR immersive mode enabled");
 
       // no point rendering passthrough in immersive mode
       VRSettings::values.vr_environment =

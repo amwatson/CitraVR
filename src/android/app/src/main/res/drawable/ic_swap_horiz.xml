@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:pathData="M275.33,800 L80,604.67l195.33,-195.34 46.67,47 -115,115h306.33L513.33,638L207,638l115,115 -46.67,47ZM684.67,550.67 L638,503.67 753,388.67L446.67,388.67L446.67,322L753,322L638,207l46.67,-47L880,355.33 684.67,550.67Z"
+      android:fillColor="@color/citra_onPrimary"/>
+</vector>

@@ -4,8 +4,7 @@
     android:id="@+id/position_panel"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:theme="@style/Theme.Material3.DayNight"
-    >
+    android:theme="@style/Theme.Material3.DayNight">
 
     <FrameLayout
         android:layout_width="1000dp"
@@ -14,15 +13,156 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/lowerPanelPlaceHolder"
         android:layout_width="900dp"
         android:layout_height="675dp"
+        android:layout_gravity="center"
         android:layout_marginTop="18dp"
-        android:background="#093A60"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+
+            <!-- Header for instructions -->
+            <TextView
+                android:id="@+id/header_instructions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To Move a Panel:"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+
+            <!-- Vertical Movement Section -->
+            <TextView
+                android:id="@+id/vertical_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vertical Movement"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="18dp"
+            android:orientation="vertical">
+            <!-- Activate vertical movement -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_touch_app"
+                android:drawablePadding="8dp"
+                android:text="Press and hold the index trigger while targeting the panel."
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+
+            <!-- Move vertically -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_swap_vert"
+                android:drawablePadding="8dp"
+                android:text="Slide the motion controller up or down to adjust the panel's vertical position."
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+            <!-- Depth Movement Section -->
+            <TextView
+                android:id="@+id/depth_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Depth Adjustment"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+
+            <!-- Adjust panel depth -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="18dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_settings_ethernet"
+                android:drawablePadding="8dp"
+                android:text="Move the thumbstick forward to extend deeper or pull backward to bring closer."
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+            <!-- Horizontal Movement Section -->
+            <TextView
+                android:id="@+id/horizontal_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Horizontal Movement"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="18dp"
+                android:orientation="vertical"
+                >
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+            <ToggleButton
+                android:id="@+id/horizontalAxisToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/vr_toggle_background"
+                android:textColor="@color/citra_onPrimary" />
+
+            <!-- Toggle horizontal movement -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="8dp"
+                android:text="Toggle Horizontal Movement: Use the toggle to enable or disable horizontal movement."
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+
+            </LinearLayout>
+
+            <!-- Move horizontally -->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_swap_horiz"
+                android:drawablePadding="8dp"
+                android:text="With horizontal movement enabled, slide left or right to adjust horizontally."
+                android:textColor="@color/citra_onPrimary"
+                android:textSize="18sp"
+                android:padding="8dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
         android:layout_width="100dp"
@@ -33,7 +173,6 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="@+id/lowerPanelPlaceHolder"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/lowerPanelPlaceHolder"
         app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
 
         <Button
@@ -47,14 +186,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ToggleButton
-            android:id="@+id/horizontalAxisToggle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Lock Horizontal Axis"
-            />
+            android:layout_weight="1"
+            android:orientation="horizontal" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

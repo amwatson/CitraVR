@@ -7,6 +7,8 @@
 namespace {
 constexpr float kInitialLowerPanelPitchInRadians = -MATH_FLOAT_PI / 4.0f; // -45 degrees in radians
 
+float gPitchAdjustInRadians = kInitialLowerPanelPitchInRadians;
+
 XrVector3f CalculatePanelPosition(const XrVector3f& viewerPosition,
                                   const XrVector3f& controllerPosition,
                                   float             sphereRadius) {
@@ -53,10 +55,17 @@ bool RibbonLayer::IsMenuBackgroundSelected() const {
     return GetEnv()->CallBooleanMethod(GetVrUILayerObject(), mIsMenuBackgroundSelectedMethodId);
 }
 
+// Goal is to rotate the lower panel to face the user, but with an initial bias of 45 degrees.
+// The result is the lower panel being slightly tilted away from the user compared to the top panel,
+// but comfortably readable at any angle.
+// The rotational offset is done so that the top+bottom text comfortably fit into the user's FOV
+// at high angles, so the user isn't craning their neck while reclining.
 void RibbonLayer::SetPanelFromController(const XrVector3f& controllerPosition) {
     constexpr XrVector3f viewerPosition{0.0f, 0.0f, 0.0f};    // Viewer position at origin
     constexpr XrVector3f windowUpDirection{0.0f, 1.0f, 0.0f}; // Y is up
-    constexpr float      pitchAdjustmentFactor = 0.5f;
+    // Arbitrary factor, chosen based on what change-in-pitch felt best
+    // A higher factor will make the window pitch more aggressively with vertical displacement.
+    constexpr float pitchAdjustmentFactor = 0.5f;
 
     // Calculate sphere radius based on panel position to viewer
     const float sphereRadius = XrMath::Vector3f::Length(mPanelFromWorld.position - viewerPosition);
@@ -75,18 +84,26 @@ void RibbonLayer::SetPanelFromController(const XrVector3f& controllerPosition) {
 
     // Calculate pitch adjustment based on vertical displacement from initial position
     const float verticalDisplacement = windowPosition.y - mInitialPose.position.y;
-    // Arbitrary factor, chosen based on what change-in-pitch felt best
-    // A higher factor will make the window pitch more aggressively
-    const float pitchAdjustment = verticalDisplacement * pitchAdjustmentFactor;
+    const float pitchAdjustment      = verticalDisplacement * pitchAdjustmentFactor;
     // Clamp the new pitch to reasonable bounds (-45 to 90 degrees)
     const float newPitchRadians =
-        std::clamp(-std::abs(kInitialLowerPanelPitchInRadians + pitchAdjustment),
-                   kInitialLowerPanelPitchInRadians, MATH_FLOAT_PI / 2.0f);
+        std::clamp(-std::abs(pitchAdjustment), 0.0f, MATH_FLOAT_PI / 4.0f) -
+        kInitialLowerPanelPitchInRadians / 2.0f;
 
     // Construct a quaternion for the pitch adjustment
     const XrQuaternionf pitchAdjustmentQuat =
-        XrMath::Quatf::FromAxisAngle({1.0f, 0.0f, 0.0f}, newPitchRadians / 2.0f);
+        XrMath::Quatf::FromAxisAngle({1.0f, 0.0f, 0.0f}, newPitchRadians + gPitchAdjustInRadians);
 
     // Combine the base rotation with the pitch adjustment
     mPanelFromWorld = {baseRotation * pitchAdjustmentQuat, windowPosition};
+}
+static constexpr float kThumbstickSpeed = 0.010f;
+// Use thumbstick to tilt the pitch of the panel
+void RibbonLayer::SetPanelFromThumbstick(const float thumbstickY) {
+    const float pitchAdjustInRadians = -thumbstickY * kThumbstickSpeed;
+    mPanelFromWorld.orientation =
+        XrMath::Quatf::FromAxisAngle({1.0f, 0.0f, 0.0f}, pitchAdjustInRadians) *
+        mPanelFromWorld.orientation;
+
+    gPitchAdjustInRadians += pitchAdjustInRadians;
 }

@@ -749,16 +749,27 @@ private:
                     if (shouldRenderCursor && triggerState.changedSinceLastSync) {
                         mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
                     }
+                    // If trigger is pressed, thumbstick controls
+                    // the depth
+                    const XrActionStateVector2f& thumbstickState =
+                        mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
+                    static constexpr float kThumbStickDirectionThreshold = 0.5f;
+                    const bool hasThumbstickMotion = std::abs(thumbstickState.currentState.y) >
+                                                          kThumbStickDirectionThreshold;
+
                     if (appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         (sIsLowerPanelBeingPositioned ||
                          (shouldRenderCursor && mRibbonLayer->IsMenuBackgroundSelected())) &&
-                        triggerState.currentState) {
+                        (triggerState.currentState || hasThumbstickMotion)) {
+                        if (hasThumbstickMotion) {
+                            mRibbonLayer->SetPanelFromThumbstick(thumbstickState.currentState.y);
+                        } else {
+                            mRibbonLayer->SetPanelFromController(
+                                {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
+                                 cursorPose3d.position.y, cursorPose3d.position.z});
+                        }
 
-                        mRibbonLayer->SetPanelFromController(
-                            {appState.mIsHorizontalAxisLocked ? 0.0f : cursorPose3d.position.x,
-                             cursorPose3d.position.y, cursorPose3d.position.z});
                         mGameSurfaceLayer->SetLowerPanelWithPose(mRibbonLayer->GetPose());
-
                         sIsLowerPanelBeingPositioned = true;
                     }
                 }
@@ -962,7 +973,7 @@ private:
             ALOGV("{}(): Received XR_SESSION_STATE_CHANGED state {}->{} "
                   "session={} time={}",
                   __func__, XrSessionStateToString(lastState),
-                  XrSessionStateToString(newState.state), (void *)newState.session, newState.time);
+                  XrSessionStateToString(newState.state), (void*)newState.session, newState.time);
         }
         lastState = newState.state;
         switch (newState.state) {
@@ -1264,9 +1275,6 @@ Java_org_citra_citra_1emu_vr_VrActivity_nativeOnCreate(JNIEnv* env, jobject thiz
 }
 extern "C" JNIEXPORT void JNICALL
 Java_org_citra_citra_1emu_vr_VrActivity_nativeOnDestroy(JNIEnv* env, jobject thiz, jlong handle) {
-    // Ensures a clean exit. This is currently not needed for proper cleanup, but may avoid the
-    // crash on program switch some have reported.
-    exit(0);
     ALOGI("nativeOnDestroy {}", static_cast<long>(handle));
     if (handle != 0) { delete VRAppHandle(handle).p; }
     VR::JNI::CleanupJNI(env);

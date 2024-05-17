@@ -9,6 +9,7 @@ public:
 
     bool IsMenuBackgroundSelected() const;
     void SetPanelFromController(const XrVector3f& controllerPosition);
+    void SetPanelFromThumbstick(const float thumbstickY);
 
     const XrPosef& GetPose() const { return mPanelFromWorld; }
 

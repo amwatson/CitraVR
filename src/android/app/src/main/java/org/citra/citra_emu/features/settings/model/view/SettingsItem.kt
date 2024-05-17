@@ -5,6 +5,7 @@
 package org.citra.citra_emu.features.settings.model.view
 
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 
 /**
@@ -23,7 +24,7 @@ abstract class SettingsItem(
 
     val isEditable: Boolean
         get() {
-            if (!NativeLibrary.isRunning()) return true
+            if (!EmulationActivity.isRunning()) return true
             return setting?.isRuntimeEditable ?: false
         }
 

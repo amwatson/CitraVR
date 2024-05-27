@@ -179,14 +179,12 @@ class Settings {
            R.string.controller_axis_vertical,
             R.string.controller_axis_horizontal
         )
-
-        val dPadTitles = listOf(
+        val dpadTitles = listOf(
             R.string.direction_up,
             R.string.direction_down,
             R.string.direction_left,
-            R.string.direction_right,
+            R.string.direction_right
         )
-
         val triggerKeys = listOf(
             KEY_BUTTON_L,
             KEY_BUTTON_R,

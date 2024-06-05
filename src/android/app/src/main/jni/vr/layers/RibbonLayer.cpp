@@ -105,12 +105,12 @@ void RibbonLayer::SetPanelFromThumbstick(const float thumbstickY) {
     gPitchAdjustInRadians = std::clamp(gPitchAdjustInRadians + pitchAdjustInRadians,
                                        -MATH_FLOAT_PI / 3.0f, MATH_FLOAT_PI / 8.0f);
     mPanelFromWorld.orientation =
+        mPanelFromWorld.orientation *
         XrMath::Quatf::FromAxisAngle({1.0f, 0.0f, 0.0f},
-                                     (gPitchAdjustInRadians - previousPitchAdjustInRadians)) *
-        mPanelFromWorld.orientation;
+                                     (gPitchAdjustInRadians - previousPitchAdjustInRadians));
 }
 
 void RibbonLayer::SetPanelWithPose(const XrPosef& pose) {
-  mPanelFromWorld = pose;
-  gPitchAdjustInRadians = XrMath::Quatf::GetPitchInRadians(pose.orientation);
+    mPanelFromWorld       = pose;
+    gPitchAdjustInRadians = XrMath::Quatf::GetPitchInRadians(pose.orientation);
 }

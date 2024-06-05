@@ -124,9 +124,6 @@ public:
      *  is already pressed).
      */
     void SendClickToUI(const XrVector2f& pos2d, const int type);
-
-    void SetPanelWithPose(const XrPosef& pose);
-
 protected:
     jobject GetVrUILayerObject() const { return mVrUILayerObject; }
     jclass  GetVrUILayerClass() const { return mVrUILayerClass; }

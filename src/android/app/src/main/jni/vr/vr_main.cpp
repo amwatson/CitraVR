@@ -754,8 +754,8 @@ private:
                     const XrActionStateVector2f& thumbstickState =
                         mInputStateFrame.mThumbStickState[mInputStateFrame.mPreferredHand];
                     static constexpr float kThumbStickDirectionThreshold = 0.5f;
-                    const bool hasThumbstickMotion = std::abs(thumbstickState.currentState.y) >
-                                                          kThumbStickDirectionThreshold;
+                    const bool             hasThumbstickMotion =
+                        std::abs(thumbstickState.currentState.y) > kThumbStickDirectionThreshold;
 
                     if (appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         (sIsLowerPanelBeingPositioned ||

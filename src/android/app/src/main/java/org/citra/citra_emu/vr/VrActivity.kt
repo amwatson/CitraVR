@@ -121,14 +121,14 @@ class VrActivity : EmulationActivity() {
 
     fun pauseGame() {
        Log.info("VR [Java] pauseGame");
-        if (NativeLibrary.isRunning()) { NativeLibrary.pauseEmulation(); }
+        NativeLibrary.pauseEmulation();
     }
 
     fun resumeGame() {
        Log.info("VR [Java] resumeGame");
         // Note: isRunning() checks to make sure the emulation has started and pausing it is
         // safe -- not whether it's paused/resumed
-          if (NativeLibrary.isRunning()) { NativeLibrary.unPauseEmulation(); }
+         NativeLibrary.unPauseEmulation();
     }
 
     class ClickRunnable : Runnable {

@@ -64,19 +64,7 @@
                 tools:text="Nintendo" />
 
             <TextView
-                android:id="@+id/text_game_id"
-                style="@style/TextAppearance.Material3.BodySmall"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="viewStart"
-                android:singleLine="true"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:ellipsize="none"
-                android:requiresFadingEdge="horizontal"
-                tools:text="0004000000033400" />
-
-            <TextView
-                android:id="@+id/text_filename"
+                android:id="@+id/text_game_region"
                 style="@style/TextAppearance.Material3.BodySmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -85,7 +73,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:ellipsize="none"
                 android:requiresFadingEdge="horizontal"
-                tools:text="Pilotwings_Resort.cxi" />
+                tools:text="Region" />
 
         </LinearLayout>
 

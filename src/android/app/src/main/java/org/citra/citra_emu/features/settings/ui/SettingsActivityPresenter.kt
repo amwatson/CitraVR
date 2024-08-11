@@ -7,6 +7,7 @@ package org.citra.citra_emu.features.settings.ui
 import android.os.Bundle
 import android.text.TextUtils
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -56,6 +57,9 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
             settings.saveSettings(activityView)
             SystemSaveGame.save()
+            //added to ensure that layout changes take effect as soon as settings window closes
+            NativeLibrary.reloadSettings()
+            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
         }
         NativeLibrary.reloadSettings()
     }

@@ -353,25 +353,14 @@ void Java_org_citra_citra_1emu_NativeLibrary_notifyOrientationChange([[maybe_unu
                                                                      jint rotation,
                                                                      jboolean portrait) {
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layout_option);
-    auto& system = Core::System::GetInstance();
-    if (system.IsPoweredOn()) {
-
-        system.GPU().Renderer().UpdateCurrentFramebufferLayout(portrait);
-    }
-    InputManager::screen_rotation = rotation;
-    Camera::NDK::g_rotation = rotation;
 }
-
-void Java_io_github_lime3ds_android_NativeLibrary_notifyPortraitLayoutChange(
-    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jint layout_option, jint rotation) {
-    Settings::values.portrait_layout_option =
-        static_cast<Settings::PortraitLayoutOption>(layout_option);
+void Java_org_citra_citra_1emu_NativeLibrary_updateFramebuffer([[maybe_unused]] JNIEnv* env,
+                                                                    [[maybe_unused]] jobject obj,
+                                                                    jboolean is_portrait_mode) {
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
-        system.GPU().Renderer().UpdateCurrentFramebufferLayout(!(rotation % 2));
+        system.GPU().Renderer().UpdateCurrentFramebufferLayout(is_portrait_mode);
     }
-    InputManager::screen_rotation = rotation;
-    Camera::NDK::g_rotation = rotation;
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_swapScreens([[maybe_unused]] JNIEnv* env,

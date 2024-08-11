@@ -15,6 +15,7 @@ enum class BooleanSetting(
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
+    CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
     ADRENO_GPU_BOOST("adreno_gpu_boost", Settings.SECTION_RENDERER, false);
 
     override var boolean: Boolean = defaultValue

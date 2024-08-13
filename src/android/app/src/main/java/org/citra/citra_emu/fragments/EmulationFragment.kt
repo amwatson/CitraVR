@@ -1069,7 +1069,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private fun resetScale(target: String) {
         preferences.edit().putInt(
             target,
-            100
+            50
         ).apply()
     }
 

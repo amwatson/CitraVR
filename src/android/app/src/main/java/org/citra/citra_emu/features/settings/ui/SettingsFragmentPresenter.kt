@@ -927,7 +927,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addLayoutSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle("Layout")
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_layout))
         sl.apply {
             add(
                 SingleChoiceSetting(

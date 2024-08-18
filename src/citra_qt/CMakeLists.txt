@@ -343,10 +343,6 @@ target_compile_definitions(citra-qt PRIVATE
     -DQT_NO_CAST_TO_ASCII
 )
 
-if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
-    target_compile_definitions(citra-qt PRIVATE -DCITRA_ENABLE_COMPATIBILITY_REPORTING)
-endif()
-
 if (USE_DISCORD_PRESENCE)
     target_sources(citra-qt PUBLIC
         discord_impl.cpp

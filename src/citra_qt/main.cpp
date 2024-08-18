@@ -335,9 +335,6 @@ GMainWindow::~GMainWindow() {
 }
 
 void GMainWindow::InitializeWidgets() {
-#ifdef CITRA_ENABLE_COMPATIBILITY_REPORTING
-    ui->action_Report_Compatibility->setVisible(true);
-#endif
     render_window = new GRenderWindow(this, emu_thread.get(), system, false);
     secondary_window = new GRenderWindow(this, emu_thread.get(), system, true);
     render_window->hide();

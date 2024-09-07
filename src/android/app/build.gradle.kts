@@ -28,7 +28,7 @@ val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-34"
+    compileSdkVersion = "android-35"
     ndkVersion = "27.1.12297006"
 
     compileOptions {
@@ -63,7 +63,7 @@ android {
         // TODO If this is ever modified, change application_id in strings.xml
         applicationId = "org.citra.citra_emu"
         minSdk = 28
-        targetSdk = 34
+        targetSdk = 35
         versionCode = autoVersion
         versionName = getGitVersion()
 

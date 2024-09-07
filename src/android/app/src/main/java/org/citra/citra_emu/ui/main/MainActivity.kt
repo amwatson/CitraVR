@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             windowInsets
         }
 
-    val openCitraDirectory = registerForActivityResult<Uri, Uri>(
+    val openCitraDirectory = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { result: Uri? ->
         if (result == null) {

@@ -26,7 +26,7 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
             .setTitle(R.string.select_citra_user_folder)
             .setMessage(R.string.cannot_skip_directory_description)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                mainActivity.openCitraDirectory.launch(null)
+                mainActivity?.openCitraDirectory?.launch(null)
             }
             .show()
     }

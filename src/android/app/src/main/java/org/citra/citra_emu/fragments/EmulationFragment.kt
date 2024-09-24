@@ -73,7 +73,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
-    private lateinit var emulationState: EmulationState
+    private var emulationState: EmulationState? = null
     private var perfStatsUpdater: Runnable? = null
 
     private lateinit var emulationActivity: EmulationActivity
@@ -144,7 +144,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil = ScreenAdjustmentUtil(emulationActivity.windowManager, settingsViewModel.settings)
-        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState.stop() })
+        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState?.stop() })
         EmulationLifecycleUtil.addPauseResumeHook(hook = { togglePause() })
     }
 
@@ -231,22 +231,24 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {
-                    if (emulationState.isPaused) {
-                        emulationState.unpause()
-                        it.title = resources.getString(R.string.pause_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_pause,
-                            requireContext().theme
-                        )
-                    } else {
-                        emulationState.pause()
-                        it.title = resources.getString(R.string.resume_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_play,
-                            requireContext().theme
-                        )
+                    emulationState?.let { emulationState ->
+                        if (emulationState.isPaused) {
+                            emulationState.unpause()
+                            it.title = resources.getString(R.string.pause_emulation)
+                            it.icon = ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_pause,
+                                requireContext().theme
+                            )
+                        } else {
+                            emulationState.pause()
+                            it.title = resources.getString(R.string.resume_emulation)
+                            it.icon = ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_play,
+                                requireContext().theme
+                            )
+                        }
                     }
                     true
                 }
@@ -420,14 +422,16 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     fun surfaceCreated(surface : Surface) {
         Log.debug("[EmulationFragment] Surface created");
-        emulationState.newSurface(surface, VRUtils.isVR(emulationActivity))
+        emulationState?.newSurface(surface, VRUtils.isVR(emulationActivity))
     }
 
     private fun togglePause() {
-        if(emulationState.isPaused) {
-            emulationState.unpause()
-        } else {
-            emulationState.pause()
+        emulationState?.let { emulationState ->
+            if (emulationState.isPaused) {
+                emulationState.unpause()
+            } else {
+                emulationState.pause()
+            }
         }
     }
 
@@ -436,7 +440,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         Choreographer.getInstance().postFrameCallback(this)
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState?.run(emulationActivity.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -457,7 +461,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState?.run(emulationActivity.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -866,11 +870,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         Log.debug("[EmulationFragment] Surface changed. Resolution: " + width + "x" + height)
-        emulationState.newSurface(holder.surface, !VRUtils.isVR(emulationActivity))
+        emulationState?.newSurface(holder.surface, !VRUtils.isVR(emulationActivity))
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        emulationState.clearSurface()
+        emulationState?.clearSurface()
     }
 
     override fun doFrame(frameTimeNanos: Long) {

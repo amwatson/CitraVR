@@ -53,6 +53,7 @@ License     :   Licensed under GPLv3 or any later version.
 namespace vr {
 XrSession  gSession     = XR_NULL_HANDLE;
 int        gPriorityTid = -1;
+bool       gCitraReady  = false;
 XrSession& GetSession() { return gSession; }
 void       PrioritizeTid(const int tid) {
           assert(gSession != XR_NULL_HANDLE);
@@ -67,6 +68,10 @@ void       PrioritizeTid(const int tid) {
           OXR(pfnSetAndroidApplicationThreadKHR(gSession, XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR, tid));
           gPriorityTid = tid;
           ALOGD("Setting prio tid from original code {}", vr::gPriorityTid);
+}
+
+void SetCitraReady() {
+   gCitraReady = true;
 }
 } // namespace vr
 
@@ -1131,11 +1136,13 @@ private:
     }
 
     void PauseEmulation(JNIEnv* jni) const {
+      if (!vr::gCitraReady) return;
         assert(jni != nullptr);
         jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
     }
 
     void ResumeEmulation(JNIEnv* jni) const {
+        if (!vr::gCitraReady) return;
         assert(jni != nullptr);
         jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
     }

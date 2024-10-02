@@ -16,4 +16,5 @@ namespace vr {
 
 XrSession& GetSession();
 void       PrioritizeTid(const int tid);
+void SetCitraReady();
 } // namespace vr

@@ -70,9 +70,7 @@ void       PrioritizeTid(const int tid) {
           ALOGD("Setting prio tid from original code {}", vr::gPriorityTid);
 }
 
-void SetCitraReady() {
-   gCitraReady = true;
-}
+void SetCitraReady() { gCitraReady = true; }
 } // namespace vr
 
 namespace {
@@ -418,13 +416,24 @@ private:
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
 
+        // Compare the distance between the head and the controllers to determine if either is near
+        // the head (test fails if no controllers are active)
         {
-            const float lengthLeft = XrMath::Vector3f::Length(
-                gOpenXr->headLocation.pose.position -
-                mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER].pose.position);
-            const float lengthRight = XrMath::Vector3f::Length(
-                gOpenXr->headLocation.pose.position -
-                mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER].pose.position);
+            const float lengthLeft =
+                mInputStateFrame.mIsHandActive[InputStateFrame::LEFT_CONTROLLER]
+                    ? XrMath::Vector3f::Length(
+                          gOpenXr->headLocation.pose.position -
+                          mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
+                              .pose.position)
+                    : std::numeric_limits<float>::max();
+            const float lengthRight =
+                mInputStateFrame.mIsHandActive[InputStateFrame::RIGHT_CONTROLLER]
+                    ? XrMath::Vector3f::Length(
+                          gOpenXr->headLocation.pose.position -
+                          mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
+                              .pose.position)
+                    : std::numeric_limits<float>::max();
+            ;
             const float length = std::min(lengthLeft, lengthRight);
 
             // This block is for testing which uinform offset is needed
@@ -1136,7 +1145,7 @@ private:
     }
 
     void PauseEmulation(JNIEnv* jni) const {
-      if (!vr::gCitraReady) return;
+        if (!vr::gCitraReady) return;
         assert(jni != nullptr);
         jni->CallVoidMethod(mActivityObject, mPauseGameMethodID);
     }

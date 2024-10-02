@@ -440,9 +440,15 @@ private:
             mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
 
             // Game surface (upper and lower panels) are in front of the passthrough layer.
-            mGameSurfaceLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount,
-                                     gOpenXr->headLocation.pose, immersiveModeFactor,
-                                     showLowerPanel);
+            mGameSurfaceLayer->FrameTopPanel(gOpenXr->mLocalSpace, layers, layerCount,
+                                             gOpenXr->headLocation.pose, isImmersiveModeEnabled,
+                                             immersiveModeFactor);
+
+            if (showLowerPanel) {
+                assert(!isImmersiveModeEnabled);
+                mGameSurfaceLayer->FrameLowerPanel(gOpenXr->mLocalSpace, layers, layerCount,
+                                                   immersiveModeFactor);
+            }
 
             // If active, the keyboard layer is in front of the game surface.
             if (appState.mIsKeyboardActive) {

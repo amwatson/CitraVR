@@ -129,17 +129,34 @@ public:
     void SetSurface(const jobject activityObject) const;
 
     /** Called once-per-frame. Populates the layer list to show the
-     *  top and bottom panels as two separate layers.
+     *  top panel as a single stereo layer.
      *
      *  @param space the XrSpace this layer should be positioned with. The
      * center of the layer is placed in the center of the FOV.
      *  @param layers the array of layers to populate
      *  @param layerCount the number of layers in the array
-     *  @param visibleLowerPanel whether the lower panel is shown/visible
+     *  @param headPose the head pose
+     *  @isImmersiveModeEnabled whether immersive mode is enabled (different from immersive mode, as
+     *  we might be temporarily disabling/correcting for the immersive mode effect)
+     *  @param immersiveModeFactor the immersive mode factor set in the rendering engine.
      */
-    void Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers, uint32_t& layerCount,
-               const XrPosef& headPose, const float& immersiveModeFactor,
-               const bool visibleLowerPanel);
+    void FrameTopPanel(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
+                       uint32_t& layerCount, const XrPosef& headPose,
+                       const bool isImmersiveModeEnabled, const float& immersiveModeFactor);
+
+    /** Called once-per-frame when lower panel is visible.
+     * Populates the layer list to show the bottom panel as a single layer. Only shown
+     * when immersive mode is disabled.
+     *
+     *  @param space the XrSpace this layer should be positioned with. The
+     * center of the layer is placed in the center of the FOV.
+     *  @param layers the array of layers to populate
+     *  @param layerCount the number of layers in the array
+     *  @param headPose the head pose
+     *  @param immersiveModeFactor the immersive mode factor set in the rendering engine.
+     */
+    void FrameLowerPanel(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
+                         uint32_t& layerCount, const float& immersiveModeFactor);
 
     /** Given an origin, direction of a ray,
      *  returns the coordinates of where the ray will intersects

@@ -269,9 +269,10 @@ void GameSurfaceLayer::SetSurface(const jobject activityObject) const {
     mEnv->CallStaticVoidMethod(mVrGameSurfaceClass, setSurfaceMethodID, activityObject, mSurface);
 }
 
-void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
-                             uint32_t& layerCount, const XrPosef& headPose,
-                             const float& immersiveModeFactor, const bool showLowerPanel) {
+void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrCompositionLayer>& layers,
+                                     uint32_t& layerCount, const XrPosef& headPose,
+                                     const bool   isImmersiveModeEnabled,
+                                     const float& immersiveModeFactor) {
     // Prevent a seam between the top and bottom view
     constexpr uint32_t verticalBorderTex = 1;
     const bool         useCylinder       = (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
@@ -279,7 +280,7 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
         // Create the Top Display Panel (Curved display)
         for (uint32_t eye = 0; eye < NUM_EYES; eye++) {
             XrPosef topPanelFromWorld = mTopPanel.mPanelFromWorld;
-            if (mImmersiveMode > 1 && !showLowerPanel) {
+            if (mImmersiveMode > 1 && isImmersiveModeEnabled) {
                 topPanelFromWorld = GetTopPanelFromHeadPose(eye, headPose);
             }
 
@@ -297,8 +298,9 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             // Central angle controls how much of the cylinder is
             // covered by the texture. Together, they control the
             // scale of the texture.
-            const float radius =
-                (mImmersiveMode < 2 || showLowerPanel) ? GetRadiusSysprop() : kSuperImmersiveRadius;
+            const float radius = (mImmersiveMode < 2 || !isImmersiveModeEnabled)
+                                     ? GetRadiusSysprop()
+                                     : kSuperImmersiveRadius;
 
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
@@ -352,6 +354,11 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
             layers[layerCount++].mQuad = layer;
         }
     }
+}
+
+void GameSurfaceLayer::FrameLowerPanel(const XrSpace&                   space,
+                                       std::vector<XrCompositionLayer>& layers,
+                                       uint32_t& layerCount, const float& immersiveModeFactor) {
 
     // Create the Lower Display Panel (flat touchscreen)
     // When citra is in stereo mode, this panel is also rendered in stereo (i.e.
@@ -360,39 +367,36 @@ void GameSurfaceLayer::Frame(const XrSpace& space, std::vector<XrCompositionLaye
     // FIXME we waste rendering time rendering both displays. That said, We also
     // waste rendering time copying the buffer between runtimes. No time for
     // that now!
-    if (showLowerPanel) {
-        const uint32_t         cropHoriz = 90 * mResolutionFactor;
-        XrCompositionLayerQuad layer     = {};
+    // Prevent a seam between the top and bottom view
+    constexpr uint32_t verticalBorderTex = 1;
 
-        layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
-        layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-        layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-        layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
-        // NOTE: may not want unpremultiplied alpha
+    const uint32_t         cropHoriz = 90 * mResolutionFactor;
+    XrCompositionLayerQuad layer     = {};
 
-        layer.space = space;
+    layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
+    layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+    layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+    layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
+    // NOTE: may not want unpremultiplied alpha
 
-        layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
-        memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
-        layer.subImage.swapchain = mSwapchain.mHandle;
-        layer.subImage.imageRect.offset.x =
-            (cropHoriz / 2) / immersiveModeFactor +
-            mLowerPanel.mWidth * (0.5f - (0.5f / immersiveModeFactor));
-        layer.subImage.imageRect.offset.y =
-            mLowerPanel.mHeight + verticalBorderTex +
-            mLowerPanel.mHeight * (0.5f - (0.5f / immersiveModeFactor));
-        layer.subImage.imageRect.extent.width =
-            (mLowerPanel.mWidth - cropHoriz) / immersiveModeFactor;
-        layer.subImage.imageRect.extent.height = mLowerPanel.mHeight / immersiveModeFactor;
-        layer.subImage.imageArrayIndex         = 0;
-        layer.pose                             = mLowerPanel.mPanelFromWorld;
-        const auto scale =
-            GetDensityScaleForSize(mLowerPanel.mWidth - cropHoriz, -mLowerPanel.mHeight,
-                                   mLowerPanel.mScaleFactor, mResolutionFactor);
-        layer.size.width           = scale.x;
-        layer.size.height          = scale.y;
-        layers[layerCount++].mQuad = layer;
-    }
+    layer.space = space;
+
+    layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+    memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
+    layer.subImage.swapchain          = mSwapchain.mHandle;
+    layer.subImage.imageRect.offset.x = (cropHoriz / 2) / immersiveModeFactor +
+                                        mLowerPanel.mWidth * (0.5f - (0.5f / immersiveModeFactor));
+    layer.subImage.imageRect.offset.y = mLowerPanel.mHeight + verticalBorderTex +
+                                        mLowerPanel.mHeight * (0.5f - (0.5f / immersiveModeFactor));
+    layer.subImage.imageRect.extent.width  = (mLowerPanel.mWidth - cropHoriz) / immersiveModeFactor;
+    layer.subImage.imageRect.extent.height = mLowerPanel.mHeight / immersiveModeFactor;
+    layer.subImage.imageArrayIndex         = 0;
+    layer.pose                             = mLowerPanel.mPanelFromWorld;
+    const auto scale  = GetDensityScaleForSize(mLowerPanel.mWidth - cropHoriz, -mLowerPanel.mHeight,
+                                               mLowerPanel.mScaleFactor, mResolutionFactor);
+    layer.size.width  = scale.x;
+    layer.size.height = scale.y;
+    layers[layerCount++].mQuad = layer;
 }
 
 bool GameSurfaceLayer::GetRayIntersectionWithPanelTopPanel(const XrVector3f& start,

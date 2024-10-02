@@ -415,10 +415,11 @@ private:
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
 
-        const bool isImmersiveModeEnabled =
-            UpdateImmersiveModeIfNeeded(immersiveModeFactor);
-        const bool showLowerPanel = appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU &&
-                                    !isImmersiveModeEnabled;
+        const bool isImmersiveModeEnabled = VRSettings::values.vr_immersive_mode == 0
+                                                ? false
+                                                : UpdateImmersiveModeIfNeeded(immersiveModeFactor);
+        const bool showLowerPanel =
+            appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU && !isImmersiveModeEnabled;
 
         //////////////////////////////////////////////////
         //  Set the compositor layers for this frame.

@@ -470,7 +470,7 @@ private:
 
             // Cursor visibility will depend on hit-test but will be in front
             // of all other panels. This is because precedence lines up with depth order.
-            HandleCursorLayer(jni, appState, showUIRibbon, layers, layerCount);
+            HandleCursorLayer(jni, appState, showLowerPanel, showUIRibbon, layers, layerCount);
         }
 
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
@@ -616,7 +616,8 @@ private:
      *  interactions.
      **/
     void HandleCursorLayer(JNIEnv* jni, const AppState& appState, const bool showLowerPanel,
-                           std::vector<XrCompositionLayer>& layers, uint32_t& layerCount) const {
+                           const bool showUIRibbon, std::vector<XrCompositionLayer>& layers,
+                           uint32_t& layerCount) const {
 
         bool                    shouldRenderCursor = false;
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
@@ -692,7 +693,7 @@ private:
                 }
 
                 // 4. Ribbon layer
-                if (!shouldRenderCursor) {
+                if (!shouldRenderCursor && showUIRibbon) {
                     shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
                     if (shouldRenderCursor && triggerState.changedSinceLastSync) {

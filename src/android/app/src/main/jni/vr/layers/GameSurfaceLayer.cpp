@@ -488,7 +488,7 @@ void GameSurfaceLayer::ResetPanelPositions() {
 int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityObject) {
     if (mImmersiveMode > 0) {
         ALOGI("Using VR immersive mode {}", mImmersiveMode);
-        mTopPanel.mPanelFromWorld.position.z   = mLowerPanel.mPanelFromWorld.position.z;
+        mLowerPanel.mPanelFromWorld.position.z = mTopPanel.mPanelFromWorld.position.z;
         mLowerPanel.mPanelFromWorld.position.y = -1.0f;
     }
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";

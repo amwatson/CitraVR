@@ -40,11 +40,11 @@ XrQuaternionf CalculatePanelRotation(const XrVector3f& windowPosition,
 
 } // anonymous namespace
 
-RibbonLayer::RibbonLayer(const XrVector3f&& position, const XrQuaternionf&& orientation,
-                         JNIEnv* jni, jobject activityObject, const XrSession& session)
-    : UILayer(VR::JniGlobalRef::gVrRibbonLayerClass, std::move(position), std::move(orientation),
-              jni, activityObject, session)
-    , mInitialPose({orientation, position}) {
+RibbonLayer::RibbonLayer(const XrPosef& pose, JNIEnv* jni, jobject activityObject,
+                         const XrSession& session)
+    : UILayer(VR::JniGlobalRef::gVrRibbonLayerClass, std::move(pose.position),
+              std::move(pose.orientation), jni, activityObject, session)
+    , mInitialPose(pose) {
     mIsMenuBackgroundSelectedMethodId =
         jni->GetMethodID(GetVrUILayerClass(), "isMenuBackgroundSelected", "()Z");
     if (mIsMenuBackgroundSelectedMethodId == nullptr) {

@@ -676,4 +676,6 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="reset_header_text">Reinicio</string>
     <string name="reset_instruction_text">Presione este botón para restablecer la posición.</string>
     <string name="horizontal_header_text">Movimiento Horizontal</string>
+    <string name="toggle_off_text">Apagado</string>
+    <string name="toggle_on_text">sí</string>
 </resources>

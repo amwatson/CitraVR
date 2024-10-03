@@ -345,4 +345,6 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="reset_header_text">Reiniciar</string>
     <string name="reset_instruction_text">Pulse este botão para redefinir a posição.</string>
     <string name="horizontal_header_text">Movimento Horizontal</string>
+    <string name="toggle_off_text">Desligado</string>
+    <string name="toggle_on_text">ativado</string>
 </resources>

@@ -676,4 +676,6 @@
     <string name="reset_header_text">Сброс</string>
     <string name="reset_instruction_text">Нажмите эту кнопку, чтобы сбросить позицию.</string>
     <string name="horizontal_header_text">Горизонтальное движение</string>
+    <string name="toggle_off_text">Выключено</string>
+    <string name="toggle_on_text">Вкл</string>
 </resources>

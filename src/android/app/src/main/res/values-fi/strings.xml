@@ -138,4 +138,6 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="reset_header_text">Nollaa</string>
     <string name="reset_instruction_text">Paina tätä painiketta nollataksesi sijainti.</string>
     <string name="horizontal_header_text">Vaakasuuntainen liike</string>
+    <string name="toggle_off_text">Pois</string>
+    <string name="toggle_on_text">Kytketty päälle</string>
 </resources>

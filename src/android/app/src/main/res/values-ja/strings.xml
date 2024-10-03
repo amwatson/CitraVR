@@ -154,4 +154,6 @@
     <string name="reset_header_text">リセット</string>
     <string name="reset_instruction_text">このボタンを押して位置をリセットします。</string>
     <string name="horizontal_header_text">水平移動</string>
+    <string name="toggle_off_text">非表示</string>
+    <string name="toggle_on_text">オン</string>
     </resources>

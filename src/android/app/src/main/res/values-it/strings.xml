@@ -292,4 +292,6 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="reset_header_text">Ripristino</string>
     <string name="reset_instruction_text">Premere questo pulsante per ripristinare la posizione.</string>
     <string name="horizontal_header_text">Movimento orizzontale</string>
+    <string name="toggle_off_text">Spento</string>
+    <string name="toggle_on_text">Attivo</string>
 </resources>

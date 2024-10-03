@@ -543,4 +543,6 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="reset_header_text">Zurücksetzen</string>
     <string name="reset_instruction_text">Drücken Sie diese Taste, um die Position zurückzusetzen.</string>
     <string name="horizontal_header_text">Horizontale Bewegung</string>
+    <string name="toggle_off_text">Ausgeschaltet</string>
+    <string name="toggle_on_text">An</string>
 </resources>

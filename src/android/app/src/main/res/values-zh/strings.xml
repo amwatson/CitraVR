@@ -674,4 +674,6 @@
     <string name="reset_header_text">重置</string>
     <string name="reset_instruction_text">按下这个按钮来重置位置。</string>
     <string name="horizontal_header_text">水平移动</string>
+    <string name="toggle_off_text">关闭 (zh-CN)</string>
+    <string name="toggle_on_text">开启</string>
 </resources>

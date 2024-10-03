@@ -165,8 +165,8 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/vr_toggle_background"
                         android:textColor="@color/vr_ribbon_button_text_color"
-                        android:textOff="On"
-                        android:textOn="Off" />
+                        android:textOff="@string/toggle_on_text"
+                        android:textOn="@string/toggle_off_text"   />
 
                     <!-- Toggle horizontal movement -->
                     <TextView

@@ -207,4 +207,6 @@
     <string name="reset_header_text">Nullstill</string>
     <string name="reset_instruction_text">Trykk på denne knappen for å tilbakestille posisjonen.</string>
     <string name="horizontal_header_text">Horisontal bevegelse</string>
+    <string name="toggle_off_text">Av</string>
+    <string name="toggle_on_text">I gang</string>
 </resources>

@@ -703,4 +703,6 @@
     <string name="reset_header_text">Reset</string>
     <string name="reset_instruction_text">Press this button to reset position.</string>
     <string name="horizontal_header_text">Horizontal Movement</string>
+    <string name="toggle_off_text">Off</string>
+    <string name="toggle_on_text">On</string>
 </resources>

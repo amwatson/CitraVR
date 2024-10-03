@@ -145,8 +145,7 @@ public:
                        const bool isImmersiveModeEnabled, const float& immersiveModeFactor);
 
     /** Called once-per-frame when lower panel is visible.
-     * Populates the layer list to show the bottom panel as a single layer. Only shown
-     * when immersive mode is disabled.
+     * Populates the layer list to show the bottom panel as a single layer.
      *
      *  @param space the XrSpace this layer should be positioned with. The
      * center of the layer is placed in the center of the FOV.

@@ -231,6 +231,24 @@ public:
             if (appState.mIsStopRequested) { break; }
             HandleStateChanges(jni, appState);
             if (appState.mIsXrSessionActive) {
+                // Increment the frame index.
+                // Frame index starts at 1. I don't know why, we've always done this.
+                // Doesn't actually matter, except to make the indices
+                // consistent in traces
+                mFrameIndex++;
+                // Log time to first frame
+                if (mFrameIndex == 1) {
+                    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+                    ALOGI("Time to first frame: {} ms",
+                          std::chrono::duration_cast<std::chrono::milliseconds>(now -
+                                                                                gOnCreateStartTime)
+                              .count());
+                }
+
+                // Update non-tracking-dependent-state.
+                mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
+                HandleInput(jni, mInputStateFrame, appState);
+
                 Frame(jni, appState);
             } else {
                 // FIXME: currently, the way this is set up, some messages can be discarded if they
@@ -342,32 +360,13 @@ private:
         mOpenSettingsMethodID =
             jni->GetMethodID(jni->GetObjectClass(mActivityObject), "openSettingsMenu", "()V");
         if (mOpenSettingsMethodID == nullptr) { FAIL("could not get openSettingsMenuMethodID"); }
+
+        if (VRSettings::values.vr_immersive_mode != 0) {
+            mLastAppState.mIsLowerMenuToggledOn = false;
+        }
     }
 
     void Frame(JNIEnv* jni, const AppState& appState) {
-
-        ////////////////////////////////
-        // Increment the frame index.
-        ////////////////////////////////
-
-        // Frame index starts at 1. I don't know why, we've always done this.
-        // Doesn't actually matter, except to make the indices
-        // consistent in traces
-        mFrameIndex++;
-        // Log time to first frame
-        if (mFrameIndex == 1) {
-            std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-            ALOGI("Time to first frame: {} ms",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(now - gOnCreateStartTime)
-                      .count());
-        }
-
-        ////////////////////////////////////////
-        // Update non-tracking-dependent-state.
-        ////////////////////////////////////////
-
-        mInputStateFrame.SyncButtonsAndThumbSticks(gOpenXr->mSession, mInputStateStatic);
-        ForwardControllerButtonsAndThumbSticksIfNeeded(jni, mInputStateFrame);
 
         ////////////////////////////////
         // XrWaitFrame()
@@ -414,12 +413,19 @@ private:
         float immersiveModeFactor = (VRSettings::values.vr_immersive_mode < 2)
                                         ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
                                         : immersiveScaleFactor[2];
-
-        const bool isImmersiveModeEnabled = VRSettings::values.vr_immersive_mode == 0
-                                                ? false
-                                                : UpdateImmersiveModeIfNeeded(immersiveModeFactor);
-        const bool showLowerPanel =
-            appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU && !isImmersiveModeEnabled;
+        // enable toggle when menu is set to main. Otherwise, always on (immersive disabled).
+        const bool showUIRibbon =
+            appState.mLowerMenuType != LowerMenuType::MAIN_MENU || appState.mIsLowerMenuToggledOn;
+        const bool isImmersiveModeEnabled = [&](const bool showUIRibbon) -> bool {
+            if (VRSettings::values.vr_immersive_mode != 0 && !showUIRibbon) {
+                UpdateImmersiveModeIfNeeded(immersiveModeFactor);
+                return true;
+            } else {
+                DisableImmersiveMode();
+                return false;
+            }
+        }(showUIRibbon);
+        if (!isImmersiveModeEnabled) { immersiveModeFactor = 1.0f; }
 
         //////////////////////////////////////////////////
         //  Set the compositor layers for this frame.
@@ -437,14 +443,17 @@ private:
                 layers[layerCount++].mPassthrough = passthroughLayer;
             }
 
-            mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount);
+            if (showUIRibbon) { mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
 
             // Game surface (upper and lower panels) are in front of the passthrough layer.
             mGameSurfaceLayer->FrameTopPanel(gOpenXr->mLocalSpace, layers, layerCount,
                                              gOpenXr->headLocation.pose, isImmersiveModeEnabled,
                                              immersiveModeFactor);
 
+            const bool showLowerPanel =
+                showUIRibbon && appState.mLowerMenuType == LowerMenuType::MAIN_MENU;
             if (showLowerPanel) {
+                // Assert here because method code assumes immersive mode disabled.
                 assert(!isImmersiveModeEnabled);
                 mGameSurfaceLayer->FrameLowerPanel(gOpenXr->mLocalSpace, layers, layerCount,
                                                    immersiveModeFactor);
@@ -462,7 +471,7 @@ private:
 
             // Cursor visibility will depend on hit-test but will be in front
             // of all other panels. This is because precedence lines up with depth order.
-            HandleCursorLayer(jni, appState, showLowerPanel, layers, layerCount);
+            HandleCursorLayer(jni, appState, showUIRibbon, layers, layerCount);
         }
 
         std::vector<const XrCompositionLayerBaseHeader*> layerHeaders;
@@ -483,8 +492,7 @@ private:
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
     }
 
-    void ForwardControllerButtonsAndThumbSticksIfNeeded(JNIEnv*                jni,
-                                                        const InputStateFrame& inputState) const {
+    void HandleInput(JNIEnv* jni, const InputStateFrame& inputState, AppState& newState) const {
         assert(gOpenXr != nullptr);
 
         // Forward VR input to Android gamepad emulation
@@ -596,6 +604,13 @@ private:
                 }
             }
         }
+
+#if !defined(USE_INGAME_MENU)
+        if (mInputStateFrame.mLeftMenuButtonState.changedSinceLastSync &&
+            mInputStateFrame.mLeftMenuButtonState.currentState == XR_TRUE) {
+            newState.mIsLowerMenuToggledOn = !newState.mIsLowerMenuToggledOn;
+        }
+#endif
     }
 
     /** Handle the cursor and any hand-tracked/layer-dependent input
@@ -779,20 +794,10 @@ private:
         // action. So instead, we'll map this to start/select
 
 #if defined(USE_INGAME_MENU)
-        if (mInputStateFrame.mLeftMenuButtonState.changedSinceLastSync ||
+        if (mInputStateFrame.mLeftMenuButtonState.changedSinceLastSync &&
             mInputStateFrame.mLeftMenuButtonState.currentState == XR_TRUE) {
             jni->CallVoidMethod(mActivityObject, mOpenSettingsMethodID);
         }
-#else
-        // What would be ideal is if we placed these buttons in the
-        // scene, on a layer (maybe as part of the top layer in a view
-        // overlay -- I could
-        // add a black border to the top/bottom. Don't want to change
-        // too much right now. That would have been smart, though.)
-        ForwardButtonStateIfNeeded(jni, mActivityObject, mForwardVRInputMethodID,
-                                   108 /* BUTTON_START */, mInputStateFrame.mLeftMenuButtonState,
-                                   "start");
-
 #endif
     }
 
@@ -1077,7 +1082,7 @@ private:
         jni->CallVoidMethod(mActivityObject, mResumeGameMethodID);
     }
 
-    bool UpdateImmersiveModeIfNeeded(float& immersiveModeFactor) const {
+    void UpdateImmersiveModeIfNeeded(const float immersiveModeFactor) const {
         // This block is for testing which uinform offset is needed
         // for a given game to implement new super-immersive profiles if needed
         static bool increase = false;
@@ -1103,71 +1108,30 @@ private:
 
         if (!Core::System::GetInstance().IsPoweredOn() ||
             !Core::System::GetInstance().GPU().Renderer().Rasterizer()) {
-            return false;
+            return;
         }
 
-        // Disable immersive mode if the user stares down towards the lower panel
-        constexpr auto shouldDisableImmersiveMode1 = [](const XrPosef& headPose) {
-            return XrMath::Quatf::GetPitchInRadians(headPose.orientation) < -MATH_FLOAT_PI / 8.0f;
-        };
-        // Compare the distance between the head and the controllers to determine if either is near
-        // the head (test fails if no controllers are active)
-        constexpr auto shouldDisableImmersiveMode2 = [](const InputStateFrame& inputStateFrame) {
-            const float lengthLeft =
-                inputStateFrame.mIsHandActive[InputStateFrame::LEFT_CONTROLLER]
-                    ? XrMath::Vector3f::Length(
-                          gOpenXr->headLocation.pose.position -
-                          inputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
-                              .pose.position)
-                    : std::numeric_limits<float>::max();
-            const float lengthRight =
-                inputStateFrame.mIsHandActive[InputStateFrame::RIGHT_CONTROLLER]
-                    ? XrMath::Vector3f::Length(
-                          gOpenXr->headLocation.pose.position -
-                          inputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
-                              .pose.position)
-                    : std::numeric_limits<float>::max();
-            return std::min(lengthLeft, lengthRight) < 0.2;
-        };
+        XrVector4f transform[4] = {};
+        XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation, (float*)transform);
 
-        const bool shoudDisableImmersiveMode =
-            VRSettings::values.vr_immersive_mode == 0 ||
-            (VRSettings::values.vr_immersive_mode == 1 &&
-             shouldDisableImmersiveMode1(gOpenXr->headLocation.pose)) ||
-            (VRSettings::values.vr_immersive_mode >= 2 &&
-             shouldDisableImmersiveMode2(mInputStateFrame));
+        // Calculate the inverse
+        XrVector4f inv_transform[4];
+        XrMath::Matrixf::ToInverse(transform, inv_transform);
 
-        // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
-        if (shouldDisableImmersiveMode) {
-            assert(immersiveModeFactor == 1.0f || VRSettings::values.vr_immersive_mode != 0);
-            immersiveModeFactor = 1.0f;
-            DisableImmersiveMode();
-            return false;
-        } else {
-            XrVector4f transform[4] = {};
-            XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
-                                            (float*)transform);
+        XrQuaternionf invertedOrientation =
+            XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
+        XrVector3f position =
+            XrMath::Quatf::Rotate(invertedOrientation, gOpenXr->headLocation.pose.position);
 
-            // Calculate the inverse
-            XrVector4f inv_transform[4];
-            XrMath::Matrixf::ToInverse(transform, inv_transform);
+        const float gamePosScaler =
+            powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+            VRSettings::values.vr_factor_3d;
 
-            XrQuaternionf invertedOrientation =
-                XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
-            XrVector3f position =
-                XrMath::Quatf::Rotate(invertedOrientation, gOpenXr->headLocation.pose.position);
+        inv_transform[3].x = -position.x * gamePosScaler;
+        inv_transform[3].y = -position.y * gamePosScaler;
+        inv_transform[3].z = -position.z * gamePosScaler;
 
-            const float gamePosScaler =
-                powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
-                VRSettings::values.vr_factor_3d;
-
-            inv_transform[3].x = -position.x * gamePosScaler;
-            inv_transform[3].y = -position.y * gamePosScaler;
-            inv_transform[3].z = -position.z * gamePosScaler;
-
-            UpdateImmersiveMode(immersiveModeFactor, uoffset, gamePosScaler, inv_transform);
-            return true;
-        }
+        UpdateImmersiveMode(immersiveModeFactor, uoffset, gamePosScaler, inv_transform);
     }
 
     void UpdateImmersiveMode(const float immersiveModeFactor, const float uoffset,
@@ -1178,8 +1142,11 @@ private:
     }
 
     void DisableImmersiveMode() const {
-        Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-            1, 1.0f, -1, 0.f, (float*)XrMath::Matrixf::Identity);
+        if (Core::System::GetInstance().IsPoweredOn() &&
+            Core::System::GetInstance().GPU().Renderer().Rasterizer()) {
+            Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
+                1, 1.0f, -1, 0.f, (float*)XrMath::Matrixf::Identity);
+        }
     }
 
     uint64_t    mFrameIndex = 0;
@@ -1191,6 +1158,7 @@ private:
         LowerMenuType mLowerMenuType          = LowerMenuType::MAIN_MENU;
         int32_t       mNumPanelResets         = 0;
         bool          mIsHorizontalAxisLocked = true;
+        bool          mIsLowerMenuToggledOn   = true;
 
         bool mIsKeyboardActive       = false;
         bool mShouldShowErrorMessage = false;

@@ -125,4 +125,10 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="cancelling">Peruutetaan...</string>
     <string name="start">Käynnistä</string>
     <string name="vr_ribbon_menus_text_label">Valikot:</string>
+    <string name="header_instructions_text">Siirrä paneelia:</string>
+    <string name="vertical_header_text">Pystysuuntainen liike</string>
+    <string name="vertical_instruction_1_text">Paina ja pidä alatriggeriä painettuna kohdistimen ollessa paneelissa.</string>
+    <string name="vertical_instruction_2_text">Siirrä liikeohjainta ylös tai alas säätääksesi paneelin pystysuuntaista asentoa.</string>
+    <string name="depth_header_text">Syvyyden säätö</string>
+    <string name="depth_top_panel_instruction_text">(Ylin paneeli) Siirrä peukalotikkua eteenpäin syvemmälle laajentamiseksi tai vedä sitä taaksepäin lähemmäksi tuomiseksi.</string>
 </resources>

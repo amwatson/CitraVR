@@ -194,4 +194,10 @@
     <string name="cancelling">Avbryter...</string>
     <string name="start">Starte</string>
     <string name="vr_ribbon_menus_text_label">Menyer:</string>
+    <string name="header_instructions_text">For å flytte en panel:</string>
+    <string name="vertical_header_text">Vertikal bevegelse</string>
+    <string name="vertical_instruction_1_text">Trykk og hold nede indekstriggeren mens du retter mot panelet.</string>
+    <string name="vertical_instruction_2_text">Skyv bevegelseskontrolleren opp eller ned for å justere panelets vertikale posisjon.</string>
+    <string name="depth_header_text">Dybdejustering</string>
+    <string name="depth_top_panel_instruction_text">(Top Panel) Flytt tommelstikken framover for å dykke dypere eller dra den bakover for å bringe den nærmere.</string>
 </resources>

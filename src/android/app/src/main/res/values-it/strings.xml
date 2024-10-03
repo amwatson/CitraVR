@@ -279,4 +279,10 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="cancelling">Annullamento in corso...</string>
     <string name="start">Inizio</string>
     <string name="vr_ribbon_menus_text_label">Menu:</string>
+    <string name="header_instructions_text">Per spostare un pannello:</string>
+    <string name="vertical_header_text">Movimento Verticale</string>
+    <string name="vertical_instruction_1_text">Premere e tenere premuto il grilletto indice mentre punti il pannello.</string>
+    <string name="vertical_instruction_2_text">Scorri il controller di movimento verso l\'alto o verso il basso per regolare la posizione verticale del pannello.</string>
+    <string name="depth_header_text">Regolazione della profondità</string>
+    <string name="depth_top_panel_instruction_text">(Pannello superiore) Muovi il thumbstick in avanti per estenderlo più in profondità o tira indietro per avvicinarlo.</string>
 </resources>

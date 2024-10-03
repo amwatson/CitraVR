@@ -141,4 +141,10 @@
     <string name="cancelling">キャンセル中...</string>
     <string name="start">開始</string>
     <string name="vr_ribbon_menus_text_label">メニュー:</string>
+    <string name="header_instructions_text">パネルを移動する方法:</string>
+    <string name="vertical_header_text">垂直移動</string>
+    <string name="vertical_instruction_1_text">パネルをターゲットしたまま、インデックストリガーを押し続けてください。</string>
+    <string name="vertical_instruction_2_text">パネルの垂直位置を調整するために、モーションコントローラーを上下にスライドさせます。</string>
+    <string name="depth_header_text">深度調整</string>
+    <string name="depth_top_panel_instruction_text">(トップパネル) サムスティックを前に動かすとより深く延長され、後ろに引くと近づけます。</string>
     </resources>

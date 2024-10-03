@@ -332,4 +332,10 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="cancelling">Cancelando...</string>
     <string name="start">Iniciar</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>
+    <string name="header_instructions_text">Para Mover um Painel:</string>
+    <string name="vertical_header_text">Movimento Vertical</string>
+    <string name="vertical_instruction_1_text">Pressione e segure o gatilho indicador enquanto mira no painel.</string>
+    <string name="vertical_instruction_2_text">Deslize o controlador de movimento para cima ou para baixo para ajustar a posição vertical do painel.</string>
+    <string name="depth_header_text">Ajuste de Profundidade</string>
+    <string name="depth_top_panel_instruction_text">(Painel superior) Mova o polegar para a frente para estender mais ou puxe para trás para aproximar.</string>
 </resources>

@@ -661,4 +661,10 @@
     <string name="cancelling">取消中...</string>
     <string name="start">开始</string>
     <string name="vr_ribbon_menus_text_label">菜单:</string>
+    <string name="header_instructions_text">移动板块：</string>
+    <string name="vertical_header_text">垂直运动</string>
+    <string name="vertical_instruction_1_text">针对面板时按住食指扳机。</string>
+    <string name="vertical_instruction_2_text">滑动运动控制器向上或向下调整面板的垂直位置。</string>
+    <string name="depth_header_text">深度调整 </string>
+    <string name="depth_top_panel_instruction_text">(顶部面板) 将拇指杆向前移动，以延伸更深，或向后拉动以使其更加靠近。</string>
 </resources>

@@ -530,4 +530,10 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="cancelling">Abbruch...</string>
     <string name="start">Start</string>
     <string name="vr_ribbon_menus_text_label">Menüs:</string>
+    <string name="header_instructions_text">Um ein Panel zu verschieben:</string>
+    <string name="vertical_header_text">Vertikale Bewegung</string>
+    <string name="vertical_instruction_1_text">Drücken und halten Sie den Zeigefingerabzug, während Sie das Panel anvisieren.</string>
+    <string name="vertical_instruction_2_text">Bewegen Sie den Bewegungsregler nach oben oder unten, um die vertikale Position des Panels anzupassen.</string>
+    <string name="depth_header_text">Tiefenanpassung</string>
+    <string name="depth_top_panel_instruction_text">de</string>
 </resources>

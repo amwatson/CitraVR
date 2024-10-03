@@ -690,4 +690,10 @@
     <string name="vr_immersive_pos_game_scaler_title">Depth Factor Multiplier</string>
     <string name="vr_immersive_pos_game_scaler_description">Adjusts how much the depth slider affects the game camera (movement/separation), some games require smaller/larger values, so this multiplier adjusts how much movement the depth setting causes</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>
+    <string name="header_instructions_text">To Move a Panel:</string>
+    <string name="vertical_header_text">Vertical Movement</string>
+    <string name="vertical_instruction_1_text">Press and hold the index trigger while targeting the panel.</string>
+    <string name="vertical_instruction_2_text">Slide the motion controller up or down to adjust the panel\'s vertical position.</string>
+    <string name="depth_header_text">Depth Adjustment</string>
+    <string name="depth_top_panel_instruction_text">(Top Panel) Move the thumbstick forward to extend deeper or pull backward to bring it closer.</string>
 </resources>

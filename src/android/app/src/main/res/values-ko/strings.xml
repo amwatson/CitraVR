@@ -196,4 +196,10 @@
     <string name="cancelling">취소 중...</string>
     <string name="start">시작</string>
     <string name="vr_ribbon_menus_text_label">메뉴:</string>
+    <string name="header_instructions_text">패널을 이동시키려면:</string>
+    <string name="vertical_header_text">수직 이동</string>
+    <string name="vertical_instruction_1_text">패널을 향하면서 색인 트리거를 누른 채로 길게 누르세요.</string>
+    <string name="vertical_instruction_2_text">패널의 수직 위치를 조절하려면 모션 컨트롤러를 위로 또는 아래로 슬라이드하십시오.</string>
+    <string name="depth_header_text">깊이 조절 (Depth Adjustment)</string>
+    <string name="depth_top_panel_instruction_text">(상단 패널) 썸스틱을 앞으로 밀어서 더 깊게 연장하거나 뒤로 당겨서 더 가까이 가져오세요.</string>
 </resources>

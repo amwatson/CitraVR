@@ -662,4 +662,10 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="cancelling">Annulation...</string>
     <string name="start">Commencer</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>
+    <string name="header_instructions_text">Pour déplacer un panneau :</string>
+    <string name="vertical_header_text">Mouvement Vertical</string>
+    <string name="vertical_instruction_1_text">Appuyez et maintenez enfoncé le déclencheur index tout en ciblant le panneau.</string>
+    <string name="vertical_instruction_2_text">Déplacez le contrôleur de mouvement vers le haut ou vers le bas pour ajuster la position verticale du panneau.</string>
+    <string name="depth_header_text">Ajustement de la profondeur</string>
+    <string name="depth_top_panel_instruction_text">(Panneau supérieur) Déplacez le joystick vers l\'avant pour l\'étendre plus profondément ou tirez-le en arrière pour le rapprocher.</string>
 </resources>

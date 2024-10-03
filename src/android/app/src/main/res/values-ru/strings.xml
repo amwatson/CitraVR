@@ -663,4 +663,10 @@
     <string name="cancelling">Отмена...</string>
     <string name="start">Начать</string>
     <string name="vr_ribbon_menus_text_label">Меню:</string>
+    <string name="header_instructions_text">Для перемещения панели:</string>
+    <string name="vertical_header_text">Вертикальное движение</string>
+    <string name="vertical_instruction_1_text">Нажмите и удерживайте указательный триггер, нацеливаясь на панель.</string>
+    <string name="vertical_instruction_2_text">Передвиньте регулятор движения вверх или вниз, чтобы отрегулировать вертикальное положение панели.</string>
+    <string name="depth_header_text">ru: Регулировка глубины</string>
+    <string name="depth_top_panel_instruction_text">(Верхняя панель) Двигайте джойстик вперед, чтобы углубить или тяните назад, чтобы приблизить.</string>
 </resources>

@@ -45,7 +45,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         else if (menuTypeCurrent == MenuType.POSITION)
           VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
         else if (menuTypeCurrent == MenuType.STATS)
-          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
+          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 2)
   }
 
   fun isMenuBackgroundSelected(): Boolean {

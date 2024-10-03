@@ -452,7 +452,7 @@ private:
 
             if (showUIRibbon) { mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
             const bool showLowerPanel =
-                showUIRibbon && appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU;
+                showUIRibbon && appState.mLowerMenuType == LowerMenuType::MAIN_MENU;
             if (showLowerPanel) {
                 mGameSurfaceLayer->FrameLowerPanel(gOpenXr->mLocalSpace, layers, layerCount,
                                                    immersiveModeFactor);
@@ -813,7 +813,8 @@ private:
             const bool shouldPauseEmulation =
                 !newState.mHasFocus || newState.mShouldShowErrorMessage ||
                 newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU;
-            if (shouldPauseEmulation != mLastAppState.mIsEmulationPaused) {
+            if (shouldPauseEmulation != mLastAppState.mIsEmulationPaused ||
+                newState.mLowerMenuType != mLastAppState.mLowerMenuType) {
                 ALOGI("State change: Emulation paused: {} -> {} (F={}, E={}, MP={})",
                       mLastAppState.mIsEmulationPaused, shouldPauseEmulation, newState.mHasFocus,
                       newState.mShouldShowErrorMessage,

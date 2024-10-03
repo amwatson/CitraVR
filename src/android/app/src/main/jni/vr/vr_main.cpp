@@ -1078,92 +1078,96 @@ private:
     }
 
     bool UpdateImmersiveModeIfNeeded(float& immersiveModeFactor) const {
-        // Compare the distance between the head and the controllers to determine if either is near
-        // the head (test fails if no controllers are active)
+        // This block is for testing which uinform offset is needed
+        // for a given game to implement new super-immersive profiles if needed
+        static bool increase = false;
+        static int  uoffset  = -1;
         {
-            const float lengthLeft =
-                mInputStateFrame.mIsHandActive[InputStateFrame::LEFT_CONTROLLER]
-                    ? XrMath::Vector3f::Length(
-                          gOpenXr->headLocation.pose.position -
-                          mInputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
-                              .pose.position)
-                    : std::numeric_limits<float>::max();
-            const float lengthRight =
-                mInputStateFrame.mIsHandActive[InputStateFrame::RIGHT_CONTROLLER]
-                    ? XrMath::Vector3f::Length(
-                          gOpenXr->headLocation.pose.position -
-                          mInputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
-                              .pose.position)
-                    : std::numeric_limits<float>::max();
-            ;
-            const float length = std::min(lengthLeft, lengthRight);
-
-            // This block is for testing which uinform offset is needed
-            // for a given game to implement new super-immersive profiles if needed
-            static bool increase = false;
-            static int  uoffset  = -1;
-            {
-                if (VRSettings::values.vr_immersive_mode > 90) {
-                    if (mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER]
-                            .currentState) {
-                        if (increase) {
-                            ++uoffset;
-                            increase = false;
-                        }
-
-                        // There are 96 Vec4f; since we are applying 4 of them at a time we need to
-                        // loop
-                        //  after 92
-                        if (uoffset > 92) { uoffset = 0; }
-                    } else {
-                        increase = true;
+            if (VRSettings::values.vr_immersive_mode > 90) {
+                if (mInputStateFrame.mThumbrestTouchState[InputStateFrame::RIGHT_CONTROLLER]
+                        .currentState) {
+                    if (increase) {
+                        ++uoffset;
+                        increase = false;
                     }
-                }
-            }
 
-            // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
-            if (Core::System::GetInstance().IsPoweredOn() &&
-                Core::System::GetInstance().GPU().Renderer().Rasterizer()) {
-                if (VRSettings::values.vr_immersive_mode == 0 ||
-                    // If in normal immersive mode then look down for the lower panel to reveal
-                    // itself
-                    (VRSettings::values.vr_immersive_mode == 1 &&
-                     XrMath::Quatf::GetPitchInRadians(gOpenXr->headLocation.pose.orientation) <
-                         -MATH_FLOAT_PI / 8.0f) ||
-                    // If in "super immersive" mode then put controller next to head in order to
-                    // disable the mode temporarily
-                    (VRSettings::values.vr_immersive_mode >= 2 && length < 0.2)) {
-                    immersiveModeFactor = 1.0f;
-                    DisableImmersiveMode();
+                    // There are 96 Vec4f; since we are applying 4 of them at a time we need to
+                    // loop
+                    //  after 92
+                    if (uoffset > 92) { uoffset = 0; }
                 } else {
-                    XrVector4f transform[4] = {};
-                    XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
-                                                    (float*)transform);
-
-                    // Calculate the inverse
-                    XrVector4f inv_transform[4];
-                    XrMath::Matrixf::ToInverse(transform, inv_transform);
-
-                    XrQuaternionf invertedOrientation =
-                        XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
-                    XrVector3f position = XrMath::Quatf::Rotate(
-                        invertedOrientation, gOpenXr->headLocation.pose.position);
-
-                    const float gamePosScaler =
-                        powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
-                        VRSettings::values.vr_factor_3d;
-
-                    inv_transform[3].x = -position.x * gamePosScaler;
-                    inv_transform[3].y = -position.y * gamePosScaler;
-                    inv_transform[3].z = -position.z * gamePosScaler;
-
-                    UpdateImmersionMode(immersiveModeFactor, uoffset, gamePosScaler,
-                                                inv_transform);
-                    return true;
+                    increase = true;
                 }
             }
         }
-        return false;
+
+        if (!Core::System::GetInstance().IsPoweredOn() ||
+            !Core::System::GetInstance().GPU().Renderer().Rasterizer()) {
+            return false;
+        }
+
+        // Disable immersive mode if the user stares down towards the lower panel
+        constexpr auto shouldDisableImmersiveMode1 = [](const XrPosef& headPose) {
+            return XrMath::Quatf::GetPitchInRadians(headPose.orientation) < -MATH_FLOAT_PI / 8.0f;
+        };
+        // Compare the distance between the head and the controllers to determine if either is near
+        // the head (test fails if no controllers are active)
+        constexpr auto shouldDisableImmersiveMode2 = [](const InputStateFrame& inputStateFrame) {
+            const float lengthLeft =
+                inputStateFrame.mIsHandActive[InputStateFrame::LEFT_CONTROLLER]
+                    ? XrMath::Vector3f::Length(
+                          gOpenXr->headLocation.pose.position -
+                          inputStateFrame.mHandPositions[InputStateFrame::LEFT_CONTROLLER]
+                              .pose.position)
+                    : std::numeric_limits<float>::max();
+            const float lengthRight =
+                inputStateFrame.mIsHandActive[InputStateFrame::RIGHT_CONTROLLER]
+                    ? XrMath::Vector3f::Length(
+                          gOpenXr->headLocation.pose.position -
+                          inputStateFrame.mHandPositions[InputStateFrame::RIGHT_CONTROLLER]
+                              .pose.position)
+                    : std::numeric_limits<float>::max();
+            return std::min(lengthLeft, lengthRight) < 0.2;
+        };
+
+        const bool shoudDisableImmersiveMode =
+            VRSettings::values.vr_immersive_mode == 0 ||
+            (VRSettings::values.vr_immersive_mode == 1 &&
+             shouldDisableImmersiveMode1(gOpenXr->headLocation.pose)) ||
+            (VRSettings::values.vr_immersive_mode >= 2 &&
+             shouldDisableImmersiveMode2(mInputStateFrame));
+
+        // Push the HMD position through to the Rasterizer to pass on to the VS Uniform
+        if (shouldDisableImmersiveMode) {
+            assert(immersiveModeFactor == 1.0f || VRSettings::values.vr_immersive_mode != 0);
+            immersiveModeFactor = 1.0f;
+            DisableImmersiveMode();
+            return false;
+        } else {
+            XrVector4f transform[4] = {};
+            XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
+                                            (float*)transform);
+
+            // Calculate the inverse
+            XrVector4f inv_transform[4];
+            XrMath::Matrixf::ToInverse(transform, inv_transform);
+
+            XrQuaternionf invertedOrientation =
+                XrMath::Quatf::Inverted(gOpenXr->headLocation.pose.orientation);
+            XrVector3f position =
+                XrMath::Quatf::Rotate(invertedOrientation, gOpenXr->headLocation.pose.position);
+
+            const float gamePosScaler =
+                powf(10.f, VRSettings::values.vr_immersive_positional_game_scaler) *
+                VRSettings::values.vr_factor_3d;
+
+            inv_transform[3].x = -position.x * gamePosScaler;
+            inv_transform[3].y = -position.y * gamePosScaler;
+            inv_transform[3].z = -position.z * gamePosScaler;
+
+            UpdateImmersiveMode(immersiveModeFactor, uoffset, gamePosScaler, inv_transform);
+            return true;
+        }
     }
 
     void UpdateImmersiveMode(const float immersiveModeFactor, const float uoffset,

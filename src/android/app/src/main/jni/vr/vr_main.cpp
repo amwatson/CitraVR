@@ -410,8 +410,8 @@ private:
         //////////////////////////////////////////////////
 
         // enable toggle when menu is set to main. Otherwise, always on (super immersive disabled).
-        const bool showUIRibbon =
-            appState.mLowerMenuType != LowerMenuType::MAIN_MENU || appState.mIsLowerMenuToggledOn;
+        const bool showUIRibbon = appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ||
+                                  appState.mIsLowerMenuToggledOn;
 
         float      immersiveModeFactor    = (VRSettings::values.vr_immersive_mode < 2)
                                                 ? immersiveScaleFactor[VRSettings::values.vr_immersive_mode]
@@ -452,7 +452,7 @@ private:
 
             if (showUIRibbon) { mRibbonLayer->Frame(gOpenXr->mLocalSpace, layers, layerCount); }
             const bool showLowerPanel =
-                showUIRibbon && appState.mLowerMenuType == LowerMenuType::MAIN_MENU;
+                showUIRibbon && appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU;
             if (showLowerPanel) {
                 mGameSurfaceLayer->FrameLowerPanel(gOpenXr->mLocalSpace, layers, layerCount,
                                                    immersiveModeFactor);
@@ -686,7 +686,7 @@ private:
                 if (!shouldRenderCursor && showLowerPanel) {
                     shouldRenderCursor = mGameSurfaceLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
-                    if (appState.mLowerMenuType == LowerMenuType::MAIN_MENU) {
+                    if (appState.mLowerMenuType != LowerMenuType::POSITIONAL_MENU) {
                         SendTriggerStateToWindow(jni, mActivityObject, mSendClickToWindowMethodID,
                                                  triggerState, cursorPos2d);
                     }
@@ -819,6 +819,7 @@ private:
                       newState.mShouldShowErrorMessage,
                       newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? "P"
                       : newState.mLowerMenuType == LowerMenuType::MAIN_MENU     ? "M"
+                      : newState.mLowerMenuType == LowerMenuType::STATS_MENU    ? "S"
                                                                                 : "U");
                 if (shouldPauseEmulation) {
                     PauseEmulation(jni);

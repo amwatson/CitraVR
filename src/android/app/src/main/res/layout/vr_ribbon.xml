@@ -86,7 +86,6 @@
                         android:layout_height="wrap_content"
                         android:button="@null"
                         android:clipToOutline="true"
-                        android:visibility="gone"
                         android:text="Stats"
                         android:layout_marginBottom="20dp"
                         />
@@ -107,6 +106,10 @@
 
                 <include
                     layout="@layout/vr_ribbon_position_panel"
+                    android:visibility="gone" />
+
+                <include
+                    layout="@layout/vr_ribbon_stats_panel"
                     android:visibility="gone" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>

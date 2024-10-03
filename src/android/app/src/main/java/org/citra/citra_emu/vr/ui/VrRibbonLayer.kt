@@ -16,7 +16,8 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
 
   enum class MenuType(val resId: Int, buttonId: Int) {
     MAIN(R.id.main_panel, R.id.button_menu_main),
-    POSITION(R.id.position_panel, R.id.button_menu_positional)
+    POSITION(R.id.position_panel, R.id.button_menu_positional),
+    STATS(R.id.stats_panel, R.id.button_menu_stats)
   }
 
   private var menuTypeCurrent: MenuType = MenuType.MAIN
@@ -26,6 +27,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         initializeLeftMenu()
         initializeMainPanel()
         initializePositionalPanel()
+      initializeStatsPanel()
     }
 
     // Used in positional menu to know when background is selected, but not the buttons,
@@ -42,6 +44,8 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
         else if (menuTypeCurrent == MenuType.POSITION)
           VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
+        else if (menuTypeCurrent == MenuType.STATS)
+          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
   }
 
   fun isMenuBackgroundSelected(): Boolean {
@@ -61,6 +65,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
                 when (btn.id) {
                   R.id.button_menu_main -> switchMenus(MenuType.MAIN)
                     R.id.button_menu_positional -> switchMenus(MenuType.POSITION)
+                  R.id.button_menu_stats -> switchMenus(MenuType.STATS)
                 }
             } else {
               // This button is not checked, revert to the default background
@@ -70,6 +75,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
       }
     // Set the first button as checked
     radioGroup?.check(R.id.button_menu_main)
+  }
+
+  private fun initializeStatsPanel() {
+
   }
 
   private fun initializePositionalPanel() {

@@ -15,7 +15,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <cstdint>
 
-enum LowerMenuType : uint16_t { MAIN_MENU = 0, POSITIONAL_MENU = 1 };
+enum LowerMenuType : uint16_t { MAIN_MENU = 0, POSITIONAL_MENU = 1, STATS_MENU = 2 };
 
 /**
  * Message class

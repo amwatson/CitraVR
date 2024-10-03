@@ -66,7 +66,7 @@
                         android:button="@null"
                         android:clipToOutline="true"
                         android:text="Main"
-                        android:layout_marginBottom="15dp"
+                        android:layout_marginBottom="20dp"
                         />
                     <RadioButton
                         android:id="@+id/button_menu_positional"
@@ -88,7 +88,7 @@
                         android:clipToOutline="true"
                         android:visibility="gone"
                         android:text="Stats"
-                        android:layout_marginBottom="15dp"
+                        android:layout_marginBottom="20dp"
                         />
                 </RadioGroup>
             </LinearLayout>

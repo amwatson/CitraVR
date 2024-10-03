@@ -1133,11 +1133,8 @@ private:
                     // If in "super immersive" mode then put controller next to head in order to
                     // disable the mode temporarily
                     (VRSettings::values.vr_immersive_mode >= 2 && length < 0.2)) {
-                    XrVector4f identity[4] = {};
-                    XrMath::Matrixf::Identity(identity);
                     immersiveModeFactor = 1.0f;
-                    Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-                        1, immersiveModeFactor, -1, 0.f, (float*)identity);
+                    DisableImmersiveMode();
                 } else {
                     XrVector4f transform[4] = {};
                     XrMath::Quatf::ToRotationMatrix(gOpenXr->headLocation.pose.orientation,
@@ -1160,14 +1157,25 @@ private:
                     inv_transform[3].y = -position.y * gamePosScaler;
                     inv_transform[3].z = -position.z * gamePosScaler;
 
-                    Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
-                        VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset,
-                        -gamePosScaler, (float*)inv_transform);
+                    UpdateImmersionMode(immersiveModeFactor, uoffset, gamePosScaler,
+                                                inv_transform);
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    void UpdateImmersiveMode(const float immersiveModeFactor, const float uoffset,
+                             const float gamePosScaler, const XrVector4f* inv_transform) const {
+        Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
+            VRSettings::values.vr_immersive_mode, immersiveModeFactor, uoffset, -gamePosScaler,
+            (float*)inv_transform);
+    }
+
+    void DisableImmersiveMode() const {
+        Core::System::GetInstance().GPU().Renderer().Rasterizer()->SetVRData(
+            1, 1.0f, -1, 0.f, (float*)XrMath::Matrixf::Identity);
     }
 
     uint64_t    mFrameIndex = 0;

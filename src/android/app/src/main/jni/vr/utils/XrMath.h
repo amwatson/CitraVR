@@ -98,12 +98,8 @@ public:
 
 class Matrixf {
 public:
-    static void Identity(XrVector4f mat[4]) {
-        mat[0] = {1.f, 0.f, 0.f, 0.f};
-        mat[1] = {0.f, 1.f, 0.f, 0.f};
-        mat[2] = {0.f, 0.f, 1.f, 0.f};
-        mat[3] = {0.f, 0.f, 0.f, 1.f};
-    }
+    static constexpr XrVector4f Identity[4] = {
+        {1.f, 0.f, 0.f, 0.f}, {0.f, 1.f, 0.f, 0.f}, {0.f, 0.f, 1.f, 0.f}, {0.f, 0.f, 0.f, 1.f}};
 
     static XrVector4f XrVector4f_Multiply(const XrVector4f mat[4], const XrVector4f& v) {
         XrVector4f out;

@@ -66,6 +66,7 @@
                     android:drawableStart="@drawable/ic_touch_app"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
+                    android:gravity="center_vertical"
                     android:text="Press and hold the index trigger while targeting the panel."
                     android:textColor="@color/citra_onPrimary"
                     android:textSize="18sp" />
@@ -77,6 +78,7 @@
                     android:drawableStart="@drawable/ic_swap_vert"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
+                    android:gravity="center_vertical"
                     android:text="Slide the motion controller up or down to adjust the panel's vertical position."
                     android:textColor="@color/citra_onPrimary"
                     android:textSize="18sp" />
@@ -88,24 +90,47 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="8dp"
-                android:text="Depth Adjustment (Top panel only)"
+                android:text="Depth Adjustment"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 android:textColor="@color/citra_onPrimary"
                 android:textSize="18sp" />
 
-            <!-- Adjust panel depth -->
+            <!-- Top Panel Depth Adjustment -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:paddingStart="18dp">
 
+                <!-- Top panel adjustment instruction -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/ic_vr_adjust_depth"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
-                    android:text="Move the thumbstick forward to extend deeper or pull backward to bring closer."
+                    android:gravity="center_vertical"
+                    android:text="(Top Panel) Move the thumbstick forward to extend deeper or pull backward to bring it closer."
+                    android:textColor="@color/citra_onPrimary"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <!-- Lower Panel Depth Adjustment Section -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="18dp">
+
+                <!-- Lower panel adjustment instruction -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_rotate_90_degrees_ccw"
+                    android:drawablePadding="8dp"
+                    android:padding="8dp"
+                    android:gravity="center_vertical"
+                    android:text="(Lower Panel) Move the thumbstick to adjust the panel angle towards or away from you."
                     android:textColor="@color/citra_onPrimary"
                     android:textSize="18sp" />
             </LinearLayout>
@@ -147,6 +172,7 @@
                         android:layout_height="wrap_content"
                         android:drawablePadding="8dp"
                         android:padding="8dp"
+                        android:gravity="center_vertical"
                         android:text="Use the toggle to enable or disable horizontal movement."
                         android:textColor="@color/citra_onPrimary"
                         android:textSize="18sp" />
@@ -159,6 +185,7 @@
                     android:drawableStart="@drawable/ic_swap_horiz"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
+                    android:gravity="center_vertical"
                     android:text="With horizontal movement enabled, slide left or right to adjust horizontally."
                     android:textColor="@color/citra_onPrimary"
                     android:textSize="18sp" />
@@ -192,6 +219,7 @@
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
                     android:padding="8dp"
+                    android:gravity="center_vertical"
                     android:text="Press this button to reset position."
                     android:textColor="@color/citra_onPrimary"
                     android:textSize="18sp" />

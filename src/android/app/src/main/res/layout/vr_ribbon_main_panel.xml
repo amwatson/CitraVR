@@ -12,6 +12,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- toggle to "visible" to check actual vr panel placement with 'correct' placement' -->
     <FrameLayout
         android:id="@+id/lowerPanelPlaceHolder"
         android:layout_width="900dp"
@@ -20,6 +21,7 @@
         android:background="#093A60"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:visibility="invisible"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout

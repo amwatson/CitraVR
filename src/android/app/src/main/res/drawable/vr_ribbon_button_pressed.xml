@@ -1,11 +1,19 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Border layer -->
     <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#A0FFFFFF" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <item android:left="2dp" android:right="2dp" android:top="2dp" android:bottom="2dp">
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
                 android:endColor="#8034515E"
                 android:startColor="#B334515E" />
-            <corners android:radius="4dp" />
+            <corners android:radius="6dp" />
         </shape>
     </item>
 </layer-list>

@@ -36,12 +36,22 @@
             <LinearLayout
                 android:layout_width="100dp"
                 android:layout_height="400dp"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_marginEnd="30dp"
                 app:layout_constraintBottom_toBottomOf="@+id/frame"
                 app:layout_constraintEnd_toStartOf="@+id/panelHolder"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:text="Menus:"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:textColor="@color/citra_onPrimary"
+                    android:textSize="14sp" />
 
                 <RadioGroup
                     android:id="@+id/vertical_tab"
@@ -55,7 +65,9 @@
                         android:layout_height="wrap_content"
                         android:button="@null"
                         android:clipToOutline="true"
-                        android:text="Main" />
+                        android:text="Main"
+                        android:layout_marginBottom="10dp"
+                        />
                     <RadioButton
                         android:id="@+id/button_menu_positional"
                         style="@style/VrRibbonButtonStyle"
@@ -63,7 +75,9 @@
                         android:layout_height="wrap_content"
                         android:button="@null"
                         android:clipToOutline="true"
-                        android:text="Position" />
+                        android:text="Position"
+                        android:layout_marginBottom="10dp"
+                        />
 
                     <RadioButton
                         android:id="@+id/button_menu_stats"
@@ -72,7 +86,10 @@
                         android:layout_height="wrap_content"
                         android:button="@null"
                         android:clipToOutline="true"
-                        android:text="Stats" />
+                        android:visibility="gone"
+                        android:text="Stats"
+                        android:layout_marginBottom="10dp"
+                        />
                 </RadioGroup>
             </LinearLayout>
 

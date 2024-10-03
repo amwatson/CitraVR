@@ -200,4 +200,11 @@
     <string name="vertical_instruction_2_text">Skyv bevegelseskontrolleren opp eller ned for å justere panelets vertikale posisjon.</string>
     <string name="depth_header_text">Dybdejustering</string>
     <string name="depth_top_panel_instruction_text">(Top Panel) Flytt tommelstikken framover for å dykke dypere eller dra den bakover for å bringe den nærmere.</string>
+    <string name="depth_lower_panel_instruction_text">(Nedre panel) Flytt tommelstikken for å justere panelvinkelen mot deg eller vekk fra deg.</string>
+    <string name="horizontal_instruction_toggle_text">Bruk vippebryteren for å aktivere eller deaktivere horisontal bevegelse.</string>
+    <string name="horizontal_instruction_slide_text">Med horisontal bevegelse aktivert, skyv til venstre eller høyre for å justere horisontalt.</string>
+    <string name="reset_button_text">Tilbakestill</string>
+    <string name="reset_header_text">Nullstill</string>
+    <string name="reset_instruction_text">Trykk på denne knappen for å tilbakestille posisjonen.</string>
+    <string name="horizontal_header_text">Horisontal bevegelse</string>
 </resources>

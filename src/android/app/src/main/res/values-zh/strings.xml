@@ -667,4 +667,11 @@
     <string name="vertical_instruction_2_text">滑动运动控制器向上或向下调整面板的垂直位置。</string>
     <string name="depth_header_text">深度调整 </string>
     <string name="depth_top_panel_instruction_text">(顶部面板) 将拇指杆向前移动，以延伸更深，或向后拉动以使其更加靠近。</string>
+    <string name="depth_lower_panel_instruction_text">(下部面板) 将拇指杆移动以调整面板角度朝向或远离您。</string>
+    <string name="horizontal_instruction_toggle_text">使用切换按钮来启用或禁用水平移动。</string>
+    <string name="horizontal_instruction_slide_text">带有水平移动功能时，滑动左右来调整水平位置。</string>
+    <string name="reset_button_text">重置</string>
+    <string name="reset_header_text">重置</string>
+    <string name="reset_instruction_text">按下这个按钮来重置位置。</string>
+    <string name="horizontal_header_text">水平移动</string>
 </resources>

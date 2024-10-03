@@ -147,4 +147,11 @@
     <string name="vertical_instruction_2_text">パネルの垂直位置を調整するために、モーションコントローラーを上下にスライドさせます。</string>
     <string name="depth_header_text">深度調整</string>
     <string name="depth_top_panel_instruction_text">(トップパネル) サムスティックを前に動かすとより深く延長され、後ろに引くと近づけます。</string>
+    <string name="depth_lower_panel_instruction_text">(下パネル) サムスティックを動かして、パネルの角度を自分に向けたり、自分から遠ざけたりします。</string>
+    <string name="horizontal_instruction_toggle_text">水平移動を有効または無効にするためにトグルを使用してください。</string>
+    <string name="horizontal_instruction_slide_text">横方向の移動が有効になっている場合、左右にスライドして水平位置を調整します。</string>
+    <string name="reset_button_text">リセット</string>
+    <string name="reset_header_text">リセット</string>
+    <string name="reset_instruction_text">このボタンを押して位置をリセットします。</string>
+    <string name="horizontal_header_text">水平移動</string>
     </resources>

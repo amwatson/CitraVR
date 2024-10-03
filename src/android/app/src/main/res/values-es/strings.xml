@@ -669,4 +669,11 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vertical_instruction_2_text">Mueva el controlador de movimiento hacia arriba o hacia abajo para ajustar la posición vertical del panel.</string>
     <string name="depth_header_text">Ajuste de Profundidad</string>
     <string name="depth_top_panel_instruction_text">(Panel superior) Mueve el joystick hacia adelante para extender más o tira hacia atrás para acercarlo.</string>
+    <string name="depth_lower_panel_instruction_text">(Panel Inferior) Mueva el stick hacia el pulgar para ajustar el ángulo del panel hacia ti o lejos de ti.</string>
+    <string name="horizontal_instruction_toggle_text">Usa el interruptor para habilitar o deshabilitar el movimiento horizontal.</string>
+    <string name="horizontal_instruction_slide_text">Con el movimiento horizontal activado, deslízate hacia la izquierda o hacia la derecha para ajustar horizontalmente.</string>
+    <string name="reset_button_text">Reiniciar</string>
+    <string name="reset_header_text">Reinicio</string>
+    <string name="reset_instruction_text">Presione este botón para restablecer la posición.</string>
+    <string name="horizontal_header_text">Movimiento Horizontal</string>
 </resources>

@@ -285,4 +285,11 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vertical_instruction_2_text">Scorri il controller di movimento verso l\'alto o verso il basso per regolare la posizione verticale del pannello.</string>
     <string name="depth_header_text">Regolazione della profondità</string>
     <string name="depth_top_panel_instruction_text">(Pannello superiore) Muovi il thumbstick in avanti per estenderlo più in profondità o tira indietro per avvicinarlo.</string>
+    <string name="depth_lower_panel_instruction_text">(Panel inferiore) Muovi il joystick per regolare l\'angolo del pannello verso di te o lontano da te.</string>
+    <string name="horizontal_instruction_toggle_text">Usa il pulsante per abilitare o disabilitare il movimento orizzontale.</string>
+    <string name="horizontal_instruction_slide_text">Con il movimento orizzontale abilitato, scorri verso sinistra o verso destra per regolare in orizzontale.</string>
+    <string name="reset_button_text">Ripristina</string>
+    <string name="reset_header_text">Ripristino</string>
+    <string name="reset_instruction_text">Premere questo pulsante per ripristinare la posizione.</string>
+    <string name="horizontal_header_text">Movimento orizzontale</string>
 </resources>

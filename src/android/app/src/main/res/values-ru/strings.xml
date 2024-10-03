@@ -669,4 +669,11 @@
     <string name="vertical_instruction_2_text">Передвиньте регулятор движения вверх или вниз, чтобы отрегулировать вертикальное положение панели.</string>
     <string name="depth_header_text">ru: Регулировка глубины</string>
     <string name="depth_top_panel_instruction_text">(Верхняя панель) Двигайте джойстик вперед, чтобы углубить или тяните назад, чтобы приблизить.</string>
+    <string name="depth_lower_panel_instruction_text">(Niжniй panel\') Двигайте джойстик, чтобы отрегулировать угол панели к себе или от себя.</string>
+    <string name="horizontal_instruction_toggle_text">Используйте переменный дубликат для включения или отключения горизонтального движения.</string>
+    <string name="horizontal_instruction_slide_text">С включенным горизонтальным движением переместите палец влево или вправо, чтобы отрегулировать горизонтальное положение.</string>
+    <string name="reset_button_text">Сброс</string>
+    <string name="reset_header_text">Сброс</string>
+    <string name="reset_instruction_text">Нажмите эту кнопку, чтобы сбросить позицию.</string>
+    <string name="horizontal_header_text">Горизонтальное движение</string>
 </resources>

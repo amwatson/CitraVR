@@ -202,4 +202,11 @@
     <string name="vertical_instruction_2_text">패널의 수직 위치를 조절하려면 모션 컨트롤러를 위로 또는 아래로 슬라이드하십시오.</string>
     <string name="depth_header_text">깊이 조절 (Depth Adjustment)</string>
     <string name="depth_top_panel_instruction_text">(상단 패널) 썸스틱을 앞으로 밀어서 더 깊게 연장하거나 뒤로 당겨서 더 가까이 가져오세요.</string>
+    <string name="depth_lower_panel_instruction_text">밑 패널) 패널 각도를 조정하려면 썸스틱을 움직이십시오.</string>
+    <string name="horizontal_instruction_toggle_text">토글을 사용하여 수평 이동을 활성화 또는 비활성화하세요. (Toggle 을 사용하여 수평 이동을 활성화 또는 비활성화하세요.)</string>
+    <string name="horizontal_instruction_slide_text">수평 이동이 활성화되어 있으면 왼쪽이나 오른쪽으로 슬라이드하여 수평을 조절하세요.</string>
+    <string name="reset_button_text">재설정</string>
+    <string name="reset_header_text">재설정</string>
+    <string name="reset_instruction_text">이 버튼을 눌러 위치를 재설정하세요.</string>
+    <string name="horizontal_header_text">수평 이동</string>
 </resources>

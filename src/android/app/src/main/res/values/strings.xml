@@ -696,4 +696,11 @@
     <string name="vertical_instruction_2_text">Slide the motion controller up or down to adjust the panel\'s vertical position.</string>
     <string name="depth_header_text">Depth Adjustment</string>
     <string name="depth_top_panel_instruction_text">(Top Panel) Move the thumbstick forward to extend deeper or pull backward to bring it closer.</string>
+    <string name="depth_lower_panel_instruction_text">(Lower Panel) Move the thumbstick to adjust the panel angle towards or away from you.</string>
+    <string name="horizontal_instruction_toggle_text">Use the toggle to enable or disable horizontal movement.</string>
+    <string name="horizontal_instruction_slide_text">With horizontal movement enabled, slide left or right to adjust horizontally.</string>
+    <string name="reset_button_text">Reset</string>
+    <string name="reset_header_text">Reset</string>
+    <string name="reset_instruction_text">Press this button to reset position.</string>
+    <string name="horizontal_header_text">Horizontal Movement</string>
 </resources>

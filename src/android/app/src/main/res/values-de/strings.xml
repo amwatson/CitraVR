@@ -536,4 +536,11 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vertical_instruction_2_text">Bewegen Sie den Bewegungsregler nach oben oder unten, um die vertikale Position des Panels anzupassen.</string>
     <string name="depth_header_text">Tiefenanpassung</string>
     <string name="depth_top_panel_instruction_text">de</string>
+    <string name="depth_lower_panel_instruction_text">(Unteres Panel) Bewegen Sie den Daumenstick, um den Panelwinkel in Richtung oder von Ihnen weg anzupassen.</string>
+    <string name="horizontal_instruction_toggle_text">Verwenden Sie die Umschalttaste, um die horizontale Bewegung zu aktivieren oder zu deaktivieren.</string>
+    <string name="horizontal_instruction_slide_text">Mit aktivierter horizontaler Bewegung kannst du nach links oder rechts gleiten, um horizontal anzupassen.</string>
+    <string name="reset_button_text">Zurücksetzen</string>
+    <string name="reset_header_text">Zurücksetzen</string>
+    <string name="reset_instruction_text">Drücken Sie diese Taste, um die Position zurückzusetzen.</string>
+    <string name="horizontal_header_text">Horizontale Bewegung</string>
 </resources>

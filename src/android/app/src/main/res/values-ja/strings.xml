@@ -140,4 +140,5 @@
     <string name="vr_immersive_pos_game_scaler_description">ゲームカメラに左右、上下の移動がどれだけ影響するかを調整します。一部のゲームではより大きな値が必要になる場合があるため、これは位置移動係数を乗算します。</string>
     <string name="cancelling">キャンセル中...</string>
     <string name="start">開始</string>
+    <string name="vr_ribbon_menus_text_label">メニュー:</string>
     </resources>

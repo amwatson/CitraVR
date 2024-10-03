@@ -278,4 +278,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_immersive_pos_game_scaler_description">Regola quanto i movimenti sinistra/destra/su/giù influiscono sulla telecamera di gioco; alcuni giochi richiedono valori più elevati, quindi questo moltiplica il fattore di movimento posizionale.</string>
     <string name="cancelling">Annullamento in corso...</string>
     <string name="start">Inizio</string>
+    <string name="vr_ribbon_menus_text_label">Menu:</string>
 </resources>

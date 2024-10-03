@@ -195,4 +195,5 @@
     <string name="vr_immersive_pos_game_scaler_description">게임 카메라에 좌/우/위/아래로 이동이 얼마나 영향을 미치는지 조정합니다. 일부 게임에서는 더 큰 값이 필요할 수 있으므로 이 설정은 위치 이동 계수에 곱해집니다.</string>
     <string name="cancelling">취소 중...</string>
     <string name="start">시작</string>
+    <string name="vr_ribbon_menus_text_label">메뉴:</string>
 </resources>

@@ -660,4 +660,5 @@
     <string name="vr_immersive_pos_game_scaler_description">调整左/右/上/下的运动对游戏摄像机的影响程度，某些游戏需要更大的值，因此这个设置会将位置运动因子乘以一个标量。</string>
     <string name="cancelling">取消中...</string>
     <string name="start">开始</string>
+    <string name="vr_ribbon_menus_text_label">菜单:</string>
 </resources>

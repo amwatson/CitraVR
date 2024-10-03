@@ -662,4 +662,5 @@
     <string name="vr_immersive_pos_game_scaler_description">Настройка определяет, насколько движение влево/вправо/вверх/вниз влияет на камеру игры; в некоторых играх требуются большие значения, поэтому это умножает фактор перемещения положения.</string>
     <string name="cancelling">Отмена...</string>
     <string name="start">Начать</string>
+    <string name="vr_ribbon_menus_text_label">Меню:</string>
 </resources>

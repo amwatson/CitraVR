@@ -662,4 +662,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_immersive_pos_game_scaler_description">Ajusta cuánto afecta el movimiento izquierda/derecha/arriba/abajo a la cámara del juego, algunos juegos requieren valores más grandes, por lo que esto multiplica el Factor de Movimiento Posicional.</string>
     <string name="cancelling">Cancelando...</string>
     <string name="start">Comienzo</string>
+    <string name="vr_ribbon_menus_text_label">Menús:</string>
 </resources>

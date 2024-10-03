@@ -689,4 +689,5 @@
     <string name="vr_immersive_eye_indicator_description">[Leave blank for auto-detect] CAUTION: Sets the register and index offset used for identifying which eye is being drawn e.g 87,2</string>
     <string name="vr_immersive_pos_game_scaler_title">Depth Factor Multiplier</string>
     <string name="vr_immersive_pos_game_scaler_description">Adjusts how much the depth slider affects the game camera (movement/separation), some games require smaller/larger values, so this multiplier adjusts how much movement the depth setting causes</string>
+    <string name="vr_ribbon_menus_text_label">Menus:</string>
 </resources>

@@ -1,8 +1,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Border layer -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#A0FFFFFF" />
+            <solid android:color="#FFE6C5C7" />
             <corners android:radius="8dp" />
         </shape>
     </item>
@@ -11,8 +10,9 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:endColor="#8034515E"
-                android:startColor="#B334515E" />
+                android:endColor="#FFEBD4D7"
+            android:startColor="#FFF7C8CA"
+            />
             <corners android:radius="6dp" />
         </shape>
     </item>

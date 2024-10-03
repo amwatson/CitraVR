@@ -26,7 +26,7 @@
             android:layout_width="1300dp"
             android:layout_height="wrap_content"
             android:background="@drawable/vr_menu_background"
-            android:backgroundTint="#011627"
+            android:backgroundTint="#0C1A27"
             android:padding="50dp"
             android:clickable="true"
             android:focusable="true"
@@ -51,7 +51,7 @@
                     android:textAlignment="center"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="@color/citra_onPrimary"
-                    android:textSize="14sp" />
+                    android:textSize="24sp" />
 
                 <RadioGroup
                     android:id="@+id/vertical_tab"
@@ -66,7 +66,7 @@
                         android:button="@null"
                         android:clipToOutline="true"
                         android:text="Main"
-                        android:layout_marginBottom="10dp"
+                        android:layout_marginBottom="15dp"
                         />
                     <RadioButton
                         android:id="@+id/button_menu_positional"
@@ -76,7 +76,7 @@
                         android:button="@null"
                         android:clipToOutline="true"
                         android:text="Position"
-                        android:layout_marginBottom="10dp"
+                        android:layout_marginBottom="15dp"
                         />
 
                     <RadioButton
@@ -88,7 +88,7 @@
                         android:clipToOutline="true"
                         android:visibility="gone"
                         android:text="Stats"
-                        android:layout_marginBottom="10dp"
+                        android:layout_marginBottom="15dp"
                         />
                 </RadioGroup>
             </LinearLayout>

@@ -122,19 +122,26 @@ Panel CreateTopPanel(const XrVector3f& position, const float surfaceWidth,
  *
  *    Note: all values are chosen to be aesthetically pleasing and can be modified.
  */
-Panel CreateLowerPanelFromTopPanel(const Panel& topPanel, const float resolutionFactor) {
+Panel CreateLowerPanelFromTopPanel(const Panel& topPanel, const float resolutionFactor,
+                                   const bool isImmersiveModeEnabled) {
     // Note: the fact that two constants are 0.75 is purely coincidental.
-    constexpr float kDefaultLowerPanelScaleFactor = 0.75f * 0.75f;
-    constexpr float kLowerPanelYOffsetInMeters    = -0.75f;
-    constexpr float kLowerPanelZOffsetInMeters    = 0.5f;
+    constexpr float kDefaultLowerPanelScaleFactor     = 0.75f * 0.75f;
+    constexpr float kDefaultLowerPanelYOffsetInMeters = -0.75f;
+    constexpr float kDefaultLowerPanelZOffsetInMeters = 0.5f;
+
+    constexpr float kImmersiveLowerPanelYOffsetInMeters = -1.0f;
+    constexpr float kImmersiveLowerPanelZOffsetInMeters = 0.0f;
+
     // Pitch the lower panel away from the viewer 45 degrees
     const float cropHoriz = 90.0f * resolutionFactor;
 
     XrPosef lowerPanelFromWorld = topPanel.mPanelFromWorld;
     lowerPanelFromWorld.orientation =
         XrMath::Quatf::FromEuler(kInitialLowerPanelPitchInRadians, 0, 0);
-    lowerPanelFromWorld.position.y += kLowerPanelYOffsetInMeters;
-    lowerPanelFromWorld.position.z += kLowerPanelZOffsetInMeters;
+    lowerPanelFromWorld.position.y += isImmersiveModeEnabled ? kImmersiveLowerPanelYOffsetInMeters
+                                                             : kDefaultLowerPanelYOffsetInMeters;
+    lowerPanelFromWorld.position.z += isImmersiveModeEnabled ? kImmersiveLowerPanelZOffsetInMeters
+                                                             : kDefaultLowerPanelZOffsetInMeters;
     return Panel(lowerPanelFromWorld, topPanel.mWidth, topPanel.mHeight,
                  kDefaultLowerPanelScaleFactor, XrVector2f{cropHoriz / 2.0f, 0.0f},
                  XrVector2f{topPanel.mWidth - cropHoriz / 2.0f, topPanel.mHeight});
@@ -246,7 +253,8 @@ GameSurfaceLayer::GameSurfaceLayer(const XrVector3f&& position, JNIEnv* env, job
     , mTopPanel(CreateTopPanel(position,
                                (SURFACE_WIDTH_UNSCALED * mResolutionFactor),
                                (SURFACE_HEIGHT_UNSCALED * mResolutionFactor)))
-    , mLowerPanel(CreateLowerPanelFromTopPanel(mTopPanel, mResolutionFactor))
+    , mLowerPanel(CreateLowerPanelFromTopPanel(mTopPanel, mResolutionFactor,
+                                               VRSettings::values.vr_immersive_mode))
     , mImmersiveMode(VRSettings::values.vr_immersive_mode)
     , mEnv(env)
 
@@ -486,11 +494,6 @@ void GameSurfaceLayer::ResetPanelPositions() {
 // based on thumbstick, modify the depth of the top panel
 // Next error code: -2
 int32_t GameSurfaceLayer::Init(const XrSession& session, const jobject activityObject) {
-    if (mImmersiveMode > 0) {
-        ALOGI("Using VR immersive mode {}", mImmersiveMode);
-        mLowerPanel.mPanelFromWorld.position.z = mTopPanel.mPanelFromWorld.position.z;
-        mLowerPanel.mPanelFromWorld.position.y = -1.0f;
-    }
     static const std::string gameSurfaceClassName = "org/citra/citra_emu/vr/GameSurfaceLayer";
     mVrGameSurfaceClass =
         JniUtils::GetGlobalClassReference(mEnv, activityObject, gameSurfaceClassName.c_str());

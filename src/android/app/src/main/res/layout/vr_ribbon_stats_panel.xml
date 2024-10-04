@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/stats_panel"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:theme="@style/Theme.Material3.DayNight">
 
     <FrameLayout
         android:layout_width="1000dp"
@@ -12,60 +14,322 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- toggle to "visible" to check actual vr panel placement with 'correct' placement' -->
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/lowerPanelPlaceHolder"
         android:layout_width="900dp"
         android:layout_height="675dp"
+        android:layout_gravity="center"
         android:layout_marginTop="18dp"
-        android:background="#093A60"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:visibility="invisible"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <LinearLayout
-        android:layout_width="100dp"
-        android:layout_height="400dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="50dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@+id/lowerPanelPlaceHolder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/lowerPanelPlaceHolder"
-        app:layout_constraintTop_toTopOf="@+id/lowerPanelPlaceHolder">
-
-        <Button
-            android:id="@+id/buttonSelect"
-            style="@style/VrRibbonButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/button_select" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Vertical Guidelines for alignment -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_labels"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="100dp" />
 
-        <Button
-            android:id="@+id/buttonStart"
-            style="@style/VrRibbonButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/button_start" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_values"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="400dp" />
 
-        <Button
-            android:id="@+id/buttonExit"
-            style="@style/VrRibbonButtonStyle"
-            android:layout_width="match_parent"
+        <!-- Game FPS -->
+        <TextView
+            android:id="@+id/label_game_fps"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/emulation_close_game" />
-    </LinearLayout>
+            android:text="Game FPS"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_game_fps"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_game_fps"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Game Frame Time (ms) -->
+        <TextView
+            android:id="@+id/label_game_frame_time"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Game Frame Time (ms)"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_game_fps"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_game_frame_time"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_game_frame_time"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Emulation Speed (%) -->
+        <TextView
+            android:id="@+id/label_emulation_speed"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Emulation Speed (%)"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_game_frame_time"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_emulation_speed"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_emulation_speed"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Section Divider -->
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:background="@drawable/vr_ribbon_button_default"
+            app:layout_constraintTop_toBottomOf="@id/value_emulation_speed"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- CPU Usage (%) -->
+        <TextView
+            android:id="@+id/label_cpu_usage"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="CPU Usage (%)"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/divider1"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_cpu_usage"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_cpu_usage"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- CPU Usage Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progress_cpu_usage"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:max="100"
+            android:progress="0"
+            app:layout_constraintStart_toStartOf="@id/label_cpu_usage"
+            app:layout_constraintEnd_toEndOf="@id/value_cpu_usage"
+            app:layout_constraintTop_toBottomOf="@id/value_cpu_usage"
+            android:layout_marginTop="4dp" />
+
+        <!-- GPU Usage (%) -->
+        <TextView
+            android:id="@+id/label_gpu_usage"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="GPU Usage (%)"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/progress_cpu_usage"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_gpu_usage"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_gpu_usage"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- GPU Usage Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progress_gpu_usage"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:max="100"
+            android:progress="0"
+            app:layout_constraintStart_toStartOf="@id/label_gpu_usage"
+            app:layout_constraintEnd_toEndOf="@id/value_gpu_usage"
+            app:layout_constraintTop_toBottomOf="@id/value_gpu_usage"
+            android:layout_marginTop="4dp" />
+
+        <!-- Section Divider -->
+        <View
+            android:id="@+id/divider2"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:background="@drawable/vr_ribbon_button_default"
+            app:layout_constraintTop_toBottomOf="@id/progress_gpu_usage"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- VR FPS -->
+        <TextView
+            android:id="@+id/label_vr_fps"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="VR FPS"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/divider2"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_vr_fps"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_vr_fps"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Stale Frames Counter -->
+        <TextView
+            android:id="@+id/label_stale_frames"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="• Stale Frames"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_vr_fps"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/value_stale_frames"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_stale_frames"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Tear Counter -->
+        <TextView
+            android:id="@+id/label_tear_counter"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="• Tear Counter"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_stale_frames"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/value_tear_counter"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_tear_counter"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- VR Frame Time (ms) -->
+        <TextView
+            android:id="@+id/label_vr_frame_time"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="VR Frame Time (ms)"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_tear_counter"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/value_vr_frame_time"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_vr_frame_time"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Section Divider -->
+        <View
+            android:id="@+id/divider3"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:background="@drawable/vr_ribbon_button_default"
+            app:layout_constraintTop_toBottomOf="@id/value_vr_frame_time"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- App Build Version -->
+        <TextView
+            android:id="@+id/label_app_version"
+            style="@style/VrRibbonStatsLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Build Version"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/divider3"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/value_app_version"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_app_version"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

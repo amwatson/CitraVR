@@ -70,12 +70,10 @@ class VrActivity : EmulationActivity() {
     public override fun onResume() {
        Log.info("VR [Java] onResume");
         super.onResume()
-        logPerfStats()
     }
 
     public override fun onPause() {
        Log.info("VR [Java] onPause");
-        endLogPerfStats()
         super.onPause()
     }
 
@@ -164,8 +162,6 @@ class VrActivity : EmulationActivity() {
         var hasRun = false
         var currentActivity: VrActivity? = null
 
-        private val perfStatsUpdateHandler = Handler(Looper.myLooper()!!)
-
         init {
             if (Build.BRAND == "oculus") {
                 try {
@@ -213,33 +209,4 @@ class VrActivity : EmulationActivity() {
             return -1
         }
     }
-
-    private var perfStatsUpdater: Runnable? = null
-
-    fun logPerfStats() {
-            val SYSTEM_FPS = 0
-            val FPS = 1
-            val FRAMETIME = 2
-            val SPEED = 3
-            perfStatsUpdater = Runnable {
-                val perfStats = NativeLibrary.getPerfStats()
-                if (perfStats[FPS] > 0) {
-                    Log.info(String.format(
-                        "Game FPS: %d Speed: %d%% Frame Time: %.2fms",
-                        (perfStats[FPS] + 0.5).toInt(),
-                        (perfStats[SPEED] * 100.0 + 0.5).toInt(),
-                        (perfStats[FRAMETIME] * 1000.0).toFloat(),
-                    ))
-                }
-                perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
-            }
-            perfStatsUpdateHandler.post(perfStatsUpdater!!)
-        }
-
-    fun endLogPerfStats() {
-        if (perfStatsUpdater != null) {
-           perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
-        }
-    }
-
 }

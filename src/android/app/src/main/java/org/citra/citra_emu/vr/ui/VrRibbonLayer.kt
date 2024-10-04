@@ -1,11 +1,15 @@
 package org.citra.citra_emu.vr.ui
 
+import android.os.Handler
+import android.os.Looper
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.ToggleButton
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
@@ -24,9 +28,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
 
     override fun onSurfaceCreated() {
       super.onSurfaceCreated()
-        initializeLeftMenu()
-        initializeMainPanel()
-        initializePositionalPanel()
+      initializeLeftMenu()
+      initializeMainPanel()
+      initializePositionalPanel()
       initializeStatsPanel()
     }
 
@@ -37,15 +41,20 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   fun switchMenus(menuTypeNew: MenuType) {
     if (menuTypeNew == menuTypeCurrent)
       return
-        window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.GONE
-        menuTypeCurrent = menuTypeNew
-        window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.VISIBLE
-        if (menuTypeCurrent == MenuType.MAIN)
-          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
-        else if (menuTypeCurrent == MenuType.POSITION)
-          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
-        else if (menuTypeCurrent == MenuType.STATS)
-          VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 2)
+    if (menuTypeCurrent == MenuType.STATS) {
+      endLogPerfStats()
+    }
+    window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.GONE
+    menuTypeCurrent = menuTypeNew
+    window?.findViewById<View>(menuTypeCurrent.resId)?.visibility = View.VISIBLE
+    if (menuTypeCurrent == MenuType.MAIN)
+      VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 0)
+    else if (menuTypeCurrent == MenuType.POSITION)
+      VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 1)
+    else if (menuTypeCurrent == MenuType.STATS) {
+      startPerfStats()
+      VrMessageQueue.post(VrMessageQueue.MessageType.CHANGE_LOWER_MENU, 2)
+    }
   }
 
   fun isMenuBackgroundSelected(): Boolean {
@@ -75,10 +84,6 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
       }
     // Set the first button as checked
     radioGroup?.check(R.id.button_menu_main)
-  }
-
-  private fun initializeStatsPanel() {
-
   }
 
   private fun initializePositionalPanel() {
@@ -148,6 +153,65 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
       activity.quitToMenu()
         false
     }
+  }
 
+  private lateinit var valueGameFps: TextView
+  private lateinit var valueGameFrameTime: TextView
+  private lateinit var valueEmulationSpeed: TextView
+  private lateinit var valueCpuUsage: TextView
+  private lateinit var valueGpuUsage: TextView
+  private lateinit var valueVrFps: TextView
+  private lateinit var valueStaleFrames: TextView
+  private lateinit var valueTearCounter: TextView
+  private lateinit var valueVrFrameTime: TextView
+  private lateinit var valueAppVersion: TextView
+  private var perfStatsUpdater: Runnable? = null
+  private lateinit var perfStatsUpdateHandler : Handler
+
+  private fun initializeStatsPanel() {
+    perfStatsUpdateHandler =  Handler(activity.mainLooper)
+
+    valueGameFps = window?.findViewById(R.id.value_game_fps) ?: return
+    valueGameFrameTime = window?.findViewById(R.id.value_game_frame_time) ?: return
+    valueEmulationSpeed = window?.findViewById(R.id.value_emulation_speed) ?: return
+    valueCpuUsage = window?.findViewById(R.id.value_cpu_usage) ?: return
+    valueGpuUsage = window?.findViewById(R.id.value_gpu_usage) ?: return
+    valueVrFps = window?.findViewById(R.id.value_vr_fps) ?: return
+    valueStaleFrames = window?.findViewById(R.id.value_stale_frames) ?: return
+    valueTearCounter = window?.findViewById(R.id.value_tear_counter) ?: return
+    valueVrFrameTime = window?.findViewById(R.id.value_vr_frame_time) ?: return
+    valueAppVersion = window?.findViewById(R.id.value_app_version) ?: return
+
+    valueAppVersion.text = BuildConfig.VERSION_NAME
+  }
+
+  fun startPerfStats() {
+    val SYSTEM_FPS = 0
+    val FPS = 1
+    val FRAMETIME = 2
+    val SPEED = 3
+    perfStatsUpdater = Runnable {
+      val perfStats = NativeLibrary.getPerfStats()
+      if (perfStats[FPS] > 0) {
+        Log.info(String.format(
+          "System FPS: %d Game FPS: %d Speed: %d%% Frame Time: %.2fms",
+          (perfStats[SYSTEM_FPS] + 0.5).toInt(),
+          (perfStats[FPS] + 0.5).toInt(),
+          (perfStats[SPEED] * 100.0 + 0.5).toInt(),
+          (perfStats[FRAMETIME] * 1000.0).toFloat(),
+        ))
+          valueGameFps?.text = String.format("%d", (perfStats[FPS] + 0.5).toInt())
+          valueGameFrameTime?.text = String.format("%.2fms", (perfStats[FRAMETIME] * 1000.0).toFloat())
+          valueEmulationSpeed?.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
+      }
+      perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
+    }
+    perfStatsUpdateHandler.post(perfStatsUpdater!!)
+  }
+
+  fun endLogPerfStats() {
+    if (perfStatsUpdater != null) {
+      perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
+    }
   }
 }

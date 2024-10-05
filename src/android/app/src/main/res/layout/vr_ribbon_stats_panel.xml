@@ -75,7 +75,17 @@
             app:layout_constraintTop_toBottomOf="@id/label_game"
             android:layout_marginTop="8dp"/>
 
-        <!-- Game Frame Time (ms) -->
+        <TextView
+            android:id="@+id/value_game_fps"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_game_fps"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
         <!-- Frame Time (ms) -->
         <TextView
             android:id="@+id/bullet_game_frame_time"
@@ -94,7 +104,7 @@
             style="@style/VrRibbonStatsSubLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Frame Time (ms)"
+            android:text="Frame Time"
             android:layout_marginStart="16dp"
             app:layout_constraintStart_toEndOf="@id/bullet_game_frame_time"
             app:layout_constraintEnd_toStartOf="@id/guideline_values"

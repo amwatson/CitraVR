@@ -295,5 +295,4 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="toggle_off_text">Spento</string>
     <string name="toggle_on_text">Attivo</string>
     <string name="vr_stats_game_label">Gioco</string>
-    <string name="vr_stats_fps_label">FPS</string>
 </resources>

@@ -157,7 +157,5 @@
     <string name="toggle_off_text">非表示</string>
     <string name="toggle_on_text">オン</string>
     <string name="vr_stats_game_label">ゲーム</string>
-    <string name="vr_stats_fps_label">FPS
-
-ISO code \'ja\': FPS</string>
-    </resources>
+    <string name="vr_stats_fps_label">フレームレート</string>
+</resources>

@@ -679,5 +679,4 @@
     <string name="toggle_off_text">Выключено</string>
     <string name="toggle_on_text">Вкл</string>
     <string name="vr_stats_game_label">Игра</string>
-    <string name="vr_stats_fps_label">ЧЗВ</string>
 </resources>

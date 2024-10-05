@@ -215,4 +215,6 @@
     <string name="vr_stats_game_frame_time_label">프레임 시간</string>
     <string name="vr_stats_ms_unit">밀리초</string>
     <string name="vr_stats_emulation_speed_label">KO: 에뮬레이션 속도</string>
+    <string name="vr_stats_cpu_util_label">중앙처리장치 사용률</string>
+    <string name="vr_stats_gpu_util_label">GPU 사용량</string>
 </resources>

@@ -549,4 +549,6 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vr_stats_game_frame_time_label">Rahmenzeit</string>
     <string name="vr_stats_ms_unit">ms</string>
     <string name="vr_stats_emulation_speed_label">Emulationsgeschwindigkeit</string>
+    <string name="vr_stats_cpu_util_label">CPU-Auslastung</string>
+    <string name="vr_stats_gpu_util_label">Grafikkartenauslastung</string>
 </resources>

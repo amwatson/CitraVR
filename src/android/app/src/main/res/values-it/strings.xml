@@ -298,4 +298,6 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_stats_game_frame_time_label">Tempo di Frame</string>
     <string name="vr_stats_ms_unit">ms</string>
     <string name="vr_stats_emulation_speed_label">Velocità di Emulazione</string>
+    <string name="vr_stats_cpu_util_label">Utilizzo della CPU</string>
+    <string name="vr_stats_gpu_util_label">Utilizzo GPU</string>
 </resources>

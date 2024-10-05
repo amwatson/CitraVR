@@ -710,4 +710,6 @@
     <string name="vr_stats_game_frame_time_label">Frame Time</string>
     <string name="vr_stats_ms_unit">ms</string>
     <string name="vr_stats_emulation_speed_label">Emulation Speed</string>
+    <string name="vr_stats_cpu_util_label">CPU Usage</string>
+    <string name="vr_stats_gpu_util_label">GPU Usage</string>
 </resources>

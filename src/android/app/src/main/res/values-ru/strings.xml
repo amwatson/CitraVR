@@ -682,4 +682,6 @@
     <string name="vr_stats_game_frame_time_label">Время кадра</string>
     <string name="vr_stats_ms_unit">мс</string>
     <string name="vr_stats_emulation_speed_label">Скорость эмуляции</string>
+    <string name="vr_stats_cpu_util_label">Использование ЦП.</string>
+    <string name="vr_stats_gpu_util_label">GPU использование</string>
 </resources>

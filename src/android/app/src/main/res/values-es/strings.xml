@@ -682,4 +682,6 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_stats_game_frame_time_label">Tiempo de fotograma</string>
     <string name="vr_stats_ms_unit">ms</string>
     <string name="vr_stats_emulation_speed_label">Velocidad de Emulación</string>
+    <string name="vr_stats_cpu_util_label">Uso de la CPU</string>
+    <string name="vr_stats_gpu_util_label">Uso de GPU</string>
 </resources>

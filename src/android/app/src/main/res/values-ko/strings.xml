@@ -212,4 +212,5 @@
     <string name="toggle_off_text">끄기</string>
     <string name="toggle_on_text">켜짐</string>
     <string name="vr_stats_game_label">게임</string>
+    <string name="vr_stats_fps_label">FPS: 초당 프레임 (Frames Per Second)</string>
 </resources>

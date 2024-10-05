@@ -50,41 +50,56 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="8dp" />
 
+        <!-- FPS -->
         <TextView
-            android:id="@+id/label_game_fps"
+            android:id="@+id/bullet_game_fps"
             style="@style/VrRibbonStatsSubLabel"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="• FPS"
+            android:text="• "
             app:layout_constraintStart_toStartOf="@id/guideline_labels"
-            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintEnd_toStartOf="@id/label_game_fps"
             app:layout_constraintTop_toBottomOf="@id/label_game"
             android:layout_marginTop="8dp"
             android:layout_marginStart="16dp"/>
 
         <TextView
-            android:id="@+id/value_game_fps"
-            style="@style/VrRibbonStatsValue"
-            android:layout_width="wrap_content"
+            android:id="@+id/label_game_fps"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="--"
-            app:layout_constraintStart_toStartOf="@id/guideline_values"
-            app:layout_constraintBaseline_toBaselineOf="@id/label_game_fps"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp" />
+            android:layout_marginStart="16dp"
+            android:text="@string/vr_stats_fps_label"
+            app:layout_constraintStart_toEndOf="@id/bullet_game_fps"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_game"
+            android:layout_marginTop="8dp"/>
 
         <!-- Game Frame Time (ms) -->
+        <!-- Frame Time (ms) -->
+        <TextView
+            android:id="@+id/bullet_game_frame_time"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="• "
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/label_game_frame_time"
+            app:layout_constraintTop_toBottomOf="@id/label_game_fps"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"/>
+
         <TextView
             android:id="@+id/label_game_frame_time"
             style="@style/VrRibbonStatsSubLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="• Frame Time (ms)"
-            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            android:text="Frame Time (ms)"
+            android:layout_marginStart="16dp"
+            app:layout_constraintStart_toEndOf="@id/bullet_game_frame_time"
             app:layout_constraintEnd_toStartOf="@id/guideline_values"
             app:layout_constraintTop_toBottomOf="@id/label_game_fps"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="16dp" />
+            android:layout_marginTop="8dp"/>
 
         <TextView
             android:id="@+id/value_game_frame_time"
@@ -99,16 +114,28 @@
 
         <!-- Emulation Speed (%) -->
         <TextView
+            android:id="@+id/bullet_emulation_speed"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="• "
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/label_emulation_speed"
+            app:layout_constraintTop_toBottomOf="@id/label_game_frame_time"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"/>
+
+        <TextView
             android:id="@+id/label_emulation_speed"
             style="@style/VrRibbonStatsSubLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="• Emulation Speed (%)"
-            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            android:layout_marginStart="16dp"
+            android:text="Emulation Speed (%)"
+            app:layout_constraintStart_toEndOf="@id/bullet_emulation_speed"
             app:layout_constraintEnd_toStartOf="@id/guideline_values"
             app:layout_constraintTop_toBottomOf="@id/label_game_frame_time"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="16dp"/>
+            android:layout_marginTop="8dp"/>
 
         <TextView
             android:id="@+id/value_emulation_speed"
@@ -248,8 +275,20 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/divider2" />
 
-            <!-- Something is wrong with the CPU stats API. It's valid, but retrieves 0.
-                  Disable for now -->
+            <!-- CPU Frame Time (ms) -->
+            <TextView
+                android:id="@+id/bullet_vr_app_cpu"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_app_cpu"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_app"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/label_vr_app_cpu"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -257,9 +296,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• CPU Frame Time (ms)"
+                android:text="CPU Frame Time"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_app_cpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app"
                 android:visibility="gone" />
 
@@ -275,6 +314,19 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr"
                 android:visibility="gone" />
 
+            <!-- GPU Frame Time (ms) -->
+            <TextView
+                android:id="@+id/bullet_vr_app_gpu"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_app_gpu"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_app_cpu" />
+
             <TextView
                 android:id="@+id/label_vr_app_gpu"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -282,9 +334,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• GPU Frame Time (ms)"
+                android:text="GPU Frame Time"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_app_gpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app_cpu" />
 
             <TextView
@@ -298,6 +350,20 @@
                 app:layout_constraintBaseline_toBaselineOf="@id/label_vr_app_gpu"
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr" />
 
+            <!-- PrD Latency (ms) -->
+            <TextView
+                android:id="@+id/bullet_vr_app_latency"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_app_latency"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/label_vr_app_latency"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -305,9 +371,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• PrD Latency (ms)"
+                android:text="VR Latency"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_app_latency"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"
                 android:visibility="gone" />
 
@@ -323,6 +389,7 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr"
                 android:visibility="gone" />
 
+            <!-- VR Compositor -->
             <TextView
                 android:id="@+id/label_vr_compositor"
                 style="@style/VrRibbonStatsLabelDeveloper"
@@ -334,6 +401,20 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app_latency" />
 
+            <!-- CPU Frame Time (ms) -->
+            <TextView
+                android:id="@+id/bullet_vr_comp_cpu"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_comp_cpu"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_compositor"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/label_vr_comp_cpu"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -341,9 +422,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• CPU Frame Time (ms)"
+                android:text="CPU Frame Time"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_comp_cpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_compositor"
                 android:visibility="gone" />
 
@@ -359,6 +440,19 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr"
                 android:visibility="gone" />
 
+            <!-- GPU Frame Time (ms) -->
+            <TextView
+                android:id="@+id/bullet_vr_comp_gpu"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_comp_gpu"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_comp_cpu" />
+
             <TextView
                 android:id="@+id/label_vr_comp_gpu"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -366,9 +460,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• GPU Frame Time (ms)"
+                android:text="GPU Frame Time"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_comp_gpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_comp_cpu" />
 
             <TextView
@@ -382,6 +476,19 @@
                 app:layout_constraintBaseline_toBaselineOf="@id/label_vr_comp_gpu"
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr" />
 
+            <!-- Tear Count -->
+            <TextView
+                android:id="@+id/bullet_vr_comp_tears"
+                style="@style/VrRibbonStatsSubLabelDeveloper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:text="•"
+                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
+                app:layout_constraintEnd_toStartOf="@id/label_vr_comp_tears"
+                app:layout_constraintTop_toBottomOf="@id/label_vr_comp_gpu" />
+
             <TextView
                 android:id="@+id/label_vr_comp_tears"
                 style="@style/VrRibbonStatsSubLabelDeveloper"
@@ -389,9 +496,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="• Tear Count (total)"
+                android:text="Tear Count (total)"
+                app:layout_constraintStart_toEndOf="@id/bullet_vr_comp_tears"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_comp_gpu" />
 
             <TextView

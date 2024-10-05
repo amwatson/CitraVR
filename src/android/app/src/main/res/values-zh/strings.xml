@@ -677,4 +677,5 @@
     <string name="toggle_off_text">关闭 (zh-CN)</string>
     <string name="toggle_on_text">开启</string>
     <string name="vr_stats_game_label">游戏</string>
+    <string name="vr_stats_fps_label">帧率</string>
 </resources>

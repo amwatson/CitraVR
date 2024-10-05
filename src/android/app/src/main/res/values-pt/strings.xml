@@ -348,4 +348,5 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="toggle_off_text">Desligado</string>
     <string name="toggle_on_text">ativado</string>
     <string name="vr_stats_game_label">Jogo</string>
+    <string name="vr_stats_fps_label">FPS</string>
 </resources>

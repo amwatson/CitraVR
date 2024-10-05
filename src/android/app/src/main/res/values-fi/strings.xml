@@ -141,4 +141,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="toggle_off_text">Pois</string>
     <string name="toggle_on_text">Kytketty päälle</string>
     <string name="vr_stats_game_label">Peli</string>
+    <string name="vr_stats_fps_label">KPS</string>
 </resources>

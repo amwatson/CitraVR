@@ -159,7 +159,6 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   private lateinit var valueEmulationSpeed: TextView
   private lateinit var valueCpuUsage: TextView
   private lateinit var valueGpuUsage: TextView
-  private lateinit var valueVrFps: TextView
   private lateinit var valueAppCpu: TextView
   private lateinit var valueAppGpu: TextView
   private lateinit var valueVrLatency: TextView
@@ -217,25 +216,31 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         val DEVICE_GPU_USAGE = 1
         val APP_CPU_FRAMETIME_MS = 2
         val APP_GPU_FRAMETIME_MS = 3
-        val TEAR_COUNTER = 4
+        val APP_VR_LATENCY_MS = 4
+        val APP_COMP_CPU_FRAMETIME_MS = 5
+        val APP_COMP_GPU_FRAMETIME_MS = 6
+        val TEAR_COUNTER = 7
         valueCpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_CPU_USAGE])
         valueGpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_GPU_USAGE])
         val appCpuTime = statsOXR[APP_CPU_FRAMETIME_MS]
         val appGpuTime = statsOXR[APP_GPU_FRAMETIME_MS] ?: 0.0f
         valueAppCpu.text = if (appCpuTime == 0.0f) {
-          String.format("%.0f", appCpuTime)
+          String.format("%.0fms", appCpuTime)
         } else if (appCpuTime > 0.01) {
-          String.format("%.2f", appCpuTime)
+          String.format("%.2fms", appCpuTime)
         } else {
-          String.format("%.5f", appCpuTime)
+          String.format("%.5fms", appCpuTime)
         }
         valueAppGpu.text = if (appGpuTime == 0.0f) {
-          String.format("%.0f", appGpuTime)
+          String.format("%.0fms", appGpuTime)
         } else if (appGpuTime > 0.01) {
-          String.format("%.2f", appGpuTime)
+          String.format("%.2fms", appGpuTime)
         } else {
-          String.format("%.5f", appGpuTime)
+          String.format("%.5fms", appGpuTime)
         }
+        valueVrLatency.text = String.format("%.2fms", statsOXR[APP_VR_LATENCY_MS])
+        valueVrCompCpu.text = String.format("%.2fms", statsOXR[APP_COMP_CPU_FRAMETIME_MS])
+        valueVrCompGpu.text = String.format("%.2fms", statsOXR[APP_COMP_GPU_FRAMETIME_MS])
         valueVrCompTears.text = String.format("%d", statsOXR[TEAR_COUNTER].toInt())
       }
       perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)

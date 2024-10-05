@@ -79,8 +79,6 @@ std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
-PFN_xrQueryPerformanceMetricsCounterMETA xrQueryPerformanceMetricsCounterMETA = nullptr;
-
 const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.4f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
@@ -1315,6 +1313,7 @@ Java_org_citra_citra_1emu_vr_ui_VrRibbonLayer_nativeGetStatsOXR(JNIEnv* env, job
         return nullptr;
     }
 
+    static PFN_xrQueryPerformanceMetricsCounterMETA xrQueryPerformanceMetricsCounterMETA = nullptr;
     if (xrQueryPerformanceMetricsCounterMETA == nullptr) {
         const XrResult result =
             xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrQueryPerformanceMetricsCounterMETA",
@@ -1346,40 +1345,57 @@ Java_org_citra_citra_1emu_vr_ui_VrRibbonLayer_nativeGetStatsOXR(JNIEnv* env, job
         return nullptr;
     }
 
-    XrPath cpuUtilizationPath, gpuUtilizationPath, cpuFrametimePath, gpuFrametimePath,
-        droppedFramePath;
+    XrPath cpuUtilizationPath, gpuUtilizationPath, appCpuFrameTimePath, appGpuFrameTimePath,
+        appVrLatencyPath, compTearPath, compCpuFrameTimePath, compGpuFrameTimePath;
 
-    XrPerformanceMetricsCounterMETA cpuUtilization = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
-    XrPerformanceMetricsCounterMETA gpuUtilization = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
-    XrPerformanceMetricsCounterMETA cpuFrametime   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
-    XrPerformanceMetricsCounterMETA gpuFrametime   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
-    XrPerformanceMetricsCounterMETA droppedFrames  = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA cpuUtilization   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA gpuUtilization   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA appCpuFrameTime  = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA appGpuFrameTime  = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA appVrLatency     = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA compTears        = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA compCpuFrameTime = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA compGpuFrameTime = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
 
     xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/device/cpu_utilization_average",
                    &cpuUtilizationPath);
     xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/device/gpu_utilization",
                    &gpuUtilizationPath);
-    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/cpu_frametime", &cpuFrametimePath);
-    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/gpu_frametime", &gpuFrametimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/cpu_frametime",
+                   &appCpuFrameTimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/gpu_frametime",
+                   &appGpuFrameTimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/motion_to_photon_latency",
+                   &appVrLatencyPath);
     xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/compositor/dropped_frame_count",
-                   &droppedFramePath);
+                   &compTearPath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/compositor/cpu_frametime",
+                   &compCpuFrameTimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/compositor/gpu_frametime",
+                   &compGpuFrameTimePath);
 
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, cpuUtilizationPath, &cpuUtilization);
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, gpuUtilizationPath, &gpuUtilization);
-    xrQueryPerformanceMetricsCounterMETA(vr::gSession, cpuFrametimePath, &cpuFrametime);
-    xrQueryPerformanceMetricsCounterMETA(vr::gSession, gpuFrametimePath, &gpuFrametime);
-    xrQueryPerformanceMetricsCounterMETA(vr::gSession, droppedFramePath, &droppedFrames);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, appCpuFrameTimePath, &appCpuFrameTime);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, appGpuFrameTimePath, &appGpuFrameTime);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, appVrLatencyPath, &appVrLatency);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, compTearPath, &compTears);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, compCpuFrameTimePath, &compCpuFrameTime);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, compGpuFrameTimePath, &compGpuFrameTime);
 
-    jfloat metricsArray[5] = {
-        cpuUtilization.floatValue,                   // CPU Utilization %
-        gpuUtilization.floatValue,                   // GPU Utilization %
-        cpuFrametime.floatValue,                     // App CPU Frametime (ms)
-        gpuFrametime.floatValue,                     // App GPU Frametime (ms)
-        static_cast<jfloat>(droppedFrames.uintValue) // Dropped frames count
+    const jfloat metricsArray[8] = {
+        cpuUtilization.floatValue,                // Device CPU Utilization %
+        gpuUtilization.floatValue,                // Device GPU Utilization %
+        appCpuFrameTime.floatValue,               // App CPU Frametime (ms)
+        appGpuFrameTime.floatValue,               // App GPU Frametime (ms)
+        appVrLatency.floatValue,                  // App VR Latency (ms)
+        compCpuFrameTime.floatValue,              // Compositor CPU Frametime (ms)
+        compGpuFrameTime.floatValue,              // Compositor GPU Frametime (ms)
+        static_cast<jfloat>(compTears.uintValue)  // Compositor tear count
     };
 
-    jfloatArray result = env->NewFloatArray(5);
-    env->SetFloatArrayRegion(result, 0, 5, metricsArray);
+    const jfloatArray result = env->NewFloatArray(8);
+    env->SetFloatArrayRegion(result, 0, 8, metricsArray);
 
     return result;
 }

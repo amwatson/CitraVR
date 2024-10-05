@@ -1,7 +1,6 @@
 package org.citra.citra_emu.vr.ui
 
 import android.os.Handler
-import android.os.Looper
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.view.KeyEvent
@@ -161,9 +160,12 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   private lateinit var valueCpuUsage: TextView
   private lateinit var valueGpuUsage: TextView
   private lateinit var valueVrFps: TextView
-  private lateinit var valueStaleFrames: TextView
-  private lateinit var valueTearCounter: TextView
-  private lateinit var valueVrFrameTime: TextView
+  private lateinit var valueAppCpu: TextView
+  private lateinit var valueAppGpu: TextView
+  private lateinit var valueVrLatency: TextView
+  private lateinit var valueVrCompCpu: TextView
+  private lateinit var valueVrCompGpu: TextView
+  private lateinit var valueVrCompTears: TextView
   private lateinit var valueAppVersion: TextView
   private var perfStatsUpdater: Runnable? = null
   private lateinit var perfStatsUpdateHandler : Handler
@@ -178,10 +180,12 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     valueEmulationSpeed = window?.findViewById(R.id.value_emulation_speed) ?: return
     valueCpuUsage = window?.findViewById(R.id.value_cpu_usage) ?: return
     valueGpuUsage = window?.findViewById(R.id.value_gpu_usage) ?: return
-    valueVrFps = window?.findViewById(R.id.value_vr_fps) ?: return
-    valueStaleFrames = window?.findViewById(R.id.value_stale_frames) ?: return
-    valueTearCounter = window?.findViewById(R.id.value_tear_counter) ?: return
-    valueVrFrameTime = window?.findViewById(R.id.value_vr_frame_time) ?: return
+    valueAppCpu = window?.findViewById(R.id.value_vr_app_cpu) ?: return
+    valueAppGpu = window?.findViewById(R.id.value_vr_app_gpu) ?: return
+    valueVrLatency = window?.findViewById(R.id.value_vr_app_latency) ?: return
+    valueVrCompCpu= window?.findViewById(R.id.value_vr_comp_cpu) ?: return
+    valueVrCompGpu= window?.findViewById(R.id.value_vr_comp_gpu) ?: return
+    valueVrCompTears= window?.findViewById(R.id.value_vr_comp_tears) ?: return
     valueAppVersion = window?.findViewById(R.id.value_app_version) ?: return
 
     valueAppVersion.text = BuildConfig.VERSION_NAME
@@ -202,22 +206,37 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           (perfStats[SPEED] * 100.0 + 0.5).toInt(),
           (perfStats[FRAMETIME] * 1000.0).toFloat(),
         ))
-          valueGameFps?.text = String.format("%d", (perfStats[FPS] + 0.5).toInt())
-          valueGameFrameTime?.text = String.format("%.2fms", (perfStats[FRAMETIME] * 1000.0).toFloat())
-          valueEmulationSpeed?.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
+          valueGameFps.text = String.format("%d", (perfStats[FPS] + 0.5).toInt())
+          valueGameFrameTime.text = String.format("%.2fms", (perfStats[FRAMETIME] * 1000.0).toFloat())
+          valueEmulationSpeed.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
       }
 
-      val statsOXR : FloatArray = nativeGetStatsOXR()
+      val statsOXR: FloatArray = nativeGetStatsOXR()
       if (statsOXR.size > 0) {
         val DEVICE_CPU_USAGE = 0
         val DEVICE_GPU_USAGE = 1
         val APP_CPU_FRAMETIME_MS = 2
         val APP_GPU_FRAMETIME_MS = 3
         val TEAR_COUNTER = 4
-          valueCpuUsage?.text = String.format("%.2f%%", statsOXR[DEVICE_CPU_USAGE])
-          valueGpuUsage?.text = String.format("%.2f%%", statsOXR[DEVICE_GPU_USAGE])
-          valueTearCounter?.text = String.format("%d", statsOXR[TEAR_COUNTER].toInt())
-          valueVrFrameTime?.text = String.format("%.2fms", statsOXR[APP_CPU_FRAMETIME_MS])
+        valueCpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_CPU_USAGE])
+        valueGpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_GPU_USAGE])
+        val appCpuTime = statsOXR[APP_CPU_FRAMETIME_MS]
+        val appGpuTime = statsOXR[APP_GPU_FRAMETIME_MS] ?: 0.0f
+        valueAppCpu.text = if (appCpuTime == 0.0f) {
+          String.format("%.0f", appCpuTime)
+        } else if (appCpuTime > 0.01) {
+          String.format("%.2f", appCpuTime)
+        } else {
+          String.format("%.5f", appCpuTime)
+        }
+        valueAppGpu.text = if (appGpuTime == 0.0f) {
+          String.format("%.0f", appGpuTime)
+        } else if (appGpuTime > 0.01) {
+          String.format("%.2f", appGpuTime)
+        } else {
+          String.format("%.5f", appGpuTime)
+        }
+        valueVrCompTears.text = String.format("%d", statsOXR[TEAR_COUNTER].toInt())
       }
       perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
     }

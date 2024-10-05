@@ -169,6 +169,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   private lateinit var valueVrCompGpu: TextView
   private lateinit var valueVrCompTears: TextView
   private lateinit var valueAppVersion: TextView
+
   private var perfStatsUpdater: Runnable? = null
   private lateinit var perfStatsUpdateHandler : Handler
 
@@ -191,7 +192,6 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     valueVrCompGpu= window?.findViewById(R.id.value_vr_comp_gpu) ?: return
     valueVrCompTears= window?.findViewById(R.id.value_vr_comp_tears) ?: return
     valueAppVersion = window?.findViewById(R.id.value_app_version) ?: return
-
     valueAppVersion.text = BuildConfig.VERSION_NAME
   }
 
@@ -201,6 +201,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     val FRAMETIME = 2
     val SPEED = 3
     perfStatsUpdater = Runnable {
+      // Retrieve, print and display the Citra Emulator stats
       val perfStats = NativeLibrary.getPerfStats()
       if (perfStats[FPS] > 0) {
         Log.info(String.format(
@@ -215,6 +216,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           valueEmulationSpeed.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
       }
 
+      // Retrieve and display the VR stats
       val statsOXR: FloatArray = nativeGetStatsOXR()
       if (statsOXR.size > 0) {
         val DEVICE_CPU_USAGE = 0

@@ -146,4 +146,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_emulation_speed_label">Emulaationopeus</string>
     <string name="vr_stats_cpu_util_label">Suoritin käyttö</string>
     <string name="vr_stats_gpu_util_label">GPU-käyttö</string>
+    <string name="vr_stats_vr_app_label">Virtuaalitodellisuussovellus</string>
 </resources>

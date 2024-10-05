@@ -215,4 +215,5 @@
     <string name="vr_stats_emulation_speed_label">Emulering hastighet</string>
     <string name="vr_stats_cpu_util_label">CPU Bruk</string>
     <string name="vr_stats_gpu_util_label">GPU Bruk</string>
+    <string name="vr_stats_vr_app_label">VR-app</string>
 </resources>

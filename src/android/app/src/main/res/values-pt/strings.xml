@@ -353,4 +353,5 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="vr_stats_emulation_speed_label">Velocidade de Emulação</string>
     <string name="vr_stats_cpu_util_label">Utilização da CPU</string>
     <string name="vr_stats_gpu_util_label">Uso de GPU</string>
+    <string name="vr_stats_vr_app_label">Aplicativo de Realidade Virtual</string>
 </resources>

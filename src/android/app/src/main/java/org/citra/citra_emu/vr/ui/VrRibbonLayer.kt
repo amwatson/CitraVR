@@ -201,6 +201,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     val FRAMETIME = 2
     val SPEED = 3
     perfStatsUpdater = Runnable {
+      val msUnit = activity.getString(R.string.vr_stats_ms_unit)
       // Retrieve, print and display the Citra Emulator stats
       val perfStats = NativeLibrary.getPerfStats()
       if (perfStats[FPS] > 0) {
@@ -212,7 +213,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           (perfStats[FRAMETIME] * 1000.0).toFloat(),
         ))
           valueGameFps.text = String.format("%d", (perfStats[FPS] + 0.5).toInt())
-          valueGameFrameTime.text = String.format("%.2fms", (perfStats[FRAMETIME] * 1000.0).toFloat())
+          valueGameFrameTime.text = String.format("%.2f%s", (perfStats[FRAMETIME] * 1000.0).toFloat(), msUnit)
           valueEmulationSpeed.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
       }
 
@@ -247,9 +248,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         } else {
           String.format("%.5fms", appGpuTime)
         }
-        valueVrLatency.text = String.format("%.2fms", statsOXR[APP_VR_LATENCY_MS])
-        valueVrCompCpu.text = String.format("%.2fms", statsOXR[APP_COMP_CPU_FRAMETIME_MS])
-        valueVrCompGpu.text = String.format("%.2fms", statsOXR[APP_COMP_GPU_FRAMETIME_MS])
+        valueVrLatency.text = String.format("%.2f%s", statsOXR[APP_VR_LATENCY_MS], msUnit)
+        valueVrCompCpu.text = String.format("%.2f%s", statsOXR[APP_COMP_CPU_FRAMETIME_MS], msUnit)
+        valueVrCompGpu.text = String.format("%.2f%s", statsOXR[APP_COMP_GPU_FRAMETIME_MS], msUnit)
         valueVrCompTears.text = String.format("%d", statsOXR[TEAR_COUNTER].toInt())
       }
       perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)

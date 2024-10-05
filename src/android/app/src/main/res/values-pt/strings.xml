@@ -349,4 +349,5 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="toggle_on_text">ativado</string>
     <string name="vr_stats_game_label">Jogo</string>
     <string name="vr_stats_game_frame_time_label">Tempo de Frame</string>
+    <string name="vr_stats_ms_unit">milissegundos</string>
 </resources>

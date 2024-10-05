@@ -296,4 +296,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="toggle_on_text">Attivo</string>
     <string name="vr_stats_game_label">Gioco</string>
     <string name="vr_stats_game_frame_time_label">Tempo di Frame</string>
+    <string name="vr_stats_ms_unit">ms</string>
 </resources>

@@ -159,4 +159,5 @@
     <string name="vr_stats_game_label">ゲーム</string>
     <string name="vr_stats_fps_label">フレームレート</string>
     <string name="vr_stats_game_frame_time_label">フレームタイム (Frame Time)</string>
+    <string name="vr_stats_ms_unit">ミリ秒</string>
 </resources>

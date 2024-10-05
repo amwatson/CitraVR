@@ -547,4 +547,5 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="toggle_on_text">An</string>
     <string name="vr_stats_game_label">Spiel</string>
     <string name="vr_stats_game_frame_time_label">Rahmenzeit</string>
+    <string name="vr_stats_ms_unit">ms</string>
 </resources>

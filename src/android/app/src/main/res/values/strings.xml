@@ -708,4 +708,5 @@
     <string name="vr_stats_game_label">Game</string>
     <string name="vr_stats_fps_label">FPS</string>
     <string name="vr_stats_game_frame_time_label">Frame Time</string>
+    <string name="vr_stats_ms_unit">ms</string>
 </resources>

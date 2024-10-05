@@ -219,4 +219,5 @@
     <string name="vr_stats_gpu_frame_time_label">GPU Rammesekvens时间</string>
     <string name="vr_stats_cpu_frame_time_label">Tid brukt av CPU\'en per ramme</string>
     <string name="vr_stats_vr_compositor_label">VR Kompositor</string>
+    <string name="vr_stats_comp_tear_count">Rivesplittelsestall (total)</string>
 </resources>

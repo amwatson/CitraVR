@@ -507,7 +507,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="Tear Count (total)"
+                android:text="@string/vr_stats_comp_tear_count"
                 app:layout_constraintStart_toEndOf="@id/bullet_vr_comp_tears"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_comp_gpu" />

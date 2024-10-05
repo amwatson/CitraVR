@@ -150,4 +150,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_gpu_frame_time_label">PFG-kehyksen aika</string>
     <string name="vr_stats_cpu_frame_time_label">Suoritinkehysaika</string>
     <string name="vr_stats_vr_compositor_label">VR-yhdistelijä</string>
+    <string name="vr_stats_comp_tear_count">Revämälaskuri (kokonaisluku)</string>
 </resources>

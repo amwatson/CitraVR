@@ -687,4 +687,5 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_stats_gpu_frame_time_label">Temps d\'image GPU</string>
     <string name="vr_stats_cpu_frame_time_label">Temps d\'exécution du processeur (CPU)</string>
     <string name="vr_stats_vr_compositor_label">Composituer VR</string>
+    <string name="vr_stats_comp_tear_count">Nombre de déchirures (total)</string>
 </resources>

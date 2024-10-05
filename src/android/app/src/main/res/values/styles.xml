@@ -51,7 +51,7 @@
     </style>
 
     <style name="VrRibbonStatsSubLabel">
-        <item name="android:textColor">@color/citra_primary</item>
+        <item name="android:textColor">@color/citra_secondary</item>
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">normal</item>
     </style>

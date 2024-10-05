@@ -160,4 +160,5 @@
     <string name="vr_stats_fps_label">フレームレート</string>
     <string name="vr_stats_game_frame_time_label">フレームタイム (Frame Time)</string>
     <string name="vr_stats_ms_unit">ミリ秒</string>
+    <string name="vr_stats_emulation_speed_label">エミュレーション速度</string>
 </resources>

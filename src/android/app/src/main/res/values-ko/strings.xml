@@ -214,4 +214,5 @@
     <string name="vr_stats_game_label">게임</string>
     <string name="vr_stats_game_frame_time_label">프레임 시간</string>
     <string name="vr_stats_ms_unit">밀리초</string>
+    <string name="vr_stats_emulation_speed_label">KO: 에뮬레이션 속도</string>
 </resources>

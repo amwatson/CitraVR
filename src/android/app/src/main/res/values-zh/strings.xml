@@ -679,4 +679,5 @@
     <string name="vr_stats_game_label">游戏</string>
     <string name="vr_stats_game_frame_time_label">帧时间</string>
     <string name="vr_stats_ms_unit">毫秒</string>
+    <string name="vr_stats_emulation_speed_label">模拟速度</string>
 </resources>

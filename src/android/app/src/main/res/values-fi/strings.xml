@@ -143,4 +143,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_game_label">Peli</string>
     <string name="vr_stats_game_frame_time_label">Kehysaika</string>
     <string name="vr_stats_ms_unit">ms</string>
+    <string name="vr_stats_emulation_speed_label">Emulaationopeus</string>
 </resources>

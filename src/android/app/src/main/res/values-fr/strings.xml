@@ -680,4 +680,5 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_stats_game_label">Jeu</string>
     <string name="vr_stats_game_frame_time_label">Temps d\'image</string>
     <string name="vr_stats_ms_unit">ms</string>
+    <string name="vr_stats_emulation_speed_label">Vitesse d\'émulation</string>
 </resources>

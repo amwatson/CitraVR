@@ -212,4 +212,5 @@
     <string name="vr_stats_game_label">Spill</string>
     <string name="vr_stats_game_frame_time_label">Frame Tid</string>
     <string name="vr_stats_ms_unit">ms</string>
+    <string name="vr_stats_emulation_speed_label">Emulering hastighet</string>
 </resources>

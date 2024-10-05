@@ -163,7 +163,7 @@ XrInstance XrInstanceCreate() {
         XR_KHR_ANDROID_SURFACE_SWAPCHAIN_EXTENSION_NAME,
         XR_FB_COMPOSITION_LAYER_SETTINGS_EXTENSION_NAME,
         XR_FB_PASSTHROUGH_EXTENSION_NAME,
-
+        XR_META_PERFORMANCE_METRICS_EXTENSION_NAME,
     };
     static constexpr size_t numRequiredExtensions =
         sizeof(requiredExtensionNames) / sizeof(requiredExtensionNames[0]);

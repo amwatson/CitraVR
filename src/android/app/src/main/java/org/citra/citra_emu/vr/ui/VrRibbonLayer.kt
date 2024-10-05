@@ -168,6 +168,8 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   private var perfStatsUpdater: Runnable? = null
   private lateinit var perfStatsUpdateHandler : Handler
 
+  private external fun nativeGetStatsOXR(): FloatArray
+
   private fun initializeStatsPanel() {
     perfStatsUpdateHandler =  Handler(activity.mainLooper)
 
@@ -194,7 +196,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
       val perfStats = NativeLibrary.getPerfStats()
       if (perfStats[FPS] > 0) {
         Log.info(String.format(
-          "System FPS: %d Game FPS: %d Speed: %d%% Frame Time: %.2fms",
+          "Citra Game: System FPS: %d Game FPS: %d Speed: %d%% Frame Time: %.2fms",
           (perfStats[SYSTEM_FPS] + 0.5).toInt(),
           (perfStats[FPS] + 0.5).toInt(),
           (perfStats[SPEED] * 100.0 + 0.5).toInt(),
@@ -203,6 +205,19 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           valueGameFps?.text = String.format("%d", (perfStats[FPS] + 0.5).toInt())
           valueGameFrameTime?.text = String.format("%.2fms", (perfStats[FRAMETIME] * 1000.0).toFloat())
           valueEmulationSpeed?.text = String.format("%d%%", (perfStats[SPEED] * 100.0 + 0.5).toInt())
+      }
+
+      val statsOXR : FloatArray = nativeGetStatsOXR()
+      if (statsOXR.size > 0) {
+        val DEVICE_CPU_USAGE = 0
+        val DEVICE_GPU_USAGE = 1
+        val APP_CPU_FRAMETIME_MS = 2
+        val APP_GPU_FRAMETIME_MS = 3
+        val TEAR_COUNTER = 4
+          valueCpuUsage?.text = String.format("%.2f%%", statsOXR[DEVICE_CPU_USAGE])
+          valueGpuUsage?.text = String.format("%.2f%%", statsOXR[DEVICE_GPU_USAGE])
+          valueTearCounter?.text = String.format("%d", statsOXR[TEAR_COUNTER].toInt())
+          valueVrFrameTime?.text = String.format("%.2fms", statsOXR[APP_CPU_FRAMETIME_MS])
       }
       perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
     }

@@ -79,6 +79,8 @@ std::chrono::time_point<std::chrono::steady_clock> gOnCreateStartTime;
 std::unique_ptr<OpenXr>                            gOpenXr;
 MessageQueue                                       gMessageQueue;
 
+PFN_xrQueryPerformanceMetricsCounterMETA xrQueryPerformanceMetricsCounterMETA = nullptr;
+
 const std::vector<float> immersiveScaleFactor = {1.0f, 3.0f, 1.4f};
 
 void ForwardButtonStateChangeToCitra(JNIEnv* jni, jobject activityObject,
@@ -1304,4 +1306,80 @@ extern "C" JNIEXPORT void JNICALL Java_org_citra_citra_1emu_vr_utils_VrMessageQu
     JNIEnv* env, jobject thiz, jint message_type, jlong payload) {
     ALOGI("{}(): message_type: {}, payload: {}", __FUNCTION__, message_type, payload);
     gMessageQueue.Post(Message(static_cast<Message::Type>(message_type), payload));
+}
+
+extern "C" JNIEXPORT jfloatArray JNICALL
+Java_org_citra_citra_1emu_vr_ui_VrRibbonLayer_nativeGetStatsOXR(JNIEnv* env, jobject thiz) {
+
+    if (vr::gSession == XR_NULL_HANDLE || OpenXr::GetInstance() == XR_NULL_HANDLE) {
+        return nullptr;
+    }
+
+    if (xrQueryPerformanceMetricsCounterMETA == nullptr) {
+        const XrResult result =
+            xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrQueryPerformanceMetricsCounterMETA",
+                                  (PFN_xrVoidFunction*)&xrQueryPerformanceMetricsCounterMETA);
+        if (result != XR_SUCCESS) {
+            ALOGE("Failed to get xrQueryPerformanceMetrics function pointer: %d", result);
+            return nullptr;
+        }
+
+        if (xrQueryPerformanceMetricsCounterMETA != nullptr) {
+            // do initial query to check available
+            PFN_xrSetPerformanceMetricsStateMETA xrSetPerformanceMetricsStateMETA = nullptr;
+            xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrSetPerformanceMetricsStateMETA",
+                                  (PFN_xrVoidFunction*)&xrSetPerformanceMetricsStateMETA);
+            if (xrSetPerformanceMetricsStateMETA != nullptr) {
+                XrPerformanceMetricsStateMETA perfMetricsState{
+                    XR_TYPE_PERFORMANCE_METRICS_STATE_META};
+                perfMetricsState.enabled = XR_TRUE;
+                if (xrSetPerformanceMetricsStateMETA(vr::gSession, &perfMetricsState) !=
+                    XR_SUCCESS) {
+                    ALOGE("xrSetPerformanceMetricsStateMETA failed");
+                    return nullptr;
+                }
+            }
+        }
+    }
+    if (xrQueryPerformanceMetricsCounterMETA == nullptr) {
+        ALOGE("xrQueryPerformanceMetricsCounterMETA is not available");
+        return nullptr;
+    }
+
+    XrPath cpuUtilizationPath, gpuUtilizationPath, cpuFrametimePath, gpuFrametimePath,
+        droppedFramePath;
+
+    XrPerformanceMetricsCounterMETA cpuUtilization = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA gpuUtilization = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA cpuFrametime   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA gpuFrametime   = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+    XrPerformanceMetricsCounterMETA droppedFrames  = {XR_TYPE_PERFORMANCE_METRICS_COUNTER_META};
+
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/device/cpu_utilization_average",
+                   &cpuUtilizationPath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/device/gpu_utilization",
+                   &gpuUtilizationPath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/cpu_frametime", &cpuFrametimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/app/gpu_frametime", &gpuFrametimePath);
+    xrStringToPath(OpenXr::GetInstance(), "/perfmetrics_meta/compositor/dropped_frame_count",
+                   &droppedFramePath);
+
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, cpuUtilizationPath, &cpuUtilization);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, gpuUtilizationPath, &gpuUtilization);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, cpuFrametimePath, &cpuFrametime);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, gpuFrametimePath, &gpuFrametime);
+    xrQueryPerformanceMetricsCounterMETA(vr::gSession, droppedFramePath, &droppedFrames);
+
+    jfloat metricsArray[5] = {
+        cpuUtilization.floatValue,                   // CPU Utilization %
+        gpuUtilization.floatValue,                   // GPU Utilization %
+        cpuFrametime.floatValue,                     // App CPU Frametime (ms)
+        gpuFrametime.floatValue,                     // App GPU Frametime (ms)
+        static_cast<jfloat>(droppedFrames.uintValue) // Dropped frames count
+    };
+
+    jfloatArray result = env->NewFloatArray(5);
+    env->SetFloatArrayRegion(result, 0, 5, metricsArray);
+
+    return result;
 }

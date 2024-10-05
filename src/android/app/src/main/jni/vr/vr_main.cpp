@@ -159,6 +159,7 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
                   kDefaultResolutionFactor);
         case VRSettings::HMDType::QUEST2:
         case VRSettings::HMDType::QUESTPRO:
+        case VRSettings::HMDType::QUEST3S:
             return kDefaultResolutionFactor;
     }
 }

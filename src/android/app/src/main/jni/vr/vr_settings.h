@@ -25,7 +25,7 @@ License     :   Licensed under GPLv3 or any later version.
 namespace VRSettings {
 
 // NOTE: keep this in-sync with HMDType in sync with VRUtils.java
-enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO };
+enum class HMDType { UNKNOWN = 0, QUEST1, QUEST2, QUEST3, QUESTPRO, QUEST3S };
 
 enum class VREnvironmentType { PASSTHROUGH = 1, VOID = 2 };
 

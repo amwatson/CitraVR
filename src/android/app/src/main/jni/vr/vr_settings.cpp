@@ -28,6 +28,8 @@ HMDType HmdTypeFromStr(const std::string& hmdType) {
         return HMDType::QUEST3;
     } else if (hmdType == "Quest Pro") {
         return HMDType::QUESTPRO;
+    } else if (hmdType == "Quest 3S" || hmdType == "Quest 3s" || hmdType == "Panther") {
+        return HMDType::QUEST3S;
     }
     return HMDType::UNKNOWN;
 }

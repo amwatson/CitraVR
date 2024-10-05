@@ -684,4 +684,6 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_stats_cpu_util_label">fr</string>
     <string name="vr_stats_gpu_util_label">Utilisation GPU</string>
     <string name="vr_stats_vr_app_label">Application VR</string>
+    <string name="vr_stats_gpu_frame_time_label">Temps d\'image GPU</string>
+    <string name="vr_stats_cpu_frame_time_label">Temps d\'exécution du processeur (CPU)</string>
 </resources>

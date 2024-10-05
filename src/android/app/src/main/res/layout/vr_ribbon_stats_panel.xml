@@ -306,7 +306,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="CPU Frame Time"
+                android:text="@string/vr_stats_cpu_frame_time_label"
                 app:layout_constraintStart_toEndOf="@id/bullet_vr_app_cpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app"
@@ -344,7 +344,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="GPU Frame Time"
+                android:text="@string/vr_stats_gpu_frame_time_label"
                 app:layout_constraintStart_toEndOf="@id/bullet_vr_app_gpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app_cpu" />
@@ -470,7 +470,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="GPU Frame Time"
+                android:text="@string/vr_stats_gpu_frame_time_label"
                 app:layout_constraintStart_toEndOf="@id/bullet_vr_comp_gpu"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_comp_cpu" />
@@ -497,7 +497,8 @@
                 android:text="•"
                 app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintEnd_toStartOf="@id/label_vr_comp_tears"
-                app:layout_constraintTop_toBottomOf="@id/label_vr_comp_gpu" />
+                app:layout_constraintTop_toBottomOf="@id/label_vr_comp_gpu"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/label_vr_comp_tears"

@@ -218,4 +218,6 @@
     <string name="vr_stats_cpu_util_label">중앙처리장치 사용률</string>
     <string name="vr_stats_gpu_util_label">GPU 사용량</string>
     <string name="vr_stats_vr_app_label">VR 앱</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU 프레임 시간</string>
+    <string name="vr_stats_cpu_frame_time_label">CPU 프레임 시간</string>
 </resources>

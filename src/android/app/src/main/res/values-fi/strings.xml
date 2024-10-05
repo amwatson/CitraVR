@@ -147,4 +147,6 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_cpu_util_label">Suoritin käyttö</string>
     <string name="vr_stats_gpu_util_label">GPU-käyttö</string>
     <string name="vr_stats_vr_app_label">Virtuaalitodellisuussovellus</string>
+    <string name="vr_stats_gpu_frame_time_label">PFG-kehyksen aika</string>
+    <string name="vr_stats_cpu_frame_time_label">Suoritinkehysaika</string>
 </resources>

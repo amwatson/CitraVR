@@ -713,4 +713,6 @@
     <string name="vr_stats_cpu_util_label">CPU Usage</string>
     <string name="vr_stats_gpu_util_label">GPU Usage</string>
     <string name="vr_stats_vr_app_label">VR App</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU Frame Time</string>
+    <string name="vr_stats_cpu_frame_time_label">CPU Frame Time</string>
 </resources>

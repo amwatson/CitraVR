@@ -552,4 +552,6 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vr_stats_cpu_util_label">CPU-Auslastung</string>
     <string name="vr_stats_gpu_util_label">Grafikkartenauslastung</string>
     <string name="vr_stats_vr_app_label">VR-Anwendung</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU Frame Zeit</string>
+    <string name="vr_stats_cpu_frame_time_label">CPU Frame Zeit</string>
 </resources>

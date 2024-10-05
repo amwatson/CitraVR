@@ -685,4 +685,6 @@
     <string name="vr_stats_cpu_util_label">Использование ЦП.</string>
     <string name="vr_stats_gpu_util_label">GPU использование</string>
     <string name="vr_stats_vr_app_label">VR Приложение</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU Время кадра</string>
+    <string name="vr_stats_cpu_frame_time_label">Время кадра CPU</string>
 </resources>

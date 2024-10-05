@@ -6,6 +6,7 @@ import android.widget.RadioGroup
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.ToggleButton
 import org.citra.citra_emu.BuildConfig
@@ -158,7 +159,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
   private lateinit var valueGameFrameTime: TextView
   private lateinit var valueEmulationSpeed: TextView
   private lateinit var valueCpuUsage: TextView
+  private lateinit var cpuProgressBar : ProgressBar
   private lateinit var valueGpuUsage: TextView
+  private lateinit var gpuProgressBar : ProgressBar
   private lateinit var valueAppCpu: TextView
   private lateinit var valueAppGpu: TextView
   private lateinit var valueVrLatency: TextView
@@ -178,7 +181,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     valueGameFrameTime = window?.findViewById(R.id.value_game_frame_time) ?: return
     valueEmulationSpeed = window?.findViewById(R.id.value_emulation_speed) ?: return
     valueCpuUsage = window?.findViewById(R.id.value_cpu_usage) ?: return
+    cpuProgressBar = window?.findViewById(R.id.progress_cpu_usage) ?: return
     valueGpuUsage = window?.findViewById(R.id.value_gpu_usage) ?: return
+    gpuProgressBar = window?.findViewById(R.id.progress_gpu_usage) ?: return
     valueAppCpu = window?.findViewById(R.id.value_vr_app_cpu) ?: return
     valueAppGpu = window?.findViewById(R.id.value_vr_app_gpu) ?: return
     valueVrLatency = window?.findViewById(R.id.value_vr_app_latency) ?: return
@@ -220,10 +225,12 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         val APP_COMP_CPU_FRAMETIME_MS = 5
         val APP_COMP_GPU_FRAMETIME_MS = 6
         val TEAR_COUNTER = 7
-        valueCpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_CPU_USAGE])
-        valueGpuUsage.text = String.format("%.2f%%", statsOXR[DEVICE_GPU_USAGE])
+        valueCpuUsage.text = String.format("%.0f%%", statsOXR[DEVICE_CPU_USAGE])
+        cpuProgressBar.progress = statsOXR[DEVICE_CPU_USAGE].toInt()
+        valueGpuUsage.text = String.format("%.0f%%", statsOXR[DEVICE_GPU_USAGE])
+        gpuProgressBar.progress = statsOXR[DEVICE_GPU_USAGE].toInt()
         val appCpuTime = statsOXR[APP_CPU_FRAMETIME_MS]
-        val appGpuTime = statsOXR[APP_GPU_FRAMETIME_MS] ?: 0.0f
+        val appGpuTime = statsOXR[APP_GPU_FRAMETIME_MS]
         valueAppCpu.text = if (appCpuTime == 0.0f) {
           String.format("%.0fms", appCpuTime)
         } else if (appCpuTime > 0.01) {

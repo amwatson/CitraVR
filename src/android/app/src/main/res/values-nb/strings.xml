@@ -210,4 +210,5 @@
     <string name="toggle_off_text">Av</string>
     <string name="toggle_on_text">I gang</string>
     <string name="vr_stats_game_label">Spill</string>
+    <string name="vr_stats_game_frame_time_label">Frame Tid</string>
 </resources>

@@ -212,4 +212,5 @@
     <string name="toggle_off_text">끄기</string>
     <string name="toggle_on_text">켜짐</string>
     <string name="vr_stats_game_label">게임</string>
+    <string name="vr_stats_game_frame_time_label">프레임 시간</string>
 </resources>

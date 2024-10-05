@@ -685,4 +685,5 @@
     <string name="vr_stats_vr_app_label">VR 应用程序</string>
     <string name="vr_stats_gpu_frame_time_label">GPU 帧时长</string>
     <string name="vr_stats_cpu_frame_time_label">CPU 帧时间</string>
+    <string name="vr_stats_vr_compositor_label">VR 组合器</string>
 </resources>

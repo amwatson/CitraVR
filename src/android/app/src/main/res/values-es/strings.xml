@@ -687,4 +687,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_stats_vr_app_label">Aplicación de RV</string>
     <string name="vr_stats_gpu_frame_time_label">Tiempo de cuadro de GPU</string>
     <string name="vr_stats_cpu_frame_time_label">Tiempo de cuadro de CPU</string>
+    <string name="vr_stats_vr_compositor_label">Compositor de VR</string>
 </resources>

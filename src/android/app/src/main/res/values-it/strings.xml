@@ -303,4 +303,5 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_stats_vr_app_label">App VR</string>
     <string name="vr_stats_gpu_frame_time_label">Tempo Frame GPU</string>
     <string name="vr_stats_cpu_frame_time_label">Tempo di Frame della CPU</string>
+    <string name="vr_stats_vr_compositor_label">Compositore VR</string>
 </resources>

@@ -406,7 +406,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="VR Compositor"
+                android:text="@string/vr_stats_vr_compositor_label"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
                 app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintTop_toBottomOf="@id/label_vr_app_latency" />

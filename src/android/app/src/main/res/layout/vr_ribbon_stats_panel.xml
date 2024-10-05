@@ -44,7 +44,7 @@
             style="@style/VrRibbonStatsLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Game"
+            android:text="@string/vr_stats_game_label"
             app:layout_constraintStart_toStartOf="@id/guideline_labels"
             app:layout_constraintEnd_toStartOf="@id/guideline_values"
             app:layout_constraintTop_toTopOf="parent"

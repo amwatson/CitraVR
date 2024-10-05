@@ -705,4 +705,5 @@
     <string name="horizontal_header_text">Horizontal Movement</string>
     <string name="toggle_off_text">Off</string>
     <string name="toggle_on_text">On</string>
+    <string name="vr_stats_game_label">Game</string>
 </resources>

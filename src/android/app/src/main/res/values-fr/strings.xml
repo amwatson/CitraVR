@@ -677,4 +677,5 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="horizontal_header_text">Déplacement horizontal</string>
     <string name="toggle_off_text">Éteint</string>
     <string name="toggle_on_text">Sur</string>
+    <string name="vr_stats_game_label">Jeu</string>
 </resources>

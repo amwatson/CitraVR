@@ -140,4 +140,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="horizontal_header_text">Vaakasuuntainen liike</string>
     <string name="toggle_off_text">Pois</string>
     <string name="toggle_on_text">Kytketty päälle</string>
+    <string name="vr_stats_game_label">Peli</string>
 </resources>

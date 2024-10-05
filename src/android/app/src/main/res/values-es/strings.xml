@@ -678,4 +678,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="horizontal_header_text">Movimiento Horizontal</string>
     <string name="toggle_off_text">Apagado</string>
     <string name="toggle_on_text">sí</string>
+    <string name="vr_stats_game_label">Juego</string>
 </resources>

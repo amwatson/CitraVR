@@ -156,4 +156,5 @@
     <string name="horizontal_header_text">水平移動</string>
     <string name="toggle_off_text">非表示</string>
     <string name="toggle_on_text">オン</string>
+    <string name="vr_stats_game_label">ゲーム</string>
     </resources>

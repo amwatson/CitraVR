@@ -678,4 +678,5 @@
     <string name="horizontal_header_text">Горизонтальное движение</string>
     <string name="toggle_off_text">Выключено</string>
     <string name="toggle_on_text">Вкл</string>
+    <string name="vr_stats_game_label">Игра</string>
 </resources>

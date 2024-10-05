@@ -541,7 +541,7 @@
             style="@style/VrRibbonStatsLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Build Version"
+            android:text="@string/vr_stats_build_version_label"
             app:layout_constraintStart_toStartOf="@id/guideline_labels"
             app:layout_constraintEnd_toStartOf="@id/guideline_values"
             app:layout_constraintTop_toBottomOf="@id/divider3"

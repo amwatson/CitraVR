@@ -222,4 +222,5 @@
     <string name="vr_stats_cpu_frame_time_label">CPU 프레임 시간</string>
     <string name="vr_stats_vr_compositor_label">가상 현실 조합자</string>
     <string name="vr_stats_comp_tear_count">스크린 티어 수 (합계)</string>
+    <string name="vr_stats_build_version_label">앱 버전</string>
 </resources>

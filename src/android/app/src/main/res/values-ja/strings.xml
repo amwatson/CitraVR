@@ -169,4 +169,5 @@
     <string name="vr_stats_vr_compositor_label">VR コンポジタ</string>
     <string name="vr_stats_comp_tear_count">ティア数（合計）</string>
     <string name="vr_stats_build_version_label">アプリのバージョン</string>
+    <string name="vr_stats_input_latency_label">入力遅延</string>
 </resources>

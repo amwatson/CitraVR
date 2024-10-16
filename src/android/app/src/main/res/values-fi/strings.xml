@@ -152,4 +152,5 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_vr_compositor_label">VR-yhdistelijä</string>
     <string name="vr_stats_comp_tear_count">Revämälaskuri (kokonaisluku)</string>
     <string name="vr_stats_build_version_label">Sovelluksen Versio</string>
+    <string name="vr_stats_input_latency_label">Sisääntulo Viive</string>
 </resources>

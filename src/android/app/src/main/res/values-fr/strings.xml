@@ -689,4 +689,5 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_stats_vr_compositor_label">Composituer VR</string>
     <string name="vr_stats_comp_tear_count">Nombre de déchirures (total)</string>
     <string name="vr_stats_build_version_label">Version de l\'application</string>
+    <string name="vr_stats_input_latency_label">Latence d\'entrée</string>
 </resources>

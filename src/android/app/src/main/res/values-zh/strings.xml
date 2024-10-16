@@ -688,4 +688,5 @@
     <string name="vr_stats_vr_compositor_label">VR 组合器</string>
     <string name="vr_stats_comp_tear_count">撕裂计数（总计）</string>
     <string name="vr_stats_build_version_label">应用程序版本</string>
+    <string name="vr_stats_input_latency_label">输入延迟</string>
 </resources>

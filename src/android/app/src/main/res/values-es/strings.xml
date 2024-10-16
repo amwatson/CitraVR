@@ -690,4 +690,5 @@ Después de que los shaders se carguen, se almacenan en el dispositivo, lo que e
     <string name="vr_stats_vr_compositor_label">Compositor de VR</string>
     <string name="vr_stats_comp_tear_count">Conteo de desgarros (total)</string>
     <string name="vr_stats_build_version_label">Versión de la aplicación</string>
+    <string name="vr_stats_input_latency_label">Latencia de entrada</string>
 </resources>

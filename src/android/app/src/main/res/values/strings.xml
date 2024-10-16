@@ -718,4 +718,5 @@
     <string name="vr_stats_vr_compositor_label">VR Compositor</string>
     <string name="vr_stats_comp_tear_count">Tear Count (total)</string>
     <string name="vr_stats_build_version_label">App Version</string>
+    <string name="vr_stats_input_latency_label">Input Latency</string>
 </resources>

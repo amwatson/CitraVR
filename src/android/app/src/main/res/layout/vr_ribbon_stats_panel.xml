@@ -371,8 +371,7 @@
                 android:text="•"
                 app:layout_constraintStart_toStartOf="@id/guideline_labels_vr"
                 app:layout_constraintEnd_toStartOf="@id/label_vr_app_latency"
-                app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"
-                android:visibility="gone" />
+                app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"/>
 
             <TextView
                 android:id="@+id/label_vr_app_latency"
@@ -381,11 +380,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:text="VR Latency"
+                android:text="@string/vr_stats_input_latency_label"
                 app:layout_constraintStart_toEndOf="@id/bullet_vr_app_latency"
                 app:layout_constraintEnd_toStartOf="@id/guideline_values_vr"
-                app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"
-                android:visibility="gone" />
+                app:layout_constraintTop_toBottomOf="@id/label_vr_app_gpu"/>
 
             <TextView
                 android:id="@+id/value_vr_app_latency"
@@ -396,8 +394,7 @@
                 android:layout_marginEnd="16dp"
                 android:text="--"
                 app:layout_constraintBaseline_toBaselineOf="@id/label_vr_app_latency"
-                app:layout_constraintStart_toStartOf="@id/guideline_values_vr"
-                android:visibility="gone" />
+                app:layout_constraintStart_toStartOf="@id/guideline_values_vr"/>
 
             <!-- VR Compositor -->
             <TextView

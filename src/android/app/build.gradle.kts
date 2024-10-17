@@ -68,6 +68,8 @@ android {
         versionCode = autoVersion
         versionName = getGitVersion()
 
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         ndk {
             //noinspection ChromeOsAbiSupport
             abiFilters += abiFilter
@@ -191,6 +193,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("io.coil-kt:coil:2.5.0")
+
+    // AndroidX Test - JUnit4 support
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    // AndroidX Test - Espresso
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 }
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.

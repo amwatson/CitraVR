@@ -194,10 +194,13 @@ dependencies {
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("io.coil-kt:coil:2.5.0")
 
-    // AndroidX Test - JUnit4 support
+    // NOTE: move test classes into sep directory so these dependencies don't have to get included
+    // in the build.
+    implementation("androidx.test.ext:junit-ktx:1.2.1")
+    implementation("junit:junit:4.12")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    // AndroidX Test - Espresso
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.

@@ -71,6 +71,9 @@ def build(build_config):
 def clean(_):
     return shell_cmd("./gradlew clean")
 
+def test(_):
+    return shell_cmd("./gradlew connectedAndroidTest")
+
 # Main
 
 def main():
@@ -85,6 +88,7 @@ def main():
         - start
         - stop
         - clean
+        - test
     Options will execute in order, e.g. cmd.py clean build install start stop uninstall""")
         exit(-1)
 

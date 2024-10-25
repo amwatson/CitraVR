@@ -193,7 +193,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("io.coil-kt:coil:2.5.0")
-    
+
     androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
     androidTestImplementation("junit:junit:4.12")
 
@@ -201,26 +201,37 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }
 
-// Download Vulkan Validation Layers from the KhronosGroup GitHub.
+// Specify the destination file path and check path
+val downloadedVulkanLayersZip = file("${buildDir}/tmp/Vulkan-ValidationLayers.zip")
+val validationLayersExtractedPath = file(downloadedJniLibsPath)
+
+// Download Vulkan Validation Layers only if not already downloaded or extracted
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
     src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-1.3.261.1/android-binaries-sdk-1.3.261.1-android.zip")
-    dest(file("${buildDir}/tmp/Vulkan-ValidationLayers.zip"))
-    onlyIfModified(true)
+    dest(downloadedVulkanLayersZip)
+    onlyIf {
+        !validationLayersExtractedPath.exists() // Skip download if extracted files are already present
+    }
+    onlyIfModified(true) // Check modification based on the existing ZIP
 }
 
-// Extract Vulkan Validation Layers into the downloaded native libraries directory.
+// Extract Vulkan Validation Layers only if not already extracted
 val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLayers") {
     dependsOn(downloadVulkanValidationLayers)
     from(zipTree(downloadVulkanValidationLayers.get().dest)) {
-        // Exclude the top level directory in the zip as it violates the expected jniLibs directory structure.
         eachFile {
+            // Exclude the top-level directory in the zip
             relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
         }
         includeEmptyDirs = false
     }
-    into(downloadedJniLibsPath)
+    into(validationLayersExtractedPath)
+    onlyIf {
+        !validationLayersExtractedPath.exists() // Skip extraction if already done
+    }
 }
 
+// Ensure that the preBuild task depends on the extraction task
 tasks.named("preBuild") {
     dependsOn(unzipVulkanValidationLayers)
 }

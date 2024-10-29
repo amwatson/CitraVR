@@ -1,6 +1,7 @@
 add_executable(citra_meta
     citra.rc
     main.cpp
+    precompiled_headers.h
 )
 
 set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "citra")
@@ -66,6 +67,10 @@ if(WIN32)
     elseif(MINGW)
         set_target_properties(citra_meta PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
     endif()
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(citra_meta PRIVATE precompiled_headers.h)
 endif()
 
 # Bundle in-place on MSVC so dependencies can be resolved by builds.

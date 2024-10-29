@@ -382,10 +382,11 @@ void QtConfig::ReadControlValues() {
             std::string default_param = InputCommon::GenerateAnalogParamFromKeys(
                 default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
                 default_analogs[i][3], default_analogs[i][4], 0.5f);
-            profile.analogs[i] = ReadSetting(QString::fromUtf8(Settings::NativeAnalog::mapping[i]),
-                                             QString::fromStdString(default_param))
-                                     .toString()
-                                     .toStdString();
+            profile.analogs[i] =
+                ReadSetting(QString::fromStdString(Settings::NativeAnalog::mapping[i]),
+                            QString::fromStdString(default_param))
+                    .toString()
+                    .toStdString();
             if (profile.analogs[i].empty())
                 profile.analogs[i] = default_param;
         }

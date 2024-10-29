@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 #if ENABLE_SDL2_FRONTEND
     LaunchSdlFrontend(argc, argv);
 #else
-    std::cout << "Cannot use SDL frontend as it was excluded at compile time. Exiting."
+    std::cout << "Cannot use SDL frontend as it was disabled at compile time. Exiting."
               << std::endl;
     return -1;
 #endif

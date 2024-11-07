@@ -129,6 +129,17 @@ double PerfStats::GetLastFrameTimeScale() const {
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
 }
 
+double PerfStats::GetStableFrameTimeScale() const {
+    std::scoped_lock lock{object_mutex};
+
+    constexpr double FRAME_LENGTH_MILLIS = (1.0 / SCREEN_REFRESH_RATE) * 1000;
+    const size_t num_frames = std::min<size_t>(50UL, current_index + 1);
+    const double sum = std::accumulate(perf_history.begin() + current_index - num_frames,
+                                       perf_history.begin() + current_index, 0.0);
+    const double stable_frame_length = sum / num_frames;
+    return stable_frame_length / FRAME_LENGTH_MILLIS;
+}
+
 void FrameLimiter::WaitOnce() {
     if (frame_advancing_enabled) {
         // Frame advancing is enabled: wait on event instead of doing framelimiting

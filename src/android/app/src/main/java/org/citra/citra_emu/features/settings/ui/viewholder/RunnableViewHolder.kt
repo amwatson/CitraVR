@@ -5,6 +5,7 @@
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
+import androidx.core.content.res.ResourcesCompat
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.ListItemSettingBinding
@@ -18,6 +19,19 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
 
     override fun bind(item: SettingsItem) {
         setting = item as RunnableSetting
+        if (item.iconId == 0) {
+            binding.icon.visibility = View.GONE
+        } else {
+            binding.icon.visibility = View.VISIBLE
+            binding.icon.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    binding.icon.resources,
+                    item.iconId,
+                    binding.icon.context.theme
+                )
+            )
+        }
+
         binding.textSettingName.setText(item.nameId)
         if (item.descriptionId != 0) {
             binding.textSettingDescription.setText(item.descriptionId)

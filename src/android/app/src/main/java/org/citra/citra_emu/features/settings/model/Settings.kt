@@ -179,7 +179,7 @@ class Settings {
            R.string.controller_axis_vertical,
             R.string.controller_axis_horizontal
         )
-        val dpadTitles = listOf(
+        val dPadTitles = listOf(
             R.string.direction_up,
             R.string.direction_down,
             R.string.direction_left,

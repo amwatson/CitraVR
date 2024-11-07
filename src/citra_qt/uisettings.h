@@ -149,6 +149,8 @@ struct Values {
 
     // logging
     Settings::Setting<bool> show_console{false, "showConsole"};
+
+    bool shortcut_already_warned = false;
 };
 
 extern Values values;

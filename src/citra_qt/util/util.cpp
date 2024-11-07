@@ -6,6 +6,7 @@
 #include <cmath>
 #include <QPainter>
 #include "citra_qt/util/util.h"
+#include "common/logging/log.h"
 #include "core/loader/smdh.h"
 
 #ifdef _WIN32
@@ -43,7 +44,7 @@ QPixmap CreateCirclePixmapFromColor(const QColor& color) {
     return circle_pixmap;
 }
 
-QPixmap GetQPixmapFromSMDH(std::vector<u8>& smdh_data) {
+QPixmap GetQPixmapFromSMDH(const std::vector<u8>& smdh_data) {
     Loader::SMDH smdh;
     std::memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 

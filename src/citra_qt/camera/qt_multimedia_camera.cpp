@@ -7,7 +7,7 @@
 #include <QMediaDevices>
 #include <QThread>
 #include "citra_qt/camera/qt_multimedia_camera.h"
-#include "citra_qt/main.h"
+#include "citra_qt/citra_qt.h"
 
 #if defined(__APPLE__)
 #include "common/apple_authorization.h"

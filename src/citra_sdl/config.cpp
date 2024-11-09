@@ -8,8 +8,8 @@
 #include <type_traits>
 #include <INIReader.h>
 #include <SDL.h>
-#include "citra/config.h"
-#include "citra/default_ini.h"
+#include "citra_sdl/config.h"
+#include "citra_sdl/default_ini.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -19,7 +19,7 @@
 #include "input_common/udp/client.h"
 #include "network/network_settings.h"
 
-Config::Config() {
+SdlConfig::SdlConfig() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "sdl2-config.ini";
     sdl2_config = std::make_unique<INIReader>(sdl2_config_loc);
@@ -27,9 +27,9 @@ Config::Config() {
     Reload();
 }
 
-Config::~Config() = default;
+SdlConfig::~SdlConfig() = default;
 
-bool Config::LoadINI(const std::string& default_contents, bool retry) {
+bool SdlConfig::LoadINI(const std::string& default_contents, bool retry) {
     const std::string& location = this->sdl2_config_loc;
     if (sdl2_config->ParseError() < 0) {
         if (retry) {
@@ -71,7 +71,7 @@ static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> 
 }};
 
 template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
+void SdlConfig::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
     std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
     if (setting_value.empty()) {
         setting_value = setting.GetDefault();
@@ -80,12 +80,12 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<std::string
 }
 
 template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
+void SdlConfig::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
     setting = sdl2_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
 }
 
 template <typename Type, bool ranged>
-void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
+void SdlConfig::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
         setting = static_cast<Type>(
             sdl2_config->GetReal(group, setting.GetLabel(), setting.GetDefault()));
@@ -95,7 +95,7 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<Type, range
     }
 }
 
-void Config::ReadValues() {
+void SdlConfig::ReadValues() {
     // Controls
     // TODO: add multiple input profile support
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
@@ -382,7 +382,7 @@ void Config::ReadValues() {
         sdl2_config->GetInteger("Video Dumping", "audio_bitrate", 64000);
 }
 
-void Config::Reload() {
+void SdlConfig::Reload() {
     LoadINI(DefaultINI::sdl2_config_file);
     ReadValues();
 }

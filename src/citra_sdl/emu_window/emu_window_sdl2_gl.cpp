@@ -8,7 +8,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <glad/glad.h>
-#include "citra/emu_window/emu_window_sdl2_gl.h"
+#include "citra_sdl/emu_window/emu_window_sdl2_gl.h"
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "core/core.h"

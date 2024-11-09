@@ -8,7 +8,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <fmt/format.h>
-#include "citra/emu_window/emu_window_sdl2_vk.h"
+#include "citra_sdl/emu_window/emu_window_sdl2_vk.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "core/frontend/emu_window.h"

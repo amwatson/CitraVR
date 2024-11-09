@@ -7,7 +7,7 @@
 #include <string>
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
-#include "citra/emu_window/emu_window_sdl2.h"
+#include "citra_sdl/emu_window/emu_window_sdl2.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "core/core.h"

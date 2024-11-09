@@ -8,7 +8,7 @@
 #include <QRegularExpression>
 #include <QString>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra_qt/main.h"
+#include "citra_qt/citra_qt.h"
 #include "citra_qt/multiplayer/direct_connect.h"
 #include "citra_qt/multiplayer/message.h"
 #include "citra_qt/multiplayer/validation.h"

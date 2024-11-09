@@ -180,12 +180,16 @@ if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
 
-if (ENABLE_SDL2 AND ENABLE_SDL2_FRONTEND)
-    add_subdirectory(citra)
+if (ENABLE_SDL2_FRONTEND)
+    add_subdirectory(citra_sdl)
 endif()
 
 if (ENABLE_QT)
     add_subdirectory(citra_qt)
+endif()
+
+if (ENABLE_QT OR ENABLE_SDL2_FRONTEND)
+    add_subdirectory(citra_meta)
 endif()
 
 if (ENABLE_DEDICATED_ROOM)

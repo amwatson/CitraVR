@@ -5,7 +5,7 @@
 #pragma once
 
 #include <memory>
-#include "citra/emu_window/emu_window_sdl2.h"
+#include "citra_sdl/emu_window/emu_window_sdl2.h"
 
 namespace Frontend {
 class GraphicsContext;

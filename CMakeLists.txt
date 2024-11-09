@@ -93,6 +93,17 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
+# Pass the following values to C++ land
+if (ENABLE_QT)
+    add_definitions(-DENABLE_QT)
+endif()
+if (ENABLE_QT_TRANSLATION)
+    add_definitions(-DENABLE_QT_TRANSLATION)
+endif()
+if (ENABLE_SDL2_FRONTEND)
+    add_definitions(-DENABLE_SDL2_FRONTEND)
+endif()
+
 include(CitraHandleSystemLibs)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
@@ -429,24 +440,18 @@ endif()
 add_subdirectory(src)
 add_subdirectory(dist/installer)
 
-
-# Set citra-qt project or citra project as default StartUp Project in Visual Studio depending on whether QT is enabled or not
-if(ENABLE_QT)
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra-qt)
-else()
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra)
-endif()
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra)
 
 # Create target for outputting distributable bundles.
 # Not supported for mobile platforms as distributables are built differently.
 if (NOT ANDROID AND NOT IOS)
     include(BundleTarget)
-    if (ENABLE_SDL2_FRONTEND)
-        bundle_target(citra)
-    endif()
     if (ENABLE_QT)
-        bundle_target(citra-qt)
+        qt_bundle_target(citra_meta)
+    elseif (ENABLE_SDL2_FRONTEND)
+        bundle_target(citra_meta)
     endif()
+
     if (ENABLE_DEDICATED_ROOM)
         bundle_target(citra-room)
     endif()

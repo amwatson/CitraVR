@@ -9,7 +9,7 @@
 #include <QPainter>
 #include <QWindow>
 #include "citra_qt/bootmanager.h"
-#include "citra_qt/main.h"
+#include "citra_qt/citra_qt.h"
 #include "common/color.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"

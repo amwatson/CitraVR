@@ -10,7 +10,7 @@
 
 class INIReader;
 
-class Config {
+class SdlConfig {
     std::unique_ptr<INIReader> sdl2_config;
     std::string sdl2_config_loc;
 
@@ -18,8 +18,8 @@ class Config {
     void ReadValues();
 
 public:
-    Config();
-    ~Config();
+    SdlConfig();
+    ~SdlConfig();
 
     void Reload();
 

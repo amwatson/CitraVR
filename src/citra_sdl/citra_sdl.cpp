@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,17 +11,18 @@
 // This needs to be included before getopt.h because the latter #defines symbols used by it
 #include "common/microprofile.h"
 
-#include "citra/config.h"
-#include "citra/emu_window/emu_window_sdl2.h"
+#include "citra_sdl/config.h"
+#include "citra_sdl/emu_window/emu_window_sdl2.h"
 #ifdef ENABLE_OPENGL
-#include "citra/emu_window/emu_window_sdl2_gl.h"
+#include "citra_sdl/emu_window/emu_window_sdl2_gl.h"
 #endif
 #ifdef ENABLE_SOFTWARE_RENDERER
-#include "citra/emu_window/emu_window_sdl2_sw.h"
+#include "citra_sdl/emu_window/emu_window_sdl2_sw.h"
 #endif
 #ifdef ENABLE_VULKAN
-#include "citra/emu_window/emu_window_sdl2_vk.h"
+#include "citra_sdl/emu_window/emu_window_sdl2_vk.h"
 #endif
+#include "SDL_messagebox.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -40,6 +41,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/movie.h"
 #include "input_common/main.h"
+#include "citra_meta/common_strings.h"
 #include "network/network.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -59,31 +61,18 @@
 #include <windows.h>
 
 #include <shellapi.h>
-
-extern "C" {
-// tells Nvidia drivers to use the dedicated GPU by default on laptops with switchable graphics
-__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
-}
 #endif
 
-static void PrintHelp(const char* argv0) {
-    std::cout << "Usage: " << argv0
-              << " [options] <filename>\n"
-                 "-g, --gdbport=NUMBER Enable gdb stub on port NUMBER\n"
-                 "-i, --install=FILE    Installs a specified CIA file\n"
-                 "-m, --multiplayer=nick:password@address:port"
-                 " Nickname, password, address and port for multiplayer\n"
-                 "-r, --movie-record=[file]  Record a movie (game inputs) to the given file\n"
-                 "-a, --movie-record-author=AUTHOR Sets the author of the movie to be recorded\n"
-                 "-p, --movie-play=[file]    Playback the movie (game inputs) from the given file\n"
-                 "-d, --dump-video=[file]    Dumps audio and video to the given video file\n"
-                 "-f, --fullscreen     Start in fullscreen mode\n"
-                 "-h, --help           Display this help and exit\n"
-                 "-v, --version        Output version information and exit\n";
+static void ShowCommandOutput(std::string title, std::string message) {
+#ifdef _WIN32
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, title.c_str(), message.c_str(), NULL);
+#else
+    std::cout << message << std::endl;
+#endif
 }
 
-static void PrintVersion() {
-    std::cout << "Citra " << Common::g_scm_branch << " " << Common::g_scm_desc << std::endl;
+static void PrintHelp(const char* argv0) {
+    ShowCommandOutput("Help", fmt::format(Common::help_string, argv0));
 }
 
 static void OnStateChanged(const Network::RoomMember::State& state) {
@@ -182,12 +171,12 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
 }
 
 /// Application entry point
-int main(int argc, char** argv) {
+void LaunchSdlFrontend(int argc, char** argv) {
     Common::Log::Initialize();
     Common::Log::SetColorConsoleBackendEnabled(true);
     Common::Log::Start();
     Common::DetachedTasks detached_tasks;
-    Config config;
+    SdlConfig config;
     int option_index = 0;
     bool use_gdbstub = Settings::values.use_gdbstub.GetValue();
     u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port.GetValue());
@@ -203,7 +192,7 @@ int main(int argc, char** argv) {
 
     if (argv_w == nullptr) {
         LOG_CRITICAL(Frontend, "Failed to get command line arguments");
-        return -1;
+        exit(-1);
     }
 #endif
     std::string filepath;
@@ -216,23 +205,31 @@ int main(int argc, char** argv) {
     u16 port = Network::DefaultRoomPort;
 
     static struct option long_options[] = {
-        {"gdbport", required_argument, 0, 'g'},
-        {"install", required_argument, 0, 'i'},
-        {"multiplayer", required_argument, 0, 'm'},
-        {"movie-record", required_argument, 0, 'r'},
-        {"movie-record-author", required_argument, 0, 'a'},
-        {"movie-play", required_argument, 0, 'p'},
         {"dump-video", required_argument, 0, 'd'},
         {"fullscreen", no_argument, 0, 'f'},
+        {"gdbport", required_argument, 0, 'g'},
         {"help", no_argument, 0, 'h'},
+        {"install", required_argument, 0, 'i'},
+        {"movie-play", required_argument, 0, 'p'},
+        {"movie-record", required_argument, 0, 'r'},
+        {"movie-record-author", required_argument, 0, 'a'},
+        {"multiplayer", required_argument, 0, 'm'},
         {"version", no_argument, 0, 'v'},
+        {"windowed", no_argument, 0, 'w'},
         {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "g:i:m:r:p:fhv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "d:fg:hi:p:r:a:m:nvw", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
+            case 'd':
+                dump_video = optarg;
+                break;
+            case 'f':
+                fullscreen = true;
+                LOG_INFO(Frontend, "Starting in fullscreen mode...");
+                break;
             case 'g':
                 errno = 0;
                 gdb_port = strtoul(optarg, &endarg, 0);
@@ -244,6 +241,9 @@ int main(int argc, char** argv) {
                     exit(1);
                 }
                 break;
+            case 'h':
+                PrintHelp(argv[0]);
+                exit(0);
             case 'i': {
                 const auto cia_progress = [](std::size_t written, std::size_t total) {
                     LOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
@@ -255,6 +255,15 @@ int main(int argc, char** argv) {
                     exit(1);
                 break;
             }
+            case 'p':
+                movie_play = optarg;
+                break;
+            case 'r':
+                movie_record = optarg;
+                break;
+            case 'a':
+                movie_record_author = optarg;
+                break;
             case 'm': {
                 use_multiplayer = true;
                 const std::string str_arg(optarg);
@@ -264,7 +273,7 @@ int main(int argc, char** argv) {
                 if (!std::regex_match(str_arg, re)) {
                     std::cout << "Wrong format for option --multiplayer\n";
                     PrintHelp(argv[0]);
-                    return 0;
+                    exit(0);
                 }
 
                 std::smatch match;
@@ -279,36 +288,19 @@ int main(int argc, char** argv) {
                 if (!std::regex_match(nickname, nickname_re)) {
                     std::cout
                         << "Nickname is not valid. Must be 4 to 20 alphanumeric characters.\n";
-                    return 0;
+                    exit(0);
                 }
                 if (address.empty()) {
                     std::cout << "Address to room must not be empty.\n";
-                    return 0;
+                    exit(0);
                 }
                 break;
             }
-            case 'r':
-                movie_record = optarg;
-                break;
-            case 'a':
-                movie_record_author = optarg;
-                break;
-            case 'p':
-                movie_play = optarg;
-                break;
-            case 'd':
-                dump_video = optarg;
-                break;
-            case 'f':
-                fullscreen = true;
-                LOG_INFO(Frontend, "Starting in fullscreen mode...");
-                break;
-            case 'h':
-                PrintHelp(argv[0]);
-                return 0;
             case 'v':
-                PrintVersion();
-                return 0;
+                const std::string version_string =
+                    std::string("Citra ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+                ShowCommandOutput("Version", version_string);
+                exit(0);
             }
         } else {
 #ifdef _WIN32
@@ -329,12 +321,12 @@ int main(int argc, char** argv) {
 
     if (filepath.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
-        return -1;
+        exit(-1);
     }
 
     if (!movie_record.empty() && !movie_play.empty()) {
         LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
-        return -1;
+        exit(-1);
     }
 
     auto& system = Core::System::GetInstance();
@@ -385,7 +377,7 @@ int main(int argc, char** argv) {
 #elif ENABLE_SOFTWARE_RENDERER
             return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
 #else
-// TODO: Add a null renderer backend for this, perhaps.
+            // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
 #endif
         }
@@ -399,8 +391,8 @@ int main(int argc, char** argv) {
 
     const auto scope = emu_window->Acquire();
 
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
-             Common::g_scm_desc);
+    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
+             Common::g_scm_branch, Common::g_scm_desc);
     Settings::LogSettings();
 
     const Core::System::ResultStatus load_result{
@@ -409,26 +401,26 @@ int main(int argc, char** argv) {
     switch (load_result) {
     case Core::System::ResultStatus::ErrorGetLoader:
         LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filepath);
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::ErrorLoader:
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
         LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
                                "being used with Citra. \n\n For more information on dumping and "
                                "decrypting games, please refer to: "
                                "https://web.archive.org/web/20240304210021/https://citra-emu.org/"
                                "wiki/dumping-game-cartridges/");
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
         LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::ErrorNotInitialized:
         LOG_CRITICAL(Frontend, "CPUCore not initialized");
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::ErrorSystemMode:
         LOG_CRITICAL(Frontend, "Failed to determine system mode!");
-        return -1;
+        exit(-1);
     case Core::System::ResultStatus::Success:
         break; // Expected case
     default:
@@ -448,7 +440,7 @@ int main(int argc, char** argv) {
                          Network::NoPreferredMac, password);
         } else {
             LOG_ERROR(Network, "Could not access RoomMember");
-            return 0;
+            exit(0);
         }
     }
 
@@ -532,5 +524,5 @@ int main(int argc, char** argv) {
 #endif
 
     detached_tasks.WaitForAllTasks();
-    return 0;
+    exit(0);
 }

@@ -189,7 +189,7 @@ if (ENABLE_QT)
 endif()
 
 if (ENABLE_DEDICATED_ROOM)
-    add_subdirectory(dedicated_room)
+    add_subdirectory(citra_room)
 endif()
 
 if (ANDROID)

@@ -6,8 +6,9 @@ GITREV="`git show -s --format='%h'`"
 REV_NAME="citra-$OS-$TARGET-$GITDATE-$GITREV"
 
 # Determine the name of the release being built.
-if [[ "$GITHUB_REF_NAME" =~ ^canary- ]] || [[ "$GITHUB_REF_NAME" =~ ^nightly- ]]; then
-    RELEASE_NAME=$(echo $GITHUB_REF_NAME | cut -d- -f1)
+if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+    RELEASE_NAME=citra-$GITHUB_REF_NAME
+    REV_NAME="citra-$GITHUB_REF_NAME-$OS-$TARGET"
 else
     RELEASE_NAME=head
 fi
@@ -61,7 +62,10 @@ function pack_artifacts() {
     fi
 }
 
-if [ -n "$UNPACKED" ]; then
+if [ "$OS" = "windows" ] && [ "$GITHUB_REF_TYPE" = "tag" ]; then
+    # Move the installer to the artifacts directory
+    mv src/installer/bin/*.exe artifacts/
+elif [ -n "$UNPACKED" ]; then
     # Copy the artifacts to be uploaded unpacked.
     for ARTIFACT in build/bundle/*; do
         FILENAME=$(basename "$ARTIFACT")

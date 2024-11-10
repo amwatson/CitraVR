@@ -41,6 +41,7 @@
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/camera/still_image_camera.h"
+#include "citra_qt/citra_qt.h"
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
@@ -62,7 +63,6 @@
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/loading_screen.h"
-#include "citra_qt/citra_qt.h"
 #include "citra_qt/movie/movie_play_dialog.h"
 #include "citra_qt/movie/movie_record_dialog.h"
 #include "citra_qt/multiplayer/state.h"
@@ -766,7 +766,8 @@ void GMainWindow::InitializeHotkeys() {
     // QShortcut Hotkeys
     const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
         const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
-        const auto* secondary_hotkey = hotkey_registry.GetHotkey(main_window, action_name, secondary_window);
+        const auto* secondary_hotkey =
+            hotkey_registry.GetHotkey(main_window, action_name, secondary_window);
         connect(hotkey, &QShortcut::activated, this, function);
         connect(secondary_hotkey, &QShortcut::activated, this, function);
     };
@@ -3637,7 +3638,7 @@ void GMainWindow::SyncMenuUISettings() {
     ui->action_Screen_Layout_Separate_Windows->setChecked(
         Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
     ui->action_Screen_Layout_Custom_Layout->setChecked(Settings::values.layout_option.GetValue() ==
-                                                      Settings::LayoutOption::CustomLayout);
+                                                       Settings::LayoutOption::CustomLayout);
     ui->action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen.GetValue());
     ui->action_Screen_Layout_Upright_Screens->setChecked(
         Settings::values.upright_screen.GetValue());

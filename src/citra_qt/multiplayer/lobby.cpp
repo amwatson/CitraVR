@@ -5,8 +5,8 @@
 #include <QInputDialog>
 #include <QList>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra_qt/game_list_p.h"
 #include "citra_qt/citra_qt.h"
+#include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/lobby_p.h"
 #include "citra_qt/multiplayer/message.h"

@@ -25,11 +25,11 @@
 #include <QToolButton>
 #include <QTreeView>
 #include <fmt/format.h>
+#include "citra_qt/citra_qt.h"
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/game_list_worker.h"
-#include "citra_qt/citra_qt.h"
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "common/settings.h"

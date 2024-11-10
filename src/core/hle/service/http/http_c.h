@@ -110,11 +110,11 @@ struct ClientCertContext {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& handle;
-        ar& session_id;
-        ar& cert_id;
-        ar& certificate;
-        ar& private_key;
+        ar & handle;
+        ar & session_id;
+        ar & cert_id;
+        ar & certificate;
+        ar & private_key;
     }
     friend class boost::serialization::access;
 };
@@ -132,9 +132,9 @@ struct RootCertChain {
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& handle;
-            ar& session_id;
-            ar& certificate;
+            ar & handle;
+            ar & session_id;
+            ar & certificate;
         }
         friend class boost::serialization::access;
     };
@@ -147,9 +147,9 @@ struct RootCertChain {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& handle;
-        ar& session_id;
-        ar& certificates;
+        ar & handle;
+        ar & session_id;
+        ar & certificates;
     }
     friend class boost::serialization::access;
 };
@@ -178,10 +178,10 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& url;
-            ar& username;
-            ar& password;
-            ar& port;
+            ar & url;
+            ar & username;
+            ar & password;
+            ar & port;
         }
         friend class boost::serialization::access;
     };
@@ -193,8 +193,8 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& username;
-            ar& password;
+            ar & username;
+            ar & password;
         }
         friend class boost::serialization::access;
     };
@@ -207,8 +207,8 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& name;
-            ar& value;
+            ar & name;
+            ar & value;
         }
         friend class boost::serialization::access;
     };
@@ -221,9 +221,9 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& options;
-            ar& client_cert_ctx;
-            ar& root_ca_chain;
+            ar & options;
+            ar & client_cert_ctx;
+            ar & root_ca_chain;
         }
         friend class boost::serialization::access;
     };
@@ -254,9 +254,9 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& name;
-            ar& value;
-            ar& is_binary;
+            ar & name;
+            ar & value;
+            ar & is_binary;
         }
         friend class boost::serialization::access;
     };
@@ -325,11 +325,11 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
             *this);
-        ar& current_http_context;
-        ar& session_id;
-        ar& num_http_contexts;
-        ar& num_client_certs;
-        ar& initialized;
+        ar & current_http_context;
+        ar & session_id;
+        ar & num_http_contexts;
+        ar & num_client_certs;
+        ar & initialized;
     }
     friend class boost::serialization::access;
 };
@@ -897,12 +897,12 @@ private:
         // There is a very good chance that saving/loading during a network connection will break,
         // regardless!
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& ClCertA.certificate;
-        ar& ClCertA.private_key;
-        ar& ClCertA.init;
-        ar& context_counter;
-        ar& client_certs_counter;
-        ar& client_certs;
+        ar & ClCertA.certificate;
+        ar & ClCertA.private_key;
+        ar & ClCertA.init;
+        ar & context_counter;
+        ar & client_certs_counter;
+        ar & client_certs;
         // NOTE: `contexts` is not serialized because it contains non-serializable data. (i.e.
         // handles to ongoing HTTP requests.) Serializing across HTTP contexts will break.
     }

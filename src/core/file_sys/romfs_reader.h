@@ -92,13 +92,13 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<RomFSReader>(*this);
-        ar& is_encrypted;
-        ar& file;
-        ar& key;
-        ar& ctr;
-        ar& file_offset;
-        ar& crypto_offset;
-        ar& data_size;
+        ar & is_encrypted;
+        ar & file;
+        ar & key;
+        ar & ctr;
+        ar & file_offset;
+        ar & crypto_offset;
+        ar & data_size;
     }
     friend class boost::serialization::access;
 };
@@ -144,7 +144,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<RomFSReader>(*this);
-        ar& data_size;
+        ar & data_size;
     }
     friend class boost::serialization::access;
 };

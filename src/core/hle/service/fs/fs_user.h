@@ -41,7 +41,7 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
             *this);
-        ar& program_id;
+        ar & program_id;
     }
     friend class boost::serialization::access;
 };

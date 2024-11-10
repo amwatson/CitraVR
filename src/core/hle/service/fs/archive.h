@@ -334,10 +334,10 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& id_code_map;
-        ar& handle_map;
-        ar& next_handle;
-        ar& sd_savedata_source;
+        ar & id_code_map;
+        ar & handle_map;
+        ar & next_handle;
+        ar & sd_savedata_source;
     }
     friend class boost::serialization::access;
 };

@@ -56,7 +56,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& base_path;
+        ar & base_path;
     }
     friend class boost::serialization::access;
 };

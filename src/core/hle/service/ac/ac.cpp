@@ -206,10 +206,10 @@ Module::Module(Core::System& system_) : system(system_) {}
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
-    ar& ac_connected;
-    ar& close_event;
-    ar& connect_event;
-    ar& disconnect_event;
+    ar & ac_connected;
+    ar & close_event;
+    ar & connect_event;
+    ar & disconnect_event;
     // default_config is never written to
 }
 SERIALIZE_IMPL(Module)

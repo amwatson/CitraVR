@@ -342,8 +342,7 @@ void JNICALL Java_org_citra_citra_1emu_NativeLibrary_initializeGpuDriver(
                         GetJString(env, custom_driver_name), GetJString(env, file_redirect_dir));
 }
 
-void JNICALL Java_org_citra_citra_1emu_NativeLibrary_enableAdrenoTurboMode(JNIEnv* env,
-                                                                           jobject obj,
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_enableAdrenoTurboMode(JNIEnv* env, jobject obj,
                                                                            jboolean enable) {
     EnableAdrenoTurboMode(enable);
 }
@@ -356,8 +355,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_notifyOrientationChange([[maybe_unu
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layout_option);
 }
 void Java_org_citra_citra_1emu_NativeLibrary_updateFramebuffer([[maybe_unused]] JNIEnv* env,
-                                                                    [[maybe_unused]] jobject obj,
-                                                                    jboolean is_portrait_mode) {
+                                                               [[maybe_unused]] jobject obj,
+                                                               jboolean is_portrait_mode) {
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
         system.GPU().Renderer().UpdateCurrentFramebufferLayout(is_portrait_mode);

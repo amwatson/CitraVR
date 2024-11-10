@@ -723,7 +723,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
-        ar& do_output;
+        ar & do_output;
     }
     friend class boost::serialization::access;
 };

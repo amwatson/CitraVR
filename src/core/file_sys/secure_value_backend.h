@@ -13,7 +13,7 @@
 namespace FileSys {
 class SecureValueBackend : NonCopyable {
 public:
-    virtual ~SecureValueBackend(){};
+    virtual ~SecureValueBackend() {};
 
     virtual Result ObsoletedSetSaveDataSecureValue(u32 unique_id, u8 title_variation,
                                                    u32 secure_value_slot, u64 secure_value) = 0;

@@ -79,7 +79,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<FileBackend>(*this);
-        ar& data;
+        ar & data;
     }
     friend class boost::serialization::access;
 };
@@ -242,7 +242,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveBackend>(*this);
-        ar& ncch_data;
+        ar & ncch_data;
     }
     friend class boost::serialization::access;
 };

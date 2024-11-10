@@ -23,6 +23,7 @@
 #include "citra_sdl/emu_window/emu_window_sdl2_vk.h"
 #endif
 #include "SDL_messagebox.h"
+#include "citra_meta/common_strings.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -41,7 +42,6 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/movie.h"
 #include "input_common/main.h"
-#include "citra_meta/common_strings.h"
 #include "network/network.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -391,8 +391,8 @@ void LaunchSdlFrontend(int argc, char** argv) {
 
     const auto scope = emu_window->Acquire();
 
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
-             Common::g_scm_branch, Common::g_scm_desc);
+    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
+             Common::g_scm_desc);
     Settings::LogSettings();
 
     const Core::System::ResultStatus load_result{

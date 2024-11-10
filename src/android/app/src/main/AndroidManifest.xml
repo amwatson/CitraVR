@@ -34,9 +34,9 @@
         android:name="org.citra.citra_emu.CitraApplication"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
+        android:appCategory="game"
         android:allowBackup="false"
         android:supportsRtl="true"
-        android:isGame="true"
         android:banner="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
 

@@ -147,8 +147,6 @@ private:
     const PlayTime::PlayTimeManager& play_time_manager;
 };
 
-Q_DECLARE_METATYPE(GameListOpenTarget);
-
 class GameListPlaceholder : public QWidget {
     Q_OBJECT
 public:

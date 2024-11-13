@@ -92,7 +92,7 @@ SERIALIZE_IMPL(PLG_LDR)
 
 void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel) {
     constexpr u32 TITLE_ID_APP_MASK = 0xFFFFFFED;
-    constexpr u32 TITLE_ID_APP_VALUE = 0x04000000;
+    constexpr u32 TITLE_ID_APP_VALUE = 0x00040000;
     if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded ||
         (static_cast<u32>(process.codeset->program_id >> 32) & TITLE_ID_APP_MASK) !=
             TITLE_ID_APP_VALUE) {

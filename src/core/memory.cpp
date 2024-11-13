@@ -586,7 +586,7 @@ bool MemorySystem::IsValidVirtualAddress(const Kernel::Process& process, const V
     return false;
 }
 
-bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) const {
+bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
     return GetPhysicalRef(paddr);
 }
 
@@ -637,11 +637,15 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* MemorySystem::GetPhysicalPointer(PAddr address) const {
+u8* MemorySystem::GetPhysicalPointer(PAddr address) {
     return GetPhysicalRef(address);
 }
 
-MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
+MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
+    if (address == physical_ptr_cache.first) {
+        return physical_ptr_cache.second;
+    }
+
     constexpr std::array memory_areas = {
         std::make_pair(VRAM_PADDR, VRAM_SIZE),
         std::make_pair(DSP_RAM_PADDR, DSP_RAM_SIZE),
@@ -655,10 +659,11 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
         return address >= area.first && address <= area.first + area.second;
     });
 
-    if (area == memory_areas.end()) {
+    if (area == memory_areas.end()) [[unlikely]] {
         LOG_ERROR(HW_Memory, "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}", address,
                   impl->GetPC());
-        return nullptr;
+        physical_ptr_cache = {address, {nullptr}};
+        return physical_ptr_cache.second;
     }
 
     u32 offset_into_region = address - area->first;
@@ -680,11 +685,13 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
     default:
         UNREACHABLE();
     }
-    if (offset_into_region > target_mem->GetSize()) {
-        return {nullptr};
+    if (offset_into_region > target_mem->GetSize()) [[unlikely]] {
+        physical_ptr_cache = {address, {nullptr}};
+        return physical_ptr_cache.second;
     }
 
-    return {target_mem, offset_into_region};
+    physical_ptr_cache = {address, {target_mem, offset_into_region}};
+    return physical_ptr_cache.second;
 }
 
 std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr addr) {

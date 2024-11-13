@@ -520,16 +520,16 @@ public:
     std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr);
 
     /// Gets a pointer to the memory region beginning at the specified physical address.
-    u8* GetPhysicalPointer(PAddr address) const;
+    u8* GetPhysicalPointer(PAddr address);
 
     /// Returns a reference to the memory region beginning at the specified physical address
-    MemoryRef GetPhysicalRef(PAddr address) const;
+    MemoryRef GetPhysicalRef(PAddr address);
 
     /// Determines if the given VAddr is valid for the specified process.
     bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
     /// Returns true if the address refers to a valid memory region
-    bool IsValidPhysicalAddress(PAddr paddr) const;
+    bool IsValidPhysicalAddress(PAddr paddr);
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(const u8* pointer) const;
@@ -572,6 +572,8 @@ private:
     MemoryRef GetPointerForRasterizerCache(VAddr addr) const;
 
     void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
+
+    std::pair<PAddr, MemoryRef> physical_ptr_cache;
 
 private:
     class Impl;

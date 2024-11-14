@@ -68,7 +68,7 @@ public:
 
     /// Binds a PICA decompiled vertex shader
     bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                                     const VertexLayout& layout);
+                                     const VertexLayout& layout, bool accurate_mul);
 
     /// Binds a passthrough vertex shader
     void UseTrivialVertexShader();

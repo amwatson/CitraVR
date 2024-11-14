@@ -9,6 +9,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
 #include "common/bit_field.h"
+#include "common/hacks/hack_manager.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -20,6 +21,7 @@
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/pica/regs_lcd.h"
+#include "video_core/right_eye_disabler.h"
 
 SERIALIZE_EXPORT_IMPL(Service::GSP::SessionData)
 SERIALIZE_EXPORT_IMPL(Service::GSP::GSP_GPU)
@@ -599,6 +601,13 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
     LOG_DEBUG(Service_GSP, "called flag={:08X} process={} thread_id={}", flag, process->process_id,
               session_data->thread_id);
 
+    bool right_eye_disable_allow =
+        Common::Hacks::hack_manager.GetHackAllowMode(Common::Hacks::HackType::RIGHT_EYE_DISABLE,
+                                                     process->codeset->program_id) !=
+        Common::Hacks::HackAllowMode::DISALLOW;
+    auto& gpu = system.GPU();
+    gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
+
     if (active_thread_id == session_data->thread_id) {
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
                 ErrorLevel::Success};
@@ -708,11 +717,11 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
 template <class Archive>
 void GSP_GPU::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar & shared_memory;
-    ar & active_thread_id;
-    ar & first_initialization;
-    ar & used_thread_ids;
-    ar & saved_vram;
+    ar& shared_memory;
+    ar& active_thread_id;
+    ar& first_initialization;
+    ar& used_thread_ids;
+    ar& saved_vram;
 }
 SERIALIZE_IMPL(GSP_GPU)
 
@@ -771,10 +780,10 @@ std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> GSP_GPU::MakeSes
 template <class Archive>
 void SessionData::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(*this);
-    ar & gsp;
-    ar & interrupt_event;
-    ar & thread_id;
-    ar & registered;
+    ar& gsp;
+    ar& interrupt_event;
+    ar& thread_id;
+    ar& registered;
 }
 SERIALIZE_IMPL(SessionData)
 

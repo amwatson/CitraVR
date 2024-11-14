@@ -847,6 +847,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()
                 )
             )
+            add(
+                SwitchSetting(
+                    IntSetting.DISABLE_RIGHT_EYE_RENDER,
+                    R.string.disable_right_eye_render,
+                    R.string.use_disk_shader_cache_description,
+                    IntSetting.DISABLE_RIGHT_EYE_RENDER.key,
+                    IntSetting.DISABLE_RIGHT_EYE_RENDER.defaultValue
+                )
+            )
 
             add(HeaderSetting(R.string.cardboard_vr))
             add(

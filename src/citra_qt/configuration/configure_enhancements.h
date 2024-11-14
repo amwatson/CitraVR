@@ -43,5 +43,6 @@ private:
     ConfigurationShared::CheckState custom_textures;
     ConfigurationShared::CheckState preload_textures;
     ConfigurationShared::CheckState async_custom_loading;
+    ConfigurationShared::CheckState disable_right_eye_render;
     QColor bg_color;
 };

@@ -330,7 +330,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
 bool RasterizerVulkan::SetupVertexShader() {
     MICROPROFILE_SCOPE(Vulkan_VS);
     return pipeline_cache.UseProgrammableVertexShader(regs, pica.vs_setup,
-                                                      pipeline_info.vertex_layout);
+                                                      pipeline_info.vertex_layout, accurate_mul);
 }
 
 bool RasterizerVulkan::SetupGeometryShader() {
@@ -963,9 +963,10 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
     if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<Common::Vec2f, 128> new_data;
 
-        std::transform(
-            pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
-            [](const auto& entry) { return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()}; });
+        std::transform(pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
+                       [](const auto& entry) {
+                           return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
+                       });
 
         if (new_data != fog_lut_data || invalidate) {
             fog_lut_data = new_data;

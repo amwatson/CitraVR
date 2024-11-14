@@ -66,7 +66,7 @@ struct PicaGSConfigState {
  */
 struct PicaVSConfigState {
     void Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, bool use_clip_planes_,
-              bool use_geometry_shader_);
+              bool use_geometry_shader_, bool accurate_mul_);
 
     bool use_clip_planes;
     bool use_geometry_shader;
@@ -92,7 +92,7 @@ struct PicaVSConfigState {
  */
 struct PicaVSConfig : Common::HashableStruct<PicaVSConfigState> {
     explicit PicaVSConfig(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                          bool use_clip_planes_, bool use_geometry_shader_);
+                          bool use_clip_planes_, bool use_geometry_shader_, bool accurate_mul_);
 };
 
 /**

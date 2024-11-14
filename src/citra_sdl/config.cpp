@@ -160,6 +160,7 @@ void SdlConfig::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_red);
     ReadSetting("Renderer", Settings::values.bg_green);
     ReadSetting("Renderer", Settings::values.bg_blue);
+    ReadSetting("Renderer", Settings::values.disable_right_eye_render);
 
     // Layout
     ReadSetting("Layout", Settings::values.layout_option);

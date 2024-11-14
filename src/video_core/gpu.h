@@ -37,6 +37,7 @@ constexpr u64 FRAME_TICKS = 4481136ull;
 
 class GraphicsDebugger;
 class RendererBase;
+class RightEyeDisabler;
 
 /**
  * The GPU class is the high level interface to the video_core for core services.
@@ -92,6 +93,12 @@ public:
     /// Returns a mutable reference to the GSP command debugger.
     [[nodiscard]] GraphicsDebugger& Debugger();
 
+    RightEyeDisabler& GetRightEyeDisabler() {
+        return *right_eye_disabler;
+    }
+
+    void ReportLoadingProgramID(u64 program_ID);
+
 private:
     void SubmitCmdList(u32 index);
 
@@ -105,7 +112,10 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version);
 
+    std::unique_ptr<RightEyeDisabler> right_eye_disabler;
+
 private:
+    friend class RightEyeDisabler;
     struct Impl;
     std::unique_ptr<Impl> impl;
 

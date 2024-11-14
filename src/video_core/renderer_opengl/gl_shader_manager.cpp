@@ -82,7 +82,7 @@ static std::set<GLenum> GetSupportedFormats() {
 }
 
 static std::tuple<PicaVSConfig, Pica::ShaderSetup> BuildVSConfigFromRaw(
-    const ShaderDiskCacheRaw& raw, const Driver& driver) {
+    const ShaderDiskCacheRaw& raw, const Driver& driver, bool accurate_mul) {
     Pica::ProgramCode program_code{};
     Pica::SwizzleData swizzle_data{};
     std::copy_n(raw.GetProgramCode().begin(), Pica::MAX_PROGRAM_CODE_LENGTH, program_code.begin());
@@ -96,7 +96,7 @@ static std::tuple<PicaVSConfig, Pica::ShaderSetup> BuildVSConfigFromRaw(
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
     const bool use_geometry_shader = !raw.GetRawShaderConfig().lighting.disable;
     return {PicaVSConfig{raw.GetRawShaderConfig(), setup, driver.HasClipCullDistance(),
-                         use_geometry_shader},
+                         use_geometry_shader, accurate_mul},
             setup};
 }
 
@@ -337,12 +337,14 @@ ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, con
 ShaderProgramManager::~ShaderProgramManager() = default;
 
 bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
-                                                       Pica::ShaderSetup& setup) {
+                                                       Pica::ShaderSetup& setup,
+                                                       bool accurate_mul) {
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
     const bool use_geometry_shader = !regs.lighting.disable;
 
-    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), use_geometry_shader};
+    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), use_geometry_shader,
+                        accurate_mul};
     auto [handle, result] = impl->programmable_vertex_shaders.Get(config, setup);
     if (handle == 0)
         return false;
@@ -358,9 +360,8 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal&
         const u64 unique_identifier = GetUniqueIdentifier(regs, program_code);
         const ShaderDiskCacheRaw raw{unique_identifier, ProgramType::VS, regs,
                                      std::move(program_code)};
-        const bool sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
         disk_cache.SaveRaw(raw);
-        disk_cache.SaveDecompiled(unique_identifier, *result, sanitize_mul);
+        disk_cache.SaveDecompiled(unique_identifier, *result, accurate_mul);
     }
     return true;
 }
@@ -398,7 +399,7 @@ void ShaderProgramManager::UseFragmentShader(const Pica::RegsInternal& regs,
     }
 }
 
-void ShaderProgramManager::ApplyTo(OpenGLState& state) {
+void ShaderProgramManager::ApplyTo(OpenGLState& state, bool accurate_mul) {
     if (impl->separable) {
         if (driver.HasBug(DriverBug::ShaderStageChangeFreeze)) {
             glUseProgramStages(
@@ -418,15 +419,15 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
             cached_program.Create(false,
                                   std::array{impl->current.vs, impl->current.gs, impl->current.fs});
             auto& disk_cache = impl->disk_cache;
-            const bool sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
-            disk_cache.SaveDumpToFile(unique_identifier, cached_program.handle, sanitize_mul);
+            disk_cache.SaveDumpToFile(unique_identifier, cached_program.handle, accurate_mul);
         }
         state.draw.shader_program = cached_program.handle;
     }
 }
 
 void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
-                                         const VideoCore::DiskResourceLoadCallback& callback) {
+                                         const VideoCore::DiskResourceLoadCallback& callback,
+                                         bool accurate_mul) {
     auto& disk_cache = impl->disk_cache;
     const auto transferable = disk_cache.LoadTransferable();
     if (!transferable) {
@@ -484,9 +485,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 
             if (dump != dump_map.end() && decomp != decompiled_map.end()) {
                 // Only load the vertex shader if its sanitize_mul setting matches
-                const bool sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
                 if (raw.GetProgramType() == ProgramType::VS &&
-                    decomp->second.sanitize_mul != sanitize_mul) {
+                    decomp->second.sanitize_mul != accurate_mul) {
                     continue;
                 }
 
@@ -502,7 +502,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 // we have both the binary shader and the decompiled, so inject it into the
                 // cache
                 if (raw.GetProgramType() == ProgramType::VS) {
-                    auto [conf, setup] = BuildVSConfigFromRaw(raw, driver);
+                    auto [conf, setup] = BuildVSConfigFromRaw(raw, driver, accurate_mul);
                     std::scoped_lock lock(mutex);
                     impl->programmable_vertex_shaders.Inject(conf, decomp->second.code,
                                                              std::move(shader));
@@ -541,8 +541,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             const auto decomp{decompiled_map.find(unique_identifier)};
 
             // Only load the program if its sanitize_mul setting matches
-            const bool sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
-            if (decomp->second.sanitize_mul != sanitize_mul) {
+            if (decomp->second.sanitize_mul != accurate_mul) {
                 continue;
             }
 
@@ -610,7 +609,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             // Otherwise decompile and build the shader at boot and save the result to the
             // precompiled file
             if (raw.GetProgramType() == ProgramType::VS) {
-                auto [conf, setup] = BuildVSConfigFromRaw(raw, driver);
+                auto [conf, setup] = BuildVSConfigFromRaw(raw, driver, accurate_mul);
                 code = GLSL::GenerateVertexShader(setup, conf, impl->separable);
                 OGLShaderStage stage{impl->separable};
                 stage.Create(code.c_str(), GL_VERTEX_SHADER);

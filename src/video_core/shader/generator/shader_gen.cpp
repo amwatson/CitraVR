@@ -37,14 +37,14 @@ void PicaGSConfigState::Init(const Pica::RegsInternal& regs, bool use_clip_plane
 }
 
 void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                             bool use_clip_planes_, bool use_geometry_shader_) {
+                             bool use_clip_planes_, bool use_geometry_shader_, bool accurate_mul_) {
     use_clip_planes = use_clip_planes_;
     use_geometry_shader = use_geometry_shader_;
+    sanitize_mul = accurate_mul_;
 
     program_hash = setup.GetProgramCodeHash();
     swizzle_hash = setup.GetSwizzleDataHash();
     main_offset = regs.vs.main_offset;
-    sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
 
     num_outputs = 0;
     load_flags.fill(AttribLoadFlags::Float);
@@ -60,8 +60,8 @@ void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& 
 }
 
 PicaVSConfig::PicaVSConfig(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                           bool use_clip_planes_, bool use_geometry_shader_) {
-    state.Init(regs, setup, use_clip_planes_, use_geometry_shader_);
+                           bool use_clip_planes_, bool use_geometry_shader_, bool accurate_mul_) {
+    state.Init(regs, setup, use_clip_planes_, use_geometry_shader_, accurate_mul_);
 }
 
 PicaFixedGSConfig::PicaFixedGSConfig(const Pica::RegsInternal& regs, bool use_clip_planes_) {

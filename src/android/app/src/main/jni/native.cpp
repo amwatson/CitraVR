@@ -50,7 +50,6 @@
 #ifdef ENABLE_VULKAN
 #include "jni/emu_window/emu_window_vk.h"
 #endif
-#include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
@@ -181,7 +180,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     if (app_loader) {
         app_loader->ReadProgramId(program_id);
         system.RegisterAppLoaderEarly(app_loader);
-        GameSettings::LoadOverrides(program_id);
     }
     system.ApplySettings();
     Settings::LogSettings();
@@ -624,7 +622,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
     if (system.IsPoweredOn()) {
         u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
-        GameSettings::LoadOverrides(program_id);
     }
 
     system.ApplySettings();

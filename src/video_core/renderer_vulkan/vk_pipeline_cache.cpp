@@ -334,13 +334,14 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
 
 bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
                                                 Pica::ShaderSetup& setup,
-                                                const VertexLayout& layout) {
+                                                const VertexLayout& layout, bool accurate_mul) {
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
     // We also don't need the geometry shader if we have the barycentric extension.
     const bool use_geometry_shader = instance.UseGeometryShaders() && !regs.lighting.disable &&
                                      !instance.IsFragmentShaderBarycentricSupported();
-    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(), use_geometry_shader};
+    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(), use_geometry_shader,
+                        accurate_mul};
 
     for (u32 i = 0; i < layout.attribute_count; i++) {
         const VertexAttribute& attr = layout.attributes[i];

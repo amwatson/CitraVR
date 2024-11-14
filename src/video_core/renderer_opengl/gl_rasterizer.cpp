@@ -175,7 +175,7 @@ void RasterizerOpenGL::TickFrame() {
 
 void RasterizerOpenGL::LoadDiskResources(const std::atomic_bool& stop_loading,
                                          const VideoCore::DiskResourceLoadCallback& callback) {
-    shader_manager.LoadDiskCache(stop_loading, callback);
+    shader_manager.LoadDiskCache(stop_loading, callback, accurate_mul);
 }
 
 void RasterizerOpenGL::SyncFixedState() {
@@ -271,7 +271,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    return shader_manager.UseProgrammableVertexShader(regs, pica.vs_setup);
+    return shader_manager.UseProgrammableVertexShader(regs, pica.vs_setup, accurate_mul);
 }
 
 bool RasterizerOpenGL::SetupGeometryShader() {
@@ -333,7 +333,7 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
     SetupVertexArray(buffer_ptr, buffer_offset, vs_input_index_min, vs_input_index_max);
     vertex_buffer.Unmap(vs_input_size);
 
-    shader_manager.ApplyTo(state);
+    shader_manager.ApplyTo(state, accurate_mul);
     state.Apply();
 
     if (is_indexed) {
@@ -458,7 +458,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
         shader_manager.UseTrivialVertexShader();
         shader_manager.UseTrivialGeometryShader();
-        shader_manager.ApplyTo(state);
+        shader_manager.ApplyTo(state, accurate_mul);
         state.Apply();
 
         std::size_t max_vertices = 3 * (VERTEX_BUFFER_SIZE / (3 * sizeof(HardwareVertex)));
@@ -970,9 +970,10 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<Common::Vec2f, 128> new_data;
 
-        std::transform(
-            pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
-            [](const auto& entry) { return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()}; });
+        std::transform(pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
+                       [](const auto& entry) {
+                           return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
+                       });
 
         if (new_data != fog_lut_data || invalidate) {
             fog_lut_data = new_data;

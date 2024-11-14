@@ -1138,9 +1138,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 val perfStats = NativeLibrary.getPerfStats()
                 if (perfStats[FPS] > 0) {
                     binding.showFpsText.text = String.format(
-                        "FPS: %d Speed: %d%%",
+                        "FPS: %d Speed: %d%% FT: %.2fms",
                         (perfStats[FPS] + 0.5).toInt(),
-                        (perfStats[SPEED] * 100.0 + 0.5).toInt()
+                        (perfStats[SPEED] * 100.0 + 0.5).toInt(),
+                        (perfStats[FRAMETIME] * 1000.0f).toFloat()
                     )
                 }
                 perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)

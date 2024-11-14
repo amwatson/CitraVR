@@ -82,5 +82,12 @@ public:
                                    [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
 
     virtual void SyncEntireState() {}
+
+    void SetAccurateMul(bool accurate_mul_) {
+        accurate_mul = accurate_mul_;
+    }
+
+protected:
+    bool accurate_mul = false;
 };
 } // namespace VideoCore

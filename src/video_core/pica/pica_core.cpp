@@ -91,7 +91,11 @@ void PicaCore::SetInterruptHandler(Service::GSP::InterruptHandler& signal_interr
     this->signal_interrupt = signal_interrupt;
 }
 
-void PicaCore::ProcessCmdList(PAddr list, u32 size) {
+void PicaCore::ProcessCmdList(PAddr list, u32 size, bool ignore_list) {
+    if (ignore_list) {
+        signal_interrupt(Service::GSP::InterruptId::P3D);
+        return;
+    }
     // Initialize command list tracking.
     const u8* head = memory.GetPhysicalPointer(list);
     cmd_list.Reset(list, head, size);
@@ -610,11 +614,78 @@ void PicaCore::LoadVertices(bool is_indexed) {
     }
 }
 
+PicaCore::RenderPropertiesGuess PicaCore::GuessCmdRenderProperties(PAddr list, u32 size) {
+    // Initialize command list tracking.
+    const u8* head = memory.GetPhysicalPointer(list);
+    cmd_list.Reset(list, head, size);
+
+    constexpr size_t max_iterations = 0x100;
+
+    RenderPropertiesGuess find_info{};
+
+    find_info.vp_height = regs.internal.rasterizer.viewport_size_y.Value();
+    find_info.paddr = regs.internal.framebuffer.framebuffer.color_buffer_address.Value() * 8;
+
+    auto process_write = [this, &find_info](u32 cmd_id, u32 value) {
+        switch (cmd_id) {
+        case PICA_REG_INDEX(rasterizer.viewport_size_y):
+            find_info.vp_height = value;
+            find_info.vp_heigh_found = true;
+            break;
+        case PICA_REG_INDEX(framebuffer.framebuffer.color_buffer_address):
+            find_info.paddr = value * 8;
+            find_info.paddr_found = true;
+            break;
+        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[0]) :
+        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[1]) : {
+            const u32 index =
+                static_cast<u32>(cmd_id - PICA_REG_INDEX(pipeline.command_buffer.trigger[0]));
+            const PAddr addr = regs.internal.pipeline.command_buffer.GetPhysicalAddress(index);
+            const u32 size = regs.internal.pipeline.command_buffer.GetSize(index);
+            const u8* head = memory.GetPhysicalPointer(addr);
+            cmd_list.Reset(addr, head, size);
+            break;
+        }
+        default:
+            break;
+        }
+        return find_info.vp_heigh_found && find_info.paddr_found;
+    };
+
+    size_t iterations = 0;
+    while (cmd_list.current_index < cmd_list.length && iterations < max_iterations) {
+        // Align read pointer to 8 bytes
+        if (cmd_list.current_index % 2 != 0) {
+            cmd_list.current_index++;
+        }
+
+        // Read the header and the value to write.
+        const u32 value = cmd_list.head[cmd_list.current_index++];
+        const CommandHeader header{cmd_list.head[cmd_list.current_index++]};
+
+        // Write to the requested PICA register.
+        if (process_write(header.cmd_id, value))
+            break;
+
+        // Write any extra paramters as well.
+        for (u32 i = 0; i < header.extra_data_length; ++i) {
+            const u32 cmd = header.cmd_id + (header.group_commands ? i + 1 : 0);
+            const u32 extra_value = cmd_list.head[cmd_list.current_index++];
+            if (process_write(cmd, extra_value))
+                break;
+        }
+
+        iterations++;
+    }
+
+    return find_info;
+}
+
 template <class Archive>
 void PicaCore::CommandList::serialize(Archive& ar, const u32 file_version) {
-    ar & addr;
-    ar & length;
-    ar & current_index;
+    ar& addr;
+    ar& length;
+    ar& current_index;
     if (Archive::is_loading::value) {
         const u8* ptr = Core::System::GetInstance().Memory().GetPhysicalPointer(addr);
         head = reinterpret_cast<const u32*>(ptr);

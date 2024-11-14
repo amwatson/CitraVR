@@ -66,6 +66,7 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->toggle_custom_textures->setChecked(Settings::values.custom_textures.GetValue());
     ui->toggle_preload_textures->setChecked(Settings::values.preload_textures.GetValue());
     ui->toggle_async_custom_loading->setChecked(Settings::values.async_custom_loading.GetValue());
+    ui->disable_right_eye_render->setChecked(Settings::values.disable_right_eye_render.GetValue());
 }
 
 void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
@@ -120,6 +121,7 @@ void ConfigureEnhancements::ApplyConfiguration() {
         Settings::values.pp_shader_name =
             ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     }
+    Settings::values.disable_right_eye_render = ui->disable_right_eye_render->isChecked();
 
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.filter_mode,
                                              ui->toggle_linear_filter, linear_filter);
@@ -133,6 +135,9 @@ void ConfigureEnhancements::ApplyConfiguration() {
                                              ui->toggle_preload_textures, preload_textures);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_custom_loading,
                                              ui->toggle_async_custom_loading, async_custom_loading);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.disable_right_eye_render,
+                                             ui->disable_right_eye_render,
+                                             disable_right_eye_render);
 }
 
 void ConfigureEnhancements::SetupPerGameUI() {
@@ -146,10 +151,15 @@ void ConfigureEnhancements::SetupPerGameUI() {
         ui->toggle_preload_textures->setEnabled(Settings::values.preload_textures.UsingGlobal());
         ui->toggle_async_custom_loading->setEnabled(
             Settings::values.async_custom_loading.UsingGlobal());
+        ui->disable_right_eye_render->setEnabled(
+            Settings::values.disable_right_eye_render.UsingGlobal());
         return;
     }
 
-    ui->stereo_group->setVisible(false);
+    ui->render_3d_combobox->setEnabled(false);
+    ui->factor_3d->setEnabled(false);
+    ui->mono_rendering_eye->setEnabled(false);
+
     ui->widget_shader->setVisible(false);
 
     ConfigurationShared::SetColoredTristate(ui->toggle_linear_filter, Settings::values.filter_mode,
@@ -163,6 +173,9 @@ void ConfigureEnhancements::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->toggle_async_custom_loading,
                                             Settings::values.async_custom_loading,
                                             async_custom_loading);
+    ConfigurationShared::SetColoredTristate(ui->disable_right_eye_render,
+                                            Settings::values.disable_right_eye_render,
+                                            disable_right_eye_render);
 
     ConfigurationShared::SetColoredComboBox(
         ui->resolution_factor_combobox, ui->widget_resolution,

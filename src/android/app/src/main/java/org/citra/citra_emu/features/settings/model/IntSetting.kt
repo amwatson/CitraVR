@@ -63,7 +63,8 @@ enum class IntSetting(
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
     DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
-    ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2);
+    ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
+    DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, 1);
     override var int: Int = defaultValue
 
     override val valueAsString: String
@@ -91,7 +92,8 @@ enum class IntSetting(
             CPU_JIT,
             ASYNC_CUSTOM_LOADING,
             AUDIO_INPUT_TYPE,
-            USE_ARTIC_BASE_CONTROLLER
+            USE_ARTIC_BASE_CONTROLLER,
+            SHADERS_ACCURATE_MUL,
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

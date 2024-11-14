@@ -182,6 +182,11 @@ filter_mode =
 # Set to 0 for no delay, only useful in dynamic-fps games to simulate GPU delay.
 delay_game_render_thread_us =
 
+# Disables rendering the right eye image.
+# Greatly improves performance in some games, but can cause flickering in others.
+# 0: Enable right eye rendering, 1 (default): Disable right eye rendering
+disable_right_eye_render =
+
 [Layout]
 # Layout for the screen inside the render window, landscape mode
 # 0: Original (screens vertically aligned)

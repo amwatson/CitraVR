@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/common_types.h"
 #include "core/hle/service/gsp/gsp_interrupt.h"
 #include "video_core/pica/geometry_pipeline.h"
 #include "video_core/pica/packed_attribute.h"
@@ -36,7 +37,7 @@ public:
 
     void SetInterruptHandler(Service::GSP::InterruptHandler& signal_interrupt);
 
-    void ProcessCmdList(PAddr list, u32 size);
+    void ProcessCmdList(PAddr list, u32 size, bool ignore_list);
 
 private:
     void InitializeRegs();
@@ -109,10 +110,10 @@ public:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
-            ar & input_vertex;
-            ar & current_attribute;
-            ar & reset_geometry_pipeline;
-            ar & queue;
+            ar& input_vertex;
+            ar& current_attribute;
+            ar& reset_geometry_pipeline;
+            ar& queue;
         }
     };
 
@@ -199,7 +200,7 @@ public:
 
             template <class Archive>
             void serialize(Archive& ar, const u32 file_version) {
-                ar & raw;
+                ar& raw;
             }
         };
 
@@ -256,20 +257,30 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version) {
-        ar & regs_lcd;
-        ar & regs.reg_array;
-        ar & gs_unit;
-        ar & vs_setup;
-        ar & gs_setup;
-        ar & proctex;
-        ar & lighting;
-        ar & fog;
-        ar & input_default_attributes;
-        ar & immediate;
-        ar & geometry_pipeline;
-        ar & primitive_assembler;
-        ar & cmd_list;
+        ar& regs_lcd;
+        ar& regs.reg_array;
+        ar& gs_unit;
+        ar& vs_setup;
+        ar& gs_setup;
+        ar& proctex;
+        ar& lighting;
+        ar& fog;
+        ar& input_default_attributes;
+        ar& immediate;
+        ar& geometry_pipeline;
+        ar& primitive_assembler;
+        ar& cmd_list;
     }
+
+public:
+    struct RenderPropertiesGuess {
+        u32 vp_height;
+        PAddr paddr;
+        bool vp_heigh_found = false;
+        bool paddr_found = false;
+    };
+
+    RenderPropertiesGuess GuessCmdRenderProperties(PAddr list, u32 size);
 
 private:
     Memory::MemorySystem& memory;

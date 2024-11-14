@@ -38,9 +38,10 @@ public:
     ~ShaderProgramManager();
 
     void LoadDiskCache(const std::atomic_bool& stop_loading,
-                       const VideoCore::DiskResourceLoadCallback& callback);
+                       const VideoCore::DiskResourceLoadCallback& callback, bool accurate_mul);
 
-    bool UseProgrammableVertexShader(const Pica::RegsInternal& config, Pica::ShaderSetup& setup);
+    bool UseProgrammableVertexShader(const Pica::RegsInternal& config, Pica::ShaderSetup& setup,
+                                     bool accurate_mul);
 
     void UseTrivialVertexShader();
 
@@ -50,7 +51,7 @@ public:
 
     void UseFragmentShader(const Pica::RegsInternal& config, const Pica::Shader::UserConfig& user);
 
-    void ApplyTo(OpenGLState& state);
+    void ApplyTo(OpenGLState& state, bool accurate_mul);
 
 private:
     Frontend::EmuWindow& emu_window;

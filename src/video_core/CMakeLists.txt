@@ -12,6 +12,7 @@ add_library(video_core STATIC
     gpu.cpp
     gpu.h
     gpu_debugger.h
+    gpu_impl.h
     pica_types.h
     precompiled_headers.h
     rasterizer_accelerated.cpp
@@ -63,6 +64,8 @@ add_library(video_core STATIC
     # Needed as a fallback regardless of enabled renderers.
     renderer_software/sw_blitter.cpp
     renderer_software/sw_blitter.h
+    right_eye_disabler.cpp
+    right_eye_disabler.h
     shader/debug_data.h
     shader/generator/glsl_fs_shader_gen.cpp
     shader/generator/glsl_fs_shader_gen.h

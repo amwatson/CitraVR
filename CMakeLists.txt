@@ -440,7 +440,7 @@ endif()
 add_subdirectory(src)
 add_subdirectory(dist/installer)
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra_meta)
 
 # Create target for outputting distributable bundles.
 # Not supported for mobile platforms as distributables are built differently.

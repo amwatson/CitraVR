@@ -452,7 +452,7 @@ if (NOT ANDROID AND NOT IOS)
     endif()
 
     if (ENABLE_DEDICATED_ROOM)
-        bundle_target(citra-room)
+        bundle_target(citra_room)
     endif()
 endif()
 

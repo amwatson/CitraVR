@@ -6,7 +6,7 @@ add_executable(citra_room
     citra_room.rc
 )
 
-set_target_properties(citra_room PROPERTIES OUTPUT_NAME "citra-room")
+set_target_properties(citra_room PROPERTIES OUTPUT_NAME "azahar-room")
 
 create_target_directory_groups(citra_room)
 

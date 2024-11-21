@@ -17,16 +17,16 @@
   !error "PRODUCT_VARIANT must be defined"
 !endif
 
-!define PRODUCT_NAME "Citra"
-!define PRODUCT_PUBLISHER "Citra Emulator Developers"
-!define PRODUCT_WEB_SITE "https://citra-emu.org/"
+!define PRODUCT_NAME "Azahar"
+!define PRODUCT_PUBLISHER "Azahar Emulator Developers"
+!define PRODUCT_WEB_SITE "https://azahar-emu.org/"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
 !define BINARY_SOURCE_DIR "..\..\build\bundle"
 
 Name "${PRODUCT_NAME}"
-OutFile "citra-${PRODUCT_VERSION}-windows-${PRODUCT_VARIANT}-installer.exe"
+OutFile "azahar-${PRODUCT_VERSION}-windows-${PRODUCT_VARIANT}-installer.exe"
 SetCompressor /SOLID lzma
 ShowInstDetails show
 ShowUnInstDetails show
@@ -162,9 +162,9 @@ Section "Base"
   ; Create start menu and desktop shortcuts
   ; This needs to be done after Dolphin.exe is copied
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk" "$INSTDIR\citra.exe"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
-    CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\citra.exe"
+    CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
 
   ; ??
@@ -181,12 +181,12 @@ SectionEnd
 Section -Post
   WriteUninstaller "$INSTDIR\uninst.exe"
 
-  WriteRegStr SHCTX "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\citra.exe"
+  WriteRegStr SHCTX "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\azahar.exe"
 
   ; Write metadata for add/remove programs applet
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayName" "$DisplayName"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe /$MultiUser.InstallMode"
-  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\citra.exe"
+  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\azahar.exe"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
@@ -208,8 +208,8 @@ Section Uninstall
 
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
-  Delete "$INSTDIR\citra.exe"
-  Delete "$INSTDIR\citra-room.exe"
+  Delete "$INSTDIR\azahar.exe"
+  Delete "$INSTDIR\azahar-room.exe"
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\qt.conf"
   Delete "$INSTDIR\README.md"

@@ -298,7 +298,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
             }
             case 'v':
                 const std::string version_string =
-                    std::string("Citra ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+                    std::string("Azahar ") + Common::g_scm_branch + " " + Common::g_scm_desc;
                 ShowCommandOutput("Version", version_string);
                 exit(0);
             }
@@ -391,7 +391,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
 
     const auto scope = emu_window->Acquire();
 
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
+    LOG_INFO(Frontend, "Azahar Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
     Settings::LogSettings();
 
@@ -407,7 +407,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
         exit(-1);
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
         LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
-                               "being used with Citra. \n\n For more information on dumping and "
+                               "being used with Azahar. \n\n For more information on dumping and "
                                "decrypting games, please refer to: "
                                "https://web.archive.org/web/20240304210021/https://citra-emu.org/"
                                "wiki/dumping-game-cartridges/");

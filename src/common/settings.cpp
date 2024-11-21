@@ -80,7 +80,7 @@ void LogSettings() {
         LOG_INFO(Config, "{}: {}", name, value);
     };
 
-    LOG_INFO(Config, "Citra Configuration:");
+    LOG_INFO(Config, "Azahar Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
     log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
     log_setting("Controller_UseArticController", values.use_artic_base_controller.GetValue());

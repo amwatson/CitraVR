@@ -94,7 +94,7 @@ object DirectoryInitialization {
         val dataPath = PermissionsHandler.citraDirectory
         if (dataPath.toString().isNotEmpty()) {
             userPath = dataPath.toString()
-            android.util.Log.d("[Citra Frontend]", "[DirectoryInitialization] User Dir: $userPath")
+            android.util.Log.d("[Azahar Frontend]", "[DirectoryInitialization] User Dir: $userPath")
             return true
         }
         return false

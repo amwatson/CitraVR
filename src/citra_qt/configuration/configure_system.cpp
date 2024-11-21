@@ -296,11 +296,7 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
         ui->combo_download_region->setEnabled(false);
         ui->label_nus_download->setTextInteractionFlags(Qt::TextBrowserInteraction);
         ui->label_nus_download->setOpenExternalLinks(true);
-        ui->label_nus_download->setText(
-            tr("Citra is missing keys to download system files. <br><a "
-               "href='https://web.archive.org/web/20240304203412/https://citra-emu.org/wiki/"
-               "aes-keys/'><span style=\"text-decoration: "
-               "underline; color:#039be5;\">How to get keys?</span></a>"));
+        ui->label_nus_download->setText(tr("Azahar is missing keys to download system files."));
     }
 
     ConfigureTime();
@@ -703,9 +699,9 @@ void ConfigureSystem::DownloadFromNUS() {
     future_watcher.waitForFinished();
 
     if (failed) {
-        QMessageBox::critical(this, tr("Citra"), tr("Downloading system files failed."));
+        QMessageBox::critical(this, tr("Azahar"), tr("Downloading system files failed."));
     } else if (!future_watcher.isCanceled()) {
-        QMessageBox::information(this, tr("Citra"), tr("Successfully downloaded system files."));
+        QMessageBox::information(this, tr("Azahar"), tr("Successfully downloaded system files."));
     }
 
     ui->button_start_download->setEnabled(true);

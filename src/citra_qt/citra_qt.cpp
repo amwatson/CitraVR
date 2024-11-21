@@ -366,7 +366,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     ConnectMenuEvents();
     ConnectWidgetEvents();
 
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
+    LOG_INFO(Frontend, "Azahar Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
 #if CITRA_ARCH(x86_64)
     const auto& caps = Common::GetCPUCaps();
@@ -741,7 +741,7 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Load_File, QStringLiteral("Load File"));
     link_action_shortcut(ui->action_Load_Amiibo, QStringLiteral("Load Amiibo"));
     link_action_shortcut(ui->action_Remove_Amiibo, QStringLiteral("Remove Amiibo"));
-    link_action_shortcut(ui->action_Exit, QStringLiteral("Exit Citra"));
+    link_action_shortcut(ui->action_Exit, QStringLiteral("Exit Azahar"));
     link_action_shortcut(ui->action_Restart, QStringLiteral("Restart Emulation"));
     link_action_shortcut(ui->action_Pause, QStringLiteral("Continue/Pause Emulation"));
     link_action_shortcut(ui->action_Stop, QStringLiteral("Stop Emulation"));
@@ -1223,7 +1223,7 @@ static std::optional<QDBusObjectPath> HoldWakeLockLinux(u32 window_id = 0) {
     //: TRANSLATORS: This string is shown to the user to explain why Citra needs to prevent the
     //: computer from sleeping
     options.insert(QString::fromLatin1("reason"),
-                   QCoreApplication::translate("GMainWindow", "Citra is running a game"));
+                   QCoreApplication::translate("GMainWindow", "Azahar is running a game"));
     // 0x4: Suspend lock; 0x8: Idle lock
     QDBusReply<QDBusObjectPath> reply =
         xdp.call(QString::fromLatin1("Inhibit"),
@@ -1352,7 +1352,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
         case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
             QMessageBox::critical(this, tr("Unsupported ROM"),
-                                  tr("GBA Virtual Console ROMs are not supported by Citra."));
+                                  tr("GBA Virtual Console ROMs are not supported by Azahar."));
             break;
 
         case Core::System::ResultStatus::ErrorArticDisconnected:
@@ -1407,7 +1407,7 @@ void GMainWindow::BootGame(const QString& filename) {
 
     show_artic_label = is_artic;
 
-    LOG_INFO(Frontend, "Citra starting...");
+    LOG_INFO(Frontend, "Azahar starting...");
     if (!is_artic) {
         StoreRecentFile(filename); // Put the filename on top of the list
     }
@@ -2066,7 +2066,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     if (CreateShortcutMessagesGUI(this, CREATE_SHORTCUT_MSGBOX_FULLSCREEN_PROMPT, qt_game_title)) {
         arguments = "-f " + arguments;
     }
-    const std::string comment = fmt::format("Start {:s} with the Citra Emulator", game_title);
+    const std::string comment = fmt::format("Start {:s} with the Azahar Emulator", game_title);
     const std::string categories = "Game;Emulator;Qt;";
     const std::string keywords = "3ds;Nintendo;";
 
@@ -2100,7 +2100,7 @@ void GMainWindow::OnGameListDumpRomFS(QString game_path, u64 program_id) {
                 const auto& [base, update] = future_watcher->result();
                 if (base != Loader::ResultStatus::Success) {
                     QMessageBox::critical(
-                        this, tr("Citra"),
+                        this, tr("Azahar"),
                         tr("Could not dump base RomFS.\nRefer to the log for details."));
                     return;
                 }
@@ -2262,7 +2262,7 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString 
     case Service::AM::InstallStatus::ErrorEncrypted:
         QMessageBox::critical(this, tr("Encrypted File"),
                               tr("%1 must be decrypted "
-                                 "before being used with Citra. A real 3DS is required.")
+                                 "before being used with Azahar. A real 3DS is required.")
                                   .arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorFileNotFound:
@@ -2324,9 +2324,9 @@ void GMainWindow::UninstallTitles(
     future_watcher.waitForFinished();
 
     if (failed) {
-        QMessageBox::critical(this, tr("Citra"), tr("Failed to uninstall '%1'.").arg(failed_name));
+        QMessageBox::critical(this, tr("Azahar"), tr("Failed to uninstall '%1'.").arg(failed_name));
     } else if (!future_watcher.isCanceled()) {
-        QMessageBox::information(this, tr("Citra"),
+        QMessageBox::information(this, tr("Azahar"),
                                  tr("Successfully uninstalled '%1'.").arg(first_name));
     }
 }
@@ -2959,7 +2959,7 @@ void GMainWindow::OnOpenFFmpeg() {
 
     for (auto& library_name : library_names) {
         if (!FileUtil::Exists(bin_dir + DIR_SEP + library_name)) {
-            QMessageBox::critical(this, tr("Citra"),
+            QMessageBox::critical(this, tr("Azahar"),
                                   tr("The provided FFmpeg directory is missing %1. Please make "
                                      "sure the correct directory was selected.")
                                       .arg(QString::fromStdString(library_name)));
@@ -2983,9 +2983,9 @@ void GMainWindow::OnOpenFFmpeg() {
     FileUtil::ForeachDirectoryEntry(nullptr, bin_dir, process_file);
 
     if (success.load()) {
-        QMessageBox::information(this, tr("Citra"), tr("FFmpeg has been sucessfully installed."));
+        QMessageBox::information(this, tr("Azahar"), tr("FFmpeg has been sucessfully installed."));
     } else {
-        QMessageBox::critical(this, tr("Citra"),
+        QMessageBox::critical(this, tr("Azahar"),
                               tr("Installation of FFmpeg failed. Check the log file for details."));
     }
 }
@@ -3015,7 +3015,7 @@ void GMainWindow::StartVideoDumping(const QString& path) {
         system.RegisterVideoDumper(dumper);
     } else {
         QMessageBox::critical(
-            this, tr("Citra"),
+            this, tr("Azahar"),
             tr("Could not start video dumping.<br>Please ensure that the video encoder is "
                "configured correctly.<br>Refer to the log for details."));
         ui->action_Dump_Video->setChecked(false);
@@ -3377,7 +3377,7 @@ bool GMainWindow::ConfirmClose() {
     }
 
     QMessageBox::StandardButton answer =
-        QMessageBox::question(this, tr("Citra"), tr("Would you like to exit now?"),
+        QMessageBox::question(this, tr("Azahar"), tr("Would you like to exit now?"),
                               QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }
@@ -3470,7 +3470,7 @@ bool GMainWindow::ConfirmChangeGame() {
     }
 
     auto answer = QMessageBox::question(
-        this, tr("Citra"), tr("The game is still running. Would you like to stop emulation?"),
+        this, tr("Azahar"), tr("The game is still running. Would you like to stop emulation?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }
@@ -3596,12 +3596,12 @@ void GMainWindow::UpdateWindowTitle() {
     const QString full_name = QString::fromUtf8(Common::g_build_fullname);
 
     if (game_title.isEmpty()) {
-        setWindowTitle(QStringLiteral("Citra %1").arg(full_name));
+        setWindowTitle(QStringLiteral("Azahar %1").arg(full_name));
     } else {
-        setWindowTitle(QStringLiteral("Citra %1 | %2").arg(full_name, game_title));
+        setWindowTitle(QStringLiteral("Azahar %1 | %2").arg(full_name, game_title));
         render_window->setWindowTitle(
-            QStringLiteral("Citra %1 | %2 | %3").arg(full_name, game_title, tr("Primary Window")));
-        secondary_window->setWindowTitle(QStringLiteral("Citra %1 | %2 | %3")
+            QStringLiteral("Azahar %1 | %2 | %3").arg(full_name, game_title, tr("Primary Window")));
+        secondary_window->setWindowTitle(QStringLiteral("Azahar %1 | %2 | %3")
                                              .arg(full_name, game_title, tr("Secondary Window")));
     }
 }
@@ -3758,8 +3758,8 @@ void LaunchQtFrontend(int argc, char* argv[]) {
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
     // Init settings params
-    QCoreApplication::setOrganizationName(QStringLiteral("Citra team"));
-    QCoreApplication::setApplicationName(QStringLiteral("Citra"));
+    QCoreApplication::setOrganizationName(QStringLiteral("Azahar Developers"));
+    QCoreApplication::setApplicationName(QStringLiteral("Azahar"));
 
     auto rounding_policy = GetHighDpiRoundingPolicy();
     QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);

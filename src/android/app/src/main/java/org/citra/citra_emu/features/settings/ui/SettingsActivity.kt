@@ -216,7 +216,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
             CitraApplication.documentsTree.setRoot(Uri.parse(DirectoryInitialization.userPath))
             NativeLibrary.createConfigFile()
         } else {
-            throw IllegalStateException("Citra directory unavailable when accessing config file!")
+            throw IllegalStateException("Azahar directory unavailable when accessing config file!")
         }
 
         // Set default values for system config file

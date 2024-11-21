@@ -4,7 +4,7 @@ add_executable(citra_meta
     precompiled_headers.h
 )
 
-set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "citra")
+set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "azahar")
 
 if (APPLE)
     set(DIST_DIR "../../dist/apple")

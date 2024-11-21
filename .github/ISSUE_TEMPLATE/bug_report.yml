@@ -4,7 +4,7 @@ labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Tech support does not belong here. You should only file an issue here if you think you have experienced an actual bug with Citra.
+      value: Tech support does not belong here. You should only file an issue here if you think you have experienced a bug in Azahar.
   - type: checkboxes
     attributes:
       label: Is there an existing issue for this?
@@ -16,7 +16,7 @@ body:
     attributes:
       label: Affected Build(s)
       description: List the affected build(s) that this issue applies to.
-      placeholder: Nightly 1234 / Canary 1234
+      placeholder: 1234
     validations:
       required: true
   - type: textarea
@@ -44,7 +44,7 @@ body:
     id: log
     attributes:
       label: Log File
-      description: A log file will help our developers to better diagnose and fix the issue. Instructions can be found [here](https://community.citra-emu.org/t/how-to-upload-the-log-file/296).
+      description: A log file will help our developers to better diagnose and fix the issue.
     validations:
       required: true
   - type: textarea

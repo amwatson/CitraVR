@@ -246,7 +246,7 @@ class HomeSettingsFragment : Fragment() {
             PermissionsHandler.citraDirectory
         )?.findFile("log")
         val currentLog = logDirectory?.findFile("citra_log.txt")
-        val oldLog = logDirectory?.findFile("citra_log.txt.old.txt")
+        val oldLog = logDirectory?.findFile("citra_log.old.txt")
 
         val intent = Intent().apply {
             action = Intent.ACTION_SEND

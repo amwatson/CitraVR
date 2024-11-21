@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/regex.hpp>
 
 #include <fmt/format.h>
@@ -90,7 +91,7 @@ class FileBackend final : public Backend {
 public:
     explicit FileBackend(const std::string& filename) {
         auto old_filename = filename;
-        old_filename += ".old.txt";
+        boost::replace_all(old_filename, ".txt", ".old.txt");
 
         // Existence checks are done within the functions themselves.
         // We don't particularly care if these succeed or not.

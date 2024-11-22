@@ -60,8 +60,9 @@ android {
     }
 
     defaultConfig {
-        // TODO If this is ever modified, change application_id in strings.xml
-        applicationId = "org.citra.citra_emu"
+        // The application ID refers to Lime3DS to allow for
+        // the Play Store listing, which was originally set up for Lime3DS, to still be used.
+        applicationId = "io.github.lime3ds.Lime3DS"
         minSdk = 28
         targetSdk = 35
         versionCode = autoVersion

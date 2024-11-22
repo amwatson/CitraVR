@@ -10,7 +10,7 @@ jobs:
   clang-format:
     runs-on: ubuntu-latest
     container:
-      image: pablomk7/build-environments:linux-fresh
+      image: opensauce04/azahar-build-environment:latest
       options: -u 1001
     steps:
       - uses: actions/checkout@v4

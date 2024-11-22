@@ -28,7 +28,7 @@ jobs:
       matrix:
         target: ["appimage", "fresh"]
     container:
-      image: pablomk7/build-environments:linux-${{ matrix.target }}
+      image: opensauce04/azahar-build-environment:latest
       options: -u 1001
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache

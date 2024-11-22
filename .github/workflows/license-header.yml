@@ -8,7 +8,7 @@ jobs:
   license-header:
     runs-on: ubuntu-latest
     container:
-      image: opensauce04/lime3ds-build:latest
+      image: opensauce04/azahar-build-environment:latest
       options: -u 1001
     steps:
       - uses: actions/checkout@v4

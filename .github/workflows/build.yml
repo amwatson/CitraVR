@@ -155,7 +155,7 @@ jobs:
         if: ${{ matrix.target == 'msvc' }}
       - name: Install vulkan-sdk (MSVC)
         run: |
-          wget https://sdk.lunarg.com/sdk/download/1.3.280.0/windows/VulkanSDK-1.3.280.0-Installer.exe -O D:/a/_temp/vulkan.exe
+          wget https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe -O D:/a/_temp/vulkan.exe
           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
         if: ${{ matrix.target == 'msvc' }}
       - name: Set up MSYS2

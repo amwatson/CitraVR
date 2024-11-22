@@ -289,7 +289,7 @@ GMainWindow::GMainWindow(Core::System& system_)
 
         if (args[i] == QStringLiteral("--version") || args[i] == QStringLiteral("-v")) {
             const std::string version_string =
-                std::string("Lime3DS ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+                std::string("Azahar ") + Common::g_scm_branch + " " + Common::g_scm_desc;
             ShowCommandOutput("Version", version_string);
             exit(0);
         }
@@ -1992,7 +1992,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
         citra_command = fmt::format("flatpak run {}", env_flatpak_id);
         skip_tryexec = true;
     } else {
-        // Get path to Lime3DS executable
+        // Get path to Citra executable
         const QStringList args = QApplication::arguments();
         citra_command = args[0].toStdString();
         // If relative path, make it an absolute path

@@ -85,7 +85,7 @@ public:
 
     /**
      * Has the same functionality as GetLastFrameTimeScale, but uses the mean frame time over the
-     * last 50 frames rather than only the frame time of the previous frame.
+     * last 2 frames rather than only the frame time of the previous frame.
      */
     double GetStableFrameTimeScale() const;
 
@@ -137,6 +137,8 @@ private:
     Clock::time_point frame_begin = reset_point;
     /// Total visible duration (including frame-limiting, etc.) of the previous system frame
     Clock::duration previous_frame_length = Clock::duration::zero();
+    /// Visible duration for the frame prior to previous_frame_length
+    Clock::duration previous_previous_frame_length = Clock::duration::zero();
 
     /// Last recorded performance statistics.
     Results last_stats;

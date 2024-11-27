@@ -22,6 +22,7 @@ using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
+constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
 // Purposefully ignore the first five frames, as there's a significant amount of overhead in
 // booting that we shouldn't account for
 constexpr std::size_t IgnoreFrames = 5;
@@ -64,6 +65,9 @@ void PerfStats::EndSystemFrame() {
     }
     accumulated_frametime += frame_time;
     system_frames += 1;
+
+    // TODO: Track previous frame times in a less stupid way. -OS
+    previous_previous_frame_length = previous_frame_length;
 
     previous_frame_length = frame_end - previous_frame_end;
     previous_frame_end = frame_end;
@@ -125,19 +129,17 @@ PerfStats::Results PerfStats::GetLastStats() {
 double PerfStats::GetLastFrameTimeScale() const {
     std::scoped_lock lock{object_mutex};
 
-    constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
 }
 
 double PerfStats::GetStableFrameTimeScale() const {
     std::scoped_lock lock{object_mutex};
 
-    constexpr double FRAME_LENGTH_MILLIS = (1.0 / SCREEN_REFRESH_RATE) * 1000;
-    const size_t num_frames = std::min<size_t>(50UL, current_index + 1);
-    const double sum = std::accumulate(perf_history.begin() + current_index - num_frames,
-                                       perf_history.begin() + current_index, 0.0);
-    const double stable_frame_length = sum / num_frames;
-    return stable_frame_length / FRAME_LENGTH_MILLIS;
+    const double stable_previous_frame_length =
+        (duration_cast<DoubleSecs>(previous_frame_length).count() +
+         duration_cast<DoubleSecs>(previous_previous_frame_length).count()) /
+        2;
+    return stable_previous_frame_length / FRAME_LENGTH;
 }
 
 void FrameLimiter::WaitOnce() {

@@ -419,8 +419,8 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     // Reschedule recurrent event
     const double time_scale =
         Settings::values.enable_realtime_audio
-            ? std::clamp(Core::System::GetInstance().GetStableFrameTimeScale(),
-                         100. / Settings::values.frame_limit.GetValue(), 3.0)
+            ? std::max(0.01, // Arbitrary small value to prevent time_scale from approaching zero
+                       Core::System::GetInstance().GetStableFrameTimeScale())
             : 1.0;
     s64 adjusted_ticks = static_cast<s64>(audio_frame_ticks / time_scale - cycles_late);
     core_timing.ScheduleEvent(adjusted_ticks, tick_event);

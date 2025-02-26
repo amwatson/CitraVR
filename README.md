@@ -1,98 +1,108 @@
-<h1 align="center">
-  <br>
-  <a href="https://citra-emu.org/"><img src="https://raw.githubusercontent.com/citra-emu/citra-assets/master/Main/citra_logo.svg" alt="Citra" width="200"></a>
-  <br>
-  <b>Citra</b>
-  <br>
-</h1>
+![Azahar Emulator](https://azahar-emu.org/resources/images/logo/azahar-name-and-logo.svg)
 
-<h4 align="center"><b>Citra</b> is the world's most popular, open-source, Nintendo 3DS emulator.
-<br>
-It is written in C++ with portability in mind and builds are actively maintained for Windows, Linux, Android and macOS.
-</h4>
+![GitHub Release](https://img.shields.io/github/v/release/azahar-emu/azahar?label=Current%20Release)
+![GitHub Downloads](https://img.shields.io/github/downloads/azahar-emu/azahar/total?logo=github&label=GitHub%20Downloads) <!-- ![Flathub Downloads](https://img.shields.io/flathub/downloads/org.azahar-emu.azahar?logo=Flathub&label=Flathub%20Downloads) -->
+![CI Build Status](https://github.com/azahar-emu/azahar/actions/workflows/build.yml/badge.svg)
 
-<p align="center">
-    <a href="https://github.com/citra-emu/citra/actions/">
-        <img src="https://github.com/citra-emu/citra/workflows/citra-ci/badge.svg"
-            alt="GitHub Actions Build Status">
-    </a>
-    <a href="https://discord.gg/FAXfZV9">
-        <img src="https://img.shields.io/discord/220740965957107713?color=%237289DA&label=Citra&logo=discord&logoColor=white"
-            alt="Discord">
-    </a>
-</p>
+<b>Azahar</b> is an open-source 3DS emulator project based Citra.
 
-<p align="center">
-  <a href="#compatibility">Compatibility</a> |
-  <a href="#releases">Releases</a> |
-  <a href="#development">Development</a> |
-  <a href="#building">Building</a> |
-  <a href="#support">Support</a> |
-  <a href="#license">License</a>
-</p>
+It was created from the merging of PabloMK7's Citra fork and the Lime3DS project, both of which emerged shortly after Citra was taken down.
 
+The goal of this project is to be the de-facto platform for future development.
 
-## Compatibility
+> [!NOTE]
+> Azahar has not fully released yet. For this reason, there are no compiled binaries available for download.
+> 
+> It is recommended that only developers and early adopters should use the emulator until our first stable release.
+>
+> Here be dragons.
 
-The emulator is capable of running most commercial games at full speed, provided you meet the necessary hardware requirements.
+<!--
+# Installation
 
-For a full list of games Citra supports, please visit our [Compatibility page](https://citra-emu.org/game/)
+### Windows & MacOS
 
-Check out our [website](https://citra-emu.org/) for the latest news on exciting features, progress reports, and more!
-Please read the [FAQ](https://citra-emu.org/wiki/faq/) before getting started with the project.
+Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases).
 
-Need help? Check out our [asking for help](https://citra-emu.org/help/reference/asking/) guide.
+---
+### Android
+The recommended method of downloading Azahar on Android is via the [Google Play store](https://play.google.com/store/apps/details?id=io.github.lime3ds.android).
 
-## Releases
+Alternatively, you can install the app using Obtainium:
+1. Download and install Obtainium from [here](https://github.com/ImranR98/Obtainium/releases) (use the file named `app-release.apk`)
+2. Open Obtainium and click 'Add App'
+3. Type `https://github.com/azahar/azahar-emu` into the 'App Source URL' section
+4. Click 'Add'
+5. Click 'Install'
 
-Citra has two main release channels: Nightly and Canary.
+If you wish, you can also simply install the latest APK from the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
-The [Nightly](https://github.com/citra-emu/citra-nightly) build is based on the master branch, and contains already reviewed and tested features.
+Keep in mind that you will not recieve automatic updates when installing via the APK.
 
-The [Canary](https://github.com/citra-emu/citra-canary) build is based on the master branch, but with additional features still under review. PRs tagged `canary-merge` are merged only into the Canary builds.
+---
+### Linux
 
-Both builds can be installed with the installer provided on the [website](https://citra-emu.org/download/), but those looking for specific versions or standalone releases can find them in the release tabs of the [Nightly](https://github.com/citra-emu/citra-nightly/releases) and [Canary](https://github.com/citra-emu/citra-canary/releases) repositories.
+Azahar is available as an AppImage on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
-Android builds can be downloaded from the Google Play Store.
+We are also on Flathub:
 
-A Flatpak for Citra is available on [Flathub](https://flathub.org/apps/details/org.citra_emu.citra). Details on the build process can be found in [our Flathub repository](https://github.com/flathub/org.citra_emu.citra).
+<a href=https://flathub.org/apps/org.azahar-emu.azahar><img width='180' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.png'/></a>
+-->
 
-## Development
+# Build instructions
 
-Most of the development happens on GitHub. It's also where [our central repository](https://github.com/citra-emu/citra) is hosted.
-For development discussion, please join us on our [Discord server](https://citra-emu.org/discord/) or at #citra-dev on libera.
+Please refer this repository's [wiki](https://github.com/azahar-emu/azahar/wiki/Building-From-Source) for build instructions
 
-If you want to contribute please take a look at the [Contributor's Guide](https://github.com/citra-emu/citra/wiki/Contributing) and [Developer Information](https://github.com/citra-emu/citra/wiki/Developer-Information). You can also contact any of the developers on Discord in order to know about the current state of the emulator.
+# How can I contribute?
 
-If you want to contribute to the user interface translation, please check out the [Citra project on transifex](https://www.transifex.com/citra/citra). We centralize the translation work there, and periodically upstream translations.
+### Pull requests
 
-## Building
+If you want to implement a change and have the technical capability to do so, we would be happy to accept your contributions.
 
-* __Windows__: [Windows Build](https://github.com/citra-emu/citra/wiki/Building-For-Windows)
-* __Linux__: [Linux Build](https://github.com/citra-emu/citra/wiki/Building-For-Linux)
-* __macOS__: [macOS Build](https://github.com/citra-emu/citra/wiki/Building-for-macOS)
-* __Android__: [Android Build](https://github.com/citra-emu/citra/wiki/Building-for-Android)
+If you are contributing a new feature, it is highly suggested that you first make a Feature Request issue to discuss the addition before writing any code. This is to ensure that your time isn't wasted working on a feature which isn't deemed appropriate for the project.
 
+After creating a pull request, please don't repeatedly merge `master` into your branch. A maintainer will update the branch for you if/ when it is appropriate to do so.
 
-## Support
+### Language translations
 
-If you enjoy the project and want to support us financially, check out our Patreon!
+Additionally, we are accepting language translations on [Transifex](https://app.transifex.com/azahar/azahar). If you know a non-english language listed on our Transifex page, please feel free to contribute.
 
-<a href="https://www.patreon.com/citraemu">
-    <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160">
-</a>
+> [!NOTE]
+> We are not currently accepting new languages for translation. Please do not request for new languages or language variants to be added.
 
-We also happily accept donated games and hardware.
-Please see our [donations page](https://citra-emu.org/donate/) for more information on how you can contribute to Citra.
-Any donations received will go towards things like:
-* 3DS consoles for developers to explore the hardware
-* 3DS games for testing
-* Any equipment required for homebrew
-* Infrastructure setup
+### Compatibility reports
 
-We also more than gladly accept used 3DS consoles! If you would like to give yours away, don't hesitate to join our [Discord server](https://citra-emu.org/discord/) and talk to bunnei.
+Even if you don't wish to contribute code or translations, you can help the project by reporting game compatibility data to our compatibility list.
 
+To do so, simply read https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md and follow the instructions.
 
-## License
+Contributing compatibility data helps more accurately reflect the current capabilities of the emulator, so it would be highly appreciated if you could go through the reporting process after completing a game.
 
-Citra is licensed under the GPLv2 (or any later version). Refer to the [LICENSE.txt](https://github.com/citra-emu/citra/blob/master/license.txt) file.
+# Minimum requirements
+Below are the minimum requirements to run Azahar:
+
+### Desktop
+```
+Operating System: Windows 10 (64-bit), MacOS 13 (Ventura), or modern 64-bit Linux
+CPU: x86-64 (64-bit) CPU. Single core performance higher than 1,800 on Passmark
+GPU: OpenGL 4.3 or Vulkan 1.1 support
+Memory: 2GB of RAM. 4GB is recommended
+```
+### Android
+```
+Operating System: Android 9.0+
+CPU: Snapdragon 835 SoC or better
+GPU: OpenGL ES 3.2 or Vulkan 1.1 support
+Memory: 2GB of RAM. 4GB is recommended
+```
+
+# What's next?
+
+We share public roadmaps for upcoming releases in the form of GitHub milestones.
+
+You can find these at https://github.com/azahar-emu/azahar/milestones.
+
+# Join the conversation
+We have a community Discord server where you can chat about the project, keep up to date with the latest announcements, or coordinate emulator development.
+
+[![](https://dcbadge.vercel.app/api/server/4ZjMpAp3M6)](https://discord.gg/4ZjMpAp3M6)

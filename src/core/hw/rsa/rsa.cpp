@@ -12,8 +12,8 @@
 #include <fmt/format.h>
 #include "common/common_paths.h"
 #include "common/file_util.h"
-#include "common/string_util.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
 #include "core/hw/aes/key.h"
 #include "core/hw/rsa/rsa.h"
 #include "cryptopp/osrng.h"

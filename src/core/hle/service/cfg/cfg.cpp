@@ -28,8 +28,8 @@
 #include "core/hle/service/cfg/cfg_nor.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
-#include "core/loader/loader.h"
 #include "core/hw/unique_data.h"
+#include "core/loader/loader.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::CFG::Module)
 SERIALIZE_EXPORT_IMPL(Service::CFG::Module)

@@ -636,8 +636,8 @@ PicaCore::RenderPropertiesGuess PicaCore::GuessCmdRenderProperties(PAddr list, u
             find_info.paddr = value * 8;
             find_info.paddr_found = true;
             break;
-        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[0]) :
-        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[1]) : {
+        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[0]):
+        [[unlikely]] case PICA_REG_INDEX(pipeline.command_buffer.trigger[1]): {
             const u32 index =
                 static_cast<u32>(cmd_id - PICA_REG_INDEX(pipeline.command_buffer.trigger[0]));
             const PAddr addr = regs.internal.pipeline.command_buffer.GetPhysicalAddress(index);
@@ -683,9 +683,9 @@ PicaCore::RenderPropertiesGuess PicaCore::GuessCmdRenderProperties(PAddr list, u
 
 template <class Archive>
 void PicaCore::CommandList::serialize(Archive& ar, const u32 file_version) {
-    ar& addr;
-    ar& length;
-    ar& current_index;
+    ar & addr;
+    ar & length;
+    ar & current_index;
     if (Archive::is_loading::value) {
         const u8* ptr = Core::System::GetInstance().Memory().GetPhysicalPointer(addr);
         head = reinterpret_cast<const u32*>(ptr);

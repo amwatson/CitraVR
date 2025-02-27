@@ -37,7 +37,9 @@
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
 #define do_div(n, base)                                                                            \
-    { n /= base; }
+    {                                                                                              \
+        n /= base;                                                                                 \
+    }
 
 enum : u32 {
     FOP_MASK = 0x00b00040,

@@ -3467,7 +3467,8 @@ bool GMainWindow::ConfirmChangeGame() {
     }
 
     auto answer = QMessageBox::question(
-        this, tr("Azahar"), tr("The application is still running. Would you like to stop emulation?"),
+        this, tr("Azahar"),
+        tr("The application is still running. Would you like to stop emulation?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }

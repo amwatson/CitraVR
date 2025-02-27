@@ -11,6 +11,7 @@ namespace Common::Hacks {
 enum class HackType : int {
     RIGHT_EYE_DISABLE,
     ACCURATE_MULTIPLICATION,
+    DECRYPTION_AUTHORIZED,
 };
 
 class UserHackData {};

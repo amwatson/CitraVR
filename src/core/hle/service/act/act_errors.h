@@ -17,7 +17,7 @@ enum {
     LibraryError = 100,
     NotInitialized = 101,
     AlreadyInitialized = 102,
-    ErrDesc103 = 103,
+    AcStatusDisconnected = 103,
     ErrDesc104 = 104,
     Busy = 111,
     ErrDesc112 = 112,
@@ -313,16 +313,16 @@ enum {
     MailAddressNotConfirmed = 220001, // 022-0001
 
     // Library errors
-    LibraryError = 220500,       // 022-0500
-    NotInitialized = 220501,     // 022-0501
-    AlreadyInitialized = 220502, // 022-0502
-    ErrCode225103 = 225103,      // 022-5103
-    ErrCode225104 = 225104,      // 022-5104
-    Busy = 220511,               // 022-0511
-    ErrCode225112 = 225112,      // 022-5112
-    NotImplemented = 220591,     // 022-0591
-    Deprecated = 220592,         // 022-0592
-    DevelopmentOnly = 220593,    // 022-0593
+    LibraryError = 220500,         // 022-0500
+    NotInitialized = 220501,       // 022-0501
+    AlreadyInitialized = 220502,   // 022-0502
+    AcStatusDisconnected = 225103, // 022-5103
+    ErrCode225104 = 225104,        // 022-5104
+    Busy = 220511,                 // 022-0511
+    ErrCode225112 = 225112,        // 022-5112
+    NotImplemented = 220591,       // 022-0591
+    Deprecated = 220592,           // 022-0592
+    DevelopmentOnly = 220593,      // 022-0593
 
     InvalidArgument = 220600, // 022-0600
     InvalidPointer = 220601,  // 022-0601

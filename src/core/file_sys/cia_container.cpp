@@ -147,6 +147,11 @@ Loader::ResultStatus CIAContainer::LoadTicket(std::span<const u8> ticket_data, s
     return cia_ticket.Load(ticket_data, offset);
 }
 
+Loader::ResultStatus CIAContainer::LoadTicket(const Ticket& ticket) {
+    cia_ticket = ticket;
+    return Loader::ResultStatus::Success;
+}
+
 Loader::ResultStatus CIAContainer::LoadTitleMetadata(std::span<const u8> tmd_data,
                                                      std::size_t offset) {
     return cia_tmd.Load(tmd_data, offset);

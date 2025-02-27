@@ -21,6 +21,10 @@ namespace Core {
 class System;
 }
 
+namespace HW::UniqueData {
+enum class SecureDataLoadStatus;
+}
+
 namespace Service::CFG {
 
 enum ConfigBlockID {
@@ -176,28 +180,6 @@ enum class AccessFlag : u16 {
     Global = UserRead | SystemRead | SystemWrite,
 };
 DECLARE_ENUM_FLAG_OPERATORS(AccessFlag);
-
-struct SecureInfoA {
-    std::array<u8, 0x100> signature;
-    u8 region;
-    u8 unknown;
-    std::array<u8, 0xF> serial_number;
-};
-static_assert(sizeof(SecureInfoA) == 0x111);
-
-struct LocalFriendCodeSeedB {
-    std::array<u8, 0x100> signature;
-    u64 unknown;
-    u64 friend_code_seed;
-};
-static_assert(sizeof(LocalFriendCodeSeedB) == 0x110);
-
-enum class SecureDataLoadStatus {
-    Loaded,
-    NotFound,
-    Invalid,
-    IOError,
-};
 
 class Module final {
 public:
@@ -636,34 +618,6 @@ public:
     Result UpdateConfigNANDSavegame();
 
     /**
-     * Invalidates the loaded secure data so that it is loaded again.
-     */
-    void InvalidateSecureData();
-    /**
-     * Loads the LocalFriendCodeSeed_B file from NAND.
-     * @returns LocalFriendCodeSeedBLoadStatus indicating the file load status.
-     */
-    SecureDataLoadStatus LoadSecureInfoAFile();
-
-    /**
-     * Loads the LocalFriendCodeSeed_B file from NAND.
-     * @returns LocalFriendCodeSeedBLoadStatus indicating the file load status.
-     */
-    SecureDataLoadStatus LoadLocalFriendCodeSeedBFile();
-
-    /**
-     * Gets the SecureInfo_A path in the host filesystem
-     * @returns std::string SecureInfo_A path in the host filesystem
-     */
-    std::string GetSecureInfoAPath();
-
-    /**
-     * Gets the LocalFriendCodeSeed_B path in the host filesystem
-     * @returns std::string LocalFriendCodeSeed_B path in the host filesystem
-     */
-    std::string GetLocalFriendCodeSeedBPath();
-
-    /**
      * Saves MCU specific data
      */
     void SaveMCUConfig();
@@ -678,10 +632,6 @@ private:
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code = 0;
-    bool secure_info_a_loaded = false;
-    SecureInfoA secure_info_a;
-    bool local_friend_code_seed_b_loaded = false;
-    LocalFriendCodeSeedB local_friend_code_seed_b;
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
 

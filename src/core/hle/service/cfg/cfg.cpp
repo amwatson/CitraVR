@@ -29,6 +29,7 @@
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/loader/loader.h"
+#include "core/hw/unique_data.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::CFG::Module)
 SERIALIZE_EXPORT_IMPL(Service::CFG::Module)
@@ -217,10 +218,18 @@ void Module::Interface::GetRegion(Kernel::HLERequestContext& ctx) {
 void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    u8 ret = 0;
-    if (cfg->secure_info_a_loaded) {
-        ret = cfg->secure_info_a.unknown;
+    const auto& secure_info_a = HW::UniqueData::GetSecureInfoA();
+    const auto& local_friend_code_seed_b = HW::UniqueData::GetLocalFriendCodeSeedB();
+
+    // Never happens on real hardware, but may happen if user didn't supply a dump.
+    // Always make sure to have available both secure data kinds or error otherwise.
+    if (!secure_info_a.IsValid() || !local_friend_code_seed_b.IsValid()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
     }
+
+    u8 ret = secure_info_a.body.unknown;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
@@ -232,20 +241,25 @@ void Module::Interface::SecureInfoGetSerialNo(Kernel::HLERequestContext& ctx) {
     [[maybe_unused]] u32 out_size = rp.Pop<u32>();
     auto out_buffer = rp.PopMappedBuffer();
 
-    if (out_buffer.GetSize() < sizeof(SecureInfoA::serial_number)) {
+    if (out_buffer.GetSize() < sizeof(HW::UniqueData::SecureInfoA::body.serial_number)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::InvalidSize, ErrorModule::Config,
                        ErrorSummary::WrongArgument, ErrorLevel::Permanent));
     }
+
+    const auto& secure_info_a = HW::UniqueData::GetSecureInfoA();
+    const auto& local_friend_code_seed_b = HW::UniqueData::GetLocalFriendCodeSeedB();
+
     // Never happens on real hardware, but may happen if user didn't supply a dump.
     // Always make sure to have available both secure data kinds or error otherwise.
-    if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
+    if (!secure_info_a.IsValid() || !local_friend_code_seed_b.IsValid()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
                        ErrorLevel::Permanent));
     }
 
-    out_buffer.Write(&cfg->secure_info_a.serial_number, 0, sizeof(SecureInfoA::serial_number));
+    out_buffer.Write(secure_info_a.body.serial_number.data(), 0,
+                     sizeof(HW::UniqueData::SecureInfoA::body.serial_number));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -398,27 +412,34 @@ void Module::Interface::GetLocalFriendCodeSeedData(Kernel::HLERequestContext& ct
     auto out_buffer = rp.PopMappedBuffer();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (out_buffer.GetSize() < sizeof(LocalFriendCodeSeedB)) {
+    if (out_buffer.GetSize() < sizeof(HW::UniqueData::LocalFriendCodeSeedB)) {
         rb.Push(Result(ErrorDescription::InvalidSize, ErrorModule::Config,
                        ErrorSummary::WrongArgument, ErrorLevel::Permanent));
     }
+
+    const auto& secure_info_a = HW::UniqueData::GetSecureInfoA();
+    const auto& local_friend_code_seed_b = HW::UniqueData::GetLocalFriendCodeSeedB();
+
     // Never happens on real hardware, but may happen if user didn't supply a dump.
     // Always make sure to have available both secure data kinds or error otherwise.
-    if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
+    if (!secure_info_a.IsValid() || !local_friend_code_seed_b.IsValid()) {
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
                        ErrorLevel::Permanent));
     }
 
-    out_buffer.Write(&cfg->local_friend_code_seed_b, 0, sizeof(LocalFriendCodeSeedB));
+    out_buffer.Write(&local_friend_code_seed_b, 0, sizeof(HW::UniqueData::LocalFriendCodeSeedB));
     rb.Push(ResultSuccess);
 }
 
 void Module::Interface::GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
+    const auto& secure_info_a = HW::UniqueData::GetSecureInfoA();
+    const auto& local_friend_code_seed_b = HW::UniqueData::GetLocalFriendCodeSeedB();
+
     // Never happens on real hardware, but may happen if user didn't supply a dump.
     // Always make sure to have available both secure data kinds or error otherwise.
-    if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
+    if (!secure_info_a.IsValid() || !local_friend_code_seed_b.IsValid()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
                        ErrorLevel::Permanent));
@@ -426,7 +447,7 @@ void Module::Interface::GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(ResultSuccess);
-    rb.Push<u64>(cfg->local_friend_code_seed_b.friend_code_seed);
+    rb.Push<u64>(local_friend_code_seed_b.body.friend_code_seed);
 }
 
 void Module::Interface::FormatConfig(Kernel::HLERequestContext& ctx) {
@@ -601,14 +622,6 @@ Result Module::UpdateConfigNANDSavegame() {
     return ResultSuccess;
 }
 
-std::string Module::GetLocalFriendCodeSeedBPath() {
-    return FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) + "rw/sys/LocalFriendCodeSeed_B";
-}
-
-std::string Module::GetSecureInfoAPath() {
-    return FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) + "rw/sys/SecureInfo_A";
-}
-
 Result Module::FormatConfig() {
     Result res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
@@ -682,55 +695,6 @@ Result Module::LoadConfigNANDSaveFile() {
     return FormatConfig();
 }
 
-void Module::InvalidateSecureData() {
-    secure_info_a_loaded = local_friend_code_seed_b_loaded = false;
-}
-
-SecureDataLoadStatus Module::LoadSecureInfoAFile() {
-    if (secure_info_a_loaded) {
-        return SecureDataLoadStatus::Loaded;
-    }
-    std::string file_path = GetSecureInfoAPath();
-    if (!FileUtil::Exists(file_path)) {
-        return SecureDataLoadStatus::NotFound;
-    }
-    FileUtil::IOFile file(file_path, "rb");
-    if (!file.IsOpen()) {
-        return SecureDataLoadStatus::IOError;
-    }
-    if (file.GetSize() != sizeof(SecureInfoA)) {
-        return SecureDataLoadStatus::Invalid;
-    }
-    if (file.ReadBytes(&secure_info_a, sizeof(SecureInfoA)) != sizeof(SecureInfoA)) {
-        return SecureDataLoadStatus::IOError;
-    }
-    secure_info_a_loaded = true;
-    return SecureDataLoadStatus::Loaded;
-}
-
-SecureDataLoadStatus Module::LoadLocalFriendCodeSeedBFile() {
-    if (local_friend_code_seed_b_loaded) {
-        return SecureDataLoadStatus::Loaded;
-    }
-    std::string file_path = GetLocalFriendCodeSeedBPath();
-    if (!FileUtil::Exists(file_path)) {
-        return SecureDataLoadStatus::NotFound;
-    }
-    FileUtil::IOFile file(file_path, "rb");
-    if (!file.IsOpen()) {
-        return SecureDataLoadStatus::IOError;
-    }
-    if (file.GetSize() != sizeof(LocalFriendCodeSeedB)) {
-        return SecureDataLoadStatus::Invalid;
-    }
-    if (file.ReadBytes(&local_friend_code_seed_b, sizeof(LocalFriendCodeSeedB)) !=
-        sizeof(LocalFriendCodeSeedB)) {
-        return SecureDataLoadStatus::IOError;
-    }
-    local_friend_code_seed_b_loaded = true;
-    return SecureDataLoadStatus::Loaded;
-}
-
 void Module::LoadMCUConfig() {
     FileUtil::IOFile mcu_data_file(
         fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "rb");
@@ -768,8 +732,6 @@ Module::Module(Core::System& system_) : system(system_) {
         SetEULAVersion(default_version);
         UpdateConfigNANDSavegame();
     }
-    LoadSecureInfoAFile();
-    LoadLocalFriendCodeSeedBFile();
 }
 
 Module::~Module() = default;

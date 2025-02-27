@@ -121,6 +121,8 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     SUB(HW, LCD)                                                                                   \
     SUB(HW, GPU)                                                                                   \
     SUB(HW, AES)                                                                                   \
+    SUB(HW, RSA)                                                                                   \
+    SUB(HW, ECC)                                                                                   \
     CLS(Frontend)                                                                                  \
     CLS(Render)                                                                                    \
     SUB(Render, Software)                                                                          \

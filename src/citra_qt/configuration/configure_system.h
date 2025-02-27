@@ -53,7 +53,6 @@ private:
     void RefreshConsoleID();
 
     void InstallSecureData(const std::string& from_path, const std::string& to_path);
-    void InstallCTCert(const std::string& from_path);
     void RefreshSecureDataStatus();
 
     void SetupPerGameUI();

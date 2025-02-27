@@ -64,7 +64,8 @@ add_library(citra_core STATIC
     file_sys/archive_systemsavedata.h
     file_sys/artic_cache.cpp
     file_sys/artic_cache.h
-    file_sys/cia_common.h
+    file_sys/certificate.cpp
+    file_sys/certificate.h
     file_sys/cia_container.cpp
     file_sys/cia_container.h
     file_sys/directory_backend.h
@@ -80,6 +81,8 @@ add_library(citra_core STATIC
     file_sys/layered_fs.h
     file_sys/ncch_container.cpp
     file_sys/ncch_container.h
+    file_sys/otp.cpp
+    file_sys/otp.h
     file_sys/patch.cpp
     file_sys/patch.h
     file_sys/path_parser.cpp
@@ -97,6 +100,7 @@ add_library(citra_core STATIC
     file_sys/secure_value_backend.h
     file_sys/seed_db.cpp
     file_sys/seed_db.h
+    file_sys/signature.h
     file_sys/ticket.cpp
     file_sys/ticket.h
     file_sys/title_metadata.cpp
@@ -449,8 +453,13 @@ add_library(citra_core STATIC
     hw/aes/ccm.h
     hw/aes/key.cpp
     hw/aes/key.h
+    hw/ecc.cpp
+    hw/ecc.h
+    hw/default_keys.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
+    hw/unique_data.cpp
+    hw/unique_data.h
     hw/y2r.cpp
     hw/y2r.h
     loader/3dsx.cpp
@@ -482,7 +491,7 @@ add_library(citra_core STATIC
     tracer/citrace.h
     tracer/recorder.cpp
     tracer/recorder.h
- )
+)
 
 create_target_directory_groups(citra_core)
 

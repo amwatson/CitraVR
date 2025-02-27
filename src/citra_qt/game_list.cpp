@@ -596,7 +596,7 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     QMenu* uninstall_menu = context_menu.addMenu(tr("Uninstall"));
     QAction* uninstall_all = uninstall_menu->addAction(tr("Everything"));
     uninstall_menu->addSeparator();
-    QAction* uninstall_game = uninstall_menu->addAction(tr("Game"));
+    QAction* uninstall_game = uninstall_menu->addAction(tr("Application"));
     QAction* uninstall_update = uninstall_menu->addAction(tr("Update"));
     QAction* uninstall_dlc = uninstall_menu->addAction(tr("DLC"));
 
@@ -736,7 +736,7 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
         QMessageBox::StandardButton answer = QMessageBox::question(
             this, tr("Azahar"),
             tr("Are you sure you want to completely uninstall '%1'?\n\nThis will "
-               "delete the game if installed, as well as any installed updates or DLC.")
+               "delete the application if installed, as well as any installed updates or DLC.")
                 .arg(name),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if (answer == QMessageBox::Yes) {
@@ -805,7 +805,7 @@ void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
         UISettings::values.game_dirs[selected.data(GameListDir::GameDirRole).toInt()];
 
     QAction* deep_scan = context_menu.addAction(tr("Scan Subfolders"));
-    QAction* delete_dir = context_menu.addAction(tr("Remove Game Directory"));
+    QAction* delete_dir = context_menu.addAction(tr("Remove Application Directory"));
 
     deep_scan->setCheckable(true);
     deep_scan->setChecked(game_dir.deep_scan);
@@ -885,18 +885,18 @@ void GameList::LoadCompatibilityList() {
     QFile compat_list{QStringLiteral(":compatibility_list/compatibility_list.json")};
 
     if (!compat_list.open(QFile::ReadOnly | QFile::Text)) {
-        LOG_ERROR(Frontend, "Unable to open game compatibility list");
+        LOG_ERROR(Frontend, "Unable to open application compatibility list");
         return;
     }
 
     if (compat_list.size() == 0) {
-        LOG_WARNING(Frontend, "Game compatibility list is empty");
+        LOG_WARNING(Frontend, "Application compatibility list is empty");
         return;
     }
 
     const QByteArray content = compat_list.readAll();
     if (content.isEmpty()) {
-        LOG_ERROR(Frontend, "Unable to completely read game compatibility list");
+        LOG_ERROR(Frontend, "Unable to completely read application compatibility list");
         return;
     }
 
@@ -1004,12 +1004,12 @@ void GameList::LoadInterfaceLayout() {
 }
 
 const QStringList GameList::supported_file_extensions = {
-    QStringLiteral("3ds"), QStringLiteral("3dsx"), QStringLiteral("elf"), QStringLiteral("axf"),
-    QStringLiteral("cci"), QStringLiteral("cxi"),  QStringLiteral("app")};
+    QStringLiteral("3dsx"), QStringLiteral("elf"), QStringLiteral("axf"),
+    QStringLiteral("cci"),  QStringLiteral("cxi"), QStringLiteral("app")};
 
 void GameList::RefreshGameDirectory() {
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
-        LOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
+        LOG_INFO(Frontend, "Change detected in the applications directory. Reloading game list.");
         PopulateAsync(UISettings::values.game_dirs);
     }
 }
@@ -1094,7 +1094,7 @@ GameListPlaceholder::GameListPlaceholder(GMainWindow* parent) : QWidget{parent} 
     layout->setAlignment(Qt::AlignCenter);
     image->setPixmap(QIcon::fromTheme(QStringLiteral("plus_folder")).pixmap(200));
 
-    text->setText(tr("Double-click to add a new folder to the game list"));
+    text->setText(tr("Double-click to add a new folder to the application list"));
     QFont font = text->font();
     font.setPointSize(20);
     text->setFont(font);

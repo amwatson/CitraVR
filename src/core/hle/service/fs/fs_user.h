@@ -524,6 +524,8 @@ private:
      */
     void GetArchiveResource(Kernel::HLERequestContext& ctx);
 
+    void ExportIntegrityVerificationSeed(Kernel::HLERequestContext& ctx);
+
     /**
      * FS_User::GetFormatInfo service function.
      *  Inputs:
@@ -611,17 +613,6 @@ private:
     void GetSpecialContentIndex(Kernel::HLERequestContext& ctx);
 
     /**
-     * FS_User::GetNumSeeds service function.
-     *  Inputs:
-     *      0 : 0x087D0000
-     *  Outputs:
-     *      0 : 0x087D0080
-     *      1 : Result of function, 0 on success, otherwise error code
-     *      2 : Number of seeds in the SEEDDB
-     */
-    void GetNumSeeds(Kernel::HLERequestContext& ctx);
-
-    /**
      * FS_User::AddSeed service function.
      *  Inputs:
      *      0 : 0x087A0180
@@ -632,6 +623,25 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void AddSeed(Kernel::HLERequestContext& ctx);
+
+    void GetSeed(Kernel::HLERequestContext& ctx);
+
+    void DeleteSeed(Kernel::HLERequestContext& ctx);
+
+    /**
+     * FS_User::GetNumSeeds service function.
+     *  Inputs:
+     *      0 : 0x087D0000
+     *  Outputs:
+     *      0 : 0x087D0080
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Number of seeds in the SEEDDB
+     */
+    void GetNumSeeds(Kernel::HLERequestContext& ctx);
+
+    void SetUnknown0x80Data(Kernel::HLERequestContext& ctx);
+
+    void GetUnknown0x80Data(Kernel::HLERequestContext& ctx);
 
     /**
      * FS_User::SetSaveDataSecureValue service function.

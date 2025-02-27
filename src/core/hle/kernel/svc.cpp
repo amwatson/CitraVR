@@ -2362,7 +2362,7 @@ void SVC::CallSVC(u32 immediate) {
         if (info->func) {
             (this->*(info->func))();
         } else {
-            LOG_ERROR(Kernel_SVC, "unimplemented SVC function {}(..)", info->name);
+            LOG_ERROR(Kernel_SVC, "unimplemented SVC function {:02X} {}(..)", info->id, info->name);
         }
     }
 }

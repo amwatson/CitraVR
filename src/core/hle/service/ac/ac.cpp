@@ -13,6 +13,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
 #include "core/hle/service/ac/ac.h"
 #include "core/hle/service/ac/ac_i.h"
@@ -95,21 +96,20 @@ void Module::Interface::GetCloseResult(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_AC, "(STUBBED) called");
 }
 
-void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    bool can_reach_internet = false;
-
-    std::shared_ptr<SOC::SOC_U> socu_module = SOC::GetService(ac->system);
-    if (socu_module) {
-        can_reach_internet = socu_module->GetDefaultInterfaceInfo().has_value();
-    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push<u32>(static_cast<u32>(can_reach_internet ? (Settings::values.is_new_3ds
-                                                            ? WifiStatus::STATUS_CONNECTED_N3DS
-                                                            : WifiStatus::STATUS_CONNECTED_O3DS)
-                                                     : WifiStatus::STATUS_DISCONNECTED));
+    rb.Push<u32>(static_cast<u32>(Status::STATUS_INTERNET));
+}
+
+void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push<u32>(static_cast<u32>(WifiStatus::STATUS_CONNECTED_SLOT1));
 }
 
 void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {
@@ -176,8 +176,8 @@ void Module::Interface::IsConnected(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
     rb.Push(ac->ac_connected);
 
-    LOG_WARNING(Service_AC, "(STUBBED) called unk=0x{:08X} descriptor=0x{:08X} param=0x{:08X}", unk,
-                unk_descriptor, unk_param);
+    LOG_DEBUG(Service_AC, "(STUBBED) called unk=0x{:08X} descriptor=0x{:08X} param=0x{:08X}", unk,
+              unk_descriptor, unk_param);
 }
 
 void Module::Interface::SetClientVersion(Kernel::HLERequestContext& ctx) {

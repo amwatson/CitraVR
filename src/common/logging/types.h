@@ -88,6 +88,8 @@ enum class Class : u8 {
     HW_LCD,          ///< LCD register emulation
     HW_GPU,          ///< GPU control emulation
     HW_AES,          ///< AES engine emulation
+    HW_RSA,          ///< RSA engine emulation
+    HW_ECC,          ///< ECC engine emulation
     Frontend,        ///< Emulator UI
     Render,          ///< Emulator video output and hardware acceleration
     Render_Software, ///< Software renderer backend

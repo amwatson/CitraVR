@@ -507,8 +507,8 @@ void GMainWindow::InitializeWidgets() {
     emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
                                    "indicate emulation is running faster or slower than a 3DS."));
     game_fps_label = new QLabel();
-    game_fps_label->setToolTip(tr("How many frames per second the game is currently displaying. "
-                                  "This will vary from game to game and scene to scene."));
+    game_fps_label->setToolTip(tr("How many frames per second the app is currently displaying. "
+                                  "This will vary from app to app and scene to scene."));
     emu_frametime_label = new QLabel();
     emu_frametime_label->setToolTip(
         tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
@@ -756,7 +756,7 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Load_from_Newest_Slot, QStringLiteral("Load from Newest Slot"));
     link_action_shortcut(ui->action_Save_to_Oldest_Slot, QStringLiteral("Save to Oldest Slot"));
     link_action_shortcut(ui->action_View_Lobby,
-                         QStringLiteral("Multiplayer Browse Public Game Lobby"));
+                         QStringLiteral("Multiplayer Browse Public Application Lobby"));
     link_action_shortcut(ui->action_Start_Room, QStringLiteral("Multiplayer Create Room"));
     link_action_shortcut(ui->action_Connect_To_Room,
                          QStringLiteral("Multiplayer Direct Connect to Room"));
@@ -779,7 +779,7 @@ void GMainWindow::InitializeHotkeys() {
             ToggleFullscreen();
         }
     });
-    connect_shortcut(QStringLiteral("Toggle Per-Game Speed"), [&] {
+    connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
         Settings::values.frame_limit.SetGlobal(!Settings::values.frame_limit.UsingGlobal());
         UpdateStatusBar();
     });
@@ -1164,7 +1164,7 @@ void GMainWindow::OnUpdateFound(bool found, bool error) {
     }
 
     if (emulation_running && !explicit_update_check) {
-        LOG_INFO(Frontend, "Update found, deferring as game is running");
+        LOG_INFO(Frontend, "Update found, deferring as application is running");
         defer_update_prompt = true;
         return;
     }
@@ -1223,7 +1223,7 @@ static std::optional<QDBusObjectPath> HoldWakeLockLinux(u32 window_id = 0) {
     //: TRANSLATORS: This string is shown to the user to explain why Citra needs to prevent the
     //: computer from sleeping
     options.insert(QString::fromLatin1("reason"),
-                   QCoreApplication::translate("GMainWindow", "Azahar is running a game"));
+                   QCoreApplication::translate("GMainWindow", "Azahar is running an application"));
     // 0x4: Suspend lock; 0x8: Idle lock
     QDBusReply<QDBusObjectPath> reply =
         xdp.call(QString::fromLatin1("Inhibit"),
@@ -1295,8 +1295,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
         case Core::System::ResultStatus::ErrorGetLoader:
             LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename.toStdString());
             QMessageBox::critical(
-                this, tr("Invalid ROM Format"),
-                tr("Your ROM format is not supported.<br/>Please follow the guides to redump your "
+                this, tr("Invalid App Format"),
+                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
                    "<a "
                    "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
                    "dumping-game-cartridges/'>game "
@@ -1308,10 +1308,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
 
         case Core::System::ResultStatus::ErrorSystemMode:
-            LOG_CRITICAL(Frontend, "Failed to load ROM!");
+            LOG_CRITICAL(Frontend, "Failed to load App!");
             QMessageBox::critical(
-                this, tr("ROM Corrupted"),
-                tr("Your ROM is corrupted. <br/>Please follow the guides to redump your "
+                this, tr("App Corrupted"),
+                tr("Your app is corrupted. <br/>Please follow the guides to redump your "
                    "<a "
                    "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
                    "dumping-game-cartridges/'>game "
@@ -1323,23 +1323,17 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
-            QMessageBox::critical(
-                this, tr("ROM Encrypted"),
-                tr("Your ROM is encrypted. <br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            QMessageBox::critical(this, tr("App Encrypted"),
+                                  tr("Your app is encrypted. <br/>"
+                                     "<a "
+                                     "href='https://azahar-emu.org/blog/game-loading-changes/'>"
+                                     "Please check our blog for more info.</a>"));
             break;
         }
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
             QMessageBox::critical(
-                this, tr("Invalid ROM Format"),
-                tr("Your ROM format is not supported.<br/>Please follow the guides to redump your "
+                this, tr("Invalid App Format"),
+                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
                    "<a "
                    "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
                    "dumping-game-cartridges/'>game "
@@ -1351,8 +1345,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
-            QMessageBox::critical(this, tr("Unsupported ROM"),
-                                  tr("GBA Virtual Console ROMs are not supported by Azahar."));
+            QMessageBox::critical(this, tr("Unsupported App"),
+                                  tr("GBA Virtual Console is not supported by Azahar."));
             break;
 
         case Core::System::ResultStatus::ErrorArticDisconnected:
@@ -1365,7 +1359,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
         default:
             QMessageBox::critical(
-                this, tr("Error while loading ROM!"),
+                this, tr("Error while loading App!"),
                 tr("An unknown error occurred. Please see the log for more details."));
             break;
         }
@@ -1430,7 +1424,7 @@ void GMainWindow::BootGame(const QString& filename) {
         const std::string name{is_artic ? "" : FileUtil::GetFilename(filename.toStdString())};
         const std::string config_file_name =
             title_id == 0 ? name : fmt::format("{:016X}", title_id);
-        LOG_INFO(Frontend, "Loading per game config file for title {}", config_file_name);
+        LOG_INFO(Frontend, "Loading per application config file for title {}", config_file_name);
         QtConfig per_game_config(config_file_name, QtConfig::ConfigType::PerGameConfig);
     }
 
@@ -1932,9 +1926,9 @@ bool GMainWindow::CreateShortcutMessagesGUI(QWidget* parent, int message,
     switch (message) {
     case GMainWindow::CREATE_SHORTCUT_MSGBOX_FULLSCREEN_PROMPT:
         buttons = QMessageBox::Yes | QMessageBox::No;
-        result =
-            QMessageBox::information(parent, tr("Create Shortcut"),
-                                     tr("Do you want to launch the game in fullscreen?"), buttons);
+        result = QMessageBox::information(
+            parent, tr("Create Shortcut"),
+            tr("Do you want to launch the application in fullscreen?"), buttons);
         return result == QMessageBox::Yes;
     case GMainWindow::CREATE_SHORTCUT_MSGBOX_SUCCESS:
         QMessageBox::information(parent, tr("Create Shortcut"),
@@ -2147,7 +2141,7 @@ void GMainWindow::OnGameListAddDirectory() {
         UISettings::values.game_dirs.append(game_dir);
         game_list->PopulateAsync(UISettings::values.game_dirs);
     } else {
-        LOG_WARNING(Frontend, "Selected directory is already in the game list");
+        LOG_WARNING(Frontend, "Selected directory is already in the application list");
     }
 }
 
@@ -2164,7 +2158,7 @@ void GMainWindow::OnGameListOpenPerGameProperties(const QString& file) {
     u64 title_id{};
     if (!loader || loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         QMessageBox::information(this, tr("Properties"),
-                                 tr("The game properties could not be loaded."));
+                                 tr("The application properties could not be loaded."));
         return;
     }
 
@@ -2260,10 +2254,11 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString 
         QMessageBox::critical(this, tr("Invalid File"), tr("%1 is not a valid CIA").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorEncrypted:
-        QMessageBox::critical(this, tr("Encrypted File"),
-                              tr("%1 must be decrypted "
-                                 "before being used with Azahar. A real 3DS is required.")
-                                  .arg(filename));
+        QMessageBox::critical(this, tr("CIA Encrypted"),
+                              tr("Your CIA file is encrypted.<br/>"
+                                 "<a "
+                                 "href='https://azahar-emu.org/blog/game-loading-changes/'>"
+                                 "Please check our blog for more info.</a>"));
         break;
     case Service::AM::InstallStatus::ErrorFileNotFound:
         QMessageBox::critical(this, tr("Unable to find File"),
@@ -2625,9 +2620,10 @@ void GMainWindow::OnLoadState() {
     ASSERT(action);
 
     if (UISettings::values.save_state_warning) {
-        QMessageBox::warning(this, tr("Savestates"),
-                             tr("Warning: Savestates are NOT a replacement for in-game saves, "
-                                "and are not meant to be reliable.\n\nUse at your own risk!"));
+        QMessageBox::warning(
+            this, tr("Savestates"),
+            tr("Warning: Savestates are NOT a replacement for in-application saves, "
+               "and are not meant to be reliable.\n\nUse at your own risk!"));
         UISettings::values.save_state_warning = false;
         config->Save();
     }
@@ -2709,7 +2705,7 @@ void GMainWindow::OnLoadAmiibo() {
 
     if (!nfc->IsSearchingForAmiibos()) {
         QMessageBox::warning(this, tr("Error opening amiibo data file"),
-                             tr("Game is not looking for amiibos."));
+                             tr("Application is not looking for amiibos."));
         return;
     }
 
@@ -2859,11 +2855,11 @@ void GMainWindow::OnCaptureScreenshot() {
 
     const bool was_running = emu_thread->IsRunning();
 
-    if (was_running ||
-        (QMessageBox::question(
-             this, tr("Game will unpause"),
-             tr("The game will be unpaused, and the next frame will be captured. Is this okay?"),
-             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
+    if (was_running || (QMessageBox::question(this, tr("Application will unpause"),
+                                              tr("The application will be unpaused, and the next "
+                                                 "frame will be captured. Is this okay?"),
+                                              QMessageBox::Yes | QMessageBox::No,
+                                              QMessageBox::No) == QMessageBox::Yes)) {
         if (was_running) {
             OnPauseGame();
         }
@@ -3136,7 +3132,7 @@ void GMainWindow::UpdateStatusBar() {
                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
                                      .arg(Settings::values.frame_limit.GetValue()));
     }
-    game_fps_label->setText(tr("Game: %1 FPS").arg(results.game_fps, 0, 'f', 0));
+    game_fps_label->setText(tr("App: %1 FPS").arg(results.game_fps, 0, 'f', 0));
     emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
 
     if (show_artic_label) {
@@ -3340,7 +3336,8 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
         if (can_continue) {
             message_box.addButton(tr("Continue"), QMessageBox::RejectRole);
         }
-        QPushButton* abort_button = message_box.addButton(tr("Quit Game"), QMessageBox::AcceptRole);
+        QPushButton* abort_button =
+            message_box.addButton(tr("Quit Application"), QMessageBox::AcceptRole);
         if (result != Core::System::ResultStatus::ShutdownRequested)
             message_box.exec();
 
@@ -3470,7 +3467,7 @@ bool GMainWindow::ConfirmChangeGame() {
     }
 
     auto answer = QMessageBox::question(
-        this, tr("Azahar"), tr("The game is still running. Would you like to stop emulation?"),
+        this, tr("Azahar"), tr("The application is still running. Would you like to stop emulation?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }
@@ -3675,8 +3672,8 @@ void GMainWindow::RetranslateStatusBar() {
 
     emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
                                    "indicate emulation is running faster or slower than a 3DS."));
-    game_fps_label->setToolTip(tr("How many frames per second the game is currently displaying. "
-                                  "This will vary from game to game and scene to scene."));
+    game_fps_label->setToolTip(tr("How many frames per second the app is currently displaying. "
+                                  "This will vary from app to app and scene to scene."));
     emu_frametime_label->setToolTip(
         tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
            "full-speed emulation this should be at most 16.67 ms."));

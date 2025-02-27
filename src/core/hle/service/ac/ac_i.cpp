@@ -17,7 +17,7 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
         {0x0008, &AC_I::CloseAsync, "CloseAsync"},
         {0x0009, &AC_I::GetCloseResult, "GetCloseResult"},
         {0x000A, nullptr, "GetLastErrorCode"},
-        {0x000C, nullptr, "GetStatus"},
+        {0x000C, &AC_I::GetStatus, "GetStatus"},
         {0x000D, &AC_I::GetWifiStatus, "GetWifiStatus"},
         {0x000E, nullptr, "GetCurrentAPInfo"},
         {0x0010, nullptr, "GetCurrentNZoneInfo"},

@@ -163,7 +163,7 @@ public:
 
     GameListItemPath() = default;
     GameListItemPath(const QString& game_path, std::span<const u8> smdh_data, u64 program_id,
-                     u64 extdata_id, Service::FS::MediaType media_type) {
+                     u64 extdata_id, Service::FS::MediaType media_type, bool is_encrypted) {
         setData(type(), TypeRole);
         setData(game_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
@@ -184,6 +184,9 @@ public:
             if (UISettings::values.game_list_icon_size.GetValue() !=
                 UISettings::GameListIconSize::NoIcon)
                 setData(GetDefaultIcon(large), Qt::DecorationRole);
+            if (is_encrypted) {
+                setData(QObject::tr("Unsupported encrypted application"), TitleRole);
+            }
             return;
         }
 
@@ -262,13 +265,13 @@ public:
         };
         // clang-format off
         static const std::map<QString, CompatStatus> status_data = {
-        {QStringLiteral("0"),  {QStringLiteral("#5c93ed"), QT_TR_NOOP("Perfect"),    QT_TR_NOOP("Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without\nany workarounds needed.")}},
-        {QStringLiteral("1"),  {QStringLiteral("#47d35c"), QT_TR_NOOP("Great"),      QT_TR_NOOP("Game functions with minor graphical or audio glitches and is playable from start to finish. May require some\nworkarounds.")}},
-        {QStringLiteral("2"),  {QStringLiteral("#94b242"), QT_TR_NOOP("Okay"),       QT_TR_NOOP("Game functions with major graphical or audio glitches, but game is playable from start to finish with\nworkarounds.")}},
-        {QStringLiteral("3"),  {QStringLiteral("#f2d624"), QT_TR_NOOP("Bad"),        QT_TR_NOOP("Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches\neven with workarounds.")}},
-        {QStringLiteral("4"),  {QStringLiteral("#ff0000"), QT_TR_NOOP("Intro/Menu"), QT_TR_NOOP("Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start\nScreen.")}},
-        {QStringLiteral("5"),  {QStringLiteral("#828282"), QT_TR_NOOP("Won't Boot"), QT_TR_NOOP("The game crashes when attempting to startup.")}},
-        {QStringLiteral("99"), {QStringLiteral("#000000"), QT_TR_NOOP("Not Tested"), QT_TR_NOOP("The game has not yet been tested.")}}};
+        {QStringLiteral("0"),  {QStringLiteral("#5c93ed"), QT_TR_NOOP("Perfect"),    QT_TR_NOOP("App functions flawless with no audio or graphical glitches, all tested functionality works as intended without\nany workarounds needed.")}},
+        {QStringLiteral("1"),  {QStringLiteral("#47d35c"), QT_TR_NOOP("Great"),      QT_TR_NOOP("App functions with minor graphical or audio glitches and is playable from start to finish. May require some\nworkarounds.")}},
+        {QStringLiteral("2"),  {QStringLiteral("#94b242"), QT_TR_NOOP("Okay"),       QT_TR_NOOP("App functions with major graphical or audio glitches, but app is playable from start to finish with\nworkarounds.")}},
+        {QStringLiteral("3"),  {QStringLiteral("#f2d624"), QT_TR_NOOP("Bad"),        QT_TR_NOOP("App functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches\neven with workarounds.")}},
+        {QStringLiteral("4"),  {QStringLiteral("#ff0000"), QT_TR_NOOP("Intro/Menu"), QT_TR_NOOP("App is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start\nScreen.")}},
+        {QStringLiteral("5"),  {QStringLiteral("#828282"), QT_TR_NOOP("Won't Boot"), QT_TR_NOOP("The app crashes when attempting to startup.")}},
+        {QStringLiteral("99"), {QStringLiteral("#000000"), QT_TR_NOOP("Not Tested"), QT_TR_NOOP("The app has not yet been tested.")}}};
         // clang-format on
 
         auto iterator = status_data.find(compatibility);
@@ -445,7 +448,7 @@ public:
 
         int icon_size = IconSizes.at(UISettings::values.game_list_icon_size.GetValue());
         setData(QIcon::fromTheme(QStringLiteral("plus")).pixmap(icon_size), Qt::DecorationRole);
-        setData(QObject::tr("Add New Game Directory"), Qt::DisplayRole);
+        setData(QObject::tr("Add New Application Directory"), Qt::DisplayRole);
     }
 
     int type() const override {

@@ -6,8 +6,14 @@
 
 #include <array>
 #include <cstddef>
+#include <istream>
 #include <vector>
 #include "common/common_types.h"
+
+namespace FileSys {
+class Certificate;
+class OTP;
+} // namespace FileSys
 
 namespace HW::AES {
 
@@ -74,6 +80,8 @@ constexpr std::size_t AES_BLOCK_SIZE = 16;
 using AESKey = std::array<u8, AES_BLOCK_SIZE>;
 using AESIV = std::array<u8, AES_BLOCK_SIZE>;
 
+std::istringstream GetKeysStream();
+
 void InitKeys(bool force = false);
 
 void SetKeyX(std::size_t slot_id, const AESKey& key);
@@ -90,5 +98,8 @@ void SelectDlpNfcKeyYIndex(u8 index);
 bool NfcSecretsAvailable();
 const NfcSecret& GetNfcSecret(NfcSecretId secret_id);
 const AESIV& GetNfcIv();
+std::pair<AESKey, AESIV> GetOTPKeyIV();
+
+const AESKey& GetMovableKey(bool cmac_key);
 
 } // namespace HW::AES

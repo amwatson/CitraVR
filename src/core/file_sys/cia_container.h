@@ -44,6 +44,7 @@ public:
     // Load parts of CIAs (for CIAs streamed in)
     Loader::ResultStatus LoadHeader(std::span<const u8> header_data, std::size_t offset = 0);
     Loader::ResultStatus LoadTicket(std::span<const u8> ticket_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadTicket(const Ticket& ticket);
     Loader::ResultStatus LoadTitleMetadata(std::span<const u8> tmd_data, std::size_t offset = 0);
     Loader::ResultStatus LoadMetadata(std::span<const u8> meta_data, std::size_t offset = 0);
 

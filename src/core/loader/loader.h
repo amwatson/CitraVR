@@ -75,6 +75,7 @@ enum class ResultStatus {
     ErrorEncrypted,
     ErrorGbaTitle,
     ErrorArtic,
+    ErrorNotFound,
 };
 
 constexpr u32 MakeMagic(char a, char b, char c, char d) {

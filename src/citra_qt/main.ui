@@ -446,7 +446,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Browse Public Game Lobby</string>
+    <string>Browse Public Application Lobby</string>
    </property>
   </action>
   <action name="action_Start_Room">
@@ -688,7 +688,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Configure Current Game...</string>
+    <string>Configure Current Application...</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

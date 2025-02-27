@@ -17,6 +17,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hw/aes/key.h"
+#include "core/hw/unique_data.h"
 #include "core/system_titles.h"
 #include "ui_configure_system.h"
 
@@ -245,7 +246,7 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             this, tr("Select SecureInfo_A/B"), QString(),
             tr("SecureInfo_A/B (SecureInfo_A SecureInfo_B);;All Files (*.*)"));
         ui->button_secure_info->setEnabled(true);
-        InstallSecureData(file_path_qtstr.toStdString(), cfg->GetSecureInfoAPath());
+        InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetSecureInfoAPath());
     });
     connect(ui->button_friend_code_seed, &QPushButton::clicked, this, [this] {
         ui->button_friend_code_seed->setEnabled(false);
@@ -254,14 +255,23 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
                                          tr("LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A "
                                             "LocalFriendCodeSeed_B);;All Files (*.*)"));
         ui->button_friend_code_seed->setEnabled(true);
-        InstallSecureData(file_path_qtstr.toStdString(), cfg->GetLocalFriendCodeSeedBPath());
+        InstallSecureData(file_path_qtstr.toStdString(),
+                          HW::UniqueData::GetLocalFriendCodeSeedBPath());
     });
-    connect(ui->button_ct_cert, &QPushButton::clicked, this, [this] {
-        ui->button_ct_cert->setEnabled(false);
+    connect(ui->button_otp, &QPushButton::clicked, this, [this] {
+        ui->button_otp->setEnabled(false);
+        const QString file_path_qtstr =
+            QFileDialog::getOpenFileName(this, tr("Select encrypted OTP file"), QString(),
+                                         tr("Binary file (*.bin);;All Files (*.*)"));
+        ui->button_otp->setEnabled(true);
+        InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetOTPPath());
+    });
+    connect(ui->button_movable, &QPushButton::clicked, this, [this] {
+        ui->button_movable->setEnabled(false);
         const QString file_path_qtstr = QFileDialog::getOpenFileName(
-            this, tr("Select CTCert"), QString(), tr("CTCert.bin (*.bin);;All Files (*.*)"));
-        ui->button_ct_cert->setEnabled(true);
-        InstallCTCert(file_path_qtstr.toStdString());
+            this, tr("Select movable.sed"), QString(), tr("Sed file (*.sed);;All Files (*.*)"));
+        ui->button_movable->setEnabled(true);
+        InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetMovablePath());
     });
 
     for (u8 i = 0; i < country_names.size(); i++) {
@@ -562,50 +572,39 @@ void ConfigureSystem::InstallSecureData(const std::string& from_path, const std:
     if (from.empty() || from == to) {
         return;
     }
-    FileUtil::CreateFullPath(to_path);
+    FileUtil::CreateFullPath(to);
     FileUtil::Copy(from, to);
-    cfg->InvalidateSecureData();
-    RefreshSecureDataStatus();
-}
-
-void ConfigureSystem::InstallCTCert(const std::string& from_path) {
-    std::string from =
-        FileUtil::SanitizePath(from_path, FileUtil::DirectorySeparator::PlatformDefault);
-    std::string to = FileUtil::SanitizePath(Service::AM::Module::GetCTCertPath(),
-                                            FileUtil::DirectorySeparator::PlatformDefault);
-    if (from.empty() || from == to) {
-        return;
-    }
-    FileUtil::Copy(from, to);
+    HW::UniqueData::InvalidateSecureData();
     RefreshSecureDataStatus();
 }
 
 void ConfigureSystem::RefreshSecureDataStatus() {
-    auto status_to_str = [](Service::CFG::SecureDataLoadStatus status) {
+    auto status_to_str = [](HW::UniqueData::SecureDataLoadStatus status) {
         switch (status) {
-        case Service::CFG::SecureDataLoadStatus::Loaded:
+        case HW::UniqueData::SecureDataLoadStatus::Loaded:
             return "Loaded";
-        case Service::CFG::SecureDataLoadStatus::NotFound:
+        case HW::UniqueData::SecureDataLoadStatus::InvalidSignature:
+            return "Loaded (Invalid Signature)";
+        case HW::UniqueData::SecureDataLoadStatus::NotFound:
             return "Not Found";
-        case Service::CFG::SecureDataLoadStatus::Invalid:
+        case HW::UniqueData::SecureDataLoadStatus::Invalid:
             return "Invalid";
-        case Service::CFG::SecureDataLoadStatus::IOError:
+        case HW::UniqueData::SecureDataLoadStatus::IOError:
             return "IO Error";
         default:
             return "";
         }
     };
 
-    Service::AM::CTCert ct_cert;
-
     ui->label_secure_info_status->setText(
-        tr((std::string("Status: ") + status_to_str(cfg->LoadSecureInfoAFile())).c_str()));
+        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadSecureInfoA())).c_str()));
     ui->label_friend_code_seed_status->setText(
-        tr((std::string("Status: ") + status_to_str(cfg->LoadLocalFriendCodeSeedBFile())).c_str()));
-    ui->label_ct_cert_status->setText(
-        tr((std::string("Status: ") + status_to_str(static_cast<Service::CFG::SecureDataLoadStatus>(
-                                          Service::AM::Module::LoadCTCertFile(ct_cert))))
+        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadLocalFriendCodeSeedB()))
                .c_str()));
+    ui->label_otp_status->setText(
+        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadOTP())).c_str()));
+    ui->label_movable_status->setText(
+        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadMovable())).c_str()));
 }
 
 void ConfigureSystem::RetranslateUI() {
@@ -669,40 +668,7 @@ void ConfigureSystem::SetupPerGameUI() {
 void ConfigureSystem::DownloadFromNUS() {
     ui->button_start_download->setEnabled(false);
 
-    const auto mode =
-        static_cast<Core::SystemTitleSet>(1 << ui->combo_download_set->currentIndex());
-    const auto region = static_cast<u32>(ui->combo_download_region->currentIndex());
-    const std::vector<u64> titles = Core::GetSystemTitleIds(mode, region);
-
-    QProgressDialog progress(tr("Downloading files..."), tr("Cancel"), 0,
-                             static_cast<int>(titles.size()), this);
-    progress.setWindowModality(Qt::WindowModal);
-
-    QFutureWatcher<void> future_watcher;
-    QObject::connect(&future_watcher, &QFutureWatcher<void>::finished, &progress,
-                     &QProgressDialog::reset);
-    QObject::connect(&progress, &QProgressDialog::canceled, &future_watcher,
-                     &QFutureWatcher<void>::cancel);
-    QObject::connect(&future_watcher, &QFutureWatcher<void>::progressValueChanged, &progress,
-                     &QProgressDialog::setValue);
-
-    auto failed = false;
-    const auto download_title = [&future_watcher, &failed](const u64& title_id) {
-        if (Service::AM::InstallFromNus(title_id) != Service::AM::InstallStatus::Success) {
-            failed = true;
-            future_watcher.cancel();
-        }
-    };
-
-    future_watcher.setFuture(QtConcurrent::map(titles, download_title));
-    progress.exec();
-    future_watcher.waitForFinished();
-
-    if (failed) {
-        QMessageBox::critical(this, tr("Azahar"), tr("Downloading system files failed."));
-    } else if (!future_watcher.isCanceled()) {
-        QMessageBox::information(this, tr("Azahar"), tr("Successfully downloaded system files."));
-    }
+    QMessageBox::critical(this, tr("Azahar"), tr("Downloading from NUS has been deprecated."));
 
     ui->button_start_download->setEnabled(true);
 }

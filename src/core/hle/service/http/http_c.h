@@ -274,6 +274,8 @@ public:
     u32 socket_buffer_size;
     std::vector<RequestHeader> headers;
     const ClCertAData* clcert_data;
+    bool post_data_added = false;
+    bool post_pending_request = false;
     Params post_data;
     std::string post_data_raw;
     PostDataEncoding post_data_encoding = PostDataEncoding::Auto;
@@ -698,6 +700,12 @@ private:
      *      3-4: (Mapped buffer) Header value
      */
     void GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx);
+
+    void GetResponseData(Kernel::HLERequestContext& ctx);
+
+    void GetResponseDataTimeout(Kernel::HLERequestContext& ctx);
+
+    void GetResponseDataImpl(Kernel::HLERequestContext& ctx, bool timeout);
 
     /**
      * GetResponseHeaderImpl:

@@ -58,5 +58,17 @@ HackManager hack_manager = {
                  },
          }},
 
+        {HackType::DECRYPTION_AUTHORIZED,
+         HackEntry{
+             .mode = HackAllowMode::ALLOW,
+             .affected_title_ids =
+                 {
+                     // NIM
+                     0x0004013000002C02, // Normal
+                     0x0004013000002C03, // Safe mode
+                     0x0004013020002C03, // New 3DS safe mode
+                 },
+         }},
+
     }};
 }

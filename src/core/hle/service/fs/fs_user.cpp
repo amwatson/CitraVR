@@ -2,6 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cryptopp/aes.h>
+#include <cryptopp/cmac.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -25,6 +29,8 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hw/aes/key.h"
+#include "core/hw/unique_data.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::FS::FS_USER)
 SERIALIZE_EXPORT_IMPL(Service::FS::FS_USER)
@@ -1111,6 +1117,47 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     rb.PushRaw(*resource);
 }
 
+void FS_USER::ExportIntegrityVerificationSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto buf = rp.PopMappedBuffer();
+
+    constexpr size_t hashed_movable_size = 0x110;
+    constexpr size_t cipher_movable_size = 0x120;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto& movable_struct = HW::UniqueData::GetMovableSed();
+    if (!movable_struct.IsValid()) {
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    std::vector<u8> movable(cipher_movable_size);
+    memcpy(movable.data(), &movable_struct, cipher_movable_size);
+
+    auto movable_cmac = HW::AES::GetMovableKey(true);
+    auto movable_key = HW::AES::GetMovableKey(false);
+
+    CryptoPP::SHA256 hash;
+    std::array<u8, CryptoPP::SHA256::DIGESTSIZE> movable_digest;
+    hash.CalculateDigest(movable_digest.data(), movable.data(), hashed_movable_size);
+
+    CryptoPP::CMAC<CryptoPP::AES> cmac(movable_cmac.data(), movable_cmac.size());
+    std::array<u8, CryptoPP::AES::BLOCKSIZE> cmac_hash;
+    cmac.Update(movable_digest.data(), movable_digest.size());
+    cmac.Final(cmac_hash.data());
+
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption{movable_key.data(), movable_key.size(),
+                                                  cmac_hash.data()}
+        .ProcessData(movable.data(), movable.data(), cipher_movable_size);
+
+    movable.insert(movable.begin(), cmac_hash.begin(), cmac_hash.end());
+
+    buf.Write(movable.data(), 0, std::min(buf.GetSize(), movable.size()));
+    rb.Push(ResultSuccess);
+}
+
 void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
@@ -1262,6 +1309,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    LOG_DEBUG(Service_FS, "");
     rb.Push(ResultSuccess);
     rb.Push<u32>(FileSys::GetSeedCount());
 }
@@ -1269,10 +1317,66 @@ void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
 void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u64 title_id{rp.Pop<u64>()};
+    LOG_INFO(Service_FS, "Adding seed for title_id={:016X}", title_id);
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
     FileSys::AddSeed({title_id, seed, {}});
     IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(ResultSuccess);
+}
+
+void FS_USER::DeleteSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    bool found = FileSys::DeleteSeed(title_id);
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(found ? ResultSuccess
+                  : Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS,
+                           ErrorSummary::NotFound, ErrorLevel::Status));
+}
+
+void FS_USER::GetSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    auto seed = FileSys::GetSeed(title_id);
+    if (!seed.has_value()) {
+        IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+        rb.Push(Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
+        return;
+    }
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(5, 0)};
+    rb.Push(ResultSuccess);
+    rb.PushRaw<FileSys::Seed::Data>(seed.value());
+}
+
+void FS_USER::SetUnknown0x80Data(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    std::array<u8, 0x80> unknown_data = rp.PopRaw<std::array<u8, 0x80>>();
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_FS, "(STUBBED) title_id={:016X}", title_id);
+}
+
+void FS_USER::GetUnknown0x80Data(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    std::array<u8, 0x80> unknown_data = {0};
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(0x21, 0)};
+    rb.Push(Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                   ErrorLevel::Status));
+    rb.PushRaw(unknown_data);
+
+    LOG_WARNING(Service_FS, "(STUBBED) title_id={:016X}", title_id);
 }
 
 void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -1729,7 +1833,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0847, nullptr, "FormatCtrCardUserSaveData"},
         {0x0848, nullptr, "GetSdmcCtrRootPath"},
         {0x0849, &FS_USER::GetArchiveResource, "GetArchiveResource"},
-        {0x084A, nullptr, "ExportIntegrityVerificationSeed"},
+        {0x084A, &FS_USER::ExportIntegrityVerificationSeed, "ExportIntegrityVerificationSeed"},
         {0x084B, nullptr, "ImportIntegrityVerificationSeed"},
         {0x084C, &FS_USER::FormatSaveData, "FormatSaveData"},
         {0x084D, nullptr, "GetLegacySubBannerData"},
@@ -1767,7 +1871,11 @@ FS_USER::FS_USER(Core::System& system)
         {0x0875, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue" },
         {0x0876, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue" },
         {0x087A, &FS_USER::AddSeed, "AddSeed"},
+        {0x087B, &FS_USER::GetSeed, "GetSeed"},
+        {0x087C, &FS_USER::DeleteSeed, "GetSeed"},
         {0x087D, &FS_USER::GetNumSeeds, "GetNumSeeds"},
+        {0x0880, &FS_USER::SetUnknown0x80Data, "SetUnknown0x80Data"},
+        {0x0881, &FS_USER::GetUnknown0x80Data, "GetUnknown0x80Data"},
         {0x0886, nullptr, "CheckUpdatedDat"},
         // clang-format on
     };

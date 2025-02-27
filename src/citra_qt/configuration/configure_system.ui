@@ -629,24 +629,60 @@
              </widget>
             </item>
             <item row="3" column="0">
-             <widget class="QLabel" name="label_ct_cert">
+             <widget class="QLabel" name="label_otp">
               <property name="text">
-               <string>CTCert</string>
+               <string>OTP</string>
               </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QWidget" name="ct_cert">
-              <layout class="QHBoxLayout" name="horizontalLayout_ct_cert">
+             <widget class="QWidget" name="otp">
+              <layout class="QHBoxLayout" name="horizontalLayout_otp">
                <item>
-                <widget class="QLabel" name="label_ct_cert_status">
+                <widget class="QLabel" name="label_otp_status">
                  <property name="text">
                   <string/>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="button_ct_cert">
+                <widget class="QPushButton" name="button_otp">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Choose</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_movable">
+              <property name="text">
+               <string>movable.sed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QWidget" name="otp">
+              <layout class="QHBoxLayout" name="horizontalLayout_movable">
+               <item>
+                <widget class="QLabel" name="label_movable_status">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="button_movable">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>

@@ -43,20 +43,36 @@ public:
         u8 audit;
         INSERT_PADDING_BYTES(0x42);
         std::array<u8, 0x40> limits;
-        std::array<u8, 0xAC> content_index;
     };
-    static_assert(sizeof(Body) == 0x210, "Ticket body structure size is wrong");
+    static_assert(sizeof(Body) == 0x164, "Ticket body structure size is wrong");
 #pragma pack(pop)
 
+    Loader::ResultStatus DoTitlekeyFixup();
     Loader::ResultStatus Load(std::span<const u8> file_data, std::size_t offset = 0);
+    Loader::ResultStatus Load(u64 title_id, u64 ticket_id);
+    std::vector<u8> Serialize() const;
+    Loader::ResultStatus Save(const std::string& file_path) const;
+
     std::optional<std::array<u8, 16>> GetTitleKey() const;
     u64 GetTitleID() const {
         return ticket_body.title_id;
+    }
+    u64 GetTicketID() const {
+        return ticket_body.ticket_id;
+    }
+    u16 GetVersion() const {
+        return ticket_body.ticket_title_version;
+    }
+    size_t GetSerializedSize() {
+        return serialized_size;
     }
 
 private:
     Body ticket_body;
     u32_be signature_type;
     std::vector<u8> ticket_signature;
+    std::vector<u8> content_index;
+
+    size_t serialized_size = 0;
 };
 } // namespace FileSys

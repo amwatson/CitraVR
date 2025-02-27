@@ -6,7 +6,7 @@
 #include "common/alignment.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "core/file_sys/cia_common.h"
+#include "core/file_sys/signature.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/loader/loader.h"
 

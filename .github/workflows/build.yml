@@ -222,7 +222,6 @@ jobs:
           echo $GIT_TAG_NAME
       - name: Deps
         run: |
-          sudo add-apt-repository -y ppa:theofficialgman/gpu-tools
           sudo apt-get update -y
           sudo apt-get install ccache apksigner -y
       - name: Build

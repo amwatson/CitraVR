@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -319,9 +319,6 @@ private:
     u64 written = 0;
     std::shared_ptr<CurrentImportingTitle> importing_title;
     u16 index;
-
-    NCCH_Header ncch_header;
-    size_t ncch_copied = 0;
 };
 
 /**

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -187,6 +187,7 @@ protected:
     std::shared_ptr<Kernel::Event> disconnect_event;
 
 private:
+    [[maybe_unused]]
     Core::System& system;
 
     template <class Archive>

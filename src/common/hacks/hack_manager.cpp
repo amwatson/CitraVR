@@ -1,7 +1,8 @@
-// Copyright 2024 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include "hack_manager.h"
 
 namespace Common::Hacks {

@@ -1,9 +1,10 @@
-// Copyright 2024 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <cryptopp/oids.h>
 #include "common/alignment.h"
+#include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/signature.h"

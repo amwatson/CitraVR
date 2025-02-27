@@ -1,8 +1,9 @@
-// Copyright 2024 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_paths.h"
+#include "common/logging/log.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/otp.h"
 #include "core/hw/aes/key.h"

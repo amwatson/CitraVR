@@ -2315,10 +2315,10 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
 
     u32 count = 0;
     for (auto it = am->import_title_contexts.begin(); it != am->import_title_contexts.end(); it++) {
-        if (include_installing &&
+        if ((include_installing &&
                 (it->second.state == ImportTitleContextState::WAITING_FOR_IMPORT ||
-                 it->second.state == ImportTitleContextState::RESUMABLE) ||
-            include_finalizing && it->second.state == ImportTitleContextState::WAITING_FOR_COMMIT) {
+                 it->second.state == ImportTitleContextState::RESUMABLE)) ||
+            (include_finalizing && it->second.state == ImportTitleContextState::WAITING_FOR_COMMIT)) {
             count++;
         }
     }
@@ -2335,11 +2335,11 @@ void Module::Interface::GetImportTitleContextListImpl(IPC::RequestParser& rp,
     u32 written = 0;
 
     for (auto& key_value : am->import_content_contexts) {
-        if (include_installing &&
+        if ((include_installing &&
                 (key_value.second.state == ImportTitleContextState::WAITING_FOR_IMPORT ||
-                 key_value.second.state == ImportTitleContextState::RESUMABLE) ||
-            include_finalizing &&
-                key_value.second.state == ImportTitleContextState::WAITING_FOR_COMMIT) {
+                 key_value.second.state == ImportTitleContextState::RESUMABLE)) ||
+            (include_finalizing &&
+                key_value.second.state == ImportTitleContextState::WAITING_FOR_COMMIT)) {
 
             out_buf.Write(&key_value.first, written * sizeof(u64), sizeof(u64));
             written++;

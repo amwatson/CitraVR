@@ -201,7 +201,7 @@ LocalFriendCodeSeedB& GetLocalFriendCodeSeedB() {
     return local_friend_code_seed_b;
 }
 
-FileSys::Certificate& HW::UniqueData::GetCTCert() {
+FileSys::Certificate& GetCTCert() {
     LoadOTP();
 
     return ct_cert;

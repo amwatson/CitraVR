@@ -1357,6 +1357,7 @@ void FS_USER::SetUnknown0x80Data(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u64 title_id{rp.Pop<u64>()};
 
+    [[maybe_unused]]
     std::array<u8, 0x80> unknown_data = rp.PopRaw<std::array<u8, 0x80>>();
 
     IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};

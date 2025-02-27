@@ -6,8 +6,7 @@ if grep -nrI '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .ci* dis
     exit 1
 fi
 
-# Default clang-format points to default 3.5 version one
-CLANG_FORMAT=clang-format-19
+CLANG_FORMAT=clang-format
 $CLANG_FORMAT --version
 
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then

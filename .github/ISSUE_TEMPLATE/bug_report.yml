@@ -16,7 +16,7 @@ body:
     attributes:
       label: Affected Build(s)
       description: List the affected build(s) that this issue applies to.
-      placeholder: 1234
+      placeholder: "1234"
     validations:
       required: true
   - type: textarea

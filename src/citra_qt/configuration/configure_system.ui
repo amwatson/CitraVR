@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>535</width>
+    <width>653</width>
     <height>619</height>
    </rect>
   </property>
@@ -14,11 +14,26 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_scrollbar">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="minimumSize">
       <size>
-       <width>0</width>
+       <width>660</width>
        <height>480</height>
       </size>
      </property>

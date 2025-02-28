@@ -1070,7 +1070,7 @@ void GMainWindow::ConnectMenuEvents() {
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
     connect_menu(ui->action_FAQ, []() {
-        QDesktopServices::openUrl(QUrl(QStringLiteral("https://citra-emu.org/wiki/faq/")));
+        QDesktopServices::openUrl(QUrl(QStringLiteral("https://azahar-emu.org/pages/faq/")));
     });
     connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
 

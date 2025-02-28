@@ -3,14 +3,14 @@
 # Determine the full revision name.
 GITDATE="`git show -s --date=short --format='%ad' | sed 's/-//g'`"
 GITREV="`git show -s --format='%h'`"
-REV_NAME="citra-$OS-$TARGET-$GITDATE-$GITREV"
+REV_NAME="azahar-$OS-$TARGET-$GITDATE-$GITREV"
 
 # Determine the name of the release being built.
 if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-    RELEASE_NAME=citra-$GITHUB_REF_NAME
-    REV_NAME="citra-$GITHUB_REF_NAME-$OS-$TARGET"
+    RELEASE_NAME=azahar-$GITHUB_REF_NAME
+    REV_NAME="azahar-$GITHUB_REF_NAME-$OS-$TARGET"
 else
-    RELEASE_NAME=head
+    RELEASE_NAME=azahar-head
 fi
 
 # Archive and upload the artifacts.
@@ -46,26 +46,16 @@ function pack_artifacts() {
         tar czvf "$ARCHIVE_FULL_NAME" "$REV_NAME"
     fi
     mv "$ARCHIVE_FULL_NAME" artifacts/
-
-    if [ -z "$SKIP_7Z" ]; then
-        # Create .7z
-        ARCHIVE_FULL_NAME="$ARCHIVE_NAME.7z"
-        mv "$REV_NAME" "$RELEASE_NAME"
-        7z a "$ARCHIVE_FULL_NAME" "$RELEASE_NAME"
-        mv "$ARCHIVE_FULL_NAME" artifacts/
-
-        # Clean up created release artifacts directory.
-        rm -rf "$RELEASE_NAME"
-    else
-        # Clean up created rev artifacts directory.
-        rm -rf "$REV_NAME"
-    fi
+     # Clean up created rev artifacts directory.
+    rm -rf "$REV_NAME"
 }
 
 if [ "$OS" = "windows" ] && [ "$GITHUB_REF_TYPE" = "tag" ]; then
     # Move the installer to the artifacts directory
     mv src/installer/bin/*.exe artifacts/
-elif [ -n "$UNPACKED" ]; then
+fi
+
+if [ -n "$UNPACKED" ]; then
     # Copy the artifacts to be uploaded unpacked.
     for ARTIFACT in build/bundle/*; do
         FILENAME=$(basename "$ARTIFACT")

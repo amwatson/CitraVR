@@ -65,13 +65,13 @@ struct ScreenName {
     // 20 bytes according to 3dbrew
     std::array<char16_t, 10> name;
 };
-static_assert(sizeof(ScreenName) == 0x14, "ScreenName has inccorect size");
+static_assert(sizeof(ScreenName) == 0x14, "ScreenName has incorrect size");
 
 struct Comment {
     // 32 bytes according to 3dbrew
     std::array<char16_t, 16> name;
 };
-static_assert(sizeof(Comment) == 0x20, "Comment has inccorect size");
+static_assert(sizeof(Comment) == 0x20, "Comment has incorrect size");
 
 class Module final {
 public:

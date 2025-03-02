@@ -11,7 +11,7 @@
 #include "common/string_util.h"
 
 TEST_CASE("SplitFilename83 Sanity", "[common]") {
-    std::string filename = "long_ass_file_name.3ds";
+    std::string filename = "long_ass_file_name.cci";
     std::array<char, 9> short_name;
     std::array<char, 4> extension;
 

@@ -43,7 +43,6 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
-import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
@@ -779,17 +778,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.SHADERS_ACCURATE_MUL.defaultValue
                 )
             )
-            if (GpuDriverHelper.supportsCustomDriverLoading()) {
-                add(
-                    SwitchSetting(
-                        BooleanSetting.ADRENO_GPU_BOOST,
-                        R.string.adreno_gpu_boost,
-                        R.string.adreno_gpu_boost_description,
-                        BooleanSetting.ADRENO_GPU_BOOST.key,
-                        BooleanSetting.ADRENO_GPU_BOOST.defaultValue
-                    )
-                )
-            }
             add(
                 SwitchSetting(
                     IntSetting.DISK_SHADER_CACHE,

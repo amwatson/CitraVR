@@ -69,7 +69,6 @@
 #include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
-#include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
 #include "citra_qt/util/graphics_device_info.h"
 #include "citra_qt/util/util.h"
@@ -353,12 +352,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     InitializeRecentFileMenuActions();
     InitializeSaveStateMenuActions();
     InitializeHotkeys();
-#if ENABLE_QT_UPDATER
-    ShowUpdaterWidgets();
-#else
-    ui->action_Check_For_Updates->setVisible(false);
-    ui->action_Open_Maintenance_Tool->setVisible(false);
-#endif
 
     SetDefaultUIGeometry();
     RestoreUIState();
@@ -429,12 +422,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 #endif
 
-#if ENABLE_QT_UPDATER
-    if (UISettings::values.check_for_update_on_start) {
-        CheckForUpdates();
-    }
-#endif
-
     if (!game_path.isEmpty()) {
         BootGame(game_path);
     }
@@ -485,12 +472,6 @@ void GMainWindow::InitializeWidgets() {
     multiplayer_state = new MultiplayerState(system, this, game_list->GetModel(),
                                              ui->action_Leave_Room, ui->action_Show_Room);
     multiplayer_state->setVisible(false);
-
-#if ENABLE_QT_UPDATER
-    // Setup updater
-    updater = new Updater(this);
-    UISettings::values.updater_found = updater->HasUpdater();
-#endif
 
     UpdateBootHomeMenuState();
 
@@ -1079,11 +1060,6 @@ void GMainWindow::ConnectMenuEvents() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://azahar-emu.org/pages/faq/")));
     });
     connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
-
-#if ENABLE_QT_UPDATER
-    connect_menu(ui->action_Check_For_Updates, &GMainWindow::OnCheckForUpdates);
-    connect_menu(ui->action_Open_Maintenance_Tool, &GMainWindow::OnOpenUpdater);
-#endif
 }
 
 void GMainWindow::UpdateMenuState() {
@@ -1136,81 +1112,6 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
         }
     }
 }
-
-#if ENABLE_QT_UPDATER
-void GMainWindow::OnCheckForUpdates() {
-    explicit_update_check = true;
-    CheckForUpdates();
-}
-
-void GMainWindow::CheckForUpdates() {
-    if (updater->CheckForUpdates()) {
-        LOG_INFO(Frontend, "Update check started");
-    } else {
-        LOG_WARNING(Frontend, "Unable to start check for updates");
-    }
-}
-
-void GMainWindow::OnUpdateFound(bool found, bool error) {
-    if (error) {
-        LOG_WARNING(Frontend, "Update check failed");
-        return;
-    }
-
-    if (!found) {
-        LOG_INFO(Frontend, "No updates found");
-
-        // If the user explicitly clicked the "Check for Updates" button, we are
-        //  going to want to show them a prompt anyway.
-        if (explicit_update_check) {
-            explicit_update_check = false;
-            ShowNoUpdatePrompt();
-        }
-        return;
-    }
-
-    if (emulation_running && !explicit_update_check) {
-        LOG_INFO(Frontend, "Update found, deferring as application is running");
-        defer_update_prompt = true;
-        return;
-    }
-
-    LOG_INFO(Frontend, "Update found!");
-    explicit_update_check = false;
-
-    ShowUpdatePrompt();
-}
-
-void GMainWindow::ShowUpdatePrompt() {
-    defer_update_prompt = false;
-
-    auto result =
-        QMessageBox::question(this, tr("Update Available"),
-                              tr("An update is available. Would you like to install it now?"),
-                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-
-    if (result == QMessageBox::Yes) {
-        updater->LaunchUIOnExit();
-        close();
-    }
-}
-
-void GMainWindow::ShowNoUpdatePrompt() {
-    QMessageBox::information(this, tr("No Update Found"), tr("No update is found."),
-                             QMessageBox::Ok, QMessageBox::Ok);
-}
-
-void GMainWindow::OnOpenUpdater() {
-    updater->LaunchUI();
-}
-
-void GMainWindow::ShowUpdaterWidgets() {
-    ui->action_Check_For_Updates->setVisible(UISettings::values.updater_found);
-    ui->action_Open_Maintenance_Tool->setVisible(UISettings::values.updater_found);
-
-    connect(updater, &Updater::CheckUpdatesDone, this, &GMainWindow::OnUpdateFound);
-}
-#endif
 
 void GMainWindow::ShowMigrationCancelledMessage() {
     QMessageBox::information(
@@ -1720,12 +1621,6 @@ void GMainWindow::ShutdownGame() {
     UpdateSaveStates();
 
     emulation_running = false;
-
-#if ENABLE_QT_UDPATER
-    if (defer_update_prompt) {
-        ShowUpdatePrompt();
-    }
-#endif
 
     game_title.clear();
     UpdateWindowTitle();

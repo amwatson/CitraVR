@@ -209,8 +209,6 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="action_Check_For_Updates"/>
-    <addaction name="action_Open_Maintenance_Tool"/>
     <addaction name="separator"/>
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
@@ -494,14 +492,6 @@
     <string>Opens the Citra Log folder</string>
    </property>
   </action>
-  <action name="action_Open_Maintenance_Tool">
-   <property name="text">
-    <string>Modify Citra Install</string>
-   </property>
-   <property name="toolTip">
-    <string>Opens the maintenance tool to modify your Citra installation</string>
-   </property>
-  </action>
   <action name="action_Screen_Layout_Default">
    <property name="checkable">
     <bool>true</bool>
@@ -636,11 +626,6 @@
    </property>
    <property name="text">
     <string>Rotate Upright</string>
-   </property>
-  </action>
-  <action name="action_Check_For_Updates">
-   <property name="text">
-    <string>Check for Updates</string>
    </property>
   </action>
   <action name="action_Report_Compatibility">

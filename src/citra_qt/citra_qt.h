@@ -53,9 +53,6 @@ class QProgressBar;
 class QPushButton;
 class QSlider;
 class RegistersWidget;
-#if ENABLE_QT_UPDATER
-class Updater;
-#endif
 class WaitTreeWidget;
 
 namespace Camera {
@@ -165,13 +162,6 @@ private:
 
     void SetDiscordEnabled(bool state);
     void LoadAmiibo(const QString& filename);
-
-#if ENABLE_QT_UPDATER
-    void ShowUpdaterWidgets();
-    void ShowUpdatePrompt();
-    void ShowNoUpdatePrompt();
-    void CheckForUpdates();
-#endif
 
     enum LegacyEmu {
         Citra,
@@ -298,12 +288,6 @@ private slots:
     /// Called whenever a user selects Help->About Azahar
     void OnMenuAboutCitra();
 
-#if ENABLE_QT_UPDATER
-    void OnUpdateFound(bool found, bool error);
-    void OnCheckForUpdates();
-    void OnOpenUpdater();
-#endif
-
     void OnLanguageChanged(const QString& locale);
     void OnMouseActivity();
 
@@ -408,12 +392,6 @@ private:
     IPCRecorderWidget* ipcRecorderWidget;
     LLEServiceModulesWidget* lleServiceModulesWidget;
     WaitTreeWidget* waitTreeWidget;
-#if ENABLE_QT_UPDATER
-    Updater* updater;
-#endif
-
-    bool explicit_update_check = false;
-    bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
     std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;

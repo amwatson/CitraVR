@@ -287,8 +287,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         if (args[i] == QStringLiteral("--version") || args[i] == QStringLiteral("-v")) {
-            const std::string version_string =
-                std::string("Azahar ") + Common::g_build_fullname;
+            const std::string version_string = std::string("Azahar ") + Common::g_build_fullname;
             ShowCommandOutput("Version", version_string);
             exit(0);
         }

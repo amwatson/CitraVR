@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -207,19 +207,26 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
         return false;
     }
     std::shared_ptr<Kernel::Process> process;
-    loader->Load(process);
+    Loader::ResultStatus load_result = loader->Load(process);
+    if (load_result != Loader::ResultStatus::Success) {
+        LOG_ERROR(Service,
+                  "Service module \"{}\" could not be loaded (ResultStatus={}); Defaulting to HLE "
+                  "implementation.",
+                  service_module.name, static_cast<int>(load_result));
+        return false;
+    }
     LOG_DEBUG(Service, "Service module \"{}\" has been successfully loaded.", service_module.name);
     return true;
 }
 
 /// Initialize ServiceManager
-void Init(Core::System& core) {
+void Init(Core::System& core, bool allow_lle) {
     SM::ServiceManager::InstallInterfaces(core);
     core.Kernel().SetAppMainThreadExtendedSleep(false);
     bool lle_module_present = false;
 
     for (const auto& service_module : service_module_map) {
-        const bool has_lle = AttemptLLE(service_module);
+        const bool has_lle = allow_lle && AttemptLLE(service_module);
         if (!has_lle && service_module.init_function != nullptr) {
             service_module.init_function(core);
         }

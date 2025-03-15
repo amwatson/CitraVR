@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">To oprogramowanie umożliwia uruchamianie gier na konsolę przenośną Nintendo 3DS. Nie zawiera tytułów gier.\n\nPrzed rozpoczęciem emulacji należy wybrać folder do przechowywania danych użytkownika Lime3DS.\n\nCo to jest:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dane użytkownika i przechowywanie Lime3DS dla systemu Android</a></string>
-    <string name="app_notification_channel_description">Powiadomienia o emulatorze Lime3DS</string>
-    <string name="app_notification_running">Lime3DS jest uruchomiony</string>
-    <string name="app_game_install_description">Następnie należy wybrać folder z grą. Lime3DS wyświetli wszystkie ROM-y 3DS w wybranym folderze w aplikacji.\n\nROMy CIA, aktualizacje i DLC będą musiały zostać zainstalowane oddzielnie, klikając ikonę folderu i wybierając opcję Zainstaluj CIA.</string>
+    <string name="app_disclaimer">To oprogramowanie umożliwia uruchamianie aplikacja na konsolę przenośną Nintendo 3DS. Nie zawiera tytułów gier.\n\nPrzed rozpoczęciem emulacji należy wybrać folder do przechowywania danych użytkownika Azahar.\n\nCo to jest:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dane użytkownika i przechowywanie Azahar dla systemu Android</a></string>
+    <string name="app_notification_channel_description">Powiadomienia o emulatorze Azahar</string>
+    <string name="app_notification_running">Azahar jest uruchomiony</string>
+    <string name="app_game_install_description">Następnie należy wybrać folder z aplikacjami. Azahar wyświetli wszystkie ROM-y 3DS w wybranym folderze w aplikacji.\n\nROMy CIA, aktualizacje i DLC będą musiały zostać zainstalowane oddzielnie, klikając ikonę folderu i wybierając opcję Zainstaluj CIA.</string>
+    <string name="start">Rozpocznij</string>
+    <string name="cancelling">Anulowanie...</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ustawienia</string>
     <string name="home_options">Opcje</string>
     <string name="home_search">Wyszukaj</string>
-    <string name="home_games">Gry</string>
+    <string name="home_games">Aplikacje</string>
     <string name="settings_description">Konfiguruj ustawienia emulatora</string>
     <string name="install_game_content">Instaluj plik CIA</string>
-    <string name="install_game_content_description">Instalowanie gier, aktualizacji lub dodatków DLC</string>
+    <string name="install_game_content_description">Instalowanie aplikacji, aktualizacji lub dodatków DLC</string>
     <string name="share_log">Dziennik zdarzeń</string>
-    <string name="share_log_description">Udostępnij plik dziennika Lime3DS w celu debugowania błędów</string>
+    <string name="share_log_description">Udostępnij plik logu Azahar w celu debugowania błędów</string>
     <string name="gpu_driver_manager">Menedżer sterowników GPU</string>
     <string name="install_gpu_driver">Zainstaluj sterownik GPU</string>
     <string name="install_gpu_driver_description">Zainstaluj alternatywne sterowniki dla potencjalnie lepszej wydajności lub dokładności.</string>
@@ -23,12 +25,13 @@
     <string name="custom_driver_not_supported">Niestandardowe sterowniki nie są obsługiwane</string>
     <string name="custom_driver_not_supported_description">Ładowanie niestandardowych sterowników nie jest obecnie obsługiwane dla tego urządzenia.\nSprawdź tę opcję ponownie w przyszłości, aby zobaczyć, czy obsługa została dodana!</string>
     <string name="share_log_not_found">Nie znaleziono pliku dziennika</string>
-    <string name="select_games_folder">Wybierz folder gier</string>
-    <string name="select_games_folder_description">Pozwala Lime3DS wypełnić listę gier.</string>
+    <string name="select_games_folder">Wybierz folder aplikacji</string>
+    <string name="select_games_folder_description">Pozwala Azahar rozszerzyć listę aplikacji.</string>
     <string name="about">O</string>
+    <string name="citra_description">Emulator 3DS na licencji open source</string>
     <string name="about_description">Wersja kompilacji, kredyty i nie tylko</string>
-    <string name="games_dir_selected">Wybrano katalog z grami</string>
-    <string name="select_lime3ds_user_folder_home_description">Zmienia pliki używane przez Lime3DS do ładowania gier</string>
+    <string name="games_dir_selected">Wybrano katalog z aplikacjami</string>
+    <string name="select_citra_user_folder_home_description">Zmienia pliki, których Azahar używa do ładowania aplikacji</string>
     <string name="theme_and_color_description">Zmodyfikuj wygląd aplikacji</string>
     <string name="install_cia_title">Instaluj CIA</string>
 
@@ -45,53 +48,48 @@
 
     <!-- About screen strings -->
     <string name="copied_to_clipboard">Skopiowano do schowka</string>
-    <string name="contributors_link">https://github.com/Lime3DS/Lime3DS/graphs/contributors</string>
+    <string name="contributors">Współtwórcy</string>
+    <string name="contributors_description">Współtwórcy, dzięki którym Azahar stało się możliwe</string>
+    <string name="licenses_description">Projekty używane przez Azahar na Androida</string>
     <string name="build">Kompilacja</string>
     <string name="licenses">Licencje</string>
-    <string name="support_link">https://discord.gg/4ZjMpAp3M6</string>
-    <string name="website_link">https://lime3ds.github.io/</string>
-    <string name="github_link">https://github.com/Lime3DS</string>
-
     <!-- Setup strings -->
     <string name="welcome">Witamy!</string>
-    <string name="welcome_description">Dowiedz się, jak skonfigurować &lt;b>Lime3DS&lt;/b> i rozpocząć emulację.</string>
+    <string name="welcome_description">Dowiedz się, jak skonfigurować &lt;b>Azahar&lt;/b> i rozpocząć emulację.</string>
     <string name="get_started">Rozpocznij</string>
     <string name="step_complete">Gotowe!</string>
-    <string name="games">Gry</string>
-    <string name="games_description">Wybierz folder &lt;b>Games&lt;/b> korzystając z przycisku poniżej.</string>
+    <string name="games">Aplikacje</string>
+    <string name="games_description">Wybierz folder &lt;b>Applications&lt;/b> korzystając z przycisku poniżej.</string>
     <string name="done">Gotowe</string>
-    <string name="done_description">Wszystko jest już gotowe.\nŻyczymy miłej gry!</string>
+    <string name="done_description">Wszystko jest już gotowe.\nŻyczymy miłego korzystania z emulatora!</string>
     <string name="text_continue">Kontynuuj</string>
-    <string name="add_games">Dodaj Gry</string>
     <string name="notifications">Powiadomienia</string>
     <string name="notifications_description">Zezwól na powiadomienia naciskając przycisk poniżej.</string>
     <string name="give_permission">Udzielenie zgody</string>
     <string name="notification_warning">Pominąć udzielanie zgody na powiadomienie?</string>
-    <string name="notification_warning_description">Lime3DS nie będzie w stanie powiadomić cię o ważnych informacjach.</string>
+    <string name="notification_warning_description">Azahar nie będzie w stanie powiadomić cię o ważnych informacjach.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Udziel poniższych uprawnień kamery, aby emulować kamerę 3DS.</string>
     <string name="microphone_permission">Mikrofon</string>
     <string name="microphone_permission_description">Udziel poniższych uprawnień mikrofonu, aby emulować mikrofon 3DS.</string>
     <string name="permission_denied">Odmowa zezwolenia</string>
-    <string name="add_games_warning">Pominąć wybór folderu z grami?</string>
-    <string name="add_games_warning_description">Gry nie będą wyświetlane na liście gier, jeśli nie wybrano folderu.</string>
-    <string name="add_games_warning_help">https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/</string>
+    <string name="add_games_warning">Pominąć wybór folderu z aplikacjami?</string>
+    <string name="add_games_warning_description">Oprogramowania nie będą wyświetlane na liście aplikacji, jeśli nie wybrano folderu.</string>
     <string name="warning_help">Pomoc</string>
     <string name="warning_skip">Pomiń</string>
     <string name="warning_cancel">Anuluj</string>
-    <string name="select_lime3ds_user_folder">Wybierz folder użytkownika</string>
-    <string name="select_lime3ds_user_folder_description"><![CDATA[Wybierz katalog <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">danych użytkownika</a> korzystając z przycisku poniżej.]]></string>
+    <string name="select_citra_user_folder">Wybierz folder użytkownika</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Wybierz katalog<a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">danych użytkownika</a>korzystając z przycisku poniżej.]]></string>
     <string name="select">Wybierz</string>
     <string name="cannot_skip">Nie możesz pominąć tego kroku</string>
-    <string name="cannot_skip_directory_description">Ten krok jest wymagany, aby umożliwić działanie Lime3DS. Wybierz katalog, a następnie możesz kontynuować.</string>
-    <string name="cannot_skip_directory_help">https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage</string>
+    <string name="cannot_skip_directory_description">Ten krok jest wymagany, aby umożliwić działanie Azahar. Wybierz katalog, a następnie możesz kontynuować.</string>
     <string name="set_up_theme_settings">Ustawienia motywu</string>
-    <string name="setup_theme_settings_description">Skonfiguruj ustawienia motywu dla Lime3DS.</string>
+    <string name="setup_theme_settings_description">Skonfiguruj ustawienia motywu dla Azahar.</string>
     <string name="setup_set_theme">Ustaw motyw</string>
 
     <!-- Search Strings -->
-    <string name="search_and_filter_games">Wyszukaj i filtruj gry</string>
-    <string name="home_search_games">Wyszukaj gry</string>
+    <string name="search_and_filter_games">Wyszukaj i filtruj aplikacje</string>
+    <string name="home_search_games">Wyszukaj aplikacje</string>
     <string name="search_recently_played">Ostatnio grane</string>
     <string name="search_recently_added">Ostatnio dodane</string>
     <string name="search_installed">Zainstalowane</string>
@@ -104,7 +102,9 @@
     <string name="controller_trigger">Spust</string>
     <string name="controller_dpad">Krzyżak</string>
     <string name="controller_dpad_axis">Krzyżak (oś)</string>
+    <string name="controller_dpad_axis_description">Niektóre kontrolery mogą nie być w stanie zmapować swojego D-pada jako osi. W takim przypadku należy użyć sekcji D-Pad (przyciski).</string>
     <string name="controller_dpad_button">Krzyżak (Przycisk)</string>
+    <string name="controller_dpad_button_description">Zmapuj D-pad na te ustawienia tylko wtedy, gdy masz problemy z mapowaniem przycisków D-Pada (Oś).</string>
     <string name="controller_axis_vertical">Oś góra/dół</string>
     <string name="controller_axis_horizontal">Oś lewa/prawa</string>
     <string name="direction_up">Góra</string>
@@ -123,31 +123,22 @@
     <string name="input_message_button_only">Ten kontroler musi być powiązany z przyciskiem gamepada!</string>
 
     <!-- System files strings -->
-    <string name="system_files">Pliki systemowe</string>
-    <string name="system_files_description">Pobierz pliki systemowe, aby pobrać pliki Mii, uruchom HOME menu i nie tylko</string>
-    <string name="download_system_files">Pobierz pliki systemowe</string>
+    <string name="setup_system_files">Pliki systemowe</string>
+    <string name="setup_system_files_description">Wykonywanie operacji na plikach systemowych, takich jak instalowanie plików systemowych lub uruchamianie Home Menu</string>
+    <string name="setup_tool_connect">Podłącz do narzędzia Artic Setup Tool</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar potrzebuje plików z prawdziwej konsoli, aby móc korzystać z niektórych jej funkcji. Pliki te można uzyskać za pomocą narzędzia <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Uwaga:<ul><li><b>Ta operacja zainstaluje unikalne pliki konsoli do Azahar, nie udostępniaj swoich folderów użytkownika lub nand<br>po wykonaniu procesu konfiguracji!</b></li><li>Konfiguracja Old 3DS jest wymagana, aby konfiguracja New 3DS działała.</li><li>Oba tryby konfiguracji będą działać niezależnie od modelu konsoli, na której uruchomiono narzędzie konfiguracji.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Pobieranie bieżącego stanu plików systemowych, proszę zaczekać...</string>
+    <string name="setup_system_files_o3ds">Konfiguracja Old 3DS</string>
+    <string name="setup_system_files_n3ds">Konfiguracja New 3DS</string>
+    <string name="setup_system_files_possible">Konfiguracja jest możliwa.</string>
+    <string name="setup_system_files_o3ds_needed">Najpierw wymagana jest konfiguracja Old 3DS.</string>
+    <string name="setup_system_files_completed">Konfiguracja została zakończona.</string>
+    <string name="setup_system_files_enter_address">Wprowadź adres narzędzia konfiguracyjnego Artic:</string>
+    <string name="setup_system_files_preparing">Przygotowywanie konfiguracji, proszę zaczekać...</string>
     <string name="boot_home_menu">Uruchom HOME Menu</string>
-    <string name="system_type">Typ systemu</string>
-    <string name="download">Pobierz</string>
-    <string name="start">Rozpocznij</string>
-    <string name="keys_missing">W Lime3DS brakuje kluczy do pobierania plików systemowych.</string>
-    <string name="how_to_get_keys"><![CDATA[<a href=\"https://web.archive.org/web/20240304203412/https://citra-emu.org/wiki/aes-keys/\">Jak zdobyć klucze?</a>]]></string>
-    <string name="show_home_apps">Pokaż aplikacje z HOME menu na liście gier</string>
+    <string name="show_home_apps">Pokaż aplikacje HOME menu na liście aplikacje</string>
     <string name="run_system_setup">Uruchom konfigurację systemu po uruchomieniu HOME menu</string>
-    <string name="system_type_minimal">Minimalne</string>
-    <string name="system_type_old_3ds">Old 3DS</string>
-    <string name="system_type_new_3ds">New 3DS</string>
-    <string name="downloading_files">Pobieranie Plików...</string>
-    <string name="downloading_files_description">Nie zamykaj aplikacji.</string>
-    <string name="download_failed">Pobieranie nie powiodło się</string>
-    <string name="download_failed_description">Upewnij się, że jesteś połączony z Internetem i spróbuj ponownie.</string>
-    <string name="download_success">Pobieranie ukończone!</string>
-    <string name="download_cancelled">Pobieranie anulowane</string>
-    <string name="download_cancelled_description">Uruchom ponowne pobieranie, aby uniknąć problemów z niekompletnymi plikami systemowymi.</string>
-    <string name="cancelling">Anulowanie...</string>
     <string name="home_menu">HOME Menu</string>
-    <string name="home_menu_warning">Ostrzeżenie dotyczące plików systemowych</string>
-    <string name="home_menu_warning_description">Ze względu na powolny dostęp do pamięci masowej systemu Android w celu uzyskania dostępu do plików Lime3DS, pobieranie wielu wersji plików systemowych może znacznie spowolnić ładowanie gier, stanów zapisu i listy gier. Pobieraj tylko te pliki, których potrzebujesz, aby uniknąć problemów z szybkością ładowania.</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Przyciski</string>
@@ -174,12 +165,14 @@
     <string name="birthday_day">Dzień</string>
     <string name="country">Kraj</string>
     <string name="play_coins">Monety Gry</string>
+    <string name="steps_per_hour">Liczba kroków krokomierza na godzinę</string>
+    <string name="steps_per_hour_description">Liczba kroków na godzinę podawana przez krokomierz. Wartość może wynosić od 0 do 65,535.</string>
     <string name="console_id">ID Konsoli</string>
     <string name="regenerate_console_id">Wygeneruj ID konsoli</string>
-    <string name="regenerate_console_id_description">Spowoduje to zastąpienie bieżącego wirtualnego 3DS nowym. Obecnego wirtualnego 3DS-a nie będzie można odzyskać. Może to mieć nieoczekiwane skutki w grach. Może się to nie powieść, jeśli używana jest nieaktualna konfiguracja gry. Kontynuować?</string>
+    <string name="regenerate_console_id_description">To zastąpi twojego obecnego wirtualnego 3DS. Odzyskanie twojego obecnego 3DS będzie niemożliwe. To może spowodować niespodziewane efekty w aplikacjach. Operacja może się nie powieść jeżeli korzystasz z przestarzałej konfiguracji zapisów aplikacji. Kontynuować?</string>
     <string name="plugin_loader">Wtyczka 3GX Loader</string>
     <string name="plugin_loader_description">Ładuje wtyczki 3GX z emulowanej karty SD, jeśli są dostępne.</string>
-    <string name="allow_plugin_loader">Zezwalaj grom na zmianę stanu ładowania wtyczki</string>
+    <string name="allow_plugin_loader">Zezwól aplikacjom na zmianę stanu programu ładującego wtyczki</string>
     <string name="allow_plugin_loader_description">Umożliwia aplikacjom homebrew włączenie programu ładującego wtyczki, nawet jeśli jest on wyłączony.</string>
 
     <!-- Camera settings strings -->
@@ -209,7 +202,7 @@
     <string name="linear_filtering">Filtrowanie Linear</string>
     <string name="linear_filtering_description">Włącza filtrowanie liniowe, które sprawia, że grafika w grach jest płynniejsza.</string>
     <string name="texture_filter_name">Filtr tekstur</string>
-    <string name="texture_filter_description">Ulepsza oprawę wizualną gier poprzez zastosowanie filtra do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce i xBRZ freescale.</string>
+    <string name="texture_filter_description">Ulepsza oprawę wizualną aplikacji poprzez zastosowanie filtrów do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale i MMPX.</string>
     <string name="hw_shaders">Włącz shader sprzętu</string>
     <string name="hw_shaders_description">Używa sprzętu do emulacji shaderów 3DS. Po włączeniu, wydajność gry zostanie znacznie poprawiona.</string>
     <string name="shaders_accurate_mul">Dokładne mnożenie</string>
@@ -221,7 +214,7 @@
     <string name="frame_limit_slider">Ogranicz procent prędkości</string>
     <string name="frame_limit_slider_description">Określa wartość procentową ograniczenia prędkości emulacji. Przy domyślnej wartości 100% emulacja będzie ograniczona do normalnej prędkości. Wyższe lub niższe wartości zwiększają lub zmniejszają ograniczenie prędkości.</string>
     <string name="internal_resolution">Rozdzielczość Wewnętrzna</string>
-    <string name="internal_resolution_description">Określa rozdzielczość używaną do renderowania. Wysoka rozdzielczość znacznie poprawi jakość wizualną, ale jest również dość obciążająca dla wydajności i może powodować błędy w niektórych grach.</string>
+    <string name="internal_resolution_description">Określa rozdzielczość używaną do renderowania. Wysoka rozdzielczość znacznie poprawi jakość wizualną, ale jest również dość obciążająca dla wydajności i może powodować błędy w niektórych aplikacjach.</string>
     <string name="internal_resolution_setting_1x">Natywna (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Natywna (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Natywna (1200x720)</string>
@@ -248,8 +241,6 @@
     <string name="use_shader_jit">Shader JIT</string>
     <string name="use_disk_shader_cache">Pamięć podręczna shaderów na dysku</string>
     <string name="use_disk_shader_cache_description">Redukuje zacinanie się poprzez przechowywanie i ładowanie wygenerowanych shaderów na dysk. Nie można jej używać bez włączenia opcji Shader sprzętowy.</string>
-    <string name="adreno_gpu_boost">Wzmocnienie Adreno GPU (Eksperymentalne)</string>
-    <string name="adreno_gpu_boost_description">Zwiększa wydajność grafiki na obsługiwanych urządzeniach, poprawiając wydajność. Użycie tego ustawienia może zwiększyć zużycie baterii i zwiększyć temperaturę. Może powodować problemy ze stabilnością na niektórych urządzeniach.</string>
     <string name="utility">Narzędzia</string>
     <string name="dump_textures">Zrzuć tekstury</string>
     <string name="dump_textures_description">Tekstury są zrzucane do pliku dump/textures/[Title ID]/.</string>
@@ -268,6 +259,14 @@
     <string name="realtime_audio_description">Skaluje prędkość odtwarzania dźwięku, aby uwzględnić spadki liczby klatek na sekundę w emulacji. Oznacza to, że dźwięk będzie odtwarzany z pełną prędkością, nawet jeśli liczba klatek na sekundę w grze jest niska. Może powodować problemy z desynchronizacją dźwięku.</string>
     <string name="audio_input_type">Urządzenie wejściowe dźwięku</string>
     <string name="sound_output_mode">Tryb wyjścia dźwięku</string>
+
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">Orientacja Ekranu</string>
+    <string name="layout_screen_orientation_auto_sensor">Automatycznie</string>
+    <string name="layout_screen_orientation_landscape">Widok</string>
+    <string name="layout_screen_orientation_landscape_reverse">Odwrócony widok</string>
+    <string name="layout_screen_orientation_portrait">Portret</string>
+    <string name="layout_screen_orientation_portrait_reverse">Odwrócony portret</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Wyczyść</string>
@@ -316,6 +315,7 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Motyw i kolor</string>
     <string name="preferences_layout">Układ</string>
+
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Twój ROM jest zaszyfrowany</string>
     <string name="loader_error_invalid_format">Nieprawidłowy format ROMu</string>
@@ -353,6 +353,18 @@
     <string name="emulation_screen_layout_original">Oryginalny</string>
     <string name="emulation_portrait_layout_top_full">Domyślny</string>
     <string name="emulation_screen_layout_custom">Niestandardowy Układ</string>
+    <string name="emulation_small_screen_position">Pozycja małego ekranu</string>
+    <string name="small_screen_position_description">Gdzie powinien być wyświetlany mały ekran względem dużego w układzie dużego ekranu?</string>
+    <string name="small_screen_position_top_right">Prawy górny róg</string>
+    <string name="small_screen_position_middle_right">Środkowy prawy</string>
+    <string name="small_screen_position_bottom_right">Prawy dolny róg (domyślne)</string>
+    <string name="small_screen_position_top_left">Lewy górny róg</string>
+    <string name="small_screen_position_middle_left">Środkowy lewy</string>
+    <string name="small_screen_position_bottom_left">Lewy dolny róg</string>
+    <string name="small_screen_position_above">Powyżej</string>
+    <string name="small_screen_position_below">Poniżej</string>
+    <string name="large_screen_proportion">Proporcja dużego ekranu</string>
+    <string name="large_screen_proportion_description">Ile razy większy jest duży ekran od małego w układzie dużego ekranu?</string>
     <string name="emulation_adjust_custom_layout">Dostosuj niestandardowy układ w Ustawieniach</string>
     <string name="emulation_landscape_custom_layout">Geometryczny Układ Ekranu</string>
     <string name="emulation_portrait_custom_layout">Pionowy Układ Ekranu</string>
@@ -383,7 +395,7 @@
     <string name="write_permission_needed">Aby emulator mógł zacząć działać, należy zezwolić na zapis do pamięci zewnętrznej</string>
     <string name="load_settings">Wczytywanie Ustawień...</string>
 
-    <string name="external_storage_not_mounted">Zewnętrzna pamięć urządzenia musi być dostępna, aby można było korzystać z Lime3DS</string>
+    <string name="external_storage_not_mounted">Zewnętrzna pamięć urządzenia musi być dostępna, aby można było korzystać z Azahar</string>
 
     <string name="select_dir">Wybierz ten Katalog</string>
     <string name="empty_gamelist">Nie znaleziono żadnych plików lub nie wybrano jeszcze katalogu gry.</string>
@@ -413,11 +425,11 @@
     <!-- Camera -->
     <string name="camera_select_image">Wybierz Zdjęcie</string>
     <string name="camera">Kamera</string>
-    <string name="camera_permission_needed">Lime3DS musi mieć dostęp do kamery, aby emulować kamery 3DS.\n\nAlternatywnie można również ustawić „Źródło obrazu” na „Zdjęcie” w Ustawieniach aparatu.</string>
+    <string name="camera_permission_needed">Azahar musi mieć dostęp do kamery, aby emulować kamery 3DS.\n\nAlternatywnie można również ustawić „Źródło obrazu” na „Zdjęcie” w Ustawieniach aparatu.</string>
 
     <!-- Microphone -->
     <string name="microphone">Mikrofon</string>
-    <string name="microphone_permission_needed">Lime3DS musi mieć dostęp do mikrofonu, aby emulować mikrofon 3DS.\n\nAlternatywnie można również zmienić „Urządzenie wejściowe audio” w Ustawieniach dźwięku.</string>
+    <string name="microphone_permission_needed">Azahar musi mieć dostęp do mikrofonu, aby emulować mikrofon 3DS.\n\nAlternatywnie można również zmienić „Urządzenie wejściowe audio” w Ustawieniach dźwięku.</string>
 
     <!-- Core Errors -->
     <string name="abort_button">Przerwij</string>
@@ -436,6 +448,7 @@
 
     <!-- About Game Dialog -->
     <string name="play">Odtwórz</string>
+    <string name="shortcut">Skrót</string>
 
     <!-- Cheats -->
     <string name="cheats">Cheaty</string>
@@ -457,7 +470,7 @@
         <item quantity="many">Instalowanie plików %d. Więcej informacji można znaleźć w powiadomieniach.</item>
         <item quantity="other">Instalowanie plików %d. Więcej informacji można znaleźć w powiadomieniach.</item>
     </plurals>
-    <string name="cia_install_notification_channel_description">Powiadomienia Lime3DS podczas instalacji CIA</string>
+    <string name="cia_install_notification_channel_description">Powiadomienia Azahar podczas instalacji CIA</string>
     <string name="cia_install_notification_title">Instalacja CIA</string>
     <string name="cia_install_notification_installing">Instalacja %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Pomyślnie zainstalowano CIA</string>
@@ -465,7 +478,7 @@
     <string name="cia_install_success">\"%s\" został pomyślnie zainstalowany</string>
     <string name="cia_install_error_aborted">Instalacja \"%s\" została przerwana.\n Więcej informacji można znaleźć w dzienniku.</string>
     <string name="cia_install_error_invalid">\"%s\" nie jest prawidłowym plikiem CIA</string>
-    <string name="cia_install_error_encrypted">\"%s” musi zostać odszyfrowany przed użyciem w Lime3DS.\n Wymagany jest oryginalny 3DS</string>
+    <string name="cia_install_error_encrypted">\"%s\" musi zostać odszyfrowany przed użyciem w Azahar. Wymagany jest rzeczywisty 3DS.</string>
     <string name="cia_install_error_unknown">Wystąpił nieznany błąd podczas instalacji \"%s”.\n Więcej informacji można znaleźć w dzienniku.</string>
 
     <!-- Memory Sizes -->
@@ -722,8 +735,33 @@
     <string name="artic_base_connect_description">Połącz się z prawdziwą konsolą, na której działa serwer Artic Base</string>
     <string name="artic_base_connect">Połącz z Artic Base</string>
     <string name="artic_base_enter_address">Wprowadź adres serwera Artic Base</string>
+    <string name="delay_render_thread">Opóźnienie renderowania wątku gry</string>
+    <string name="delay_render_thread_description">Opóźnia wątek renderowania aplikacji podczas przesyłania danych do GPU. Pomaga w kwestiach wydajności w (bardzo niewielu) aplikacjach z dynamiczną liczbą klatek na sekundę.</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">Szybkie zapisywanie</string>
+    <string name="emulation_quicksave">Szybkie zapisywanie</string>
+    <string name="emulation_quickload">Szybkie zapisywanie</string>
+    <string name="emulation_occupied_quicksave_slot">Szybkie zapisywanie - %1$tF %1$tR</string>
+    <string name="quicksave_saving">Zapisywanie...</string>
+    <string name="quickload_loading">Wczytywanie...</string>
+    <string name="quickload_not_found">Funkcja szybkiego zapisu nie jest dostępna.</string>
     <string name="miscellaneous">Różne</string>
     <string name="use_artic_base_controller">Użyj kontrolera Artic po podłączeniu do serwera Artic Base</string>
     <string name="use_artic_base_controller_description">W przypadku połączenia z serwerem Artic Base zamiast skonfigurowanego urządzenia wejściowego należy używać elementów sterujących udostępnianych przez ten serwer.</string>
-
+    <string name="instant_debug_log">Opróżnia log przy każdej wiadomości</string>
+    <string name="instant_debug_log_description">Natychmiast zapisuje log debugowania do pliku. Użyj tego, jeśli azahar ulegnie awarii, a dane wyjściowe logu zostaną przerwane.</string>
+    <string name="disable_right_eye_render">Wyłącz renderowanie prawego oka</string>
+    <string name="disable_right_eye_render_description">Znacznie poprawia wydajność w niektórych aplikacjach, ale może powodować migotanie w innych.</string>
+    <string name="delay_start_lle_modules">Opóźnione uruchamianie z modułami LLE</string>
+    <string name="delay_start_lle_modules_description">Opóźnia uruchomienie aplikacji, gdy włączone są moduły LLE.</string>
+    <string name="deterministic_async_operations">Deterministyczne operacje asynchroniczne</string>
+    <string name="deterministic_async_operations_description">Sprawia, że operacje asynchroniczne są deterministyczne dla debugowania. Włączenie tej opcji może powodować zawieszanie się gry.</string>
+    <string name="enable_required_online_lle_modules">Włącz wymagane moduły LLE dla funkcji online (jeśli są zainstalowane)</string>
+    <string name="enable_required_online_lle_modules_desc">łącza moduły LLE potrzebne do gry wieloosobowej online, dostępu do eShopu itp.</string>
+    <string name="emulation_settings">Ustawienia emulacji</string>
+    <string name="profile_settings">Ustawienia profilu</string>
+    <string name="mac_address">Adres MAC</string>
+    <string name="regenerate_mac_address">Wygeneruj adres MAC</string>
+    <string name="regenerate_mac_address_description">Spowoduje to zastąpienie bieżącego adresu MAC nowym. Nie zaleca się wykonywania tej czynności, jeśli adres MAC został uzyskany z rzeczywistej konsoli za pomocą narzędzia konfiguracyjnego. Kontynuować?</string>
 </resources>

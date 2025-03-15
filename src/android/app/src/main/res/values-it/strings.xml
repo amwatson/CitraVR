@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Questo software permette di eseguire videogiochi rilasciati per la console portatile Nintendo 3DS. Non è incluso nessun titolo.\n\n Prima di poter iniziare il processo di emulazione bisogna scegliere una cartella nella memoria interna che conterrà i dati utente.\n\n Spiegazione:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - User Data e Memoria Intena</a></string>
-    <string name="app_notification_channel_description">Notifiche dell\'emulatore 3DS Citra</string>
-    <string name="app_notification_running">Citra è in Esecuzione</string>
-    <string name="app_game_install_description">Ora, seleziona una Cartella dei giochi. Citra visualizzerà tutte le ROM per il 3DS nella cartella nell\'app.\n\n Le rom Cia, glki aggiornamenti e i DLC dovranno essere installati separatamente toccando l\'icona cartella e selezionando \"Installa CIA\".</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Impostazioni</string>
     <string name="install_cia_title">Installa CIA</string>
@@ -38,7 +33,6 @@
     <string name="emulated_language">Lingua</string>
     <string name="plugin_loader">Loader Plugin 3GX</string>
     <string name="plugin_loader_description">Carica i plugins 3GX dalla scheda SD emulata, se disponibile.</string>
-    <string name="allow_plugin_loader">Permetti ai Giochi di cambiare lo stato del Loader.</string>
     <string name="allow_plugin_loader_description">Permetti alle app homebrew di abilitare il plugin Loader anche quando è disabilitato</string>
 
     <!-- Camera settings strings -->
@@ -68,7 +62,6 @@
     <string name="linear_filtering">Filtering Lineare</string>
     <string name="linear_filtering_description">Abilita il filtro lineare, che fa sembrare più smussata la grafica dei giochi.</string>
     <string name="texture_filter_name">Filtro Texture</string>
-    <string name="texture_filter_description">Migliora la grafica dei giochi applicando un filtro alle texture. I filtri supportati sono Anime4k Ultrafast, Bicubic, ScaleForce, e xBRZ freescale.</string>
     <string name="hw_shaders">Abilita le Shader Hardware</string>
     <string name="hw_shaders_description">Utilizza l\'hardware per emulare gli shader del 3DS. Se abilitato, le prestazioni dei giochi miglioreranno significativamente.</string>
     <string name="shaders_accurate_mul">Moltiplicazione Accurata</string>
@@ -80,7 +73,6 @@
     <string name="frame_limit_slider">Limita Velocità tramite Percentuale</string>
     <string name="frame_limit_slider_description">Specifica a quale percentuale limitare la velocità d\'emulazione. Utilizzando l\'impostazione predefinita di 100% l\'emulazione sarà limitata alla velocità normale. Valori superiori o inferiori aumenteranno o diminuiranno il limite di velocità.</string>
     <string name="internal_resolution">Risoluzione Interna</string>
-    <string name="internal_resolution_description">Specifica a quale risoluzione renderizzare. Un\'alta risoluzione migliorerà di molto la qualità visiva ma risulta anche essere piuttosto pesante in termini di prestazioni e potrebbe causare glitch in alcuni giochi.</string>
     <string name="performance_warning">Disabilitare questa impostazione riducerà significativamente le performance dell\'emulazione! Per un\'esperienza migliore, è consigliato lasciare questa impostazione abilitata.</string>
     <string name="debug_warning">Attenzione: Modificare queste impostazioni rallenterà l\'emulazione</string>
     <string name="stereoscopy">Stereoscopia</string>
@@ -153,7 +145,6 @@
     <string name="emulation_open_settings">Apri Impostazioni</string>
     <string name="emulation_open_cheats">Apri Trucchi</string>
     <string name="emulation_switch_screen_layout">Disposizione Schermo Orizzontale</string>
-    <string name="emulation_screen_layout_landscape">Default</string>
     <string name="emulation_screen_layout_portrait">Verticale</string>
     <string name="emulation_screen_layout_single">Schermo singolo</string>
     <string name="emulation_screen_layout_sidebyside">Affiancati</string>
@@ -170,8 +161,6 @@
     <string name="amiibo_load_error_message">Durante il caricamento di un file Amiibo, si è verificato un errore. Controlla che il file sia corretto.</string>
     <string name="write_permission_needed">L\'emulatore ha bisogno dei permessi per l\'archiviazione dei dati su memoria esterna per funzionare correttamente</string>
     <string name="load_settings">Caricando le Impostazioni...</string>
-
-    <string name="external_storage_not_mounted">C\'è bisogno di una memoria esterna disponibile per poter utilizzare Citra</string>
 
     <string name="select_dir">Seleziona questa cartella</string>
     <string name="empty_gamelist">Non è stato trovato alcun file o non è ancora stata selezionata una cartella di gioco.</string>
@@ -195,12 +184,8 @@
     <!-- Camera -->
     <string name="camera_select_image">Seleziona Immagine</string>
     <string name="camera">Fotocamera</string>
-    <string name="camera_permission_needed">Citra ha bisogno dell\'accesso alla fotocamera per emulare quella del 3DS.\n\nIn alternativa, puoi impostare \"Immagine Sorgente\" su \"Immagine Fissa\" in Impostazioni Fotocamera.</string>
-
     <!-- Microphone -->
     <string name="microphone">Microfono</string>
-    <string name="microphone_permission_needed">Citra ha bisogno dell\'accesso al microfono del tuo dispositivo per emulare il microfono del 3DS.\n\nIn alternativa, puoi anche cambiare il \"Microfono\" nelle impostazioni Audio.</string>
-
     <!-- Core Errors -->
     <string name="abort_button">Annulla</string>
     <string name="continue_button">Continua</string>
@@ -212,7 +197,7 @@
     <string name="fatal_error">Errore Fatale</string>
     <string name="fatal_error_message">Consulta il log per i dettagli.\nContinuare con l\'emulazione potrebbe causare un crash.</string>
 
-    <!-- Disk shader cache -->
+    <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando le Shaders</string>
     <string name="building_shaders">Costruisco le Shaders</string>
 
@@ -235,7 +220,6 @@
         <item quantity="many">Installando %dfiles. Guarda le notifiche per maggiori dettagli.</item>
         <item quantity="other">Installando %d files. Guarda le notifiche per maggiori dettagli.</item>
     </plurals>
-    <string name="cia_install_notification_channel_description">Notifiche di Citra durante l\'installazione di un pacchetto CIA.</string>
     <string name="cia_install_notification_title">Installando il CIA</string>
     <string name="cia_install_notification_installing">Installando %s(%d/%d)</string>
     <string name="cia_install_notification_success_title">CIA installato con successo</string>
@@ -243,7 +227,6 @@
     <string name="cia_install_success">\"%s\" è stato installato con successo</string>
     <string name="cia_install_error_aborted">L\'installazione di \"%s\" è stata annullata.\n Consulta i log per maggiori dettagli</string>
     <string name="cia_install_error_invalid">\"%s\" non è un CIA valido</string>
-    <string name="cia_install_error_encrypted">\"%s\" deve essere decriptato prima dell\'utilizzo con Citra.\nHai Bisogno di un 3DS.</string>
     <string name="cia_install_error_unknown">Errore Sconosciuto durante l\'installazione di \"%s\".\n Consulta i log per maggiori dettagli</string>
 
     </resources>

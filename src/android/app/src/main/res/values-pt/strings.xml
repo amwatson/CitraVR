@@ -193,7 +193,7 @@
     <string name="graphics_api">API de gráficos</string>
     <string name="spirv_shader_gen">Ativar geração de shaders SPIR-V</string>
     <string name="spirv_shader_gen_description">Emite o fragment shader usado para emular PICA usando SPIR-V em vez de GLSL</string>
-    <string name="async_shaders">Ativar compilação assíncrona de shaders</string>
+    <string name="async_shaders">Ativar a compilação assíncrona de shaders</string>
     <string name="async_shaders_description">Compila shaders em segundo plano para reduzir travamentos durante o jogo. Quando ativado, espere falhas gráficas temporárias</string>
     <string name="renderer_debug">Renderizador de Depuração</string>
     <string name="renderer_debug_description">Registre informações adicionais de depuração relacionadas a gráficos. Quando ativado, o desempenho do jogo será significativamente reduzido.</string>
@@ -248,7 +248,7 @@
     <string name="custom_textures_description">As texturas são carregadas de load/textures/[Title ID]/.</string>
     <string name="preload_textures">Pré-carregar Texturas Personalizadas</string>
     <string name="preload_textures_description">Carrega todas as texturas personalizadas na memória. Este recurso pode usar muita memória.</string>
-    <string name="async_custom_loading">Carregamento Assíncrono de Texturas Personalizadas</string>
+    <string name="async_custom_loading">Carregamento assíncrono de texturas personalizadas</string>
     <string name="async_custom_loading_description">Carrega texturas personalizadas de forma assíncrona com threads de segundo plano para reduzir travamentos.</string>
 
     <!-- Audio settings strings -->
@@ -314,7 +314,7 @@
     <string name="preferences_audio">Áudio</string>
     <string name="preferences_debug">Depuração</string>
     <string name="preferences_theme">Tema e Cor</string>
-    <string name="preferences_layout">Layout</string>
+    <string name="preferences_layout">Disposição</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Sua ROM está Criptografada</string>
@@ -332,7 +332,7 @@
     <string name="emulation_haptic_feedback">Feedback Tátil</string>
     <string name="emulation_overlay_options">Opções de Sobreposição</string>
     <string name="emulation_configure_controls">Configurar controles</string>
-    <string name="emulation_edit_layout">Editar esquema</string>
+    <string name="emulation_edit_layout">Editar Disposição</string>
     <string name="emulation_done">Pronto</string>
     <string name="emulation_toggle_controls">Alternar controles</string>
     <string name="emulation_control_scale">Ajustar escala</string>
@@ -344,7 +344,7 @@
     <string name="emulation_open_settings">Abrir configurações</string>
     <string name="emulation_open_cheats">Mostrar Trapaças</string>
     <string name="emulation_switch_screen_layout">Disposição de tela em paisagem</string>
-    <string name="emulation_switch_portrait_layout">Layout da Tela em Retrato</string>
+    <string name="emulation_switch_portrait_layout">Disposição da tela em retrato</string>
     <string name="emulation_screen_layout_largescreen">Tela Grande</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
     <string name="emulation_screen_layout_single">Tela única</string>
@@ -352,29 +352,29 @@
     <string name="emulation_screen_layout_hybrid">Telas Híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Padrão</string>
-    <string name="emulation_screen_layout_custom">Layout Personalizado</string>
+    <string name="emulation_screen_layout_custom">Disposição Personalizada</string>
     <string name="emulation_small_screen_position">Posição da Tela Pequena</string>
-    <string name="small_screen_position_description">Onde a tela pequena deverá aparecer relativa à grande no Layout da Tela Grande?</string>
-    <string name="small_screen_position_top_right">Superior Direito</string>
+    <string name="small_screen_position_description">Onde a tela pequena deverá aparecer relativa à grande na Disposição da Tela Grande?</string>
+    <string name="small_screen_position_top_right">Superior Direita</string>
     <string name="small_screen_position_middle_right">Centro à Direita</string>
-    <string name="small_screen_position_bottom_right">Inferior Direito (Padrão)</string>
-    <string name="small_screen_position_top_left">Superior Esquerdo</string>
+    <string name="small_screen_position_bottom_right">Inferior Direita (Padrão)</string>
+    <string name="small_screen_position_top_left">Superior Esquerda</string>
     <string name="small_screen_position_middle_left">Centro à Esquerda</string>
-    <string name="small_screen_position_bottom_left">Inferior Esquerdo</string>
+    <string name="small_screen_position_bottom_left">Inferior Esquerda</string>
     <string name="small_screen_position_above">Acima</string>
     <string name="small_screen_position_below">Abaixo</string>
     <string name="large_screen_proportion">Proporção de Tela Grande</string>
     <string name="large_screen_proportion_description">Quantas vezes maior é a tela grande em relação à tela pequena no Layout de Tela Grande?</string>
-    <string name="emulation_adjust_custom_layout">Ajuste o Layout Personalizado nas Configurações</string>
-    <string name="emulation_landscape_custom_layout">Layout em Paisagem Personalizado</string>
-    <string name="emulation_portrait_custom_layout">Layout em Retrato Personalizado</string>
+    <string name="emulation_adjust_custom_layout">Ajuste a Disposição Personalizada nas Configurações</string>
+    <string name="emulation_landscape_custom_layout">Disposição Personalizada em Paisagem</string>
+    <string name="emulation_portrait_custom_layout">Disposição Personalizada em Retrato</string>
     <string name="emulation_top_screen">Tela Superior</string>
     <string name="emulation_bottom_screen">Tela Inferior</string>
     <string name="emulation_custom_layout_x">Posição X</string>
     <string name="emulation_custom_layout_y">Posição Y</string>
     <string name="emulation_custom_layout_width">Largura</string>
     <string name="emulation_custom_layout_height">Altura</string>
-    <string name="emulation_cycle_landscape_layouts">Layouts de Ciclo</string>
+    <string name="emulation_cycle_landscape_layouts">Trocar Disposições</string>
     <string name="emulation_swap_screens">Trocar telas</string>
     <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>
     <string name="emulation_show_overlay">Mostrar sobreposição</string>
@@ -750,7 +750,7 @@
     <string name="use_artic_base_controller_description">Use os controles fornecidos pelo Artic Base Server ao se conectar a ele, em vez do dispositivo de entrada configurado.</string>
     <string name="instant_debug_log">Limpar a saída do log a cada mensagem</string>
     <string name="instant_debug_log_description">Grava imediatamente o log de depuração no arquivo. Use isto se o Azahar travar e a saída do log estiver sendo cortada.</string>
-    <string name="disable_right_eye_render">Desativar a Renderização do Olho Direito</string>
+    <string name="disable_right_eye_render">Desativar a renderização do olho direito</string>
     <string name="disable_right_eye_render_description">Melhora muito o desempenho em alguns aplicativos, mas pode causar piscadas em outros.</string>
     <string name="delay_start_lle_modules">Atraso na inicialização com módulos LLE</string>
     <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>

@@ -160,7 +160,7 @@ Section "Base"
   !insertmacro UPDATE_DISPLAYNAME
 
   ; Create start menu and desktop shortcuts
-  ; This needs to be done after Dolphin.exe is copied
+  ; This needs to be done after azahar.exe is copied
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
   CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1

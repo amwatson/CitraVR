@@ -5,7 +5,6 @@
     <string name="app_notification_running">Azahar is Actief</string>
     <string name="start">Start</string>
     <string name="cancelling">Annuleren…</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Instellingen</string>
     <string name="home_options">Opties</string>
@@ -27,7 +26,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="about_description">Bouwversie, credits en meer</string>
     <string name="theme_and_color_description">Wijzig het uiterlijk van de app</string>
     <string name="install_cia_title">Installeer CIA</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Selecteer GPU-stuurprogramma</string>
     <string name="select_gpu_driver_title">Wilt u uw huidige GPU-driver vervangen?</string>

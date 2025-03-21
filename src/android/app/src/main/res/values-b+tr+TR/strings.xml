@@ -2,7 +2,6 @@
 <resources>
 
     <string name="cancelling">İptal ediliyor...</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ayarlar</string>
     <string name="home_options">Seçenekler</string>

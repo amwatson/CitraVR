@@ -3,7 +3,6 @@
 
     <string name="start">Запустить</string>
     <string name="cancelling">Отмена...</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Настройки</string>
     <string name="home_options">Опции</string>
@@ -22,7 +21,6 @@
     <string name="about_description">Версия сборки, разработчики и другое</string>
     <string name="theme_and_color_description">Настройка внешнего вида приложения</string>
     <string name="install_cia_title">Установить CIA</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Выбрать драйвер GPU</string>
     <string name="select_gpu_driver_title">Заменить текущий драйвер GPU устройства?</string>
@@ -345,7 +343,6 @@
         <item quantity="other">Установка %d файлов. Доп. информация в уведомлении.</item>
     </plurals>
     <string name="cia_install_notification_title">Установка CIA</string>
-    <string name="cia_install_notification_installing">Установка %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Успешная установка CIA</string>
     <string name="cia_install_notification_error_title">Не удалось установить CIA</string>
     <string name="cia_install_success">\"%s\" успешно установлено</string>

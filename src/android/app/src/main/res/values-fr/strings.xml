@@ -7,7 +7,7 @@
     <string name="app_game_install_description">Ensuite, vous devrez sélectionner un dossier d\'applications. Azahar affichera toutes les ROMs 3DS à l\'intérieur du dossier sélectionné dans l\'application. Les ROMs CIA, les mises à jour et les DLCs devront être installés séparément en cliquant sur l\'icône du dossier et en sélectionnant Installer CIA.</string>
     <string name="start">Démarrer</string>
     <string name="cancelling">Annulation...</string>
-
+    <string name="important">Important</string>
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Paramètres</string>
     <string name="home_options">Options</string>
@@ -34,7 +34,6 @@
     <string name="select_citra_user_folder_home_description">Modifie les fichiers utilisés par Azahar pour charger les applications</string>
     <string name="theme_and_color_description">Modifier l\'apparence de l\'application</string>
     <string name="install_cia_title">Installer un CIA</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Sélectionner le pilote du GPU</string>
     <string name="select_gpu_driver_title">Souhaitez vous remplacer votre pilote actuel ?</string>
@@ -471,7 +470,6 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Notifications de Azahar pendant l\'installation du CIA</string>
     <string name="cia_install_notification_title">Installation du CIA </string>
-    <string name="cia_install_notification_installing">Installation de %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Installation réussie du CIA</string>
     <string name="cia_install_notification_error_title">Échec de l\'installation du CIA</string>
     <string name="cia_install_success">\"%s\" a été installé avec succès</string>

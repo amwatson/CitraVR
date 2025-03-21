@@ -7,7 +7,6 @@
     <string name="app_game_install_description">Näst måste du välja en applikationsmapp. Azahar kommer att visa alla 3DS ROM i den valda mappen i appen.\n\nCIA ROM, uppdateringar och DLC måste installeras separat genom att klicka på mappikonen och välja Installera CIA.</string>
     <string name="start">Starta</string>
     <string name="cancelling">Avbryter...</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Inställningar</string>
     <string name="home_options">Alternativ</string>
@@ -34,7 +33,6 @@
     <string name="select_citra_user_folder_home_description">Ändrar de filer som Azahar använder för att ladda applikationer</string>
     <string name="theme_and_color_description">Modifiera utseendet på appen</string>
     <string name="install_cia_title">Installera CIA</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Välj GPU-drivrutin</string>
     <string name="select_gpu_driver_title">Vill du ersätta din nuvarande GPU-drivrutin?</string>
@@ -470,7 +468,6 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Azahar-meddelanden under CIA-installation</string>
     <string name="cia_install_notification_title">Installation av CIA</string>
-    <string name="cia_install_notification_installing">Installerar %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Har installerat CIA</string>
     <string name="cia_install_notification_error_title">Installation av CIA misslyckades</string>
     <string name="cia_install_success">\"%s\" har installerats framgångsrikt</string>

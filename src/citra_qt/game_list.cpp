@@ -355,10 +355,10 @@ GameList::GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* p
 
         warning_layout = new QHBoxLayout;
         deprecated_3ds_warning = new QLabel;
-        deprecated_3ds_warning->setText(tr(
-            "IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting "
-            "and/or renaming to .cci may be necessary. <a "
-            "href='https://azahar-emu.org/blog/game-loading-changes/'>Learn more.</a>"));
+        deprecated_3ds_warning->setText(
+            tr("IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting "
+               "and/or renaming to .cci may be necessary. <a "
+               "href='https://azahar-emu.org/blog/game-loading-changes/'>Learn more.</a>"));
         deprecated_3ds_warning->setOpenExternalLinks(true);
         deprecated_3ds_warning->setStyleSheet(
             QString::fromStdString("color: black; font-weight: bold;"));

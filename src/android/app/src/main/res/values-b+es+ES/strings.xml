@@ -36,7 +36,7 @@
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
     <string name="theme_and_color_description">Modifica el aspecto de la app</string>
     <string name="install_cia_title">Instalar CIA</string>
-    <string name="warning_3ds_files">Los archivos cifrados y .3ds ya no son compatibles. Puede que sea necesario descifrarlos o renombrarlos a .cci. &lt;a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Más Información.&lt;/a></string>
+    <string name="warning_3ds_files"><![CDATA[Los archivos cifrados y .3ds ya no son compatibles. Puede que sea necesario descifrarlos o renombrarlos a .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Más Información.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>

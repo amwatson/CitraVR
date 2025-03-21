@@ -8,6 +8,8 @@
     <string name="start">Démarrer</string>
     <string name="cancelling">Annulation...</string>
     <string name="important">Important</string>
+    <string name="dont_show_again">Ne pas montrer à nouveau</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Paramètres</string>
     <string name="home_options">Options</string>
@@ -34,6 +36,8 @@
     <string name="select_citra_user_folder_home_description">Modifie les fichiers utilisés par Azahar pour charger les applications</string>
     <string name="theme_and_color_description">Modifier l\'apparence de l\'application</string>
     <string name="install_cia_title">Installer un CIA</string>
+    <string name="warning_3ds_files"><![CDATA[Les fichiers cryptés et les fichiers .3ds ne sont plus pris en charge. Il peut être nécessaire de les décrypter et/ou de les renommer en .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">En savoir plus.</a>]]></string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Sélectionner le pilote du GPU</string>
     <string name="select_gpu_driver_title">Souhaitez vous remplacer votre pilote actuel ?</string>
@@ -470,6 +474,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Notifications de Azahar pendant l\'installation du CIA</string>
     <string name="cia_install_notification_title">Installation du CIA </string>
+    <string name="cia_install_notification_installing">Installation %s (%1$d/%2$d)</string>
     <string name="cia_install_notification_success_title">Installation réussie du CIA</string>
     <string name="cia_install_notification_error_title">Échec de l\'installation du CIA</string>
     <string name="cia_install_success">\"%s\" a été installé avec succès</string>

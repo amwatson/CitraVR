@@ -4788,9 +4788,9 @@ Vols descarregar-la?</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="359"/>
-        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&quot;https://azahar-emu.org/blog/game-loading-changes/&quot;&gt;Learn more.&lt;/a&gt;</source>
-        <translation>IMPORTANT: Els fitxers encriptats .3ds ja no són compatibles. Pot ser que siga necessari desencriptar-los o canviar-los de nom a .cci. &lt;a href=&quot;https://azahar-emu.org/blog/game-loading-changes/&quot;&gt;Més Informació&lt;/a&gt;</translation>
+        <location filename="../../src/citra_qt/game_list.cpp" line="358"/>
+        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&amp;quot;https://azahar-emu.org/blog/game-loading-changes/&amp;quot;&gt;Learn more.&lt;/a&gt;</source>
+        <translation>IMPORTANT: Els fitxers encriptats .3ds ja no són compatibles. Pot ser que siga necessari desencriptar-los o canviar-los de nom a .cci. &lt;a href=&amp;quot;https://azahar-emu.org/blog/game-loading-changes/&amp;quot;&gt;Més Informació.&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="366"/>

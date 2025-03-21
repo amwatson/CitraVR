@@ -7,6 +7,9 @@
     <string name="app_game_install_description">Następnie należy wybrać folder z aplikacjami. Azahar wyświetli wszystkie ROM-y 3DS w wybranym folderze w aplikacji.\n\nROMy CIA, aktualizacje i DLC będą musiały zostać zainstalowane oddzielnie, klikając ikonę folderu i wybierając opcję Zainstaluj CIA.</string>
     <string name="start">Rozpocznij</string>
     <string name="cancelling">Anulowanie...</string>
+    <string name="important">Ważne</string>
+    <string name="dont_show_again">Nie pokazuj tego ponownie</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ustawienia</string>
     <string name="home_options">Opcje</string>
@@ -470,6 +473,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Powiadomienia Azahar podczas instalacji CIA</string>
     <string name="cia_install_notification_title">Instalacja CIA</string>
+    <string name="cia_install_notification_installing">Instalacja %s (%1$d/%2$d)</string>
     <string name="cia_install_notification_success_title">Pomyślnie zainstalowano CIA</string>
     <string name="cia_install_notification_error_title">Instalacja CIA nie powiodła się</string>
     <string name="cia_install_success">\"%s\" został pomyślnie zainstalowany</string>

@@ -887,7 +887,7 @@ Gostaria de ignorar o erro e continuar?</translation>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="54"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="182"/>
         <source>Layout</source>
-        <translation>Layout </translation>
+        <translation>Disposição</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="55"/>
@@ -1902,7 +1902,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="50"/>
         <source>Screen Layout</source>
-        <translation>Layout da Tela</translation>
+        <translation>Disposição da Tela</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="58"/>
@@ -1938,7 +1938,7 @@ Gostaria de ignorar o erro e continuar?</translation>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="88"/>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="264"/>
         <source>Custom Layout</source>
-        <translation>Layout Personalizado</translation>
+        <translation>Disposição Personalizada</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
@@ -2065,7 +2065,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="491"/>
         <source>Single Screen Layout</source>
-        <translation>Layout de Tela Única</translation>
+        <translation>Disposição em Tela Única</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="505"/>
@@ -2088,7 +2088,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="635"/>
         <source>Note: These settings affect the Single Screen and Separate Windows layouts</source>
-        <translation>Nota: Estas configurações afetam os layouts de Tela Única e Janelas Separadas</translation>
+        <translation>Nota: Estas configurações afetam as disposições em Tela Única e Janelas Separadas</translation>
     </message>
 </context>
 <context>
@@ -2355,7 +2355,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="52"/>
         <source>Layout</source>
-        <translation>Layout</translation>
+        <translation>Disposição</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="53"/>
@@ -4788,9 +4788,9 @@ Você gostaria de baixá-la?</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="359"/>
-        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&quot;https://azahar-emu.org/blog/game-loading-changes/&quot;&gt;Learn more.&lt;/a&gt;</source>
-        <translation>IMPORTANTE: Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci.&lt;a href=&quot;https://azahar-emu.org/blog/game-loading-changes/&quot;&gt;Saiba mais.&lt;/a&gt;</translation>
+        <location filename="../../src/citra_qt/game_list.cpp" line="358"/>
+        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&amp;quot;https://azahar-emu.org/blog/game-loading-changes/&amp;quot;&gt;Learn more.&lt;/a&gt;</source>
+        <translation>IMPORTANTE: Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci. &lt;a href=&amp;quot;https://azahar-emu.org/blog/game-loading-changes/&amp;quot;&gt;Saiba mais.&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="366"/>
@@ -5935,7 +5935,7 @@ Mensagem de depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="135"/>
         <source>Screen Layout</source>
-        <translation>Layout de Tela</translation>
+        <translation>Disposição da Tela</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="152"/>
@@ -6205,7 +6205,7 @@ Mensagem de depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="555"/>
         <source>Custom Layout</source>
-        <translation>Layout Personalizado</translation>
+        <translation>Disposição Personalizada</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="563"/>

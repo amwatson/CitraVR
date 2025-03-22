@@ -116,7 +116,7 @@ else()
     )
 
     # If we define _FORTIFY_SOURCE when it is already defined, compilation will fail
-    string(FIND "-D_FORTIFY_SOURCE" ${CMAKE_CXX_FLAGS} FORTIFY_SOURCE_DEFINED)
+    string(FIND "-D_FORTIFY_SOURCE" "${CMAKE_CXX_FLAGS} " FORTIFY_SOURCE_DEFINED)
 
     if (NOT CMAKE_BUILD_TYPE STREQUAL Debug AND NOT FORTIFY_SOURCE_DEFINED)
         # _FORTIFY_SOURCE can't be used without optimizations.

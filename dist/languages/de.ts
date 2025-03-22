@@ -27,7 +27,7 @@
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="60"/>
@@ -54,7 +54,7 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Azahar ist ein kostenloser und quelloffener 3DS Emulator, lizenziert unter GPLv2.0 oder jeder späteren Versionen.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Diese Software sollte nicht zum Spielen von Spielen verwendet werden, die nicht legal erworben wurde.&lt;/span&gt;&lt;/p&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Diese Software sollte nicht zum Spielen von Spielen verwendet werden, die illegal erworben wurden.&lt;/span&gt;&lt;/p&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="118"/>
@@ -64,7 +64,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="134"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; is a trademark of Nintendo. Azahar is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; ist ein Warenzeichen von Nintendo. Azahar steht in keinster Form mit Nintendo in Verbindung.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;„3DS“ ist ein Warenzeichen von Nintendo. Azahar steht in keinster Form mit Nintendo in Verbindung.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -770,7 +770,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="222"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Das Untertakten kann die Leistung verbessern, aber Anwendungen könnten einfrieren.&lt;br/&gt;Übertakten kann den Lag reduzieren, aber auch zum Einfrieren führen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="232"/>
@@ -795,7 +795,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="259"/>
         <source>Miscellaneous</source>
-        <translation type="unfinished"/>
+        <translation>Weiteres</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="265"/>
@@ -810,12 +810,12 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="275"/>
         <source>Force deterministic async operations</source>
-        <translation type="unfinished"/>
+        <translation>Erzwinge deterministische asynchrone Operationen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="278"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don&apos;t know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zwingt alle asynchrone Operationen auf dem Haupt-Thread zu laufen, wodurch sie deterministisch werden. Aktiviere diese Funktion nicht, wenn du nicht weißt, was das bringt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="48"/>
@@ -1215,7 +1215,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="63"/>
         <source>Check for updates</source>
-        <translation type="unfinished"/>
+        <translation>Nach Aktualisierungen prüfen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="73"/>
@@ -2484,12 +2484,12 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="84"/>
         <source>Enable required LLE modules for online features (if installed)</source>
-        <translation type="unfinished"/>
+        <translation>Aktivere benötigte LLE-Module, um Online-Funktionen zu aktivieren (sofern installiert)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="87"/>
         <source>Enables the LLE modules needed for online multiplayer, eShop access, etc.</source>
-        <translation type="unfinished"/>
+        <translation>Aktiviert die LLE-Module, die vonnöten sind, um Online-Multispieler, eShop-Zugriff und mehr zu verwenden.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="107"/>
@@ -2770,7 +2770,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="517"/>
         <source>Real Console Unique Data</source>
-        <translation>Echte Konsolen-einzigartige Daten</translation>
+        <translation>Einzigartige, echte Konsolendaten </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="523"/>
@@ -4206,22 +4206,22 @@ Schau im Protokoll für weitere Informationen nach.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2115"/>
         <source>&lt;p&gt;Azahar needs files from a real console to be able to use some of its features.&lt;br&gt;You can get such files with the &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool&lt;/a&gt;&lt;br&gt; Notes:&lt;ul&gt;&lt;li&gt;&lt;b&gt;This operation will install console unique files to Azahar, do not share your user or nand folders&lt;br&gt;after performing the setup process!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Old 3DS setup is needed for the New 3DS setup to work.&lt;/li&gt;&lt;li&gt;Both setup modes will work regardless of the model of the console running the setup tool.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Azahar benötigt Dateien von einer echten Konsole um einige seiner Funktionen nutzen zu können.&lt;br&gt;Sie können diese Dateien mit dem&lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool belommen&lt;/a&gt;&lt;br&gt;Hinweise:&lt;ul&gt;&lt;li&gt;&lt;b&gt;Bei diesem Vorgang werden konsolenspezifische Dateien in Azahar installiert. Geben Sie Ihre Benutzer- oder NAND-Ordner nicht frei,&lt;br&gt; nachdem Sie den Einrichtungsvorgang durchgeführt haben!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;DDait das neue 3DS Setup funktioniert, ist ein altes 3DS Setup erforderlich.&lt;/li&gt;&lt;li&gt;Beide Setup-Modi funktionieren unabhängig vom Modell der Konsole, auf der das Setup-Tool ausgeführt wird.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</translation>
+        <translation>&lt;p&gt;Azahar benötigt Dateien von einer echten Konsole, um einige seiner Funktionen nutzen zu können.&lt;br&gt;Du kannst diese Dateien mit dem&lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Einrichtung-Tools bekommen&lt;/a&gt;&lt;br&gt;Hinweise:&lt;ul&gt;&lt;li&gt;&lt;b&gt;Bei diesem Vorgang werden konsolenspezifische Dateien in Azahar installiert. Gib deine Benutzer- oder NAND-Ordner nicht frei,&lt;br&gt; nachdem der Einrichtungsvorgang durchgeführt wurde!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Damit die New 3DS-Einrichtung funktioniert, ist zuerst eine Old 3DS-Einrichtung erforderlich.&lt;/li&gt;&lt;li&gt;Beide Setup-Modi funktionieren unabhängig vom Modell der Konsole, auf dem das Setup-Tool ausgeführt wird.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2131"/>
         <source>Enter Azahar Artic Setup Tool address:</source>
-        <translation>Geben Sie die Adresse des Azahar Artic Setup Tools ein:</translation>
+        <translation>Gib die Adresse des Azahar Artic Einrichtung-Tools ein:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2138"/>
         <source>&lt;br&gt;Choose setup mode:</source>
-        <translation>&lt;br&gt;Wählen die den Setup-Modus:</translation>
+        <translation>&lt;br&gt;Wähle den Einrichtungsmodus:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2148"/>
         <source>(ℹ️) Old 3DS setup</source>
-        <translation>(ℹ️) Alte 3DS Setup</translation>
+        <translation>(ℹ️) Old 3DS-Einrichtung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2149"/>
@@ -4232,17 +4232,17 @@ Schau im Protokoll für weitere Informationen nach.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2151"/>
         <source>(⚠) New 3DS setup</source>
-        <translation>(⚠) Neue 3DS Einrichtung</translation>
+        <translation>(⚠) New 3DS-Einrichtung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2152"/>
         <source>Old 3DS setup is required first.</source>
-        <translation>Zuerst ist eine alte 3DS Einrichtung erforderlich</translation>
+        <translation>Du musst zuerst die Old 3DS-Einrichtung abschließen.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2155"/>
         <source>(✅) Old 3DS setup</source>
-        <translation>(✅) Alte 3DS Einrichtung</translation>
+        <translation>(✅) Old 3DS-Einrichtung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2156"/>
@@ -4253,12 +4253,12 @@ Schau im Protokoll für weitere Informationen nach.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2161"/>
         <source>(ℹ️) New 3DS setup</source>
-        <translation>(ℹ️) Neue 3DS Einrichtung </translation>
+        <translation>(ℹ️) New 3DS-Einrichtung </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2166"/>
         <source>(✅) New 3DS setup</source>
-        <translation>(✅) Neue 3DS Einrichtung</translation>
+        <translation>(✅) New 3DS-Einrichtung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2184"/>
@@ -4476,7 +4476,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
 
 Um FFmpeg für Azahar zu installieren, klicke auf „Öffnen“ und wähle dein FFmpeg-Verzeichnis.
 
-Um eine Anweisung zu erhalten, wie du FFmpeg installieren kannst, klick auf „Hilfe“.</translation>
+Um eine Anweisung zu erhalten, wie du FFmpeg installieren kannst, klicke auf „Hilfe“.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2947"/>
@@ -4667,13 +4667,14 @@ Um eine Anweisung zu erhalten, wie du FFmpeg installieren kannst, klick auf „H
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3631"/>
         <source>Update Available</source>
-        <translation type="unfinished"/>
+        <translation>Aktualisierung verfügbar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3635"/>
         <source>Update %1 for Azahar is available.
 Would you like to download it?</source>
-        <translation type="unfinished"/>
+        <translation>Für Azahar ist die Aktualisierung %1 verfügbar.
+Soll es heruntergeladen werden?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3653"/>
@@ -4787,14 +4788,14 @@ Would you like to download it?</source>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="358"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="359"/>
         <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Learn more.&lt;/a&gt;</source>
-        <translation type="unfinished"/>
+        <translation>WICHTIG: Verschlüsselte Dateien und .3ds-Dateien werden nicht mehr unterstützt. Eine Entschlüsselung und/oder Umbenennung in .cci kann erforderlich sein. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Erfahre mehr&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="366"/>
         <source>Don&apos;t show again</source>
-        <translation type="unfinished"/>
+        <translation>Nicht nochmal anzeigen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
@@ -4864,7 +4865,7 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="617"/>
         <source>Texture Dump Location</source>
-        <translation>Texturendumbstandort</translation>
+        <translation>Textur-Dump-Pfad</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="618"/>
@@ -5897,7 +5898,7 @@ Debug-Meldung: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="69"/>
         <source>Recent Files</source>
-        <translation>Kürzliche Dateien</translation>
+        <translation>Zuletzt verwendete Dateien</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="74"/>
@@ -6277,7 +6278,7 @@ Debug-Meldung: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="669"/>
         <source>Open Azahar Folder</source>
-        <translation>Öffne den Ordner von Azahar</translation>
+        <translation>Öffne den Azahar-Ordner</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="677"/>

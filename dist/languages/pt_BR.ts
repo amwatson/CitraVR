@@ -1963,7 +1963,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="174"/>
         <source>Upper Right</source>
-        <translation>Superior Direito</translation>
+        <translation>Superior Direita</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="179"/>
@@ -1978,7 +1978,7 @@ Gostaria de ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="189"/>
         <source>Upper Left</source>
-        <translation>Superior Esquerdo</translation>
+        <translation>Superior Esquerda</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="194"/>
@@ -4788,7 +4788,7 @@ Você gostaria de baixá-la?</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="358"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="359"/>
         <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Learn more.&lt;/a&gt;</source>
         <translation>IMPORTANTE: Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Saiba mais.&lt;/a&gt;</translation>
     </message>

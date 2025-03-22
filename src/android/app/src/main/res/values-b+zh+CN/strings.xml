@@ -7,6 +7,9 @@
     <string name="app_game_install_description">接下来，您需要选择一个应用文件夹。Azahar 将显示所选文件夹中的所有 3DS ROM。\n\nCIA ROM、更新和 DLC 需要分别进行安装，具体为点击文件夹图标并选择“安装 CIA”。</string>
     <string name="start">开始</string>
     <string name="cancelling">取消中…</string>
+    <string name="important">重要提示</string>
+    <string name="dont_show_again">不再显示</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">设置</string>
     <string name="home_options">选项</string>
@@ -33,6 +36,8 @@
     <string name="select_citra_user_folder_home_description">更改 Azahar 用于加载应用的相关文件</string>
     <string name="theme_and_color_description">更改应用程序的外观</string>
     <string name="install_cia_title">安装 CIA</string>
+    <string name="warning_3ds_files"><![CDATA[加密文件和 3ds 后缀名文件不再受支持。可能需要解密和/或重命名为 cci 后缀名。<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">了解详情。</a>]]></string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">选择 GPU 驱动</string>
     <string name="select_gpu_driver_title">您要替换当前的 GPU 驱动吗？</string>
@@ -441,7 +446,6 @@
     <string name="save_load_error">保存/读取出现错误</string>
     <string name="fatal_error">致命错误</string>
     <string name="fatal_error_message">发生致命错误。请查阅日志获取相关信息。\n继续模拟可能会导致错误和崩溃。</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">正在准备着色器</string>
     <string name="building_shaders">正在构建着色器</string>

@@ -1,4 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_disclaimer">Denne software kører applikationer til den håndholdte spillekonsol Nintendo 3DS. Ingen spiltitler er inkluderet.\n\nInden du kan begynde med at emulere, skal du vælge en mappe til at gemme Azahars brugerdata i.\n\nHvad er dette:\nWiki - Citra Android-brugerdata og lagring</string>
+    <string name="app_notification_channel_description">Azahar 3DS emulator meddelelser</string>
+    <string name="app_notification_running">Azahar kører</string>
+    <string name="app_game_install_description">Dernæst skal du vælge en applikationsmappe. Azahar vil vise alle 3DS ROM\'erne inde i den valgte mappe i appen.\n\nCIA ROM\'er, opdateringer og DLC ​​skal installeres separat ved at klikke på mappeikonet og vælge installer CIA.</string>
+    <string name="start">Start</string>
+    <string name="cancelling">Annullerer...</string>
+    <string name="important">Vigtig</string>
+    <string name="dont_show_again">Vis ikke igen</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Indstillinger</string>
+    <string name="home_options">Valgmuligheder</string>
+    <string name="home_search">Søg</string>
+    <string name="home_games">Applikationer</string>
+    <string name="settings_description">Konfigurer emulatorindstillinger</string>
+    <string name="install_game_content">Installer CIA-fil</string>
+    <string name="install_game_content_description">Installer applikationer, opdateringer eller DLC</string>
+    <string name="share_log">Del log</string>
+    <string name="share_log_description">Del Azahars logfil for at fejlfinde problemer</string>
+    <string name="gpu_driver_manager">GPU Driver Manager</string>
+    <string name="install_gpu_driver">Installer GPU-driver</string>
+    <string name="install_gpu_driver_description">Installer alternative drivere for potentielt bedre ydeevne eller nøjagtighed</string>
+    <string name="driver_already_installed">Driver allerede installeret</string>
+    <string name="custom_driver_not_supported">Brugerdefinerede drivere understøttes ikke</string>
+    <string name="custom_driver_not_supported_description">Indlæsning af brugerdefineret driver understøttes i øjeblikket ikke for denne enhed.\nTjek denne mulighed igen senere for at se, om support er blevet tilføjet!</string>
+    <string name="share_log_not_found">Ingen logfil fundet</string>
+    <string name="select_games_folder">Vælg applikationsmappe</string>
+    <string name="select_games_folder_description">Tillad at Azahar udfylder applikationslisten</string>
+    <string name="about">Om</string>
+    <string name="citra_description">En open source 3DS-emulator</string>
     </resources>

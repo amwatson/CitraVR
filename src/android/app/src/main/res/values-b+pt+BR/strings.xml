@@ -444,7 +444,6 @@
     <string name="save_load_error">Erro ao Salvar/Carregar</string>
     <string name="fatal_error">Erro Fatal</string>
     <string name="fatal_error_message">Ocorreu um erro fatal. Verifique o registro para obter detalhes.\nContinuar a emulação pode resultar em falhas e bugs.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando Shaders</string>
     <string name="building_shaders">Construindo Shaders</string>
@@ -474,7 +473,6 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Notificações do Azahar durante a instalação do CIA</string>
     <string name="cia_install_notification_title">Instalando CIA</string>
-    <string name="cia_install_notification_installing">Instalando %s (%1$d/%2$d)</string>
     <string name="cia_install_notification_success_title">CIA Instalado com sucesso</string>
     <string name="cia_install_notification_error_title">Erro ao instalar o CIA</string>
     <string name="cia_install_success">\"%s\" foi instalado com sucesso</string>

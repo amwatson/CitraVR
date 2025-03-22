@@ -445,6 +445,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="save_load_error">Error de guardado/carga</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
+    <string name="invalid_region">Región no válida</string>
+    <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
@@ -475,7 +477,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     </plurals>
     <string name="cia_install_notification_channel_description">Notificaciones de Azahar durante la instalación de CIAs.</string>
     <string name="cia_install_notification_title">Instalando CIA</string>
-    <string name="cia_install_notification_installing">Instalando %s (%1$d/%2$d)</string>
+    <string name="cia_install_notification_installing">Instalando %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA instalado con éxito</string>
     <string name="cia_install_notification_error_title">Falló la instalación del CIA</string>
     <string name="cia_install_success">\"%s\" se ha instalado con éxito</string>

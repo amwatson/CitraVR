@@ -445,6 +445,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="save_load_error">Error de guardat/càrrega</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocorregut un error fatal. Mira el registre per a més detalls.\nSeguir amb l\'emulació podria resultar en diversos penges i problemes.</string>
+    <string name="invalid_region">Regió no vàlida</string>
+    <string name="unsupported_encrypted">Aplicació cifrada no suportada</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparant ombrejadors</string>
@@ -474,7 +476,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     </plurals>
     <string name="cia_install_notification_channel_description">Notificacions de Azahar durant la instal·lació de CIAs.</string>
     <string name="cia_install_notification_title">Instal·lant CIA</string>
-    <string name="cia_install_notification_installing">Instal·lant %s (%1$d/%2$d)</string>
+    <string name="cia_install_notification_installing">Instal·lant %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA instal·lat amb èxit</string>
     <string name="cia_install_notification_error_title">Ha fallat la instal·lació del CIA</string>
     <string name="cia_install_success">\"%s\" s\'ha instal·lat amb èxit</string>

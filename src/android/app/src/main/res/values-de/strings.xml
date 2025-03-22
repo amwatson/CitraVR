@@ -425,7 +425,6 @@
     <string name="save_load_error">Fehler beim Speichern/Laden</string>
     <string name="fatal_error">Schwerwiegender Fehler</string>
     <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen findest du in der Protokolldatei.\nDas Fortfahren könnte zu ungewollten Abstürzen oder Problemen führen.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
     <string name="building_shaders">Shader werden erstellt</string>

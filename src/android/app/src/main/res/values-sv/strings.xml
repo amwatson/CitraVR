@@ -439,7 +439,6 @@
     <string name="save_load_error">Spara/läs in-fel</string>
     <string name="fatal_error">Allvarligt fel</string>
     <string name="fatal_error_message">Ett allvarligt fel inträffade. Kontrollera loggen för detaljer.\nFortsatt emulering kan leda till krascher och buggar.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Förbereder shaders</string>
     <string name="building_shaders">Bygger shaders</string>

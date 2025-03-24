@@ -81,7 +81,8 @@
             <item row="3" column="0">
              <widget class="QCheckBox" name="enable_required_online_lle_modules">
               <property name="text">
-               <string>Enable required LLE modules for online features (if installed)</string>
+               <string>Enable required LLE modules for
+online features (if installed)</string>
               </property>
               <property name="toolTip">
                <string>Enables the LLE modules needed for online multiplayer, eShop access, etc.</string>

@@ -42,7 +42,7 @@ enum class IntSetting(
     PORTRAIT_BOTTOM_Y("custom_portrait_bottom_y",Settings.SECTION_LAYOUT,480),
     PORTRAIT_BOTTOM_WIDTH("custom_portrait_bottom_width",Settings.SECTION_LAYOUT,640),
     PORTRAIT_BOTTOM_HEIGHT("custom_portrait_bottom_height",Settings.SECTION_LAYOUT,480),
-    AUDIO_INPUT_TYPE("output_type", Settings.SECTION_AUDIO, 0),
+    AUDIO_INPUT_TYPE("input_type", Settings.SECTION_AUDIO, 0),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, 1),
     LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 1),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),

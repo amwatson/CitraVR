@@ -129,8 +129,10 @@
     <string name="setup_system_files">Archivos de Sistema</string>
     <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>
     <string name="setup_tool_connect">Conectar con la herramienta de configuración Artic</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar necesita archivos de una consola real para poder utilizar algunas de sus funciones. Puedes obtener los archivos con la <a href=https://github.com/azahar-emu/ArticSetupTool>herramienta de configuración Artic</a>.<br> Notas:<ul><li><b>Esta operación instalará archivos únicos de la consola en Azahar, ¡no compartas las carpetas de usuario ni nand<br>después de realizar el proceso de configuración!</b></li><li>Se necesita la configuración de Old 3DS para que funcione la configuración de New 3DS.</li><li>Ambos modos de configuración funcionarán independientemente del modelo de la consola que ejecute la herramienta de configuración.</li></ul>]]></string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar necesita archivos de una consola real para poder utilizar algunas de sus funciones. Puedes obtener los archivos con la <a href=https://github.com/azahar-emu/ArticSetupTool>herramienta de configuración Artic</a>.<br>Notas:<ul><li><b>Esta operación instalará archivos únicos de la consola en Azahar, ¡no compartas las carpetas de usuario ni nand después de realizar el proceso de configuración!</b></li><li>Tras la configuración, Azahar se enlazará a la consola que ha ejecutado la herramienta de configuración. Puedes desvincular la consola más tarde desde la pestaña \"Archivos de sistema\" del menú de opciones del emulador.</li><li>No te conectes en línea con Azahar y la consola 3DS al mismo tiempo después de configurar los archivos del sistema, ya que esto podría causar problemas.</li><li>Se necesita la configuración de Old 3DS para que funcione la configuración de New 3DS (configurar ambos modos es recomendado).</li><li>Ambos modos de configuración funcionarán independientemente del modelo de la consola que ejecute la herramienta de configuración.</li></ul>]]></string>
     <string name="setup_system_files_detect">Obteniendo el estado actual de los archivos del sistema, por favor espere...</string>
+    <string name="delete_system_files">Desvincular Datos Únicos de Consola</string>
+    <string name="delete_system_files_description"><![CDATA[Esta acción desvinculará tu consola real de Azahar, con las siguientes consecuencias:<br><ul><li>OTP, SecureInfo y LocalFriendCodeSeed serán eliminados de Azahar.</li><li>Tu lista de amigos se restablecerá y se cerrará la sesión de tu cuenta NNID/PNID.</li><li>Los archivos del sistema y los títulos de la eshop obtenidos a través de Azahar se volverán inaccesibles hasta que la misma consola se vincule nuevamente mediante la herramienta de configuración (los datos guardados no se perderán).</li></ul><br>¿Continuar?]]></string>
     <string name="setup_system_files_o3ds">Configuración Old 3DS</string>
     <string name="setup_system_files_n3ds">Configuración New 3DS</string>
     <string name="setup_system_files_possible">La configuración es posible.</string>
@@ -177,6 +179,9 @@
     <string name="plugin_loader_description">Carga los plugins 3GX de la SD emulada si están disponibles.</string>
     <string name="allow_plugin_loader">Permitir que las aplicaciones cambien el estado del cargador de plugins.</string>
     <string name="allow_plugin_loader_description">Permite que las apps de homebrew activen el cargador de complementos incluso cuando está desactivado.</string>
+    <string name="region_mismatch">Advertencia Región No Válida</string>
+    <string name="region_mismatch_emulated">La configuración del país no es válida para la región emulada seleccionada.</string>
+    <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
@@ -207,6 +212,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="linear_filtering_description">Activa el filtro linear, que hace que los gráficos del juego se vean más suaves.</string>
     <string name="texture_filter_name">Filtro de Texturas</string>
     <string name="texture_filter_description">Mejora los gráficos visuales de las aplicaciones aplicando un filtro a las texturas. Los filtros soportados son Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, y MMPX.</string>
+    <string name="advanced">Avanzado</string>
+    <string name="texture_sampling_name">Muestreo de Texturas</string>
+    <string name="texture_sampling_description">Sobreescribe el filtro de muestreo usado en juegos. Puede ser útil en ciertos casos con juegos con bajo rendimiento al subir la resolución. Si no estás seguro, pónlo en Controlado por Juego</string>
     <string name="hw_shaders">Activar Sombreador de Hardware</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="shaders_accurate_mul">Multiplicación Precisa</string>
@@ -234,7 +242,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="stereoscopy">Estereoscopía</string>
     <string name="render3d">Modo 3D Estereoscópico</string>
     <string name="factor3d">Profundidad</string>
-    <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.</string>
+    <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.\nNota: Los valores de profundidad superiores al 100 % no son posibles en hardware real y pueden causar problemas gráficos.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Tamaño de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un porcentaje de su tamaño original.</string>
@@ -575,10 +583,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubic</string>
-    <string name="nearest_neighbor">Nearest Neighbor</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Controlado por Juego</string>
+    <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="linear">Linear</string>
 
     <!-- Sound output modes -->
     <string name="mono">Mono</string>

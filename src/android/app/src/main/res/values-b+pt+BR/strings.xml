@@ -129,8 +129,8 @@
     <string name="setup_system_files">Arquivos do Sistema</string>
     <string name="setup_system_files_description">Executar operações de arquivos do sistema, como instalar arquivos do sistema ou iniciar o Menu Principal.</string>
     <string name="setup_tool_connect">Conectar à Ferramenta de Configuração do Artic</string>
-    <string name="setup_system_files_preamble"><![CDATA[O Azahar precisa de arquivos de um console real para poder usar alguns de seus recursos. Você pode obter esses arquivos com o <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notas:<ul><li><b>Esta operação instalará arquivos exclusivos do console no Azahar, não compartilhe suas pastas de usuário ou nand<br>após executar o processo de configuração!</b></li><li>A configuração Antiga do 3DS é necessária para que a configuração do Novo 3DS funcione</li><li>Ambos os modos de configuração funcionarão independentemente do modelo do console que estiver executando a ferramenta de configuração.</li></ul>]]></string>
     <string name="setup_system_files_detect">Buscando o status atual dos arquivos do sistema, por favor, aguarde...</string>
+    <string name="delete_system_files">Desvincular dados exclusivos do console</string>
     <string name="setup_system_files_o3ds">Configuração do Antigo 3DS</string>
     <string name="setup_system_files_n3ds">Configuração do Novo 3DS</string>
     <string name="setup_system_files_possible">É possível configurar.</string>
@@ -172,12 +172,11 @@
     <string name="steps_per_hour_description">Número de passos por hora relatados pelo pedômetro. Na faixa de 0 a 65.535.</string>
     <string name="console_id">ID do console</string>
     <string name="regenerate_console_id">Gerar Novamente o ID do Console</string>
-    <string name="regenerate_console_id_description">Isso substituirá seu ID do console 3DS virtual atual por um novo. Seu ID do console 3DS virtual atual não poderá ser recuperado. Isso pode ter efeitos inesperados dentro dos aplicativos. Poderão ocorrer falhas ao usar um arquivo salvo de configuração desatualizado. Continuar?</string>
+    <string name="regenerate_console_id_description">Isso substituirá seu ID do console 3DS virtual atual por um novo. Seu ID do console 3DS virtual atual não poderá ser recuperado. Isso pode ter efeitos inesperados dentro dos aplicativos. Poderão ocorrer falhas ao usar um arquivo salvo de configuração desatualizado. Deseja continuar?</string>
     <string name="plugin_loader">Carregador de Plug-ins 3GX</string>
     <string name="plugin_loader_description">Carregar plug-ins 3GX do cartão SD emulado, se estiverem disponíveis.</string>
     <string name="allow_plugin_loader">Permitir que os Aplicativos Alterem o Estado do Carregador de Plug-ins</string>
     <string name="allow_plugin_loader_description">Permitir que aplicativos homebrew habilitem o carregador de plugins mesmo quando ele estiver desabilitado.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Câmera frontal</string>
     <string name="outer_left_camera">Câmera traseira esquerda</string>
@@ -206,6 +205,9 @@
     <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
     <string name="texture_filter_name">Filtro de texturas</string>
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
+    <string name="advanced">Avançado\"</string>
+    <string name="texture_sampling_name">Amostragem de Texturas</string>
+    <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
     <string name="hw_shaders">Ativar Shaders via Hardware</string>
     <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
     <string name="shaders_accurate_mul">Multiplicação precisa</string>
@@ -233,7 +235,7 @@
     <string name="stereoscopy">Estereoscopia</string>
     <string name="render3d">Modo 3D Estereoscópico</string>
     <string name="factor3d">Profundidade</string>
-    <string name="factor3d_description">Especifica o valor do controle deslizante 3D. Deve ser definido como superior a 0% quando o 3D Estereoscópico estiver ativado.</string>
+    <string name="factor3d_description">Especifica o valor do controle deslizante 3D. Deve ser definido como superior a 0% quando o 3D Estereoscópico estiver ativado.\nNota: Valores de profundidade acima de 100% não são possíveis no hardware real e podem causar problemas gráficos</string>
     <string name="cardboard_vr">VR Cardboard </string>
     <string name="cardboard_screen_size">Tamanho da Tela do Cardboard</string>
     <string name="cardboard_screen_size_description">Dimensiona a tela para uma porcentagem de seu tamanho original.</string>
@@ -444,6 +446,9 @@
     <string name="save_load_error">Erro ao Salvar/Carregar</string>
     <string name="fatal_error">Erro Fatal</string>
     <string name="fatal_error_message">Ocorreu um erro fatal. Verifique o registro para obter detalhes.\nContinuar a emulação pode resultar em falhas e bugs.</string>
+    <string name="invalid_region">Região inválida</string>
+    <string name="unsupported_encrypted">Aplicativo criptografado não suportado</string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando Shaders</string>
     <string name="building_shaders">Construindo Shaders</string>
@@ -473,6 +478,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Notificações do Azahar durante a instalação do CIA</string>
     <string name="cia_install_notification_title">Instalando CIA</string>
+    <string name="cia_install_notification_installing">Instalando %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA Instalado com sucesso</string>
     <string name="cia_install_notification_error_title">Erro ao instalar o CIA</string>
     <string name="cia_install_success">\"%s\" foi instalado com sucesso</string>
@@ -570,10 +576,14 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicúbico</string>
-    <string name="nearest_neighbor">Ponto Vizinho Mais Próximo</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Controlado pelo Jogo</string>
+    <string name="nearest_neighbor">Ponto Vizinho Mais Próximo</string>
+    <string name="linear">Linear</string>
 
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
@@ -763,5 +773,5 @@
     <string name="profile_settings">Configurações de Perfil</string>
     <string name="mac_address">Endereço MAC</string>
     <string name="regenerate_mac_address">Gerar Novamente o Endereço MAC</string>
-    <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Continuar?</string>
+    <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Deseja continuar?</string>
 </resources>

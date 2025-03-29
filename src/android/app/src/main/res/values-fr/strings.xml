@@ -129,7 +129,6 @@
     <string name="setup_system_files">Fichiers système</string>
     <string name="setup_system_files_description">Effectuer des opérations sur les fichiers système, telles que l\'installation de fichiers système ou le démarrage du menu Home.</string>
     <string name="setup_tool_connect">Connexion à Artic Setup Tool</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar a besoin de fichiers provenant d\'une console réelle pour pouvoir utiliser certaines de ses fonctionnalités. Vous pouvez obtenir ces fichiers avec l\'outil <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes :<ul><li><b> Cette opération va installer des fichiers uniques à la console dans Azahar, ne partagez pas vos dossiers utilisateur ou nand après avoir effectué le processus d\'installation !</b></li><li> La configuration de la Old 3DS est nécessaire pour que la configuration de la New 3DS fonctionne.</li><li> Les deux modes d\'installation fonctionneront quel que soit le modèle de la console qui exécute l\'outil d\'installation.</li></ul>]]></string>
     <string name="setup_system_files_detect">Récupération de l\'état actuel des fichiers du système, veuillez patienter...</string>
     <string name="setup_system_files_o3ds">Configuration Old 3DS</string>
     <string name="setup_system_files_n3ds">Configuration New 3DS</string>
@@ -177,7 +176,6 @@
     <string name="plugin_loader_description">Charge les plugins 3GX à partir de la carte SD émulée s\'ils sont disponibles.</string>
     <string name="allow_plugin_loader">Autoriser les applications à modifier l\'état du Plugin Loader</string>
     <string name="allow_plugin_loader_description">Autoriser les applications homebrew à activer le Plugin Loader même lorsqu\'il est désactivé.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Caméra intérieure</string>
     <string name="outer_left_camera">Caméra extérieure de gauche</string>
@@ -233,7 +231,6 @@
     <string name="stereoscopy">Stéréoscopie</string>
     <string name="render3d">Mode 3D stéréoscopique</string>
     <string name="factor3d">Profondeur</string>
-    <string name="factor3d_description">Spécifie la valeur du curseur 3D. Cette valeur doit être supérieure à 0% lorsque la 3D stéréoscopique est activée.</string>
     <string name="cardboard_vr">Réalité virtuelle Cardboard</string>
     <string name="cardboard_screen_size">Taille de l\'écran Cardboard</string>
     <string name="cardboard_screen_size_description">Redimensionne l\'écran à un pourcentage de sa taille d\'origine.</string>
@@ -574,11 +571,11 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubique</string>
-    <string name="nearest_neighbor">Plus proche voisin</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <string name="nearest_neighbor">Plus proche voisin</string>
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stéreo</string>

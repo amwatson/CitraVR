@@ -124,7 +124,6 @@
     <string name="setup_system_files">Systemfiler</string>
     <string name="setup_system_files_description">Utför systemfilsoperationer som att installera systemfiler eller starta upp startmenyn</string>
     <string name="setup_tool_connect">Anslut till Artic Setup Tool</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar behöver filer från en riktig konsol för att kunna använda vissa av dess funktioner. Du kan hämta sådana filer med <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Observera:<ul><li><b> Den här åtgärden installerar konsolunika filer till Azahar, dela inte dina användar- eller nand-mappar<br> efter att du har utfört installationsprocessen!</b></li><li> Installation av gammal 3DS behövs för att installationen av ny 3DS ska fungera.</li><li> Båda installationslägena fungerar oavsett vilken modell konsolen som kör installationsverktyget har.</li></ul>]]></string>
     <string name="setup_system_files_detect">Hämtar aktuell status för systemfiler, vänta...</string>
     <string name="setup_system_files_o3ds">Gammal 3DS-konfiguration</string>
     <string name="setup_system_files_n3ds">Ny 3DS-konfiguration</string>
@@ -172,7 +171,6 @@
     <string name="plugin_loader_description">Inlästa 3GX-insticksmoduler från det emulerade SD-kortet om de finns tillgängliga.</string>
     <string name="allow_plugin_loader">Tillåt applikationer att ändra insticksinläsarens tillstånd</string>
     <string name="allow_plugin_loader_description">Tillåter homebrew-appar att aktivera insticksinläsaren även när den är inaktiverad.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innerkamera</string>
     <string name="outer_left_camera">Yttre vänstra kameran</string>
@@ -228,7 +226,6 @@
     <string name="stereoscopy">Stereoskop</string>
     <string name="render3d">Stereoskopiskt 3D-läge</string>
     <string name="factor3d">Djup</string>
-    <string name="factor3d_description">Anger värdet för 3D-reglaget. Detta bör sättas högre än 0% när stereoskopisk 3D är aktiverad.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Storlek på kartongskärm</string>
     <string name="cardboard_screen_size_description">Skalar skärmen till en procentandel av dess ursprungliga storlek.</string>
@@ -564,11 +561,11 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bikubisk</string>
-    <string name="nearest_neighbor">Närmaste granne</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <string name="nearest_neighbor">Närmaste granne</string>
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>

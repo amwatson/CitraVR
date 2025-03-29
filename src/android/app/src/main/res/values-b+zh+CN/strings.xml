@@ -129,7 +129,6 @@
     <string name="setup_system_files">系统文件</string>
     <string name="setup_system_files_description">执行系统文件操作，如安装系统文件或启动 HOME 菜单</string>
     <string name="setup_tool_connect">连接到 Artic 设置工具</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar 需要来自真实掌机的文件才能使用其某些功能。您可以使用 <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic 设置工具</a>获取此类文件。<br>注意：<ul><li><b>此操作会将掌机独有文件安装到 Azahar，<br>执行安装过程后请勿共享您的用户或 nand 文件夹！</b></li><li>新 3DS 设置需要先进行老 3DS 设置后才能运作。</li><li>无论运行设置工具的掌机型号如何，这两种设置模式均可运作。</li></ul>]]></string>
     <string name="setup_system_files_detect">正在获取当前系统文件状态，请稍候...</string>
     <string name="setup_system_files_o3ds">老 3DS 设置</string>
     <string name="setup_system_files_n3ds">新 3DS 设置</string>
@@ -177,7 +176,6 @@
     <string name="plugin_loader_description">当插件可用时，从模拟 SD 卡加载 3GX 插件。</string>
     <string name="allow_plugin_loader">允许应用更改插件加载器状态</string>
     <string name="allow_plugin_loader_description">允许自制程序启用插件加载器。</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
     <string name="outer_left_camera">外置左摄像头</string>
@@ -206,6 +204,9 @@
     <string name="linear_filtering_description">开启后，游戏视觉效果会更加平滑。</string>
     <string name="texture_filter_name">纹理滤镜</string>
     <string name="texture_filter_description">通过对纹理使用滤镜来增强应用的视觉效果。支持的滤镜包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
+    <string name="advanced">高级选项\"</string>
+    <string name="texture_sampling_name">纹理采样</string>
+    <string name="texture_sampling_description">覆盖游戏所使用的采样过滤器。这在某些情况下提升表现不佳的游戏画质时可能很有用。如果不确定，请将其设置为“由游戏控制”</string>
     <string name="hw_shaders">启用硬件着色器</string>
     <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
     <string name="shaders_accurate_mul">精确乘法运算</string>
@@ -233,7 +234,7 @@
     <string name="stereoscopy">画面立体</string>
     <string name="render3d">立体 3D 模式</string>
     <string name="factor3d">画面深度</string>
-    <string name="factor3d_description">指定 3D 画面深度的值。启用立体 3D 模式时，应将其设置为高于 0% 的值。</string>
+    <string name="factor3d_description">指定 3D 滑块按钮的值。启用立体 3D 模式时，应将其设置为高于 0% 的值。\n注意：实机硬件上不可能出现超过 100% 的深度值，并且可能会导致图形问题</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard 屏幕尺寸</string>
     <string name="cardboard_screen_size_description">将屏幕缩放至其原始大小的指定百分比。</string>
@@ -283,7 +284,7 @@
     <string name="learn_more">了解更多</string>
     <string name="close">关闭</string>
     <string name="reset_to_default">恢复默认</string>
-    <string name="redump_games">请按照指南以转储您的&lt;a href=https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/&gt;游戏卡带&lt;/a&gt;或&lt;a href=https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/&gt;已安装的游戏&lt;/a&gt;。</string>
+    <string name="redump_games"><![CDATA[请按照指南以转储您的<a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">游戏卡带</a>或<a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">已安装的应用</a>。]]></string>
     <string name="option_default">默认</string>
     <string name="none">无</string>
     <string name="auto">自动</string>
@@ -446,6 +447,9 @@
     <string name="save_load_error">保存/读取出现错误</string>
     <string name="fatal_error">致命错误</string>
     <string name="fatal_error_message">发生致命错误。请查阅日志获取相关信息。\n继续模拟可能会导致错误和崩溃。</string>
+    <string name="invalid_region">无效的地区</string>
+    <string name="unsupported_encrypted">不支持的加密应用</string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">正在准备着色器</string>
     <string name="building_shaders">正在构建着色器</string>
@@ -473,6 +477,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">CIA 安装期间的 Azahar 通知</string>
     <string name="cia_install_notification_title">正在安装 CIA 文件</string>
+    <string name="cia_install_notification_installing">正在安装 %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA 文件安装成功</string>
     <string name="cia_install_notification_error_title">CIA 文件安装失败</string>
     <string name="cia_install_success">“%s”已安装成功</string>
@@ -572,10 +577,14 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">双三线过滤</string>
-    <string name="nearest_neighbor">最近邻</string>
     <string name="scaleforce">强制缩放</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">由游戏控制</string>
+    <string name="nearest_neighbor">最近邻</string>
+    <string name="linear">线性过滤</string>
 
     <!-- Sound output modes -->
     <string name="mono">单声道</string>

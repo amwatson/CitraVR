@@ -129,8 +129,10 @@
     <string name="setup_system_files">Fitxers del sistema</string>
     <string name="setup_system_files_description">Realitzar operacions de fitxers del sistema, com instal·lar fitxers del sistema o obrir el menú HOME</string>
     <string name="setup_tool_connect">Connectar amb la ferramenta de configuració Artic</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar necessita fitxers d\'una consola real per poder utilitzar algunes de les seues funcions. Pots obtindre els fitxers amb la <a href=https://github.com/azahar-emu/ArticSetupTool>ferramenta de configuració Azahar</a>.<br>Notes:<ul><li><b>Aquesta operació instal·larà fitxers únics de la consola a Azahar, no compartisques les teues carpetes d\'usuari o nand<br>després de completar el procés de configuració!</b></li><li>La configuració de Old 3DS és necessària perquè funcione la configuració de New 3DS.</li><li>Els dos modes de configuració funcionaran independentment del model de la consola que execute la ferramenta de configuració.</li></ul>]]></string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar necessita fitxers d\'una consola real per poder utilitzar algunes de les seues funcions. Pots obtindre els fitxers amb la <a href=https://github.com/azahar-emu/ArticSetupTool>ferramenta de configuració Azahar</a>.<br>Notes:<ul><li><b>Aquesta operació instal·larà fitxers únics de la consola a Azahar, no compartisques les teues carpetes d\'usuari o nand després de completar el procés de configuració!</b></li><li>Després de la configuració, Azahar s\'enllaçarà a la consola que ha executat la ferramenta de configuració. Pots desvincular la consola més tard des de la pestanya \"Fitxers de sistema\" del menú d\'opcions de l\'emulador.</li><li>No et connectes en línia amb Azahar i la consola 3DS al mateix temps després de configurar els arxius del sistema, ja que això podria causar problemes.</li><li>La configuració de Old 3DS és necessària perquè funcione la configuració de New 3DS (configurar els dos modes és recomanat).</li><li>Els dos modes de configuració funcionaran independentment del model de la consola que execute la ferramenta de configuració.</li></ul>]]></string>
     <string name="setup_system_files_detect">S\'està obtenint l\'estat actual dels fitxers del sistema, per favor espera...</string>
+    <string name="delete_system_files">Desvincular Dades Úniques de Consola</string>
+    <string name="delete_system_files_description"><![CDATA[Esta acció desvincularà la teua consola real d\'Azahar, amb les següents conseqüències:<br><ul><li>OTP, SecureInfo i LocalFriendCodeSeed seran eliminats de Azahar.</li><li>La teua llista d\'amics es restablirà i es tancarà la sessió del teu compte NNID/PNID.</li><li>Els fitxers del sistema i els títols de la eshop obtinguts a través d\'Azahar es tornaran inaccessibles fins que la mateixa consola es vincule novament mitjançant la ferramenta de configuració (les dades guardades no es perdran).</li></ul><br>Continuar?]]></string>
     <string name="setup_system_files_o3ds">Configuració Old 3DS</string>
     <string name="setup_system_files_n3ds">Configuració New 3DS</string>
     <string name="setup_system_files_possible">La configuració és possible</string>
@@ -177,6 +179,9 @@
     <string name="plugin_loader_description">Carrega els plugins 3GX de la SD emulada si estan disponibles.</string>
     <string name="allow_plugin_loader">Permetre que les aplicacions canvien l\'estat del carregador de plugins</string>
     <string name="allow_plugin_loader_description">Permet que les apps homebrew activen el carregador de plugins fins i tot quan està desactivat.</string>
+    <string name="region_mismatch">Advertiment Regió No Vàlida</string>
+    <string name="region_mismatch_emulated">La configuració del país no és vàlida per a la regió emulada seleccionada.</string>
+    <string name="region_mismatch_console">La configuració del país no és vàlida per a la consola vinculada actual.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Càmera interior</string>
@@ -207,6 +212,9 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="linear_filtering_description">Activa el filtre linear, que fa que els gràfics del joc es vegen més suaus.</string>
     <string name="texture_filter_name">Filtre de Textures</string>
     <string name="texture_filter_description">Millora l\'aspecte visual de les aplicacions aplicant un filtre a les textures. Els filtres compatibles són Anime4K, Ultrafast, Bicubic, ScaleForce, xBRZ Freescale i MMPX.</string>
+    <string name="advanced">Avançat</string>
+    <string name="texture_sampling_name">Mostreig de Textures</string>
+    <string name="texture_sampling_description">Sobreescriu el filtre de mostreig usat en jocs. Pot ser útil en uns certs casos de jocs amb baix rendiment en pujar la resolució. Si no estàs segur, possa\'l en Controlat per Joc.</string>
     <string name="hw_shaders">Activar Ombrejador de Hardware</string>
     <string name="hw_shaders_description">Usa el hardware per a emular els ombrejadors de 3DS. Quan s\'active, el rendiment millorarà notablement.</string>
     <string name="shaders_accurate_mul">Multiplicació Precisa</string>
@@ -234,7 +242,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="stereoscopy">Estereoscopia</string>
     <string name="render3d">Mode 3D Estereoscòpic</string>
     <string name="factor3d">Profunditat</string>
-    <string name="factor3d_description">Especifica el valor del regulador 3D. Hauria d\'estar posat a més enllà del 0% quan el Mode 3D Estereoscòpic està activat.</string>
+    <string name="factor3d_description">Especifica el valor del regulador 3D. Hauria d\'estar posat a més enllà del 0% quan el Mode 3D Estereoscòpic està activat.\nNota: Els valors de profunditat superiors al 100% no són possibles en hardware real i poden causar problemes gràfics.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Grandària de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un percentatge de la seua grandària original.</string>
@@ -574,10 +582,14 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubic</string>
-    <string name="nearest_neighbor">Nearest Neighbor</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Controlat per Joc</string>
+    <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="linear">Liniar</string>
 
     <!-- Sound output modes -->
     <string name="mono">Mono</string>

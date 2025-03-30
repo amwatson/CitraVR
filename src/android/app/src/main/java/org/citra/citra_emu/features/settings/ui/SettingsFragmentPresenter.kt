@@ -1039,6 +1039,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA,
+                    R.string.expand_to_cutout_area,
+                    R.string.expand_to_cutout_area_description,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.key,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.defaultValue
+                )
+            )
+            add(
                 SingleChoiceSetting(
                     IntSetting.SCREEN_LAYOUT,
                     R.string.emulation_switch_screen_layout,

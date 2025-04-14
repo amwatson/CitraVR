@@ -496,7 +496,7 @@
     <!-- About Game Dialog -->
     <string name="play">Play</string>
     <string name="shortcut">Shortcut</string>
-    <string name="uninstall_cia">Uninstall Game</string>
+    <string name="uninstall_cia">Uninstall Application</string>
     <string name="uninstalling">Uninstalling...</string>
     <string name="game_context_open_save_dir">Open Save Data Folder</string>
     <string name="game_context_open_app">Open Application Folder</string>

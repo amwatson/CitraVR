@@ -188,8 +188,8 @@ jobs:
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
-          mkdir bin
-          move /y *.exe bin\
+          mkdir ..\..\artifacts 2> NUL
+          move /y *.exe ..\..\artifacts\
         shell: cmd
       - name: Pack
         run: ./.ci/pack.sh

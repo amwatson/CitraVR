@@ -1619,6 +1619,9 @@ void GMainWindow::UpdateSaveStates() {
         }
     }
     for (const auto& savestate : savestates) {
+        if (savestate.slot >= Core::SaveStateSlotCount) {
+            continue;
+        }
         const bool display_name =
             savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
             !savestate.build_name.empty();
@@ -1659,7 +1662,7 @@ void GMainWindow::UpdateSaveStates() {
     for (u32 i = 1; i < Core::SaveStateSlotCount; ++i) {
         if (!actions_load_state[i]->isEnabled()) {
             // Prefer empty slot
-            oldest_slot = i + 1;
+            oldest_slot = i;
             oldest_slot_time = 0;
             break;
         }

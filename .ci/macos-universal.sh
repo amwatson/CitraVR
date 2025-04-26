@@ -36,6 +36,9 @@ for OTHER_ARTIFACT in "${ARTIFACTS_LIST[@]:1}"; do
     done
 done
 
+# Remove leftover libs so that they aren't distributed
+rm -rf "${BUNDLE_DIR}/libs"
+
 # Re-sign executables and bundles after combining.
 APP_PATHS=(Azahar.app)
 for APP_PATH in "${APP_PATHS[@]}"; do

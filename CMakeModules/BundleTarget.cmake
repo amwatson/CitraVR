@@ -283,22 +283,6 @@ else()
             POST_BUILD)
         add_custom_command(
             TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/dist/"
-            POST_BUILD)
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dist/azahar.png" "${CMAKE_BINARY_DIR}/bundle/dist/azahar.png"
-            POST_BUILD)
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/license.txt" "${CMAKE_BINARY_DIR}/bundle/"
-            POST_BUILD)
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_BINARY_DIR}/bundle/"
-            POST_BUILD)
-        add_custom_command(
-            TARGET bundle
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/dist/scripting" "${CMAKE_BINARY_DIR}/bundle/scripting"
             POST_BUILD)
 

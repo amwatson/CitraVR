@@ -968,42 +968,42 @@ Apakah Anda ingin mengabaikan kesalahan dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="70"/>
         <source>3x Native (1200x720)</source>
-        <translation type="unfinished">2x Asli (800x480) {3x?} {1200x?} {720)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="75"/>
         <source>4x Native (1600x960)</source>
-        <translation type="unfinished">2x Asli (800x480) {4x?} {1600x?} {960)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="80"/>
         <source>5x Native (2000x1200)</source>
-        <translation type="unfinished">2x Asli (800x480) {5x?} {2000x?} {1200)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="85"/>
         <source>6x Native (2400x1440)</source>
-        <translation type="unfinished">2x Asli (800x480) {6x?} {2400x?} {1440)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="90"/>
         <source>7x Native (2800x1680)</source>
-        <translation type="unfinished">2x Asli (800x480) {7x?} {2800x?} {1680)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="95"/>
         <source>8x Native (3200x1920)</source>
-        <translation type="unfinished">2x Asli (800x480) {8x?} {3200x?} {1920)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="100"/>
         <source>9x Native (3600x2160)</source>
-        <translation type="unfinished">2x Asli (800x480) {9x?} {3600x?} {2160)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="105"/>
         <source>10x Native (4000x2400)</source>
-        <translation type="unfinished">2x Asli (800x480) {10x?} {4000x?} {2400)?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="116"/>
@@ -4168,7 +4168,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6629,6 +6629,29 @@ Debug Message: </source>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>Tinggalkan Ruangan</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>Anda akan meninggalkan ruangan. Segala koneksi jaringan akan ditutup.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>Putuskan</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>Anda akan meninggalkan ruangan. Segala koneksi jaringan akan ditutup.</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation type="unfinished"></translation>
@@ -6731,29 +6754,6 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
 They may have left the room.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>Tinggalkan Ruangan</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Anda akan meninggalkan ruangan. Segala koneksi jaringan akan ditutup.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>Putuskan</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Anda akan meninggalkan ruangan. Segala koneksi jaringan akan ditutup.</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>
         <source>Error</source>

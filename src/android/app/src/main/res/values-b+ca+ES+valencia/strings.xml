@@ -125,6 +125,10 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Aquest control s\'ha d\'assignar a un estic analògic del comandament o a un eix del Pad de Control!</string>
     <string name="input_message_button_only">Aquest control s\'ha d\'assignar a un botó del comandament!</string>
+    <string name="turbo_limit_hotkey">Velocitat Turbo</string>
+    <string name="turbo_enabled_toast">Velocitat Turbo Activada</string>
+    <string name="turbo_disabled_toast">Velocitat Turbo Desactivada</string>
+
     <!-- System files strings -->
     <string name="setup_system_files">Fitxers del sistema</string>
     <string name="setup_system_files_description">Realitzar operacions de fitxers del sistema, com instal·lar fitxers del sistema o obrir el menú HOME</string>
@@ -161,6 +165,7 @@
     <string name="init_clock_description">Configura el rellotge emulat de la 3DS perquè tinga la mateixa data i hora del teu dispositiu o per a configurar una data i hora distinta.</string>
     <string name="device_clock">Rellotge del Sistema</string>
     <string name="simulated_clock">Rellotge Simulat</string>
+    <string name="simulated_clock_description">Si el rellotge està en \"Rellotge emulat\", es canvia la data i l\'hora d\'inici.</string>
     <string name="profile_settings">Configuració de perfil</string>
     <string name="emulated_region">Regió</string>
     <string name="emulated_language">Idioma</string>
@@ -223,6 +228,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal. Quan es desactive, la velocitat d\'emulació no tindrà límit i la tecla d\'accés ràpid de velocitat turbo no funcionarà.</string>
     <string name="frame_limit_slider">Limitar percentatge de velocitat</string>
     <string name="frame_limit_slider_description">Especifica el valor al qual es limita la velocitat d\'emulació. Amb el valor per defecte del 100%, l\'emulació es limitarà a la velocitat normal. Els valors alts o baixos incrementaran o reduiran el límit de velocitat.</string>
+    <string name="turbo_limit">Límit de Velocitat Turbo</string>
+    <string name="turbo_limit_description">Límit de velocitat d\'emulació utilitzat mentres la tecla d\'accés ràpid turbo està activa.</string>
     <string name="expand_to_cutout_area">Expandir a l\'àrea de retallada</string>
     <string name="expand_to_cutout_area_description">Amplia l\'àrea de visualització per a incloure l\'àrea de retallada (o osca).</string>
     <string name="internal_resolution">Resolució interna</string>
@@ -306,6 +313,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="ini_saved">Configuració guardada</string>
     <string name="gameid_saved">Configuració guardada per a %1$s</string>
     <string name="error_saving">Error guardant %1$s.ini: %2$s</string>
+    <string name="saving">Guardant...</string>
     <string name="loading">Carregant...</string>
     <string name="next">Següent</string>
     <string name="back">Arrere</string>
@@ -401,6 +409,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="small_screen_position_bottom_left">Abaix a l\'esquerra</string>
     <string name="small_screen_position_above">Damunt</string>
     <string name="small_screen_position_below">Davall</string>
+    <string name="screen_gap">Separació de Pantalla</string>
+    <string name="screen_gap_description">Espai entre pantalles en tots els modes de dos pantalles. Mesurat en píxels respecte a l\'altura de 240 píxels de la pantalla més gran.</string>
     <string name="large_screen_proportion">Proporció de Pantalla Gran</string>
     <string name="large_screen_proportion_description">Quantes vegades més gran és la pantalla gran que la pantalla xicoteta en Proporció de Pantalla Gran?</string>
     <string name="emulation_adjust_custom_layout">Ajusta l\'estil personalitzat en Configuració</string>

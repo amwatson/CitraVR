@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="ca@valencia">
+<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="ca@valencia">
 <context>
     <name>ARMRegisters</name>
     <message>
@@ -46,9 +44,9 @@
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Azahar is a free and open source 3DS emulator licensed under GPLv2.0 or any later version.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'MS Shell Dlg 2'; font-size:12pt;&quot;&gt;Azahar is a free and open source 3DS emulator licensed under GPLv2.0 or any later version.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -1247,7 +1245,7 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="168"/>
         <source>Turbo Speed Limit:</source>
-        <translation type="unfinished"></translation>
+        <translation>Límit de Velocitat Turbo:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="232"/>
@@ -1973,7 +1971,7 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="128"/>
         <source>Screen Gap</source>
-        <translation type="unfinished"></translation>
+        <translation>Separació de Pantalla</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="166"/>
@@ -5075,7 +5073,7 @@ Vols descarregar-la?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="773"/>
-        <source>Are you sure you want to completely uninstall &apos;%1&apos;?
+        <source>Are you sure you want to completely uninstall '%1'?
 
 This will delete the application if installed, as well as any installed updates or DLC.</source>
         <translation>Està segur de voler desinstal·lar &apos;%1&apos;?
@@ -6652,112 +6650,6 @@ Missatge de depuració:</translation>
 <context>
     <name>NetworkMessage</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">El nom d&apos;usuari no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">El nom de la sala no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
-        <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished">El nom d&apos;usuari ja està en ús o no és vàlid. Per favor, tria un altre.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">La IP no és una adreça IPv4 vàlida.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
-        <source>Port must be a number between 0 to 65535.</source>
-        <translation type="unfinished">El port ha de ser un número entre 0 i 65535.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
-        <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="unfinished">Has de triar una aplicació preferida per a allotjar una sala. Si encara no tens cap aplicació en la teua llista d&apos;aplicacions, afig una carpeta fent clic en la icona del signe més en la llista d&apos;aplicacions.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
-        <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished">No s&apos;ha pogut trobar una connexió a Internet. Revisa la teua configuració d&apos;Internet.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
-        <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished">No es va poder connectar amb l&apos;amfitrió. Assegura&apos;t que la configuració d&apos;Internet és correcta. Si encara no pots connectar-te, contacta amb l&apos;amfitrió de la sala i assegura&apos;t que este està configurat correctament amb el port extern de reexpedició.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
-        <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished">No s&apos;ha pogut connectar a la sala perquè està plena.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
-        <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="unfinished">No es va poder crear una sala. Per favor, torne a intentar-ho. Podria ser necessari reiniciar Azahar.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
-        <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished">L&apos;amfitrió de la sala t&apos;ha banejat. Posa&apos;t en contacte amb l&apos;amfitrió perquè et desbanege o prova en una altra sala.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
-        <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished">Discordança de versions! Per favor, actualitze a l&apos;última versió de Azahar. Si el problema contínua, parla amb l&apos;administrador de la sala i demana-li que actualitze el servidor.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
-        <source>Incorrect password.</source>
-        <translation type="unfinished">Contrasenya incorrecta.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
-        <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished">Error desconegut. Si este error continua ocorrent, per favor, fes-nos-ho saber.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">S&apos;ha perdut la connexió a la sala. Intenta reconnectar-te a ella.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
-        <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">Has sigut expulsat per l&apos;administrador de la sala.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">Esta adreça MAC ja està en ús. Per favor, tria una altra.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
-        <source>Your Console ID conflicted with someone else&apos;s in the room.
-
-Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="unfinished">El teu ID de Consola és igual que la d&apos;una altra persona en esta sala.
-
-Per favor, veu a Emulació &gt; Configurar... &gt; Sistema per a regenerar el teu ID de Consola.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">No tens permisos per a fer esta acció.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
-        <source>The user you are trying to kick/ban could not be found.
-They may have left the room.</source>
-        <translation type="unfinished">L&apos;usuari al qual estàs intentant expulsar/banejar no va poder ser trobat.
-Pot ser que haja deixat la sala.</translation>
-    </message>
-    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
         <source>Leave Room</source>
         <translation>Abandonar Sala</translation>
@@ -6781,89 +6673,109 @@ Pot ser que haja deixat la sala.</translation>
 <context>
     <name>NetworkMessage::ErrorManager</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">El nom d&apos;usuari no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
+        <translation>El nom d&apos;usuari no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">El nom de la sala no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
+        <translation>El nom de la sala no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="vanished">El nom d&apos;usuari ja està en ús o no és vàlid. Per favor, tria un altre.</translation>
+        <translation>El nom d&apos;usuari ja està en ús o no és vàlid. Per favor, tria un altre.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">La IP no és una adreça IPv4 vàlida.</translation>
+        <translation>La IP no és una adreça IPv4 vàlida.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation type="vanished">El port ha de ser un número entre 0 i 65535.</translation>
+        <translation>El port ha de ser un número entre 0 i 65535.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
         <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="vanished">Has de triar una aplicació preferida per a allotjar una sala. Si encara no tens cap aplicació en la teua llista d&apos;aplicacions, afig una carpeta fent clic en la icona del signe més en la llista d&apos;aplicacions.</translation>
+        <translation>Has de triar una aplicació preferida per a allotjar una sala. Si encara no tens cap aplicació en la teua llista d&apos;aplicacions, afig una carpeta fent clic en la icona del signe més en la llista d&apos;aplicacions.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="vanished">No s&apos;ha pogut trobar una connexió a Internet. Revisa la teua configuració d&apos;Internet.</translation>
+        <translation>No s&apos;ha pogut trobar una connexió a Internet. Revisa la teua configuració d&apos;Internet.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="vanished">No es va poder connectar amb l&apos;amfitrió. Assegura&apos;t que la configuració d&apos;Internet és correcta. Si encara no pots connectar-te, contacta amb l&apos;amfitrió de la sala i assegura&apos;t que este està configurat correctament amb el port extern de reexpedició.</translation>
+        <translation>No es va poder connectar amb l&apos;amfitrió. Assegura&apos;t que la configuració d&apos;Internet és correcta. Si encara no pots connectar-te, contacta amb l&apos;amfitrió de la sala i assegura&apos;t que este està configurat correctament amb el port extern de reexpedició.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="vanished">No s&apos;ha pogut connectar a la sala perquè està plena.</translation>
+        <translation>No s&apos;ha pogut connectar a la sala perquè està plena.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
         <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="vanished">No es va poder crear una sala. Per favor, torne a intentar-ho. Podria ser necessari reiniciar Azahar.</translation>
+        <translation>No es va poder crear una sala. Per favor, torne a intentar-ho. Podria ser necessari reiniciar Azahar.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="vanished">L&apos;amfitrió de la sala t&apos;ha banejat. Posa&apos;t en contacte amb l&apos;amfitrió perquè et desbanege o prova en una altra sala.</translation>
+        <translation>L&apos;amfitrió de la sala t&apos;ha banejat. Posa&apos;t en contacte amb l&apos;amfitrió perquè et desbanege o prova en una altra sala.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="vanished">Discordança de versions! Per favor, actualitze a l&apos;última versió de Azahar. Si el problema contínua, parla amb l&apos;administrador de la sala i demana-li que actualitze el servidor.</translation>
+        <translation>Discordança de versions! Per favor, actualitze a l&apos;última versió de Azahar. Si el problema contínua, parla amb l&apos;administrador de la sala i demana-li que actualitze el servidor.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="vanished">Contrasenya incorrecta.</translation>
+        <translation>Contrasenya incorrecta.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="vanished">Error desconegut. Si este error continua ocorrent, per favor, fes-nos-ho saber.</translation>
+        <translation>Error desconegut. Si este error continua ocorrent, per favor, fes-nos-ho saber.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">S&apos;ha perdut la connexió a la sala. Intenta reconnectar-te a ella.</translation>
+        <translation>S&apos;ha perdut la connexió a la sala. Intenta reconnectar-te a ella.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="vanished">Has sigut expulsat per l&apos;administrador de la sala.</translation>
+        <translation>Has sigut expulsat per l&apos;administrador de la sala.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">Esta adreça MAC ja està en ús. Per favor, tria una altra.</translation>
+        <translation>Esta adreça MAC ja està en ús. Per favor, tria una altra.</translation>
     </message>
     <message>
-        <source>Your Console ID conflicted with someone else&apos;s in the room.
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
+        <source>Your Console ID conflicted with someone else's in the room.
 
 Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="vanished">El teu ID de Consola és igual que la d&apos;una altra persona en esta sala.
+        <translation>El teu ID de Consola és igual que la d&apos;una altra persona en esta sala.
 
 Per favor, veu a Emulació &gt; Configurar... &gt; Sistema per a regenerar el teu ID de Consola.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">No tens permisos per a fer esta acció.</translation>
+        <translation>No tens permisos per a fer esta acció.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="vanished">L&apos;usuari al qual estàs intentant expulsar/banejar no va poder ser trobat.
+        <translation>L&apos;usuari al qual estàs intentant expulsar/banejar no va poder ser trobat.
 Pot ser que haja deixat la sala.</translation>
     </message>
     <message>

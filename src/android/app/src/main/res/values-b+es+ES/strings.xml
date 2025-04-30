@@ -125,6 +125,10 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
+    <string name="turbo_limit_hotkey">Velocidad Turbo</string>
+    <string name="turbo_enabled_toast">Velocidad Turbo Activada</string>
+    <string name="turbo_disabled_toast">Velocidad Turbo Desactivada</string>
+
     <!-- System files strings -->
     <string name="setup_system_files">Archivos de Sistema</string>
     <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>
@@ -161,6 +165,7 @@
     <string name="init_clock_description">Configura el reloj emulado de la 3DS para que tenga la misma fecha y hora de tu dispositivo o para configurar una fecha y hora distinta en éste.</string>
     <string name="device_clock">Reloj del Sistema</string>
     <string name="simulated_clock">Reloj Simulado</string>
+    <string name="simulated_clock_description">Si el reloj está en \"Reloj emulado\", ésto cambia la fecha y hora de inicio.</string>
     <string name="profile_settings">Opciones de Perfil</string>
     <string name="emulated_region">Región</string>
     <string name="emulated_language">Idioma</string>
@@ -223,6 +228,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="frame_limit_enable_description">Cuando se active, la velocidad de emulación estará limitada a un porcentaje determinado de la velocidad normal. Cuando se desactive, la velocidad de emulación no tendrá límite y la tecla de acceso rápido de velocidad turbo no funcionará.</string>
     <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
     <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o altos incrementarán o reducirán el límite de velocidad.</string>
+    <string name="turbo_limit">Límite de Velocidad Turbo</string>
+    <string name="turbo_limit_description">Límite de velocidad de emulación utilizado mientras la tecla de acceso rápido turbo está activa.</string>
     <string name="expand_to_cutout_area">Expandir al área de recorte</string>
     <string name="expand_to_cutout_area_description">Amplía el área de visualización para incluir el área de recorte (o muesca).</string>
     <string name="internal_resolution">Resolución interna</string>
@@ -306,6 +313,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="ini_saved">Configuración guardada</string>
     <string name="gameid_saved">Configuración guardada para %1$s</string>
     <string name="error_saving">Error guardando %1$s.ini: %2$s</string>
+    <string name="saving">Guardando...</string>
     <string name="loading">Cargando...</string>
     <string name="next">Siguiente</string>
     <string name="back">Atrás</string>
@@ -401,6 +409,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="small_screen_position_bottom_left">Abajo a la Izquierda</string>
     <string name="small_screen_position_above">Encima</string>
     <string name="small_screen_position_below">Debajo</string>
+    <string name="screen_gap">Separación de Pantalla</string>
+    <string name="screen_gap_description">Espacio entre pantallas en todos los modos de dos pantallas. Medido en píxeles con respecto a la altura de 240 píxeles de la pantalla más grande.</string>
     <string name="large_screen_proportion">Proporción de Pantalla Grande</string>
     <string name="large_screen_proportion_description">¿Cuántas veces más grande es la pantalla grande que la pantalla pequeña en Disposicion de Pantalla Grande?</string>
     <string name="emulation_adjust_custom_layout">Ajusta el estilo personalizado en Configuración</string>

@@ -4166,7 +4166,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6628,29 +6628,52 @@ Debug Message: </source>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>Szoba Elhagyása</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>Be fogod zárni a szobát. Minden hálózati kapcsolat le lesz kapcsolva.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>Lecsatlakozás</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>El fogod hagyni a szobát. Minden hálózati kapcsolat le lesz csatlakoztatva.</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Érvénytelen felhasználónév. 4-20 alfanumerikus karakterből kell állnia.</translation>
+        <translation>Érvénytelen felhasználónév. 4-20 alfanumerikus karakterből kell állnia.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Érvénytelen szobanév. 4-20 alfanumerikus karakterből kell állnia.</translation>
+        <translation>Érvénytelen szobanév. 4-20 alfanumerikus karakterből kell állnia.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished">A felhasználónév már használatban van, vagy érvénytelen. Próbálj megadni egy másikat.</translation>
+        <translation>A felhasználónév már használatban van, vagy érvénytelen. Próbálj megadni egy másikat.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">Az IP nem érvényes IPv4 cím.</translation>
+        <translation>Az IP nem érvényes IPv4 cím.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation type="unfinished">A port csak 0 és 65535 közötti szám lehet.</translation>
+        <translation>A port csak 0 és 65535 közötti szám lehet.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
@@ -6690,7 +6713,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="unfinished">Helytelen jelszó.</translation>
+        <translation>Helytelen jelszó.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
@@ -6700,17 +6723,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">Megszakadt a kapcsolat a szobával. Próbálj újracsatlakozni.</translation>
+        <translation>Megszakadt a kapcsolat a szobával. Próbálj újracsatlakozni.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">A szoba házigazdája kirúgott téged.</translation>
+        <translation>A szoba házigazdája kirúgott téged.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">A MAC cím már használatban van. Válassz másikat.</translation>
+        <translation>A MAC cím már használatban van. Válassz másikat.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
@@ -6722,76 +6745,13 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">Nincs megfelelő jogosultságod a művelet végrehajtásához.</translation>
+        <translation>Nincs megfelelő jogosultságod a művelet végrehajtásához.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>Szoba Elhagyása</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Be fogod zárni a szobát. Minden hálózati kapcsolat le lesz kapcsolva.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>Lecsatlakozás</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>El fogod hagyni a szobát. Minden hálózati kapcsolat le lesz csatlakoztatva.</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
-    <message>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Érvénytelen felhasználónév. 4-20 alfanumerikus karakterből kell állnia.</translation>
-    </message>
-    <message>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Érvénytelen szobanév. 4-20 alfanumerikus karakterből kell állnia.</translation>
-    </message>
-    <message>
-        <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="vanished">A felhasználónév már használatban van, vagy érvénytelen. Próbálj megadni egy másikat.</translation>
-    </message>
-    <message>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">Az IP nem érvényes IPv4 cím.</translation>
-    </message>
-    <message>
-        <source>Port must be a number between 0 to 65535.</source>
-        <translation type="vanished">A port csak 0 és 65535 közötti szám lehet.</translation>
-    </message>
-    <message>
-        <source>Incorrect password.</source>
-        <translation type="vanished">Helytelen jelszó.</translation>
-    </message>
-    <message>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">Megszakadt a kapcsolat a szobával. Próbálj újracsatlakozni.</translation>
-    </message>
-    <message>
-        <source>You have been kicked by the room host.</source>
-        <translation type="vanished">A szoba házigazdája kirúgott téged.</translation>
-    </message>
-    <message>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">A MAC cím már használatban van. Válassz másikat.</translation>
-    </message>
-    <message>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">Nincs megfelelő jogosultságod a művelet végrehajtásához.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>

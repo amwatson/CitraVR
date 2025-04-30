@@ -4170,7 +4170,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6633,6 +6633,29 @@ Debug Message: </source>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>방 나가기</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>연결끊기</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation type="unfinished"></translation>
@@ -6735,29 +6758,6 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
 They may have left the room.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>방 나가기</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>연결끊기</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>
         <source>Error</source>

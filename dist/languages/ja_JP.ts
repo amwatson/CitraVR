@@ -4174,7 +4174,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6639,14 +6639,37 @@ Debug Message: </source>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>退室</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>ルームを閉じると現在の接続は失われます。よろしいですか？</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>切断</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>退室すると全てのネットワークは切断されます。続行しますか？</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">ユーザー名が有効ではありません。4から20文字の英数字である必要があります。</translation>
+        <translation>ユーザー名が有効ではありません。4から20文字の英数字である必要があります。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">ルーム名が有効ではありません。4から20文字の英数字である必要があります。</translation>
+        <translation>ルーム名が有効ではありません。4から20文字の英数字である必要があります。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
@@ -6691,17 +6714,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished">ルームのホストがあなたをバンしました。ホストにバンを解除してもらうか、ほかのルームに参加してください。</translation>
+        <translation>ルームのホストがあなたをバンしました。ホストにバンを解除してもらうか、ほかのルームに参加してください。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished">バージョンが一致していません。最新バージョンのAzaharに更新してください。それでも直らない場合は、ルームのホストにサーバーをアップデートするように伝えてください。</translation>
+        <translation>バージョンが一致していません。最新バージョンのAzaharに更新してください。それでも直らない場合は、ルームのホストにサーバーをアップデートするように伝えてください。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="unfinished">パスワードが間違っています。</translation>
+        <translation>パスワードが間違っています。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
@@ -6711,17 +6734,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">ルームとの接続が切れました。再接続してください。</translation>
+        <translation>ルームとの接続が切れました。再接続してください。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">ルームのホストにキックされました。</translation>
+        <translation>ルームのホストにキックされました。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">MACアドレスが使用中です。他のアドレスを指定してください。</translation>
+        <translation>MACアドレスが使用中です。他のアドレスを指定してください。</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
@@ -6739,68 +6762,7 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="unfinished">キック/バンしようとしているユーザーが見つかりません。
-ユーザーがルームを抜けたかもしれません。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>退室</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>ルームを閉じると現在の接続は失われます。よろしいですか？</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>切断</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>退室すると全てのネットワークは切断されます。続行しますか？</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
-    <message>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">ユーザー名が有効ではありません。4から20文字の英数字である必要があります。</translation>
-    </message>
-    <message>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">ルーム名が有効ではありません。4から20文字の英数字である必要があります。</translation>
-    </message>
-    <message>
-        <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="vanished">ルームのホストがあなたをバンしました。ホストにバンを解除してもらうか、ほかのルームに参加してください。</translation>
-    </message>
-    <message>
-        <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="vanished">バージョンが一致していません。最新バージョンのAzaharに更新してください。それでも直らない場合は、ルームのホストにサーバーをアップデートするように伝えてください。</translation>
-    </message>
-    <message>
-        <source>Incorrect password.</source>
-        <translation type="vanished">パスワードが間違っています。</translation>
-    </message>
-    <message>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">ルームとの接続が切れました。再接続してください。</translation>
-    </message>
-    <message>
-        <source>You have been kicked by the room host.</source>
-        <translation type="vanished">ルームのホストにキックされました。</translation>
-    </message>
-    <message>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">MACアドレスが使用中です。他のアドレスを指定してください。</translation>
-    </message>
-    <message>
-        <source>The user you are trying to kick/ban could not be found.
-They may have left the room.</source>
-        <translation type="vanished">キック/バンしようとしているユーザーが見つかりません。
+        <translation>キック/バンしようとしているユーザーが見つかりません。
 ユーザーがルームを抜けたかもしれません。</translation>
     </message>
     <message>

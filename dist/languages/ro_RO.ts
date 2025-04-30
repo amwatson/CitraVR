@@ -4170,7 +4170,7 @@ Vă rugăm să verificați instalarea FFmpeg utilizată pentru compilare.</trans
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6634,6 +6634,29 @@ Mesaj de depanare:</translation>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>Părăsește Sala</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>Sunteți pe cale să închideți sala. Orice conexiune la rețea va fi închisă.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>Deconectare</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>Sunteți pe cale să părăsiți sala. Orice conexiune la rețea va fi închisă.</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation type="unfinished"></translation>
@@ -6736,29 +6759,6 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
 They may have left the room.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>Părăsește Sala</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Sunteți pe cale să închideți sala. Orice conexiune la rețea va fi închisă.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>Deconectare</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Sunteți pe cale să părăsiți sala. Orice conexiune la rețea va fi închisă.</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>
         <source>Error</source>

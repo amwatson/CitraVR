@@ -6657,112 +6657,6 @@ Felsökningsmeddelande: </translation>
 <context>
     <name>NetworkMessage</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Användarnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Rumsnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
-        <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished">Användarnamnet används redan eller är ogiltigt. Välj ett annat.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">IP är inte en giltig IPv4-adress.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
-        <source>Port must be a number between 0 to 65535.</source>
-        <translation type="unfinished">Port måste vara ett nummer mellan 0 och 65535.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
-        <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="unfinished">Du måste välja en föredragen applikation för att vara värd för ett rum. Om du inte har några applikationer i din applikationslista ännu kan du lägga till en applikationsmapp genom att klicka på plusikonen i applikationslistan.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
-        <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished">Det går inte att hitta en internetanslutning. Kontrollera dina internetinställningar.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
-        <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished">Det går inte att ansluta till värden. Kontrollera att anslutningsinställningarna är korrekta. Om du fortfarande inte kan ansluta kontaktar du rumsvärden och kontrollerar att värden är korrekt konfigurerad med den externa porten vidarebefordrad.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
-        <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished">Det går inte att ansluta till rummet eftersom det redan är fullt.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
-        <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="unfinished">Skapandet av ett rum misslyckades. Försök igen. Det kan vara nödvändigt att starta om Azahar.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
-        <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished">Värden för rummet har bannlyst dig. Prata med värden för att häva bannlysningen eller prova ett annat rum.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
-        <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished">Felaktig versionsmatchning! Uppdatera till den senaste versionen av Azahar. Om problemet kvarstår, kontakta rumsvärden och be dem att uppdatera servern.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
-        <source>Incorrect password.</source>
-        <translation type="unfinished">Felaktigt lösenord.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
-        <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished">Ett okänt fel har inträffat. Om det här felet fortsätter att inträffa, öppna ett ärende</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">Anslutning till rum förlorades. Försök att återansluta.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
-        <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">Du har blivit utsparkad av rumsvärden.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">Hårdvaruadressen är redan i bruk. Välj en annan.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
-        <source>Your Console ID conflicted with someone else&apos;s in the room.
-
-Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="unfinished">Ditt konsol-id stämde inte överens med någon annans i rummet.
-
-Gå till Emulering &gt; Konfigurera &gt; System för att skapa ett nytt konsol-id.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">Du har inte tillräcklig behörighet för att utföra den här åtgärden.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
-        <source>The user you are trying to kick/ban could not be found.
-They may have left the room.</source>
-        <translation type="unfinished">Användaren som du försöker sparka ut/bannlysa kunde inte hittas.
-De kan ha lämnat rummet.</translation>
-    </message>
-    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
         <source>Leave Room</source>
         <translation>Lämna rum</translation>
@@ -6786,89 +6680,109 @@ De kan ha lämnat rummet.</translation>
 <context>
     <name>NetworkMessage::ErrorManager</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Användarnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
+        <translation>Användarnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Rumsnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
+        <translation>Rumsnamnet är inte giltigt. Måste innehålla 4 till 20 alfanumeriska tecken.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="vanished">Användarnamnet används redan eller är ogiltigt. Välj ett annat.</translation>
+        <translation>Användarnamnet används redan eller är ogiltigt. Välj ett annat.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">IP är inte en giltig IPv4-adress.</translation>
+        <translation>IP är inte en giltig IPv4-adress.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation type="vanished">Port måste vara ett nummer mellan 0 och 65535.</translation>
+        <translation>Port måste vara ett nummer mellan 0 och 65535.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
         <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="vanished">Du måste välja en föredragen applikation för att vara värd för ett rum. Om du inte har några applikationer i din applikationslista ännu kan du lägga till en applikationsmapp genom att klicka på plusikonen i applikationslistan.</translation>
+        <translation>Du måste välja en föredragen applikation för att vara värd för ett rum. Om du inte har några applikationer i din applikationslista ännu kan du lägga till en applikationsmapp genom att klicka på plusikonen i applikationslistan.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="vanished">Det går inte att hitta en internetanslutning. Kontrollera dina internetinställningar.</translation>
+        <translation>Det går inte att hitta en internetanslutning. Kontrollera dina internetinställningar.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="vanished">Det går inte att ansluta till värden. Kontrollera att anslutningsinställningarna är korrekta. Om du fortfarande inte kan ansluta kontaktar du rumsvärden och kontrollerar att värden är korrekt konfigurerad med den externa porten vidarebefordrad.</translation>
+        <translation>Det går inte att ansluta till värden. Kontrollera att anslutningsinställningarna är korrekta. Om du fortfarande inte kan ansluta kontaktar du rumsvärden och kontrollerar att värden är korrekt konfigurerad med den externa porten vidarebefordrad.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="vanished">Det går inte att ansluta till rummet eftersom det redan är fullt.</translation>
+        <translation>Det går inte att ansluta till rummet eftersom det redan är fullt.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
         <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="vanished">Skapandet av ett rum misslyckades. Försök igen. Det kan vara nödvändigt att starta om Azahar.</translation>
+        <translation>Skapandet av ett rum misslyckades. Försök igen. Det kan vara nödvändigt att starta om Azahar.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="vanished">Värden för rummet har bannlyst dig. Prata med värden för att häva bannlysningen eller prova ett annat rum.</translation>
+        <translation>Värden för rummet har bannlyst dig. Prata med värden för att häva bannlysningen eller prova ett annat rum.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="vanished">Felaktig versionsmatchning! Uppdatera till den senaste versionen av Azahar. Om problemet kvarstår, kontakta rumsvärden och be dem att uppdatera servern.</translation>
+        <translation>Felaktig versionsmatchning! Uppdatera till den senaste versionen av Azahar. Om problemet kvarstår, kontakta rumsvärden och be dem att uppdatera servern.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="vanished">Felaktigt lösenord.</translation>
+        <translation>Felaktigt lösenord.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="vanished">Ett okänt fel har inträffat. Om det här felet fortsätter att inträffa, öppna ett ärende</translation>
+        <translation>Ett okänt fel har inträffat. Om det här felet fortsätter att inträffa, öppna ett ärende</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">Anslutning till rum förlorades. Försök att återansluta.</translation>
+        <translation>Anslutning till rum förlorades. Försök att återansluta.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="vanished">Du har blivit utsparkad av rumsvärden.</translation>
+        <translation>Du har blivit utsparkad av rumsvärden.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">Hårdvaruadressen är redan i bruk. Välj en annan.</translation>
+        <translation>Hårdvaruadressen är redan i bruk. Välj en annan.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
         <source>Your Console ID conflicted with someone else&apos;s in the room.
 
 Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="vanished">Ditt konsol-id stämde inte överens med någon annans i rummet.
+        <translation>Ditt konsol-id stämde inte överens med någon annans i rummet.
 
 Gå till Emulering &gt; Konfigurera &gt; System för att skapa ett nytt konsol-id.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">Du har inte tillräcklig behörighet för att utföra den här åtgärden.</translation>
+        <translation>Du har inte tillräcklig behörighet för att utföra den här åtgärden.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="vanished">Användaren som du försöker sparka ut/bannlysa kunde inte hittas.
+        <translation>Användaren som du försöker sparka ut/bannlysa kunde inte hittas.
 De kan ha lämnat rummet.</translation>
     </message>
     <message>

@@ -4177,7 +4177,7 @@ Veuillez vérifier votre installation FFmpeg utilisée pour la compilation.</tra
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished">%1% {2 %3?}</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
@@ -6653,112 +6653,6 @@ Message de débogage :</translation>
 <context>
     <name>NetworkMessage</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Le nom d&apos;utilisateur n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">Le nom du salon n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
-        <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished">Le nom d&apos;utilisateur est déjà utilisé ou n&apos;est pas valide. Veuillez en choisir un autre.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">L&apos;IP n&apos;est pas une adresse IPv4 valide.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
-        <source>Port must be a number between 0 to 65535.</source>
-        <translation type="unfinished">Le port doit être un nombre compris entre 0 et 65535.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
-        <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="unfinished">Vous devez choisir votre application favorite pour ouvrir un salon. Si vous n&apos;avez pas d&apos;applications dans votre liste d&apos;applications pour le moment, ajoutez un dossier d&apos;applications en cliquant sur le l&apos;icone en forme de plus dans la liste d&apos;applications.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
-        <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished">Impossible de trouver une connexion Internet. Vérifiez vos paramètres Internet.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
-        <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished">Impossible de se connecter à l&apos;hôte. Vérifiez que les paramètres de connexion sont corrects. Si vous ne parvenez toujours pas à vous connecter, contactez l&apos;hôte du salon et vérifiez que l&apos;hôte a correctement configuré le port externe redirigé.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
-        <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished">Impossible de se connecter au salon car il est déjà plein.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
-        <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="unfinished">La création du salon a échoué. Réessayez. Redémarrer Azahar peut être nécessaire.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
-        <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished">L&apos;hôte du salon vous a banni. Parlez à l&apos;hôte pour vous débannir ou essayez un autre salon.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
-        <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished">Conflit de versions ! Veuillez installer la dernière version de Azahar. Si le problème persiste, contactez l&apos;hôte de la salle et demandez-lui de mettre à jour le serveur.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
-        <source>Incorrect password.</source>
-        <translation type="unfinished">Mot de passe incorrect.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
-        <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished">Une erreur inconnue s&apos;est produite. Si cette erreur persiste, demandez de l&apos;aide.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">Connexion au salon perdue. Essayez de vous reconnecter.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
-        <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">Vous avez été expulsé par l&apos;hôte du salon.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">L&apos;adresse MAC est déjà utilisée. Veuillez en choisir une autre.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
-        <source>Your Console ID conflicted with someone else&apos;s in the room.
-
-Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="unfinished">Votre ID de console est en conflit avec celui de quelqu&apos;un d&apos;autre dans la salle.
-
-Veuillez vous rendre dans Émulation &gt; Configurer... &gt; Système pour regénérer votre ID de console.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">Vous ne disposez pas des autorisations suffisantes pour effectuer cette action.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
-        <source>The user you are trying to kick/ban could not be found.
-They may have left the room.</source>
-        <translation type="unfinished">L&apos;utilisateur que vous essayez d&apos;exclure/bannir est introuvable.
-Il a peut-être quitté la salon.</translation>
-    </message>
-    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
         <source>Leave Room</source>
         <translation>Quitter le salon</translation>
@@ -6782,89 +6676,109 @@ Il a peut-être quitté la salon.</translation>
 <context>
     <name>NetworkMessage::ErrorManager</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Le nom d&apos;utilisateur n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
+        <translation>Le nom d&apos;utilisateur n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">Le nom du salon n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
+        <translation>Le nom du salon n&apos;est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="vanished">Le nom d&apos;utilisateur est déjà utilisé ou n&apos;est pas valide. Veuillez en choisir un autre.</translation>
+        <translation>Le nom d&apos;utilisateur est déjà utilisé ou n&apos;est pas valide. Veuillez en choisir un autre.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">L&apos;IP n&apos;est pas une adresse IPv4 valide.</translation>
+        <translation>L&apos;IP n&apos;est pas une adresse IPv4 valide.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation type="vanished">Le port doit être un nombre compris entre 0 et 65535.</translation>
+        <translation>Le port doit être un nombre compris entre 0 et 65535.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
         <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="vanished">Vous devez choisir votre application favorite pour ouvrir un salon. Si vous n&apos;avez pas d&apos;applications dans votre liste d&apos;applications pour le moment, ajoutez un dossier d&apos;applications en cliquant sur le l&apos;icone en forme de plus dans la liste d&apos;applications.</translation>
+        <translation>Vous devez choisir votre application favorite pour ouvrir un salon. Si vous n&apos;avez pas d&apos;applications dans votre liste d&apos;applications pour le moment, ajoutez un dossier d&apos;applications en cliquant sur le l&apos;icone en forme de plus dans la liste d&apos;applications.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="vanished">Impossible de trouver une connexion Internet. Vérifiez vos paramètres Internet.</translation>
+        <translation>Impossible de trouver une connexion Internet. Vérifiez vos paramètres Internet.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="vanished">Impossible de se connecter à l&apos;hôte. Vérifiez que les paramètres de connexion sont corrects. Si vous ne parvenez toujours pas à vous connecter, contactez l&apos;hôte du salon et vérifiez que l&apos;hôte a correctement configuré le port externe redirigé.</translation>
+        <translation>Impossible de se connecter à l&apos;hôte. Vérifiez que les paramètres de connexion sont corrects. Si vous ne parvenez toujours pas à vous connecter, contactez l&apos;hôte du salon et vérifiez que l&apos;hôte a correctement configuré le port externe redirigé.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="vanished">Impossible de se connecter au salon car il est déjà plein.</translation>
+        <translation>Impossible de se connecter au salon car il est déjà plein.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
         <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="vanished">La création du salon a échoué. Réessayez. Redémarrer Azahar peut être nécessaire.</translation>
+        <translation>La création du salon a échoué. Réessayez. Redémarrer Azahar peut être nécessaire.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="vanished">L&apos;hôte du salon vous a banni. Parlez à l&apos;hôte pour vous débannir ou essayez un autre salon.</translation>
+        <translation>L&apos;hôte du salon vous a banni. Parlez à l&apos;hôte pour vous débannir ou essayez un autre salon.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="vanished">Conflit de versions ! Veuillez installer la dernière version de Azahar. Si le problème persiste, contactez l&apos;hôte de la salle et demandez-lui de mettre à jour le serveur.</translation>
+        <translation>Conflit de versions ! Veuillez installer la dernière version de Azahar. Si le problème persiste, contactez l&apos;hôte de la salle et demandez-lui de mettre à jour le serveur.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="vanished">Mot de passe incorrect.</translation>
+        <translation>Mot de passe incorrect.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="vanished">Une erreur inconnue s&apos;est produite. Si cette erreur persiste, demandez de l&apos;aide.</translation>
+        <translation>Une erreur inconnue s&apos;est produite. Si cette erreur persiste, demandez de l&apos;aide.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">Connexion au salon perdue. Essayez de vous reconnecter.</translation>
+        <translation>Connexion au salon perdue. Essayez de vous reconnecter.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="vanished">Vous avez été expulsé par l&apos;hôte du salon.</translation>
+        <translation>Vous avez été expulsé par l&apos;hôte du salon.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">L&apos;adresse MAC est déjà utilisée. Veuillez en choisir une autre.</translation>
+        <translation>L&apos;adresse MAC est déjà utilisée. Veuillez en choisir une autre.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
         <source>Your Console ID conflicted with someone else&apos;s in the room.
 
 Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="vanished">Votre ID de console est en conflit avec celui de quelqu&apos;un d&apos;autre dans la salle.
+        <translation>Votre ID de console est en conflit avec celui de quelqu&apos;un d&apos;autre dans la salle.
 
 Veuillez vous rendre dans Émulation &gt; Configurer... &gt; Système pour regénérer votre ID de console.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">Vous ne disposez pas des autorisations suffisantes pour effectuer cette action.</translation>
+        <translation>Vous ne disposez pas des autorisations suffisantes pour effectuer cette action.</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="vanished">L&apos;utilisateur que vous essayez d&apos;exclure/bannir est introuvable.
+        <translation>L&apos;utilisateur que vous essayez d&apos;exclure/bannir est introuvable.
 Il a peut-être quitté la salon.</translation>
     </message>
     <message>

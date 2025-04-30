@@ -6657,112 +6657,6 @@ Debug Message: </source>
 <context>
     <name>NetworkMessage</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
-        <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">用户名无效。必须是 4 至 20 个字母或数字的组合。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
-        <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished">房间名称无效。必须是 4 至 20 个字母或数字的组合。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
-        <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished">用户名已存在或无效。请重新选择。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">这不是一个有效的 IPv4 地址。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
-        <source>Port must be a number between 0 to 65535.</source>
-        <translation type="unfinished">端口必须是介于 0 到 65535 之间的数字。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
-        <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="unfinished">您必须选择一个首选应用来创建房间。如果您的应用列表中还没有任何应用，请单击应用列表中的加号图标添加应用文件夹。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
-        <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished">无法连接到互联网。请检查你的网络设置。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
-        <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished">无法连接到服务器。请检查连接设置是否正确。如果您还是不能连接，请联系房主，核实服务器是否正确配置了外部端口转发。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
-        <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished">此房间已满，无法连接。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
-        <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="unfinished">创建房间失败。请重试。可能需要重新启动 Azahar。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
-        <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished">这个房间的房主把你封禁了。请联系房主取消封禁或尝试加入别的房间。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
-        <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished">版本不匹配！请更新至 Azahar 的最新版本。如果问题仍然存在，请联系房间主人并让他们更新服务器。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
-        <source>Incorrect password.</source>
-        <translation type="unfinished">密码错误。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
-        <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished">发生了一个未知错误。 如果这个错误继续发生，请到 GitHub 上创建 Issue。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">与房间的连接断开。请尝试重新连接。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
-        <source>You have been kicked by the room host.</source>
-        <translation type="unfinished">你已被房主踢出房间。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
-        <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished">MAC 地址已被使用。请选择其他 MAC 地址。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
-        <source>Your Console ID conflicted with someone else&apos;s in the room.
-
-Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="unfinished">你的设备 ID 与房间中的另一玩家产生冲突。
-
-请到模拟 &gt; 设置... &gt; 系统重新生成设备 ID。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">你没有权限进行该操作。</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
-        <source>The user you are trying to kick/ban could not be found.
-They may have left the room.</source>
-        <translation type="unfinished">未找到你想要踢出/封禁的用户。
-该用户可能已离开房间。</translation>
-    </message>
-    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
         <source>Leave Room</source>
         <translation>离开房间</translation>
@@ -6786,89 +6680,109 @@ They may have left the room.</source>
 <context>
     <name>NetworkMessage::ErrorManager</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">用户名无效。必须是 4 至 20 个字母或数字的组合。</translation>
+        <translation>用户名无效。必须是 4 至 20 个字母或数字的组合。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="vanished">房间名称无效。必须是 4 至 20 个字母或数字的组合。</translation>
+        <translation>房间名称无效。必须是 4 至 20 个字母或数字的组合。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="vanished">用户名已存在或无效。请重新选择。</translation>
+        <translation>用户名已存在或无效。请重新选择。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">这不是一个有效的 IPv4 地址。</translation>
+        <translation>这不是一个有效的 IPv4 地址。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation type="vanished">端口必须是介于 0 到 65535 之间的数字。</translation>
+        <translation>端口必须是介于 0 到 65535 之间的数字。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
         <source>You must choose a Preferred Application to host a room. If you do not have any applications in your Applications list yet, add an applications folder by clicking on the plus icon in the Applications list.</source>
-        <translation type="vanished">您必须选择一个首选应用来创建房间。如果您的应用列表中还没有任何应用，请单击应用列表中的加号图标添加应用文件夹。</translation>
+        <translation>您必须选择一个首选应用来创建房间。如果您的应用列表中还没有任何应用，请单击应用列表中的加号图标添加应用文件夹。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="vanished">无法连接到互联网。请检查你的网络设置。</translation>
+        <translation>无法连接到互联网。请检查你的网络设置。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="vanished">无法连接到服务器。请检查连接设置是否正确。如果您还是不能连接，请联系房主，核实服务器是否正确配置了外部端口转发。</translation>
+        <translation>无法连接到服务器。请检查连接设置是否正确。如果您还是不能连接，请联系房主，核实服务器是否正确配置了外部端口转发。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="vanished">此房间已满，无法连接。</translation>
+        <translation>此房间已满，无法连接。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
         <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="vanished">创建房间失败。请重试。可能需要重新启动 Azahar。</translation>
+        <translation>创建房间失败。请重试。可能需要重新启动 Azahar。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="vanished">这个房间的房主把你封禁了。请联系房主取消封禁或尝试加入别的房间。</translation>
+        <translation>这个房间的房主把你封禁了。请联系房主取消封禁或尝试加入别的房间。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="vanished">版本不匹配！请更新至 Azahar 的最新版本。如果问题仍然存在，请联系房间主人并让他们更新服务器。</translation>
+        <translation>版本不匹配！请更新至 Azahar 的最新版本。如果问题仍然存在，请联系房间主人并让他们更新服务器。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="vanished">密码错误。</translation>
+        <translation>密码错误。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="vanished">发生了一个未知错误。 如果这个错误继续发生，请到 GitHub 上创建 Issue。</translation>
+        <translation>发生了一个未知错误。 如果这个错误继续发生，请到 GitHub 上创建 Issue。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">与房间的连接断开。请尝试重新连接。</translation>
+        <translation>与房间的连接断开。请尝试重新连接。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="vanished">你已被房主踢出房间。</translation>
+        <translation>你已被房主踢出房间。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="vanished">MAC 地址已被使用。请选择其他 MAC 地址。</translation>
+        <translation>MAC 地址已被使用。请选择其他 MAC 地址。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
         <source>Your Console ID conflicted with someone else&apos;s in the room.
 
 Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="vanished">你的设备 ID 与房间中的另一玩家产生冲突。
+        <translation>你的设备 ID 与房间中的另一玩家产生冲突。
 
 请到模拟 &gt; 设置... &gt; 系统重新生成设备 ID。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">你没有权限进行该操作。</translation>
+        <translation>你没有权限进行该操作。</translation>
     </message>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="vanished">未找到你想要踢出/封禁的用户。
+        <translation>未找到你想要踢出/封禁的用户。
 该用户可能已离开房间。</translation>
     </message>
     <message>

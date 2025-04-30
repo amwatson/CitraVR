@@ -6638,6 +6638,29 @@ Ayıklama Mesajı:</translation>
 <context>
     <name>NetworkMessage</name>
     <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
+        <source>Leave Room</source>
+        <translation>Odadan Ayrıl</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
+        <source>You are about to close the room. Any network connections will be closed.</source>
+        <translation>Odayı kapatmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
+        <source>Disconnect</source>
+        <translation>Bağlantıyı kes</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
+        <source>You are about to leave the room. Any network connections will be closed.</source>
+        <translation>Odadan çıkmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkMessage::ErrorManager</name>
+    <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation type="unfinished"></translation>
@@ -6655,7 +6678,7 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation type="unfinished">IP, geçerli bir IPv4 adresi değil.</translation>
+        <translation>IP, geçerli bir IPv4 adresi değil.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
@@ -6670,7 +6693,7 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished">Bir internet bağlantısı bulunamadı. İnternet ayarlarınızı kontrol edin.</translation>
+        <translation>Bir internet bağlantısı bulunamadı. İnternet ayarlarınızı kontrol edin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
@@ -6700,7 +6723,7 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>Incorrect password.</source>
-        <translation type="unfinished">Yanlış şifre.</translation>
+        <translation>Yanlış şifre.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="42"/>
@@ -6710,7 +6733,7 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="45"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished">Oda bağlantısı kesildi. Tekrar bağlanmayı deneyin.</translation>
+        <translation>Oda bağlantısı kesildi. Tekrar bağlanmayı deneyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
@@ -6732,56 +6755,13 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>You do not have enough permission to perform this action.</source>
-        <translation type="unfinished">Bu eylemi gerçekleştirmek için gerekli izniniz yok.</translation>
+        <translation>Bu eylemi gerçekleştirmek için gerekli izniniz yok.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
-        <source>Leave Room</source>
-        <translation>Odadan Ayrıl</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
-        <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Odayı kapatmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
-        <source>Disconnect</source>
-        <translation>Bağlantıyı kes</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
-        <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Odadan çıkmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
-    </message>
-</context>
-<context>
-    <name>NetworkMessage::ErrorManager</name>
-    <message>
-        <source>IP is not a valid IPv4 address.</source>
-        <translation type="vanished">IP, geçerli bir IPv4 adresi değil.</translation>
-    </message>
-    <message>
-        <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="vanished">Bir internet bağlantısı bulunamadı. İnternet ayarlarınızı kontrol edin.</translation>
-    </message>
-    <message>
-        <source>Incorrect password.</source>
-        <translation type="vanished">Yanlış şifre.</translation>
-    </message>
-    <message>
-        <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="vanished">Oda bağlantısı kesildi. Tekrar bağlanmayı deneyin.</translation>
-    </message>
-    <message>
-        <source>You do not have enough permission to perform this action.</source>
-        <translation type="vanished">Bu eylemi gerçekleştirmek için gerekli izniniz yok.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>

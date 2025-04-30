@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- System settings strings -->
+    <string name="emulation_settings">エミュレーション設定</string>
+    <string name="enable_required_online_lle_modules">オンラインに必要なLLEモジュールを有効にする（インストール済みの場合）</string>
+    <string name="enable_required_online_lle_modules_desc">eShopやオンラインマルチプレイヤーなどに必要なLLEモジュールを有効にします。</string>
+    <string name="profile_settings">プロファイル設定</string>
+    <string name="mac_address">MACアドレス</string>
+    <string name="regenerate_mac_address">MACアドレスを再生成</string>
+    <string name="regenerate_mac_address_description">これを行うと、今のMACアドレスを新しいもので置き換えます。セットアップツールで実機からMACアドレスを吸い出した場合、これをするのは推奨しません。続行しますか？</string>
+    <string name="delay_render_thread">描写スレッドを遅延する</string>
+    <string name="delay_render_thread_description">GPUにデータを送信する間、ゲームの描写スレッドを遅延します。動的フレームレートである（ほんの一部の）アプリケーションでのパフォーマンスが向上します。</string>
+    <string name="instant_debug_log_description">デバッグログを即座にファイルに書き込みます。Azaharがクラッシュしてログが途切れるときに有効にしてください。</string>
+    <string name="miscellaneous">その他</string>
     <!-- Countries -->
     <string name="japan">日本</string>
     <string name="anguilla">アンゴラ</string>
@@ -129,24 +141,10 @@
     <string name="artic_base_connect_description">Artic Baseのサーバーを実行している実機に接続</string>
     <string name="artic_base_connect">Artic Baseに接続</string>
     <string name="artic_base_enter_address">Artic Baseのサーバーアドレスを入力してください</string>
-    <string name="delay_render_thread">描写スレッドを遅延する</string>
-    <string name="delay_render_thread_description">GPUにデータを送信する間、ゲームの描写スレッドを遅延します。動的フレームレートである（ほんの一部の）アプリケーションでのパフォーマンスが向上します。</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">クイックセーブ</string>
     <string name="emulation_quicksave">クイックセーブ</string>
     <string name="emulation_quickload">クイックロード</string>
     <string name="emulation_occupied_quicksave_slot">クイックセーブ-%1$tF%1$tR</string>
-    <string name="quicksave_saving">セーブ中...</string>
-    <string name="quickload_loading">ロード中...</string>
-    <string name="miscellaneous">その他</string>
-    <string name="instant_debug_log_description">デバッグログを即座にファイルに書き込みます。Azaharがクラッシュしてログが途切れるときに有効にしてください。</string>
-    <string name="enable_required_online_lle_modules">オンラインに必要なLLEモジュールを有効にする（インストール済みの場合）</string>
-    <string name="enable_required_online_lle_modules_desc">eShopやオンラインマルチプレイヤーなどに必要なLLEモジュールを有効にします。</string>
-    <string name="emulation_settings">エミュレーション設定</string>
-    <string name="profile_settings">プロファイル設定</string>
-    <string name="mac_address">MACアドレス</string>
-    <string name="regenerate_mac_address">MACアドレスを再生成</string>
-    <string name="regenerate_mac_address_description">これを行うと、今のMACアドレスを新しいもので置き換えます。セットアップツールで実機からMACアドレスを吸い出した場合、これをするのは推奨しません。続行しますか？</string>
-
-</resources>
+    </resources>

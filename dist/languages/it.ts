@@ -56,7 +56,7 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Azahar è un emulatore 3DS gratuito e open source, rilasciato secondo i termini della licenza GPLv2.0 e versioni successive.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Questo software non deve essere usato per giocare titoli non ottenuti legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Questo software non dovrebbe essere usato per giocare titoli non ottenuti legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="118"/>
@@ -802,12 +802,12 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="265"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Se i moduli LLE sono abilitati, introduce un ritardo nel primo thread avviato dall&apos;applicazione per consentire la loro inizializzazione.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="268"/>
         <source>Delay app start for LLE module initialization</source>
-        <translation>Ritarda l&apos;avvio dell&apos;app per l&apos;inizializzazione del modulo LLE</translation>
+        <translation>Ritarda l&apos;avvio dell&apos;app per l&apos;inizializzazione dei moduli LLE</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="275"/>
@@ -817,7 +817,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="278"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don&apos;t know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forza l&apos;esecuzione nel thread principale di tutte le operazioni asincrone, rendendole deterministiche. Non abilitare questa opzione se non sai quello che stai facendo&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forza l&apos;esecuzione di tutte le operazioni asincrone nel thread principale, rendendole deterministiche. Non abilitare questa opzione se non sei consapevole di quello che stai facendo.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="48"/>
@@ -1247,7 +1247,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="168"/>
         <source>Turbo Speed Limit:</source>
-        <translation type="unfinished"></translation>
+        <translation>Limite della velocità Turbo:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="232"/>
@@ -1419,7 +1419,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="261"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure, set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sostituisce il filtro di campionamento usato dalle applicazioni. Può essere utile in alcuni casi con le applicazioni che non si comportano correttamente quando si esegue l&apos;upscaling. Nel dubbio, seleziona &quot;Controllato dall&apos;applicazione&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sostituisce il filtro di campionamento usato dalle applicazioni. In alcuni casi, può essere utile con le applicazioni che non si comportano correttamente con l&apos;upscaling. Nel dubbio, seleziona &quot;Controllato dall&apos;applicazione&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="264"/>
@@ -1464,12 +1464,12 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="329"/>
         <source>Use global</source>
-        <translation>Usa l&apos;impostazione globale</translation>
+        <translation>Usa la configurazione globale</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="334"/>
         <source>Use per-application</source>
-        <translation>Usa l&apos;impostazione dell&apos;applicazione</translation>
+        <translation>Usa la configurazione dell&apos;applicazione</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="342"/>
@@ -1518,13 +1518,13 @@ Desideri ignorare l&apos;errore e continuare?</translation>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="105"/>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="110"/>
         <source>Toggle Turbo Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilita/disabilita velocità Turbo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="106"/>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="110"/>
         <source>Toggle Per-Application Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilita/disabilita velocità dell&apos;applicazione</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="126"/>
@@ -1536,7 +1536,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="127"/>
         <source>The per-application speed and turbo speed hotkeys cannot be bound at the same time.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le scorciatoie della velocità dell&apos;applicazione e della velocità Turbo non possono essere contemporaneamente associate.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="136"/>
@@ -3571,7 +3571,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="563"/>
         <source>This will replace your current virtual 3DS console ID with a new one. Your current virtual 3DS console ID will not be recoverable. This might have unexpected effects in applications. This might fail if you use an outdated config save. Continue?</source>
-        <translation>L&apos;attuale ID della console 3DS virtuale verrà sostituito con uno nuovo. L&apos;ID attuale non potrà essere recuperato. Ciò potrebbe avere degli effetti inaspettati in alcune applicazioni. Questo processo potrebbe fallire se usi un salvataggio della configurazione obsoleto. Vuoi continuare?</translation>
+        <translation>L&apos;attuale ID della console 3DS virtuale verrà sostituito con uno nuovo e non potrà più essere recuperato. Ciò potrebbe avere degli effetti inaspettati in alcune applicazioni. Questo processo potrebbe fallire se usi un salvataggio della configurazione obsoleto. Vuoi continuare?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="568"/>
@@ -3921,7 +3921,7 @@ Trascina i punti per cambiarne la posizione, o fai doppio clic sulla tabella per
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="14"/>
         <source>Dump Video</source>
-        <translation>Estrai Video</translation>
+        <translation>Estrai video</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="20"/>
@@ -4160,12 +4160,12 @@ Verifica l&apos;installazione di FFmpeg usata per la compilazione.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1622"/>
         <source>Quick Load</source>
-        <translation type="unfinished"></translation>
+        <translation>Carica salvataggio rapido</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1623"/>
         <source>Quick Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Salvataggio rapido</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1625"/>
@@ -4176,17 +4176,17 @@ Verifica l&apos;installazione di FFmpeg usata per la compilazione.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%2 %3</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
         <source>Quick Save - %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Salvataggio rapido (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1645"/>
         <source>Quick Load - %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Carica salvataggio rapido (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1649"/>
@@ -4381,7 +4381,7 @@ Consulta il log per i dettagli.</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2222"/>
         <source>The system files for the selected mode are already set up.
 Reinstall the files anyway?</source>
-        <translation>I file di sistema per la modalità selezionata sono gia stati configurati.
+        <translation>I file di sistema per la modalità selezionata sono già stati configurati.
 Vuoi comunque reinstallarli?</translation>
     </message>
     <message>
@@ -4957,42 +4957,42 @@ Vuoi installarlo?</translation>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="610"/>
         <source>Application Location</source>
-        <translation>Posizione applicazioni</translation>
+        <translation>Cartella dell&apos;applicazione</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="612"/>
         <source>Save Data Location</source>
-        <translation>Posizione dei dati di salvataggio</translation>
+        <translation>Cartella dei dati di salvataggio</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="613"/>
         <source>Extra Data Location</source>
-        <translation>Posizione dei dati extra</translation>
+        <translation>Cartella dei dati aggiuntivi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="614"/>
         <source>Update Data Location</source>
-        <translation>Posizione dei dati di aggiornamento</translation>
+        <translation>Cartella dei dati di aggiornamento</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="615"/>
         <source>DLC Data Location</source>
-        <translation>Posizione dei dati dei DLC</translation>
+        <translation>Cartella dei dati dei DLC</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="617"/>
         <source>Texture Dump Location</source>
-        <translation>Posizione del dumping delle texture</translation>
+        <translation>Cartella di estrazione delle texture</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="618"/>
         <source>Custom Texture Location</source>
-        <translation>Posizione delle texture personalizzate</translation>
+        <translation>Cartella delle texture personalizzate</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="619"/>
         <source>Mods Location</source>
-        <translation>Posizione delle mod</translation>
+        <translation>Cartella delle mod</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="621"/>
@@ -6182,7 +6182,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="350"/>
         <source>Quick Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Salvataggio rapido</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="355"/>
@@ -6192,7 +6192,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="360"/>
         <source>Quick Load</source>
-        <translation type="unfinished"></translation>
+        <translation>Carica salvataggio rapido</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="365"/>
@@ -6673,7 +6673,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
         <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Stai per uscire dalla stanza. Ogni connessione di rete verrà chiusa.</translation>
+        <translation>Stai per uscire dalla stanza. Tutte le connessioni di rete verranno chiuse.</translation>
     </message>
 </context>
 <context>
@@ -6686,7 +6686,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation>Il nome della stanza è invalido. Deve contenere almeno 4 fino a 20 caratteri alfanumerici.</translation>
+        <translation>Il nome della stanza non è valido. Dev&apos;essere compreso fra 4 e 20 caratteri e contenere solo lettere e numeri.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
@@ -6701,7 +6701,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation>Il numero massimo della porta è 65535.</translation>
+        <translation>Il numero della porta dev&apos;essere compreso tra 0 e 65535.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
@@ -7243,7 +7243,7 @@ Potrebbe aver lasciato la stanza.</translation>
         <source>Azahar has detected user data for Citra and Lime3DS.
 
 </source>
-        <translation>Azahar ha rilevato dati utente per Citra e Lime3DS.
+        <translation>Azahar ha rilevato la presenza di dati utente per Citra e Lime3DS.
 
 </translation>
     </message>
@@ -7262,7 +7262,7 @@ Potrebbe aver lasciato la stanza.</translation>
         <source>Azahar has detected user data for Citra.
 
 </source>
-        <translation>Azahar ha rilevato dati utente per Citra
+        <translation>Azahar ha rilevato la presenza di dati utente per Citra.
 
 </translation>
     </message>
@@ -7271,7 +7271,7 @@ Potrebbe aver lasciato la stanza.</translation>
         <source>Azahar has detected user data for Lime3DS.
 
 </source>
-        <translation>Azahar ha rilevato dati utente per Lime3DS
+        <translation>Azahar ha rilevato la presenza di dati utente per Lime3DS.
 
 </translation>
     </message>
@@ -7279,7 +7279,7 @@ Potrebbe aver lasciato la stanza.</translation>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="97"/>
         <source>You can manually re-trigger this prompt by deleting the new user data directory:
 %1</source>
-        <translation>Puoi far comparire di nuovo questa finestra eliminando la nuova cartella dei dati dell&apos;utente:
+        <translation>Puoi far comparire di nuovo questa finestra eliminando la nuova cartella dei dati utente:
 %1</translation>
     </message>
     <message>

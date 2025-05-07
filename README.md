@@ -87,7 +87,7 @@ Below are the minimum requirements to run Azahar:
 
 ### Desktop
 ```
-Operating System: Windows 10 (64-bit), MacOS 13 (Ventura), or modern 64-bit Linux
+Operating System: Windows 10 (64-bit), MacOS 13.4 (Ventura), or modern 64-bit Linux
 CPU: x86-64/ARM64 CPU (Windows for ARM not supported). Single core performance higher than 1,800 on Passmark
 GPU: OpenGL 4.3 or Vulkan 1.1 support
 Memory: 2GB of RAM. 4GB is recommended

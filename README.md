@@ -18,6 +18,8 @@ Download the latest release from [Releases](https://github.com/azahar-emu/azahar
 
 If you are unsure of whether you want to use MSYS2 or MSVC, use MSYS2.
 
+---
+
 ### MacOS
 
 Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases).

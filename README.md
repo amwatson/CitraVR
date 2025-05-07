@@ -26,7 +26,9 @@ The `macos-universal` download will work on both Intel and Apple Silicon Macs.
 
 ---
 ### Android
-The recommended method of downloading Azahar on Android is via the [Google Play store](https://play.google.com/store/apps/details?id=io.github.lime3ds.android).
+The recommended method of downloading Azahar on Android is via the Google Play store:
+
+<a href='https://play.google.com/store/apps/details?id=io.github.lime3ds.android'><img width='180' alt='Get it on Google Play' src='https://raw.githubusercontent.com/pioug/google-play-badges/06ccd9252af1501613da2ca28eaffe31307a4e6d/svg/English.svg'/></a>
 
 Alternatively, you can install the app using Obtainium:
 1. Download and install Obtainium from [here](https://github.com/ImranR98/Obtainium/releases) (use the file named `app-release.apk`)
@@ -42,14 +44,12 @@ Keep in mind that you will not recieve automatic updates when installing via the
 ---
 ### Linux
 
-Azahar is available as an AppImage on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
+The recommended format for using Azahar on Linux is the Flatpak available on Flathub:
 
-A Flatpak distribution is currently being worked on.
-<!--
-We are also on Flathub:
+<a href='https://flathub.org/apps/org.azahar_emu.Azahar'><img width='180' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
-<a href=https://flathub.org/apps/org.azahar-emu.azahar><img width='180' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.png'/></a>
--->
+Azahar is also available as an AppImage on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
+
 
 # Build instructions
 

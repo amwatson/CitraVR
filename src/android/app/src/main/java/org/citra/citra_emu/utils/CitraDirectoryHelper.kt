@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -17,7 +17,7 @@ import org.citra.citra_emu.viewmodel.HomeViewModel
  * Citra directory initialization ui flow controller.
  */
 class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
-    fun showCitraDirectoryDialog(result: Uri, callback: SetupCallback? = null) {
+    fun showCitraDirectoryDialog(result: Uri, callback: SetupCallback? = null, buttonState: () -> Unit) {
         val citraDirectoryDialog = CitraDirectoryDialogFragment.newInstance(
             fragmentActivity,
             result.toString(),
@@ -36,7 +36,7 @@ class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
                 )
                 if (!moveData || previous.toString().isEmpty()) {
                     initializeCitraDirectory(path)
-                    callback?.onStepCompleted()
+                    buttonState()
                     val viewModel = ViewModelProvider(fragmentActivity)[HomeViewModel::class.java]
                     viewModel.setUserDir(fragmentActivity, path.path!!)
                     viewModel.setPickingUserDir(false)

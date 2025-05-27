@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <fmt/format.h>
 #include <httplib.h>
 #include <json.hpp>
 #include "common/logging/log.h"
@@ -67,7 +68,7 @@ std::optional<std::string> UpdateChecker::GetLatestRelease(bool include_prerelea
             const std::string latest_tag =
                 nlohmann::json::parse(tags_response.value()).at(0).at("name");
             const bool latest_tag_has_release =
-                releases_response.value().find(std::format("\"{}\"", latest_tag)) !=
+                releases_response.value().find(fmt::format("\"{}\"", latest_tag)) !=
                 std::string::npos;
 
             // If there is a newer tag, but that tag has no associated release, don't prompt the

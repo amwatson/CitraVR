@@ -298,7 +298,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="delay_start_lle_modules_description">Retarda l\'inici de l\'aplicació quan els mòduls LLE estan habilitats.</string>
     <string name="deterministic_async_operations">Operacions asíncrones deterministes</string>
     <string name="deterministic_async_operations_description">Fa que les operacions asíncrones siguen deterministes per a la depuració. Habilitar esta opció pot causar bloquejos.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientació de pantalla</string>
     <string name="layout_screen_orientation_auto_sensor">Automàtica</string>
@@ -306,7 +305,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="layout_screen_orientation_landscape_reverse">Horitzontal invertida</string>
     <string name="layout_screen_orientation_portrait">Vertical</string>
     <string name="layout_screen_orientation_portrait_reverse">Vertical invertida</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Reiniciar</string>
     <string name="slider_default">Per omissió</string>
@@ -342,7 +340,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="cancelling">Cancel·lant</string>
     <string name="important">Important</string>
     <string name="dont_show_again">No tornar a mostrar</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directori de Joc</string>
 
@@ -425,7 +422,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_cycle_landscape_layouts">Alternar estils</string>
     <string name="emulation_swap_screens">Intercanviar Pantalles</string>
     <string name="emulation_touch_overlay_reset">Reiniciar Estil</string>
-    <string name="emulation_show_overlay">Mostrar Estil</string>
     <string name="emulation_close_game">Tancar Joc</string>
     <string name="emulation_toggle_pause">Activar pausa</string>
     <string name="miscellaneous">Miscel·lanis</string>

@@ -270,7 +270,6 @@
     <string name="delay_start_lle_modules_description">Retarde le démarrage de l\'application lorsque les modules LLE sont activés.</string>
     <string name="deterministic_async_operations">Opérations asynchrones déterministes</string>
     <string name="deterministic_async_operations_description">Rend les opérations asynchrones déterministes pour le débogage. L\'activation de cette fonction peut entraîner des blocages.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientation de l\'écran</string>
     <string name="layout_screen_orientation_auto_sensor">Auto</string>
@@ -278,7 +277,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Paysage inversé</string>
     <string name="layout_screen_orientation_portrait">Portait</string>
     <string name="layout_screen_orientation_portrait_reverse">Portait inversé</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Effacer</string>
     <string name="slider_default">Par défaut</string>
@@ -311,7 +309,6 @@
     <string name="cancelling">Annulation...</string>
     <string name="important">Important</string>
     <string name="dont_show_again">Ne pas montrer à nouveau</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Choisir un répertoire de jeu</string>
 
@@ -392,7 +389,6 @@
     <string name="emulation_cycle_landscape_layouts">Dispositions de cycle</string>
     <string name="emulation_swap_screens">Permuter les écrans</string>
     <string name="emulation_touch_overlay_reset">Réinitialiser l\'overlay</string>
-    <string name="emulation_show_overlay">Afficher l\'overlay</string>
     <string name="emulation_close_game">Fermer le jeu</string>
     <string name="emulation_toggle_pause">Pause</string>
     <string name="miscellaneous">Divers</string>

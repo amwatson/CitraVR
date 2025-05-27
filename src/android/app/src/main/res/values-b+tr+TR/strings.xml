@@ -282,7 +282,6 @@
     <string name="delay_start_lle_modules_description">LLE modülleri etkinken uygulamanın başlamasını geciktirir</string>
     <string name="deterministic_async_operations">Deterministik Asenkron İşlemler</string>
     <string name="deterministic_async_operations_description">Hata ayıklama için asenkron işlemleri deterministik hale getirir. Bunu etkinleştirmek donmalara neden olabilir.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Ekran Yönelimi</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
@@ -290,7 +289,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Ters Yatay</string>
     <string name="layout_screen_orientation_portrait">Portre</string>
     <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Temizle</string>
     <string name="slider_default">Varsayılan</string>
@@ -324,7 +322,6 @@
     <string name="cancelling">İptal ediliyor...</string>
     <string name="important">Önemli</string>
     <string name="dont_show_again">Tekrar gösterme</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Oyun Dosyası Seç</string>
 
@@ -403,7 +400,6 @@
     <string name="emulation_custom_layout_height">Yükseklik</string>
     <string name="emulation_swap_screens">Ekranları Değiştir</string>
     <string name="emulation_touch_overlay_reset">Yerleşimi Sıfırla</string>
-    <string name="emulation_show_overlay">Yerleşimi Göster</string>
     <string name="emulation_close_game">Oyunu Kapat</string>
     <string name="emulation_toggle_pause">Duraklatmayı Aç / Kapat</string>
     <string name="miscellaneous">Çeşitli</string>

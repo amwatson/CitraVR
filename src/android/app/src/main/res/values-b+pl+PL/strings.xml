@@ -297,6 +297,8 @@
     <string name="delay_start_lle_modules_description">Opóźnia uruchomienie aplikacji, gdy włączone są moduły LLE.</string>
     <string name="deterministic_async_operations">Deterministyczne operacje asynchroniczne</string>
     <string name="deterministic_async_operations_description">Sprawia, że operacje asynchroniczne są deterministyczne dla debugowania. Włączenie tej opcji może powodować zawieszanie się gry.</string>
+    <string name="enable_rpc_server">Włącz serwer RPC</string>
+    <string name="enable_rpc_server_desc">Włącza serwer RPC na porcie 45987. Pozwala to na zdalny odczyt/zapis pamięci gościa. Nie włączaj tej opcji, jeśli nie wiesz, co robisz.</string>
 
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientacja Ekranu</string>
@@ -305,6 +307,12 @@
     <string name="layout_screen_orientation_landscape_reverse">Odwrócony widok</string>
     <string name="layout_screen_orientation_portrait">Ekran</string>
     <string name="layout_screen_orientation_portrait_reverse">Odwrócony Ekran</string>
+    <string name="aspect_ratio_default">Domyślny</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Rozciągliwość</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Wyczyść</string>
@@ -341,6 +349,8 @@
     <string name="cancelling">Anulowanie...</string>
     <string name="important">Ważne</string>
     <string name="dont_show_again">Nie pokazuj tego ponownie</string>
+    <string name="visibility">Widoczność</string>
+    <string name="information">Informacje</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Wybierz folder gry</string>
@@ -388,6 +398,7 @@
     <string name="emulation_control_dpad_slide_enable">Przesuwanie Krzyżaka</string>
     <string name="emulation_open_settings">Otwórz ustawienia</string>
     <string name="emulation_open_cheats">Otwórz cheaty</string>
+    <string name="emulation_aspect_ratio">Proporcje obrazu</string>
     <string name="emulation_switch_screen_layout">Geometryczny Układ Ekranu</string>
     <string name="emulation_switch_portrait_layout">Pionowy Układ Ekranu</string>
     <string name="emulation_screen_layout_largescreen">Duży Ekran</string>
@@ -424,7 +435,7 @@
     <string name="emulation_cycle_landscape_layouts">Układy Cykli</string>
     <string name="emulation_swap_screens">Zamień Ekrany</string>
     <string name="emulation_touch_overlay_reset">Zresetuj Nakładkę</string>
-    <string name="emulation_show_overlay">Pokaż Nakładkę</string>
+    <string name="emulation_show_controller_overlay">Wyświetl nakładkę kontrolera</string>
     <string name="emulation_close_game">Zamknij Grę</string>
     <string name="emulation_toggle_pause">Włącz Pauzę</string>
     <string name="miscellaneous">Różne</string>
@@ -512,6 +523,34 @@
     <string name="game_context_open_extra">Otwórz folder Extra</string>
     <string name="game_context_uninstall_dlc">Odinstaluj DLC</string>
     <string name="game_context_uninstall_updates">Odinstaluj aktualizacje</string>
+
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">Wyświetl nakładkę wydajności</string>
+    <string name="performance_overlay_options">Nakładkę wydajności</string>
+    <string name="performance_overlay_enable">Włącz nakładkę wydajności</string>
+    <string name="performance_overlay_options_description">Konfiguruje, czy wyświetlana jest nakładka wydajności i jakie informacje są wyświetlane.</string>
+    <string name="overlay_show_fps">Wyświetl FPS</string>
+    <string name="overlay_show_fps_description">Wyświetla aktualną liczbę klatek na sekundę.</string>
+    <string name="overlay_show_frametime">Pokaż czas klatek</string>
+    <string name="overlay_show_frametime_description">Wyświetla bieżący czas klatek.</string>
+    <string name="overlay_show_speed">Wyświetl Prędkość</string>
+    <string name="overlay_show_speed_description">Wyświetla aktualną procentową prędkość emulacji.</string>
+    <string name="overlay_show_app_ram_usage">Wyświetl użycie pamięci aplikacji</string>
+    <string name="overlay_show_app_ram_usage_description">Wyświetla ilość pamięci RAM używanej przez emulator.</string>
+    <string name="overlay_show_available_ram">Wyświetl dostępną pamięć</string>
+    <string name="overlay_show_available_ram_description">Wyświetla ilość dostępnej pamięci RAM.</string>
+    <string name="overlay_show_battery_temp">Wyświetl temperaturę baterii</string>
+    <string name="overlay_show_battery_temp_description">Wyświetla bieżącą temperaturę baterii w stopniach Celcjusza i Fahrenheita.</string>
+    <string name="overlay_position">Pozycja nakładki</string>
+    <string name="overlay_position_description">Wybierz miejsce wyświetlania nakładki wydajności na ekranie.</string>
+    <string name="overlay_position_top_left">Lewy górny róg</string>
+    <string name="overlay_position_top_right">Prawy górny róg</string>
+    <string name="overlay_position_bottom_left">Lewy dolny róg</string>
+    <string name="overlay_position_bottom_right">Prawy dolny róg</string>
+    <string name="overlay_position_center_top">Środkowy górny</string>
+    <string name="overlay_position_center_bottom">Środkowy dolny</string>
+    <string name="overlay_background">Tło nakładki</string>
+    <string name="overlay_background_description">Dodaje tło z tyłu nakładki w celu łatwego odczytu.</string>
 
     <!-- Cheats -->
     <string name="cheats">Cheaty</string>

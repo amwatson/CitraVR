@@ -297,6 +297,8 @@
     <string name="delay_start_lle_modules_description">当 LLE 模块启用时延迟应用的启动。</string>
     <string name="deterministic_async_operations">确定性异步操作</string>
     <string name="deterministic_async_operations_description">使异步操作在调试时具有确定性。启用此功能可能会导致停滞。</string>
+    <string name="enable_rpc_server">启用 RPC 服务器</string>
+    <string name="enable_rpc_server_desc">在端口 45987 上启用 RPC 服务器。这允许远程读/写客户机内存。</string>
 
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">屏幕方向</string>
@@ -305,6 +307,12 @@
     <string name="layout_screen_orientation_landscape_reverse">横向反转</string>
     <string name="layout_screen_orientation_portrait">纵向</string>
     <string name="layout_screen_orientation_portrait_reverse">纵向反转</string>
+    <string name="aspect_ratio_default">默认</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">拉伸</string>
 
     <!-- Miscellaneous -->
     <string name="clear">清除</string>
@@ -341,6 +349,8 @@
     <string name="cancelling">取消中…</string>
     <string name="important">重要提示</string>
     <string name="dont_show_again">不再显示</string>
+    <string name="visibility">可见度</string>
+    <string name="information">信息</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">选择游戏目录</string>
@@ -388,6 +398,7 @@
     <string name="emulation_control_dpad_slide_enable">十字方向键滑动</string>
     <string name="emulation_open_settings">打开设置项</string>
     <string name="emulation_open_cheats">开启金手指</string>
+    <string name="emulation_aspect_ratio">宽高比</string>
     <string name="emulation_switch_screen_layout">屏幕布局</string>
     <string name="emulation_switch_portrait_layout">纵向屏幕布局</string>
     <string name="emulation_screen_layout_largescreen">大屏幕</string>
@@ -424,7 +435,7 @@
     <string name="emulation_cycle_landscape_layouts">环形布局</string>
     <string name="emulation_swap_screens">交换上下屏</string>
     <string name="emulation_touch_overlay_reset">重置虚拟按键</string>
-    <string name="emulation_show_overlay">显示虚拟按键</string>
+    <string name="emulation_show_controller_overlay">显示虚拟控制器</string>
     <string name="emulation_close_game">关闭游戏</string>
     <string name="emulation_toggle_pause">暂停/继续</string>
     <string name="miscellaneous">杂项</string>
@@ -514,6 +525,34 @@
     <string name="game_context_open_extra">打开额外数据文件夹</string>
     <string name="game_context_uninstall_dlc">卸载 DLC</string>
     <string name="game_context_uninstall_updates">卸载更新</string>
+
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">显示性能参数</string>
+    <string name="performance_overlay_options">性能参数覆盖</string>
+    <string name="performance_overlay_enable">启用性能参数覆盖</string>
+    <string name="performance_overlay_options_description">设置是否显示性能参数以及其他覆盖信息。</string>
+    <string name="overlay_show_fps">显示帧率</string>
+    <string name="overlay_show_fps_description">显示当前每秒帧数。</string>
+    <string name="overlay_show_frametime">显示帧生成时间</string>
+    <string name="overlay_show_frametime_description">显示当前帧生成时间。</string>
+    <string name="overlay_show_speed">显示速度</string>
+    <string name="overlay_show_speed_description">显示当前模拟速度百分比。</string>
+    <string name="overlay_show_app_ram_usage">显示应用内存占用</string>
+    <string name="overlay_show_app_ram_usage_description">显示模拟器使用的内存容量。</string>
+    <string name="overlay_show_available_ram">显示可用内存</string>
+    <string name="overlay_show_available_ram_description">显示可用的内存容量。</string>
+    <string name="overlay_show_battery_temp">显示电池温度</string>
+    <string name="overlay_show_battery_temp_description">以摄氏度和华氏度显示当前电池温度。</string>
+    <string name="overlay_position">覆盖位置</string>
+    <string name="overlay_position_description">选择性能参数覆盖在屏幕上的显示位置。</string>
+    <string name="overlay_position_top_left">左上</string>
+    <string name="overlay_position_top_right">右上</string>
+    <string name="overlay_position_bottom_left">左下</string>
+    <string name="overlay_position_bottom_right">右下</string>
+    <string name="overlay_position_center_top">中上</string>
+    <string name="overlay_position_center_bottom">中下</string>
+    <string name="overlay_background">覆盖背景</string>
+    <string name="overlay_background_description">在覆盖层后面添加背景以便于识别。</string>
 
     <!-- Cheats -->
     <string name="cheats">金手指</string>

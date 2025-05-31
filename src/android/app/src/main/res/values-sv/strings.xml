@@ -78,7 +78,6 @@
     <string name="select_citra_user_folder">Välj användarmapp</string>
     <string name="select_citra_user_folder_description"><![CDATA[Välj din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">användardatakatalog</a> med knappen nedan.]]></string>
     <string name="select">Välj</string>
-    <string name="cannot_skip">Du kan inte hoppa över det här steget</string>
     <string name="cannot_skip_directory_description">Detta steg krävs för att Azahar ska fungera. Välj en katalog och sedan kan du fortsätta.</string>
     <string name="set_up_theme_settings">Temainställningar</string>
     <string name="setup_theme_settings_description">Konfigurera dina temapreferenser för Azahar.</string>

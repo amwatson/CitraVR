@@ -83,7 +83,6 @@
     <string name="keep_current_azahar_directory">Şimdiki Azahar Dizinini Koru</string>
     <string name="use_prior_lime3ds_directory">Eski Lime3DS Dizinini Kullan</string>
     <string name="select">Seç</string>
-    <string name="cannot_skip">Bu adımı geçemezsiniz</string>
     <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
     <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
@@ -210,7 +209,6 @@
     <string name="texture_filter_description">Dokulara bir filtre uygulayarak uygulamaların görsellerini geliştirir. Desteklenen filtreler Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale ve MMPX\'tir.</string>
     <string name="delay_render_thread">Oyun işleme iş parçacığını geciktir</string>
     <string name="delay_render_thread_description">GPU\'ya veri gönderirken oyun işleme iş parçacığını geciktirin. Dinamik kare hızlarına sahip (çok az sayıda) uygulamada performans sorunlarına yardımcı olur.</string>
-    <string name="advanced">Gelişmiş\"</string>
     <string name="texture_sampling_name">Doku Örnekleme</string>
     <string name="texture_sampling_description">Uygulamalar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, görüntü yükseltme sırasında hatalı davranan uygulamaların olduğu bazı durumlarda faydalı olabilir. Emin değilseniz, bunu Uygulama Kontrollü olarak ayarlayın.</string>
     <string name="shaders_accurate_mul">İsabetli Çoğaltma</string>
@@ -472,7 +470,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Oyna</string>
-    <string name="shortcut">Kısayol</string>
     <string name="uninstall_cia">Uygulamayı Sil</string>
     <string name="uninstalling">Siliniyor...</string>
     <string name="game_context_open_save_dir">Kayıt Verileri Klasörünü Aç</string>
@@ -484,7 +481,7 @@
     <string name="game_context_open_extra">Ekstra Klasörünü Aç</string>
     <string name="game_context_uninstall_dlc">DLC\'leri Sil</string>
     <string name="game_context_uninstall_updates">Güncellemeleri Sil</string>
-
+    <string name="shortcut">Kısayol</string>
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>

@@ -83,7 +83,6 @@
     <string name="keep_current_azahar_directory">Behold den aktuelle Azahar-mappe</string>
     <string name="use_prior_lime3ds_directory">Brug tidligere Lime3DS mappe</string>
     <string name="select">Vælg</string>
-    <string name="cannot_skip">Du kan ikke springe dette trin over</string>
     <string name="cannot_skip_directory_description">Dette trin er påkrævet for at Azahar kan fungere. Vælg en mappe og så kan du fortsætte.</string>
     <string name="selecting_user_directory_without_write_permissions">Du har mistet skrivetilladelse i din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">brugerdata</a> mappe, hvor gemte tilstande og anden information er gemt. Dette kan ske efter en app- eller Android-opdatering. Vælg venligst mappen for at give tilladelse igen, så du kan fortsætte.</string>
     <string name="set_up_theme_settings">Temaindstillinger</string>
@@ -216,7 +215,6 @@
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
     <string name="delay_render_thread">Forsinket spillets renderingstråd</string>
     <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
-    <string name="advanced">Avanceret\"</string>
     <string name="texture_sampling_name">Tekstur sampling</string>
     <string name="texture_sampling_description">Tilsidesætter det samplingsfilter, der bruges af spillene. Dette kan i nogle tilfælde være nyttigt for spil, der ikke håndterer opskalering godt. Hvis du er usikker, skal du indstille dette til Styret af spillene.</string>
     <string name="shaders_accurate_mul">Nøjagtig multiplikation</string>
@@ -299,7 +297,6 @@
     <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
     <string name="enable_rpc_server">Aktivér RPC-server</string>
     <string name="enable_rpc_server_desc">Aktiverer RPC-serveren på port 45987. Dette tillader fjernlæsning/skrivning af gæstehukommelse.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Skærmorientering</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisk</string>
@@ -511,7 +508,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Spil</string>
-    <string name="shortcut">Genvej</string>
     <string name="uninstall_cia">Afinstaller applikation</string>
     <string name="uninstalling">Afinstallerer...</string>
     <string name="game_context_open_save_dir">Åbn mappen med gemt data</string>
@@ -523,7 +519,7 @@
     <string name="game_context_open_extra">Åbn mappen med ekstra</string>
     <string name="game_context_uninstall_dlc">Afinstaller DLC</string>
     <string name="game_context_uninstall_updates">Afinstaller opdateringer</string>
-
+    <string name="shortcut">Genvej</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Vis ydelsesoverlejring</string>
     <string name="performance_overlay_options">Ydelsesoverlejring</string>

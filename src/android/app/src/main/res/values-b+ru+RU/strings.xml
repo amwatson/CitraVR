@@ -53,7 +53,6 @@
     <string name="warning_skip">Пропустить</string>
     <string name="warning_cancel">Отмена</string>
     <string name="select">Выбрать</string>
-    <string name="cannot_skip">Вы не можете пропустить данное действие</string>
     <string name="search_recently_played">Запущенные недавно</string>
     <string name="search_recently_added">Добавленные недавно</string>
     <string name="search_installed">Установленные</string>

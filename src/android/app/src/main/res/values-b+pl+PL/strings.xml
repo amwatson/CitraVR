@@ -74,6 +74,10 @@
     <string name="permission_denied">Odmowa zezwolenia</string>
     <string name="add_games_warning">Pominąć wybór folderu z aplikacjami?</string>
     <string name="add_games_warning_description">Oprogramowania nie będą wyświetlane na liście aplikacji, jeśli nie wybrano folderu.</string>
+    <string name="permissions">Uprawnienia</string>
+    <string name="select_emulator_data_folders">Foldery dat</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Wybierz foldery danych<br/>(wymagany jest folder użytkownika)]]></string>
+    <string name="permissions_description">Przyznaj opcjonalne uprawnienia do korzystania z określonych funkcji emulatora.</string>
     <string name="warning_help">Pomoc</string>
     <string name="warning_skip">Pomiń</string>
     <string name="warning_cancel">Anuluj</string>
@@ -83,7 +87,7 @@
     <string name="keep_current_azahar_directory">Zachowaj aktualny katalog Azahar</string>
     <string name="use_prior_lime3ds_directory">Użyj wcześniejszego katalogu Lime3DS</string>
     <string name="select">Wybierz</string>
-    <string name="cannot_skip">Nie możesz pominąć tego kroku</string>
+    <string name="cannot_skip">Nie można pominąć konfiguracji folderu użytkownika.</string>
     <string name="cannot_skip_directory_description">Ten krok jest wymagany, aby umożliwić działanie Azahar. Wybierz katalog, a następnie możesz kontynuować.</string>
     <string name="selecting_user_directory_without_write_permissions">Utraciłeś uprawnienia do zapisu w katalogu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">danych użytkownika</a>, w którym przechowywane są zapisy i inne informacje. Może się to zdarzyć po niektórych aktualizacjach aplikacji lub systemu Android. Wybierz ponownie katalog, aby odzyskać uprawnienia i móc kontynuować.</string>
     <string name="set_up_theme_settings">Ustawienia motywu</string>
@@ -208,6 +212,8 @@
     <string name="graphics_api">API grafik</string>
     <string name="spirv_shader_gen">Włącz generowanie shaderów SPIR-V</string>
     <string name="spirv_shader_gen_description">Emituje fragment shaderów używany do emulacji PICA przy użyciu SPIR-V zamiast GLSL.</string>
+    <string name="disable_spirv_optimizer">Wyłącz optymalizator SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Wyłącza optymalizację SPIR-V, znacznie zmniejszając zacinanie się obrazu przy minimalnym wpływie na wydajność.</string>
     <string name="async_shaders">Włącz asynchroniczną kompilację shaderów</string>
     <string name="async_shaders_description">Kompiluje shadery w tle, aby zmniejszyć zacinanie się podczas rozgrywki. Po włączeniu należy spodziewać się tymczasowych błędów graficznych</string>
     <string name="linear_filtering">Filtrowanie Linear</string>
@@ -216,7 +222,6 @@
     <string name="texture_filter_description">Ulepsza oprawę wizualną aplikacji poprzez zastosowanie filtrów do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale i MMPX.</string>
     <string name="delay_render_thread">Opóźnienie renderowania wątku gry</string>
     <string name="delay_render_thread_description">Opóźnia wątek renderowania aplikacji podczas przesyłania danych do GPU. Pomaga w kwestiach wydajności w (bardzo niewielu) aplikacjach z dynamiczną liczbą klatek na sekundę.</string>
-    <string name="advanced">Zaawansowane\"</string>
     <string name="texture_sampling_name">Próbkowanie tekstur</string>
     <string name="texture_sampling_description">Zastępuje filtr próbkowania używany przez gry. Może to być przydatne w niektórych przypadkach, gdy gry źle zachowują się podczas skalowania w górę. Jeśli nie masz pewności, ustaw tę opcję na Kontrolowane przez grę.</string>
     <string name="shaders_accurate_mul">Dokładne mnożenie</string>
@@ -299,7 +304,6 @@
     <string name="deterministic_async_operations_description">Sprawia, że operacje asynchroniczne są deterministyczne dla debugowania. Włączenie tej opcji może powodować zawieszanie się gry.</string>
     <string name="enable_rpc_server">Włącz serwer RPC</string>
     <string name="enable_rpc_server_desc">Włącza serwer RPC na porcie 45987. Pozwala to na zdalny odczyt/zapis pamięci gościa. Nie włączaj tej opcji, jeśli nie wiesz, co robisz.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientacja Ekranu</string>
     <string name="layout_screen_orientation_auto_sensor">Automatycznie</string>
@@ -434,6 +438,7 @@
     <string name="emulation_custom_layout_height">Wysokość</string>
     <string name="emulation_cycle_landscape_layouts">Układy Cykli</string>
     <string name="emulation_swap_screens">Zamień Ekrany</string>
+    <string name="emulation_rotate_upright">Obróć ekran w pozycji pionowej</string>
     <string name="emulation_touch_overlay_reset">Zresetuj Nakładkę</string>
     <string name="emulation_show_controller_overlay">Wyświetl nakładkę kontrolera</string>
     <string name="emulation_close_game">Zamknij Grę</string>
@@ -511,7 +516,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Odtwórz</string>
-    <string name="shortcut">Skrót</string>
     <string name="uninstall_cia">Odinstaluj aktualizacje</string>
     <string name="uninstalling">Odinstalowywanie...</string>
     <string name="game_context_open_save_dir">Otwórz folder zapisanych danych</string>
@@ -523,7 +527,7 @@
     <string name="game_context_open_extra">Otwórz folder Extra</string>
     <string name="game_context_uninstall_dlc">Odinstaluj DLC</string>
     <string name="game_context_uninstall_updates">Odinstaluj aktualizacje</string>
-
+    <string name="shortcut">Skrót</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Wyświetl nakładkę wydajności</string>
     <string name="performance_overlay_options">Nakładkę wydajności</string>

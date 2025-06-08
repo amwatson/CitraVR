@@ -222,6 +222,7 @@
     <string name="texture_filter_description">Ulepsza oprawę wizualną aplikacji poprzez zastosowanie filtrów do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale i MMPX.</string>
     <string name="delay_render_thread">Opóźnienie renderowania wątku gry</string>
     <string name="delay_render_thread_description">Opóźnia wątek renderowania aplikacji podczas przesyłania danych do GPU. Pomaga w kwestiach wydajności w (bardzo niewielu) aplikacjach z dynamiczną liczbą klatek na sekundę.</string>
+    <string name="advanced">Zaawansowane</string>
     <string name="texture_sampling_name">Próbkowanie tekstur</string>
     <string name="texture_sampling_description">Zastępuje filtr próbkowania używany przez gry. Może to być przydatne w niektórych przypadkach, gdy gry źle zachowują się podczas skalowania w górę. Jeśli nie masz pewności, ustaw tę opcję na Kontrolowane przez grę.</string>
     <string name="shaders_accurate_mul">Dokładne mnożenie</string>
@@ -304,7 +305,10 @@
     <string name="deterministic_async_operations_description">Sprawia, że operacje asynchroniczne są deterministyczne dla debugowania. Włączenie tej opcji może powodować zawieszanie się gry.</string>
     <string name="enable_rpc_server">Włącz serwer RPC</string>
     <string name="enable_rpc_server_desc">Włącza serwer RPC na porcie 45987. Pozwala to na zdalny odczyt/zapis pamięci gościa. Nie włączaj tej opcji, jeśli nie wiesz, co robisz.</string>
-    <!-- Layout settings strings -->
+    <string name="shader_jit">Aktywuj Shader JIT</string>
+    <string name="shader_jit_description">Używa silnika JIT zamiast interpretera do programowej emulacji shaderów.</string>
+
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientacja Ekranu</string>
     <string name="layout_screen_orientation_auto_sensor">Automatycznie</string>
     <string name="layout_screen_orientation_landscape">Widok</string>
@@ -528,6 +532,12 @@
     <string name="game_context_uninstall_dlc">Odinstaluj DLC</string>
     <string name="game_context_uninstall_updates">Odinstaluj aktualizacje</string>
     <string name="shortcut">Skrót</string>
+    <string name="shortcut_name">Nazwa skrótu</string>
+    <string name="edit_icon">Edytuj ikonę</string>
+    <string name="create_shortcut">Utwórz skrót</string>
+    <string name="shortcut_name_empty">Nazwa skrótu nie może być pusta</string>
+    <string name="shortcut_image_stretch_toggle">Rozciągnij, aby dopasować obraz</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Wyświetl nakładkę wydajności</string>
     <string name="performance_overlay_options">Nakładkę wydajności</string>

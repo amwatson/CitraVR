@@ -240,7 +240,7 @@
     <string name="render3d">Stereoskopik 3B Modu</string>
     <string name="factor3d">Derinlik</string>
     <string name="factor3d_description">3D kaydıracının değerini belirtir. Stereoskopik 3D etkinleştirildiğinde bu değer %0\'dan daha yüksek bir değere ayarlanmalıdır.\nNot: %100\'ün üzerindeki derinlik değerleri gerçek donanımda mümkün değildir ve grafik sorunlarına neden olabilir</string>
-    <string name="disable_right_eye_render">Sağ Göz Render\'ını Devre Dışı Bırak</string>
+    <string name="disable_right_eye_render">Sağ Göz İşlemesini Devre Dışı Bırak</string>
     <string name="disable_right_eye_render_description">Bazı uygulamalarda performansı büyük ölçüde artırır, ancak diğerlerinde titremeye neden olabilir.</string>
     <string name="cardboard_vr">Karton VR</string>
     <string name="cardboard_screen_size">Karton Ekran Boyutu</string>
@@ -273,6 +273,7 @@
     <string name="cpu_clock_speed">CPU Saat Hızı</string>
     <string name="vsync">V-Sync\'i Etkinleştir</string>
     <string name="vsync_description">Oyun kare hızını cihazınızın yenileme hızına senkronize eder.</string>
+    <string name="renderer_debug">Hata Ayıklama İşleyicisi</string>
     <string name="renderer_debug_description">Grafiklerle ilgili ek hata ayıklama bilgilerini günlüğe kaydedin. Etkinleştirildiğinde, oyun performansı önemli ölçüde azalacaktır.</string>
     <string name="instant_debug_log">Her mesajda günlük çıktısını temizle</string>
     <string name="instant_debug_log_description">Hata ayıklama günlüğünü hemen dosyaya işler. Azahar çöküyor ve günlük çıktısı kesiliyorsa bunu kullanın.</string>

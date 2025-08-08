@@ -408,7 +408,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_button_sliding">Pulsante scorrevole</string>
     <string name="emulation_button_sliding_disabled">Tieni premuto il pulsante originariamente premuto</string>
     <string name="emulation_button_sliding_enabled">Tieni premuto il pulsante attualmente premuto</string>
-    <string name="emulation_button_sliding_alternative">Tieni premuto il pulsante originale e attualmente premuto</string>
+    <string name="emulation_button_sliding_alternative">Tieni premuto il pulsante originale e quello attualmente premuto</string>
     <string name="emulation_toggle_controls">Attiva Controlli</string>
     <string name="emulation_control_scale">Regola la Dimensione</string>
     <string name="emulation_control_scale_global">Scala Globale</string>
@@ -431,10 +431,10 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_screen_layout_custom">Layout personalizzato</string>
     <string name="emulation_small_screen_position">Posizione schermo piccolo</string>
     <string name="small_screen_position_description">Dove dovrebbe apparire lo schermo inferiore rispetto a quello superiore nella modalità Schermo Grande?</string>
-    <string name="small_screen_position_top_right">Alto-Destra</string>
+    <string name="small_screen_position_top_right">In alto a destra</string>
     <string name="small_screen_position_middle_right">Centro-Destra</string>
     <string name="small_screen_position_bottom_right">Basso-Destra (Standard)</string>
-    <string name="small_screen_position_top_left">Alto-Sinistra</string>
+    <string name="small_screen_position_top_left">In alto a sinistra</string>
     <string name="small_screen_position_middle_left">Centro-Sinistra</string>
     <string name="small_screen_position_bottom_left">Basso-Sinistra</string>
     <string name="small_screen_position_above">Sopra</string>
@@ -533,9 +533,13 @@ Divertiti usando l\'emulatore!</string>
     <string name="play">Riproduci</string>
     <string name="uninstall_cia">Disinstalla applicazione</string>
     <string name="uninstalling">Disinstallazione...</string>
+    <string name="game_context_open_save_dir">Apri cartella dei salvataggi</string>
+    <string name="game_context_open_app">Apri cartella applicazione</string>
+    <string name="game_context_open_mods">Apri cartella delle mod</string>
     <string name="game_context_open_textures">Apri cartella delle texture</string>
     <string name="game_context_open_dlc">Apri catella DLC</string>
     <string name="game_context_open_updates">Apri cartella degli aggiornamenti</string>
+    <string name="game_context_open_extra">Apri cartella extra</string>
     <string name="game_context_uninstall_dlc">Disinstalla DLC</string>
     <string name="game_context_uninstall_updates">Disinstalla aggiornamenti</string>
     <string name="shortcut">Scorciatoia</string>
@@ -567,6 +571,12 @@ Divertiti usando l\'emulatore!</string>
     <string name="overlay_show_battery_temp_description">Mostra la temperatura attuale, in Celsius e Fahrenheit, della batteria.</string>
     <string name="overlay_position">Posizione overlay</string>
     <string name="overlay_position_description">Scegli dove visualizzare l\'overlay delle prestazioni sullo schermo.</string>
+    <string name="overlay_position_top_left">In alto a sinistra</string>
+    <string name="overlay_position_top_right">In alto a destra</string>
+    <string name="overlay_position_bottom_left">In basso a sinistra</string>
+    <string name="overlay_position_bottom_right">In basso a destra</string>
+    <string name="overlay_position_center_top">In alto al centro</string>
+    <string name="overlay_position_center_bottom">In basso al centro</string>
     <string name="overlay_background">Sfondo dell\'overlay</string>
     <string name="overlay_background_description">Aggiunge uno sfondo dietro all\'overlay per una lettura più facile.</string>
 

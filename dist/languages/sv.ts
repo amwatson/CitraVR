@@ -2496,12 +2496,12 @@ Vill du ignorera felet och fortsätta?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="187"/>
         <source>Compress installed CIA content</source>
-        <translation type="unfinished"></translation>
+        <translation>Komprimera installerat CIA-innehåll</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="190"/>
         <source>Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komprimerar innehållet för CIA-filer vid installation till det emulerade SD-kortet. Påverkar endast CIA-innehåll som installeras när inställningen är aktiverad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="26"/>
@@ -4517,7 +4517,7 @@ Installera om filerna i alla fall?</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2337"/>
         <source>File compress operation failed, check log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komprimeringsåtgärden för filen misslyckades. Kontrollera loggen för detaljer.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2339"/>
@@ -4529,7 +4529,7 @@ Installera om filerna i alla fall?</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2340"/>
         <source>File decompress operation failed, check log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dekomprimeringsåtgärden för filen misslyckades. Kontrollera loggen för detaljer.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2362"/>
@@ -4675,22 +4675,22 @@ Om du vill visa en guide om hur du installerar FFmpeg trycker du på Hjälp.</tr
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3106"/>
         <source>The selected file is not a compatible 3DS ROM format. Make sure you have chosen the right file, and that it is not encrypted.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den valda filen är inte i ett kompatibelt 3DS ROM-format. Försäkra dig om att du har valt rätt fil och att den inte är krypterad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3112"/>
         <source>The selected file is already compressed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den valda filen är redan komprimerad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3117"/>
         <source>3DS Compressed ROM File (*.%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Komprimerad 3DS ROM-fil (*.%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3125"/>
         <source>Save 3DS Compressed ROM File</source>
-        <translation type="unfinished"></translation>
+        <translation>Spara komprimerad 3DS ROM-fil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3150"/>
@@ -4705,12 +4705,12 @@ Om du vill visa en guide om hur du installerar FFmpeg trycker du på Hjälp.</tr
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3180"/>
         <source>The selected file is not a compatible compressed 3DS ROM format. Make sure you have chosen the right file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den valda filen är inte i ett kompatibelt komprimerat 3DS ROM-format. Försäkra dig om att du har valt rätt fil.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3187"/>
         <source>The selected file is already decompressed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den valda filen är redan dekomprimerad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3192"/>
@@ -4841,7 +4841,7 @@ Om du vill visa en guide om hur du installerar FFmpeg trycker du på Hjälp.</tr
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3598"/>
         <source>%1 is missing. Please &lt;a href=&apos;https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;dump your system archives&lt;/a&gt;.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 saknas. &lt;a href=&apos;https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumpa dina systemarkiv&lt;/a&gt;.&lt;br/&gt;Fortsatt emulering kan resultera i krascher och buggar.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3606"/>
@@ -4871,7 +4871,7 @@ Om du vill visa en guide om hur du installerar FFmpeg trycker du på Hjälp.</tr
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3625"/>
         <source>A fatal error occurred. &lt;a href=&apos;https://web.archive.org/web/20240228001712/https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Check the log&lt;/a&gt; for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ett ödesdigert fel inträffade. &lt;a href=&apos;https://web.archive.org/web/20240228001712/https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Kontrollera loggen&lt;/a&gt; för detaljer.&lt;br/&gt;Fortsatt emulering kan resultera i krascher och buggar.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3630"/>

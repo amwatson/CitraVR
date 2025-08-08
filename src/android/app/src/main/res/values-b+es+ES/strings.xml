@@ -195,6 +195,8 @@
     <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
     <string name="storage">Almacenamiento</string>
     <string name="compress_cia_installs">Comprimir el contenido CIA instalado</string>
+    <string name="compress_cia_installs_description">Comprime el contenido de archivos CIA cuando son instalados a la SD emulada. Solo afecta contenido CIA instalado con esta opción activada.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
     <string name="outer_left_camera">Cámara izquierda externa</string>
@@ -400,6 +402,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_edit_layout">Editar Estilo</string>
     <string name="emulation_done">Hecho</string>
     <string name="emulation_button_sliding">Deslizamiento de botones</string>
+    <string name="emulation_button_sliding_disabled">Mantenga el botón presionado originalmente</string>
+    <string name="emulation_button_sliding_enabled">Mantenga el botón presionado actualmente</string>
+    <string name="emulation_button_sliding_alternative">Mantenga el botón original y actualmente presionado</string>
     <string name="emulation_toggle_controls">Activar Controles</string>
     <string name="emulation_control_scale">Ajustar Escala</string>
     <string name="emulation_control_scale_global">Escala Global</string>

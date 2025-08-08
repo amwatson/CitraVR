@@ -2660,7 +2660,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="275"/>
         <source>Italian (italiano)</source>
-        <translation>Italiano (italiano)</translation>
+        <translation>Italiano</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="280"/>
@@ -5208,7 +5208,7 @@ Vuoi installarlo?</translation>
         <source>Are you sure you want to completely uninstall &apos;%1&apos;?
 
 This will delete the application if installed, as well as any installed updates or DLC.</source>
-        <translation>Sei sicuro di voler disinstallare completamente &quot;%1&quot;?
+        <translation>Sei sicuro di voler disinstallare completamente &apos;%1&apos;?
 
 Se installata, l&apos;applicazione verrà rimossa assieme ad eventuali aggiornamenti e DLC installati.</translation>
     </message>
@@ -5227,17 +5227,17 @@ Se installata, l&apos;applicazione verrà rimossa assieme ad eventuali aggiornam
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="795"/>
         <source>Are you sure you want to uninstall &apos;%1&apos;?</source>
-        <translation>Sei sicuro di voler disinstallare &quot;%1&quot;?</translation>
+        <translation>Sei sicuro di voler disinstallare &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="806"/>
         <source>Are you sure you want to uninstall the update for &apos;%1&apos;?</source>
-        <translation>Sei sicuro di voler disinstallare l&apos;aggiornamento di &quot;%1&quot;?</translation>
+        <translation>Sei sicuro di voler disinstallare l&apos;aggiornamento di &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="818"/>
         <source>Are you sure you want to uninstall all DLC for &apos;%1&apos;?</source>
-        <translation>Sei sicuro di voler disinstallare tutti i DLC di &quot;%1&quot;?</translation>
+        <translation>Sei sicuro di voler disinstallare tutti i DLC di &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="842"/>
@@ -6393,12 +6393,12 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="466"/>
         <source>Compress ROM File...</source>
-        <translation>Compressione del file ROM...</translation>
+        <translation>File ROM compresso...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="471"/>
         <source>Decompress ROM File...</source>
-        <translation>Decompressione del file ROM...</translation>
+        <translation>File ROM decompresso...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="479"/>

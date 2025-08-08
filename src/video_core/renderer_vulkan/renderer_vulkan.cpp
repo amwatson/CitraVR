@@ -105,27 +105,33 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     : RendererBase{system, window, secondary_window}, memory{system.Memory()}, pica{pica_},
       instance{window, Settings::values.physical_device.GetValue()}, scheduler{instance},
       renderpass_cache{instance, scheduler},
-      main_window{window, instance, scheduler, IsLowRefreshRate()},
+      main_present_window{window, instance, scheduler, IsLowRefreshRate()},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},
-      update_queue{instance},
-      rasterizer{
-          memory,   pica,      system.CustomTexManager(), *this,        render_window,
-          instance, scheduler, renderpass_cache,          update_queue, main_window.ImageCount()},
+      update_queue{instance}, rasterizer{memory,
+                                         pica,
+                                         system.CustomTexManager(),
+                                         *this,
+                                         render_window,
+                                         instance,
+                                         scheduler,
+                                         renderpass_cache,
+                                         update_queue,
+                                         main_present_window.ImageCount()},
       present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
     CompileShaders();
     BuildLayouts();
     BuildPipelines();
     if (secondary_window) {
-        second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
-                                                        IsLowRefreshRate());
+        secondary_present_window_ptr = std::make_unique<PresentWindow>(
+            *secondary_window, instance, scheduler, IsLowRefreshRate());
     }
 }
 
 RendererVulkan::~RendererVulkan() {
     vk::Device device = instance.GetDevice();
     scheduler.Finish();
-    main_window.WaitPresent();
+    main_present_window.WaitPresent();
     device.waitIdle();
 
     device.destroyShaderModule(present_vertex_shader);
@@ -177,7 +183,8 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
     }
 
     renderpass_cache.EndRendering();
-    scheduler.Record([this, layout, frame, present_set, renderpass = main_window.Renderpass(),
+    scheduler.Record([this, layout, frame, present_set,
+                      renderpass = main_present_window.Renderpass(),
                       index = current_pipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
@@ -434,7 +441,7 @@ void RendererVulkan::BuildPipelines() {
             .pColorBlendState = &color_blending,
             .pDynamicState = &dynamic_info,
             .layout = *present_pipeline_layout,
-            .renderPass = main_window.Renderpass(),
+            .renderPass = main_present_window.Renderpass(),
         };
 
         const auto [result, pipeline] =
@@ -887,19 +894,32 @@ void RendererVulkan::SwapBuffers() {
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
-    RenderToWindow(main_window, layout, false);
+    RenderToWindow(main_present_window, layout, false);
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
-        if (!second_window) {
-            second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
-                                                            IsLowRefreshRate());
+        if (!secondary_present_window_ptr) {
+            secondary_present_window_ptr = std::make_unique<PresentWindow>(
+                *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
-        RenderToWindow(*second_window, secondary_layout, false);
+        RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
 #endif
+
+#ifdef ANDROID
+    if (secondary_window) {
+        const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        if (!secondary_present_window_ptr) {
+            secondary_present_window_ptr = std::make_unique<PresentWindow>(
+                *secondary_window, instance, scheduler, IsLowRefreshRate());
+        }
+        RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
+        secondary_window->PollEvents();
+    }
+#endif
+
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();
     EndFrame();
@@ -954,7 +974,7 @@ void RendererVulkan::RenderScreenshotWithStagingCopy() {
     vk::Buffer staging_buffer{unsafe_buffer};
 
     Frame frame{};
-    main_window.RecreateFrame(&frame, width, height);
+    main_present_window.RecreateFrame(&frame, width, height);
 
     DrawScreens(&frame, layout, false);
 
@@ -1127,7 +1147,7 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
     device.bindBufferMemory(imported_buffer.get(), imported_memory.get(), 0);
 
     Frame frame{};
-    main_window.RecreateFrame(&frame, width, height);
+    main_present_window.RecreateFrame(&frame, width, height);
 
     DrawScreens(&frame, layout, false);
 
@@ -1188,6 +1208,16 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
     device.destroyImageView(frame.image_view);
 
     return true;
+}
+
+void RendererVulkan::NotifySurfaceChanged(bool is_second_window) {
+    if (is_second_window) {
+        if (secondary_present_window_ptr) {
+            secondary_present_window_ptr->NotifySurfaceChanged();
+        }
+    } else {
+        main_present_window.NotifySurfaceChanged();
+    }
 }
 
 } // namespace Vulkan

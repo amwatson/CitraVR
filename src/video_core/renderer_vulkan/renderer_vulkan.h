@@ -74,9 +74,7 @@ public:
         return &rasterizer;
     }
 
-    void NotifySurfaceChanged() override {
-        main_window.NotifySurfaceChanged();
-    }
+    void NotifySurfaceChanged(bool second) override;
 
     void SwapBuffers() override;
     void TryPresent(int timeout_ms, bool is_secondary) override {}
@@ -117,11 +115,11 @@ private:
     Instance instance;
     Scheduler scheduler;
     RenderManager renderpass_cache;
-    PresentWindow main_window;
+    PresentWindow main_present_window;
     StreamBuffer vertex_buffer;
     DescriptorUpdateQueue update_queue;
     RasterizerVulkan rasterizer;
-    std::unique_ptr<PresentWindow> second_window;
+    std::unique_ptr<PresentWindow> secondary_present_window_ptr;
 
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;

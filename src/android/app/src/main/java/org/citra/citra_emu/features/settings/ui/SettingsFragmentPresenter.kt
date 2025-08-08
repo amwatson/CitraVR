@@ -14,11 +14,8 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
-import org.citra.citra_emu.display.PortraitScreenLayout
-import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
@@ -1109,6 +1106,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.portraitLayoutValues,
                     IntSetting.PORTRAIT_SCREEN_LAYOUT.key,
                     IntSetting.PORTRAIT_SCREEN_LAYOUT.defaultValue
+                )
+            )
+            add(
+                SingleChoiceSetting(
+                    IntSetting.SECONDARY_DISPLAY_LAYOUT,
+                    R.string.emulation_switch_secondary_layout,
+                    R.string.emulation_switch_secondary_layout_description,
+                    R.array.secondaryLayouts,
+                    R.array.secondaryLayoutValues,
+                    IntSetting.SECONDARY_DISPLAY_LAYOUT.key,
+                    IntSetting.SECONDARY_DISPLAY_LAYOUT.defaultValue
                 )
             )
             add(

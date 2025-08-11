@@ -25,6 +25,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target: ["appimage", "fresh"]
     container:
@@ -63,6 +64,7 @@ jobs:
   macos:
     runs-on: ${{ (matrix.target == 'x86_64' && 'macos-13') || 'macos-14' }}
     strategy:
+      fail-fast: false
       matrix:
         target: ["x86_64", "arm64"]
     env:
@@ -134,6 +136,7 @@ jobs:
   windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         target: ["msvc", "msys2"]
     defaults:

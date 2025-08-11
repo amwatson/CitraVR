@@ -416,6 +416,8 @@
     <string name="emulation_aspect_ratio">宽高比</string>
     <string name="emulation_switch_screen_layout">屏幕布局</string>
     <string name="emulation_switch_portrait_layout">纵向屏幕布局</string>
+    <string name="emulation_switch_secondary_layout">副屏幕布局</string>
+    <string name="emulation_switch_secondary_layout_description">有线或无线连接的辅助屏幕使用布局（Chromecast, Miracast）</string>
     <string name="emulation_screen_layout_largescreen">大屏幕</string>
     <string name="emulation_screen_layout_portrait">纵向</string>
     <string name="emulation_screen_layout_single">单个屏幕</string>
@@ -423,6 +425,7 @@
     <string name="emulation_screen_layout_hybrid">混合式屏幕</string>
     <string name="emulation_screen_layout_original">原始</string>
     <string name="emulation_portrait_layout_top_full">默认</string>
+    <string name="emulation_secondary_display_default">系统默认（镜像）</string>
     <string name="emulation_screen_layout_custom">自定义布局</string>
     <string name="emulation_small_screen_position">小屏幕位置</string>
     <string name="small_screen_position_description">在“大屏幕”布局中，小屏幕相对于大屏幕应该出现的位置？</string>

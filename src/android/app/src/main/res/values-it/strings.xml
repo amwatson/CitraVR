@@ -421,6 +421,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_aspect_ratio">Proporzione</string>
     <string name="emulation_switch_screen_layout">Layout Schermi Orizzontale</string>
     <string name="emulation_switch_portrait_layout">Layout Schermi Verticale</string>
+    <string name="emulation_switch_secondary_layout">Layout dello schermo di visualizzazione secondario</string>
+    <string name="emulation_switch_secondary_layout_description">Il layout utilizzato da uno schermo secondario connesso, cablato o wireless (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Schermo Grande</string>
     <string name="emulation_screen_layout_portrait">Verticale</string>
     <string name="emulation_screen_layout_single">Schermo singolo</string>
@@ -428,6 +430,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_screen_layout_hybrid">Schermi Ibridi</string>
     <string name="emulation_screen_layout_original">Originale</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
+    <string name="emulation_secondary_display_default">Predefinito del sistema (specchio)</string>
     <string name="emulation_screen_layout_custom">Layout personalizzato</string>
     <string name="emulation_small_screen_position">Posizione schermo piccolo</string>
     <string name="small_screen_position_description">Dove dovrebbe apparire lo schermo inferiore rispetto a quello superiore nella modalità Schermo Grande?</string>

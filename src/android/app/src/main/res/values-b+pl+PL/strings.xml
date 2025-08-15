@@ -417,6 +417,7 @@
     <string name="emulation_switch_screen_layout">Geometryczny Układ Ekranu</string>
     <string name="emulation_switch_portrait_layout">Pionowy Układ Ekranu</string>
     <string name="emulation_switch_secondary_layout">Układ ekranu wyświetlacza dodatkowego</string>
+    <string name="emulation_switch_secondary_layout_description">Układ używany przez podłączony dodatkowy ekran, przewodowy lub bezprzewodowy (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Duży Ekran</string>
     <string name="emulation_screen_layout_portrait">Ekran</string>
     <string name="emulation_screen_layout_single">Pojedynczy ekran</string>
@@ -424,6 +425,7 @@
     <string name="emulation_screen_layout_hybrid">Hybrydowy Ekran</string>
     <string name="emulation_screen_layout_original">Oryginalny</string>
     <string name="emulation_portrait_layout_top_full">Domyślny</string>
+    <string name="emulation_secondary_display_default">Ustawienia domyślne systemu (mirror)</string>
     <string name="emulation_screen_layout_custom">Niestandardowy Układ</string>
     <string name="emulation_small_screen_position">Pozycja małego ekranu</string>
     <string name="small_screen_position_description">Gdzie powinien być wyświetlany mały ekran względem dużego w układzie dużego ekranu?</string>

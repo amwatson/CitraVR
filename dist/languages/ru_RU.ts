@@ -3894,7 +3894,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="26"/>
         <source>Show current application in your Discord status</source>
-        <translation type="unfinished"></translation>
+        <translation>Показывать текущее приложение в статусе Discord</translation>
     </message>
 </context>
 <context>
@@ -4027,7 +4027,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/dumping/dumping_dialog.cpp" line="25"/>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.cpp" line="85"/>
         <source>Azahar</source>
-        <translation type="unfinished">Azahar</translation>
+        <translation>Azahar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.cpp" line="25"/>
@@ -4170,7 +4170,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1299"/>
         <source>GBA Virtual Console is not supported by Azahar.</source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar не поддерживает GBA Virtual Console.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1304"/>
@@ -4315,7 +4315,7 @@ Please check your FFmpeg installation used for compilation.</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3682"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3775"/>
         <source>Azahar</source>
-        <translation type="unfinished">Azahar</translation>
+        <translation>Azahar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2066"/>
@@ -4523,7 +4523,7 @@ Reinstall the files anyway?</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3181"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3188"/>
         <source>Error decompressing file</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибра при разжатии файла</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2342"/>
@@ -5036,7 +5036,7 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="366"/>
         <source>Don&apos;t show again</source>
-        <translation type="unfinished"></translation>
+        <translation>Не показывать снова</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
@@ -7383,7 +7383,8 @@ They may have left the room.</source>
         <source>Azahar has detected user data for Citra.
 
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar обнаружил файлы пользователя Citra.
+</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="77"/>

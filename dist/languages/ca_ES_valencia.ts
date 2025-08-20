@@ -27,7 +27,7 @@
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/default/256x256/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/default/256x256/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="60"/>
@@ -725,7 +725,7 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
         <source>Show log output in console</source>
-        <translation type="unfinished"/>
+        <translation>Mostrar l&apos;eixida del registre en la consola</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>
@@ -2275,7 +2275,7 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="102"/>
         <source>&lt;a href=&apos;https://web.archive.org/web/20240301211230/https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn More&lt;/span&gt;&lt;/a&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;a href=&apos;https://web.archive.org/web/20240301211230/https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Més Informació&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="209"/>
@@ -2494,12 +2494,12 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="187"/>
         <source>Compress installed CIA content</source>
-        <translation type="unfinished"/>
+        <translation>Comprimir el contingut de CIAs instal·lats</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="190"/>
         <source>Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Comprimix el contingut de fitxers CIA quan són instal·lats a la SD emulada. Només afecta contingut CIA instal·lat amb esta opció activada.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="26"/>
@@ -4431,7 +4431,7 @@ Vols reinstal·lar els arxius de totes maneres?</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2250"/>
         <source>3DS Installation File (*.cia *.zcia)</source>
-        <translation type="unfinished"/>
+        <translation>Fitxers d&apos;Instalació de 3DS (*.cia *.zcia)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2250"/>
@@ -4510,24 +4510,24 @@ Vols reinstal·lar els arxius de totes maneres?</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3107"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3113"/>
         <source>Error compressing file</source>
-        <translation type="unfinished"/>
+        <translation>Error al comprimir el fitxer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2339"/>
         <source>File compress operation failed, check log for details.</source>
-        <translation type="unfinished"/>
+        <translation>Operació de compressió fallida, mira el registre per a més detalls.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2341"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3181"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3188"/>
         <source>Error decompressing file</source>
-        <translation type="unfinished"/>
+        <translation>Error de descompressió del fitxer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2342"/>
         <source>File decompress operation failed, check log for details.</source>
-        <translation type="unfinished"/>
+        <translation>Operació de descompressió fallida, mira el registre per a més detalls.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2364"/>
@@ -4663,62 +4663,62 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3063"/>
         <source>Load 3DS ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Carregar ROM de 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3064"/>
         <source>3DS ROM Files (*.cia *cci *3dsx *cxi)</source>
-        <translation type="unfinished"/>
+        <translation>Fitxers ROM 3DS (*.cia *cci *3dsx *cxi)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3108"/>
         <source>The selected file is not a compatible 3DS ROM format. Make sure you have chosen the right file, and that it is not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>El fitxer seleccionat no és un ROM de 3DS compatible. Assegura&apos;t que has triat el fitxer correcte i que no estiga xifrat.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3114"/>
         <source>The selected file is already compressed.</source>
-        <translation type="unfinished"/>
+        <translation>El fitxer seleccionat ja està comprimit.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3119"/>
         <source>3DS Compressed ROM File (*.%1)</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM 3DS comprimit (*.%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3127"/>
         <source>Save 3DS Compressed ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Desar fitxer 3DS comprimit</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3152"/>
         <source>Load 3DS Compressed ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Carregar fitxer 3DS comprimit</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3153"/>
         <source>3DS Compressed ROM Files (*.zcia *zcci *z3dsx *zcxi)</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM 3DS comprimit (*.zcia *zcci *z3dsx *zcxi)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3182"/>
         <source>The selected file is not a compatible compressed 3DS ROM format. Make sure you have chosen the right file.</source>
-        <translation type="unfinished"/>
+        <translation>El fitxer seleccionat no és un format de ROM 3DS comprimit compatible. Assegura&apos;t d&apos;haver triat l&apos;arxiu correcte.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3189"/>
         <source>The selected file is already decompressed.</source>
-        <translation type="unfinished"/>
+        <translation>El fitxer seleccionat ja està descomprimit.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3194"/>
         <source>3DS ROM File (*.%1)</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM 3DS (*.%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3202"/>
         <source>Save 3DS ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Desar fitxer ROM 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3227"/>
@@ -4818,7 +4818,7 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3431"/>
         <source>Frame: %1 ms (GPU: [CMD: %2 ms, SWP: %3 ms], IPC: %4 ms, SVC: %5 ms, Rem: %6 ms)</source>
-        <translation type="unfinished"/>
+        <translation>Frame: %1 ms (GPU: [CMD: %2 ms, SWP: %3 ms], IPC: %4 ms, SVC: %5 ms, Rem: %6 ms)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3440"/>
@@ -4839,7 +4839,7 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3600"/>
         <source>%1 is missing. Please &lt;a href=&apos;https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;dump your system archives&lt;/a&gt;.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"/>
+        <translation>Falta %1 . Per favor,&lt;a href=&apos;https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;bolca els teus arxius de sistema&lt;/a&gt;.&lt;br/&gt;Continuar l&apos;emulació pot resultar en penges i errors.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3608"/>
@@ -4869,7 +4869,7 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3627"/>
         <source>A fatal error occurred. &lt;a href=&apos;https://web.archive.org/web/20240228001712/https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Check the log&lt;/a&gt; for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"/>
+        <translation>Error fatal.&lt;a href=&apos;https://web.archive.org/web/20240228001712/https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Mira el log&lt;/a&gt;per a més detalls.&lt;br/&gt;Continuar l&apos;emulació pot resultar en penges i errors.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3632"/>
@@ -6387,12 +6387,12 @@ Missatge de depuració:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="466"/>
         <source>Compress ROM File...</source>
-        <translation type="unfinished"/>
+        <translation>Comprimir fitxer ROM...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="471"/>
         <source>Decompress ROM File...</source>
-        <translation type="unfinished"/>
+        <translation>Descomprimir fitxer ROM...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="479"/>

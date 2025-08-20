@@ -194,7 +194,7 @@
     <string name="region_mismatch_emulated">La configuración del país no es válida para la región emulada seleccionada.</string>
     <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
     <string name="storage">Almacenamiento</string>
-    <string name="compress_cia_installs">Comprimir el contenido CIA instalado</string>
+    <string name="compress_cia_installs">Comprimir el contenido de CIAs instalados</string>
     <string name="compress_cia_installs_description">Comprime el contenido de archivos CIA cuando son instalados a la SD emulada. Solo afecta contenido CIA instalado con esta opción activada.</string>
 
     <!-- Camera settings strings -->
@@ -402,9 +402,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_edit_layout">Editar Estilo</string>
     <string name="emulation_done">Hecho</string>
     <string name="emulation_button_sliding">Deslizamiento de botones</string>
-    <string name="emulation_button_sliding_disabled">Mantenga el botón presionado originalmente</string>
-    <string name="emulation_button_sliding_enabled">Mantenga el botón presionado actualmente</string>
-    <string name="emulation_button_sliding_alternative">Mantenga el botón original y actualmente presionado</string>
+    <string name="emulation_button_sliding_disabled">Mantener el botón presionado originalmente</string>
+    <string name="emulation_button_sliding_enabled">Mantener el botón presionado actualmente</string>
+    <string name="emulation_button_sliding_alternative">Mantener el botón original y actualmente presionado</string>
     <string name="emulation_toggle_controls">Activar Controles</string>
     <string name="emulation_control_scale">Ajustar Escala</string>
     <string name="emulation_control_scale_global">Escala Global</string>
@@ -417,6 +417,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_aspect_ratio">Relación de Aspecto</string>
     <string name="emulation_switch_screen_layout">Estilo de Pantalla Apaisada</string>
     <string name="emulation_switch_portrait_layout">Estilo de Pantalla de Perfil</string>
+    <string name="emulation_switch_secondary_layout">Estilo de Pantalla Secundaria</string>
+    <string name="emulation_switch_secondary_layout_description">El estilo de la pantalla secundaria conectada, con cable o inalámbrica (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
     <string name="emulation_screen_layout_single">Pantalla Única</string>
@@ -424,6 +426,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_screen_layout_hybrid">Pantallas híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Por defecto</string>
+    <string name="emulation_secondary_display_default">Por defecto del sistema (espejo)</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
     <string name="emulation_small_screen_position">Posición Pantalla Pequeña</string>
     <string name="small_screen_position_description">¿Dónde debería aparecer la pantalla pequeña en relación con la grande en Disposicion de Pantalla Grande?</string>

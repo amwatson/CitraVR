@@ -193,6 +193,10 @@
     <string name="region_mismatch">Advertiment Regió No Vàlida</string>
     <string name="region_mismatch_emulated">La configuració del país no és vàlida per a la regió emulada seleccionada.</string>
     <string name="region_mismatch_console">La configuració del país no és vàlida per a la consola vinculada actual.</string>
+    <string name="storage">Emmagatzematge</string>
+    <string name="compress_cia_installs">Comprimir el contingut de CIAs instal·lats</string>
+    <string name="compress_cia_installs_description">Comprimix el contingut de fitxers CIA quan són instal·lats a la SD emulada. Només afecta contingut CIA instal·lat amb esta opció activada.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Càmera interior</string>
     <string name="outer_left_camera">Càmera esquerra externa</string>
@@ -397,6 +401,10 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_configure_controls">Configurar Controls</string>
     <string name="emulation_edit_layout">Editar Estil</string>
     <string name="emulation_done">Fet</string>
+    <string name="emulation_button_sliding">Lliscament de botons</string>
+    <string name="emulation_button_sliding_disabled">Mantindre el botó pressionat originalment</string>
+    <string name="emulation_button_sliding_enabled">Mantindre el botó pressionat actualment</string>
+    <string name="emulation_button_sliding_alternative">Mantindre el botó original i actualment pressionat</string>
     <string name="emulation_toggle_controls">Activar Controls</string>
     <string name="emulation_control_scale">Ajustar Escala</string>
     <string name="emulation_control_scale_global">Escala Global</string>
@@ -409,6 +417,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_aspect_ratio">Relació d\'Aspecte</string>
     <string name="emulation_switch_screen_layout">Estil de Pantalla Apaïsada</string>
     <string name="emulation_switch_portrait_layout">Estil de Pantalla de Perfil</string>
+    <string name="emulation_switch_secondary_layout">Estil de Pantalla Secundària</string>
+    <string name="emulation_switch_secondary_layout_description">La disposició de la pantalla secundària connectada, amb cable o sense fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Vertical</string>
     <string name="emulation_screen_layout_single">Pantalla Única</string>
@@ -416,6 +426,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_screen_layout_hybrid">Pantalles híbrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Per omissió</string>
+    <string name="emulation_secondary_display_default">Per defecte del sistema (espill)</string>
     <string name="emulation_screen_layout_custom">Estil Personalitzat</string>
     <string name="emulation_small_screen_position">Posició de Pantalla Xicoteta</string>
     <string name="small_screen_position_description">On hauria d\'aparéixer la pantalla xicoteta en relació amb la gran en Proporció de Pantalla Gran?</string>
@@ -536,6 +547,10 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="create_shortcut">Crear drecera</string>
     <string name="shortcut_name_empty">El nom de la drecera no pot estar buit</string>
     <string name="shortcut_image_stretch_toggle">Allargar per a ajustar la imatge</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Fitxer:</string>
+    <string name="game_context_type">Tipus:</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar informació de rendiment</string>
     <string name="performance_overlay_options">Informació de rendiment</string>

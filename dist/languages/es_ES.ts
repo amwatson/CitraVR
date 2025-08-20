@@ -4517,7 +4517,7 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2339"/>
         <source>File compress operation failed, check log for details.</source>
-        <translation>Operación de comprensión fallida, mira el registro para más detalles.</translation>
+        <translation>Operación de compresión fallida, mira el registro para más detalles.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2341"/>
@@ -4529,7 +4529,7 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2342"/>
         <source>File decompress operation failed, check log for details.</source>
-        <translation>Operación de descomprensión fallida, mira el registro para más detalles.</translation>
+        <translation>Operación de descompresión fallida, mira el registro para más detalles.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2364"/>

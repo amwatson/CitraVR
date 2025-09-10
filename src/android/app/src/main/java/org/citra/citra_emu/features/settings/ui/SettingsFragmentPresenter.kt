@@ -248,6 +248,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.ANDROID_HIDE_IMAGES,
+                    R.string.android_hide_images,
+                    R.string.android_hide_images_description,
+                    BooleanSetting.ANDROID_HIDE_IMAGES.key,
+                    BooleanSetting.ANDROID_HIDE_IMAGES.defaultValue
+                )
+            )
         }
     }
 

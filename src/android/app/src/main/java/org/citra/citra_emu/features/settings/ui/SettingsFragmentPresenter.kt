@@ -1166,6 +1166,76 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     FloatSetting.LARGE_SCREEN_PROPORTION.defaultValue
                 )
             )
+            add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
+            val bgRedSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_RED.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_RED.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_RED, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgRedSetting,
+                    R.string.bg_red,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
+            val bgGreenSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_GREEN.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_GREEN.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_GREEN, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgGreenSetting,
+                    R.string.bg_green,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
+            val bgBlueSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_BLUE.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_BLUE.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_BLUE, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgBlueSetting,
+                    R.string.bg_blue,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
             add(
                 SubmenuSetting(
                     R.string.performance_overlay_options,

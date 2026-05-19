@@ -19,6 +19,7 @@ import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.vr.utils.VRUtils
 
 class InputBindingSetting(
     val abstractSetting: AbstractSetting,
@@ -546,7 +547,14 @@ class InputBindingSetting(
                 migratedSet
             }
             if (buttonCodes == null) buttonCodes = mutableSetOf<String>()
-            return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
+            val mappedButtons = buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
+            if (mappedButtons.isNotEmpty()) {
+                return mappedButtons
+            }
+
+            return VRUtils.ButtonType.androidToNativeLibrary(translateEventToKeyId(keyCode))
+                ?.let { mutableSetOf(it) }
+                ?: mutableSetOf()
         }
 
         private fun getInputButtonKey(keyId: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyId}"

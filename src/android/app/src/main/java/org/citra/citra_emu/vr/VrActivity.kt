@@ -11,8 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Display
-import android.view.InputDevice
-import android.view.KeyEvent
 import android.view.View
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.activities.EmulationActivity
@@ -91,11 +89,13 @@ class VrActivity : EmulationActivity() {
     }
 
     fun forwardVRInput(keycode: Int, isPressed: Boolean) {
-        val event = KeyEvent(
-            if (isPressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, keycode
+        val button = org.citra.citra_emu.vr.utils.VRUtils.ButtonType.androidToNativeLibrary(keycode)
+            ?: return
+        NativeLibrary.onGamePadEvent(
+            "Quest controller",
+            button,
+            if (isPressed) NativeLibrary.ButtonState.PRESSED else NativeLibrary.ButtonState.RELEASED
         )
-        event.source = InputDevice.SOURCE_GAMEPAD
-        runOnUiThread { dispatchKeyEvent(event) }
     }
 
     fun forwardVRJoystick(x: Float, y: Float, joystickType: Int) {

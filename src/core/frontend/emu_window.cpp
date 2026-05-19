@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <mutex>
+#include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/3ds.h"
 #include "core/frontend/emu_window.h"
@@ -12,6 +13,25 @@
 namespace Frontend {
 /// We need a global touch state that is shared across the different window instances
 static std::weak_ptr<EmuWindow::TouchState> global_touch_state;
+
+#ifdef ANDROID
+Layout::FramebufferLayout MakeCitraVRFramebufferLayout(u32 width, u32 height) {
+    const u32 top_height = height / 2;
+    Layout::FramebufferLayout layout{
+        width,
+        height,
+        true,
+        true,
+        Common::Rectangle<u32>{0, 0, width, top_height},
+        Common::Rectangle<u32>{0, top_height, width, height},
+        true,
+        false,
+        false,
+    };
+    layout.render_3d_mode = Settings::StereoRenderOption::SideBySide;
+    return layout;
+}
+#endif
 
 GraphicsContext::~GraphicsContext() = default;
 
@@ -216,6 +236,23 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     bool is_bottom = is_secondary;
     if (Settings::values.swap_screen.GetValue())
         is_bottom = !is_bottom;
+
+#ifdef ANDROID
+    if (!is_secondary) {
+        layout = MakeCitraVRFramebufferLayout(width, height);
+        UpdateMinimumWindowSize({Core::kScreenTopWidth, Core::kScreenTopHeight +
+                                                        Core::kScreenBottomHeight});
+        LOG_INFO(Frontend,
+                 "CitraVR framebuffer atlas forced: {}x{}, top={},{} {}x{}, bottom={},{} {}x{}, "
+                 "stereo=SideBySide",
+                 layout.width, layout.height, layout.top_screen.left, layout.top_screen.top,
+                 layout.top_screen.GetWidth(), layout.top_screen.GetHeight(),
+                 layout.bottom_screen.left, layout.bottom_screen.top,
+                 layout.bottom_screen.GetWidth(), layout.bottom_screen.GetHeight());
+        NotifyFramebufferLayoutChanged(layout);
+        return;
+    }
+#endif
 
     const Settings::PortraitLayoutOption portrait_layout_option =
         Settings::values.portrait_layout_option.GetValue();

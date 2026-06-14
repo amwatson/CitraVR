@@ -31,7 +31,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
+import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
@@ -396,7 +396,7 @@ open class EmulationActivity : AppCompatActivity() {
                 // Axis is unmapped
                 continue
             }
-            if (value > 0f && value < 0.1f || value < 0f && value > -0.1f) {
+            if ((value > 0f && value < 0.1f) || (value < 0f && value > -0.1f)) {
                 // Skip joystick wobble
                 value = 0f
             }
@@ -478,7 +478,7 @@ open class EmulationActivity : AppCompatActivity() {
         // Triggers L/R and ZL/ZR
         if (isTriggerPressedLMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.TRIGGER_L,
                 if (isTriggerPressedL) {
                     NativeLibrary.ButtonState.PRESSED
@@ -489,7 +489,7 @@ open class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedRMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.TRIGGER_R,
                 if (isTriggerPressedR) {
                     NativeLibrary.ButtonState.PRESSED
@@ -500,7 +500,7 @@ open class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedZLMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.BUTTON_ZL,
                 if (isTriggerPressedZL) {
                     NativeLibrary.ButtonState.PRESSED
@@ -511,7 +511,7 @@ open class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedZRMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.BUTTON_ZR,
                 if (isTriggerPressedZR) {
                     NativeLibrary.ButtonState.PRESSED
@@ -524,72 +524,72 @@ open class EmulationActivity : AppCompatActivity() {
         // Work-around to allow D-pad axis to be bound to emulated buttons
         if (axisValuesDPad[0] == 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[0] < 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.PRESSED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[0] > 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.PRESSED
             )
         }
         if (axisValuesDPad[1] == 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[1] < 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.PRESSED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[1] > 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.PRESSED
             )
@@ -620,7 +620,7 @@ open class EmulationActivity : AppCompatActivity() {
                 return@registerForActivityResult
             }
 
-            OnFilePickerResult(result.toString())
+            onFilePickerResult(result.toString())
         }
 
     companion object {

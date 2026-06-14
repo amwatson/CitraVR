@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,23 +16,20 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.vr.VrActivity
 import org.citra.citra_emu.vr.ui.VrKeyboardView
 import org.citra.citra_emu.vr.utils.VrMessageQueue
-import java.io.Serializable
-import java.security.Key
-
 
 @Keep
 object SoftwareKeyboard {
     lateinit var data: KeyboardData
     val finishLock = Object()
 
-    private fun ExecuteImpl(config: KeyboardConfig) {
+    private fun executeImpl(config: KeyboardConfig) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         data = KeyboardData(0, "")
         KeyboardDialogFragment.newInstance(config)
             .show(emulationActivity!!.supportFragmentManager, KeyboardDialogFragment.TAG)
     }
 
-    fun HandleValidationError(config: KeyboardConfig, error: ValidationError) {
+    fun handleValidationError(config: KeyboardConfig, error: ValidationError) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()!!
         val message: String = when (error) {
             ValidationError.FixedLengthRequired -> emulationActivity.getString(
@@ -59,12 +56,11 @@ object SoftwareKeyboard {
     }
 
     @JvmStatic
-    fun Execute(config: KeyboardConfig): KeyboardData {
-        if (config.buttonConfig == ButtonConfig.None) {
+    fun execute(config: KeyboardConfig): KeyboardData {
+        if (config.buttonConfig == ButtonConfig.NONE) {
             Log.error("Unexpected button config None")
             return KeyboardData(0, "")
         }
-
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         if (emulationActivity is VrActivity) {
             NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
@@ -74,11 +70,7 @@ object SoftwareKeyboard {
             }
         } else {
             Log.debug("Starting keyboard: non-VR")
-            NativeLibrary.sEmulationActivity.get()!!.runOnUiThread {
-                ExecuteImpl(
-                    config
-                )
-            }
+            NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { executeImpl(config) }
         }
         synchronized(finishLock) {
             try {
@@ -93,8 +85,9 @@ object SoftwareKeyboard {
         return data
     }
 
+    @Suppress("unused")
     @JvmStatic
-    fun ShowError(error: String) {
+    fun showError(error: String) {
         NativeLibrary.displayAlertMsg(
             appContext.resources.getString(R.string.software_keyboard),
             error,
@@ -102,16 +95,19 @@ object SoftwareKeyboard {
         )
     }
 
+    @Suppress("FunctionName")
     private external fun ValidateFilters(text: String): ValidationError
+
+    @Suppress("FunctionName")
     external fun ValidateInput(text: String): ValidationError
 
     // / Corresponds to Frontend::ButtonConfig
     interface ButtonConfig {
         companion object {
-            const val Single = 0 // / Ok button
-            const val Dual = 1 // / Cancel | Ok buttons
-            const val Triple = 2 // / Cancel | I Forgot | Ok buttons
-            const val None = 3 // / No button (returned by swkbdInputText in special cases)
+            const val SINGLE = 0 // / Ok button
+            const val DUAL = 1 // / Cancel | Ok buttons
+            const val TRIPLE = 2 // / Cancel | I Forgot | Ok buttons
+            const val NONE = 3 // / No button (returned by swkbdInputText in special cases)
         }
     }
 
@@ -178,7 +174,7 @@ object SoftwareKeyboard {
         data = KeyboardData(config!!.buttonConfig, text!!)
         val error = ValidateInput(data.text)
         if (error != ValidationError.None) {
-            HandleValidationError(config, error)
+            handleValidationError(config, error)
             onFinishVrKeyboardNegative()
             return
         }

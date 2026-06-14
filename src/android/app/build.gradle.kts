@@ -150,7 +150,7 @@ android {
             }
             lint {
                 checkReleaseBuilds = false // Ditto
-                                           // The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+                // ^- The name of this property is misleading, this doesn't actually disable linting for the `release` build.
             }
         }
 
@@ -285,7 +285,7 @@ fun getGitHash(): String =
 fun getBranch(): String =
     runGitCommand(ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")) ?: "dummy-branch"
 
-fun runGitCommand(command: ProcessBuilder) : String? {
+fun runGitCommand(command: ProcessBuilder): String? {
     try {
         command.directory(project.rootDir)
         val process = command.start()
@@ -311,7 +311,7 @@ android.applicationVariants.configureEach {
     val variant = this
     val capitalizedName = variant.name.capitalizeUS()
 
-    val copyTask = tasks.register("copyBundle${capitalizedName}") {
+    val copyTask = tasks.register("copyBundle$capitalizedName") {
         doLast {
             project.copy {
                 from(variant.outputs.first().outputFile.parentFile)
@@ -325,5 +325,5 @@ android.applicationVariants.configureEach {
             }
         }
     }
-    tasks.named("bundle${capitalizedName}").configure { finalizedBy(copyTask) }
+    tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
 }

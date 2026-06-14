@@ -38,7 +38,10 @@ object EmulationMenuSettings {
         }
 
     var buttonSlide: Int
-        get() = preferences.getInt("EmulationMenuSettings_ButtonSlideMode", ButtonSlidingMode.Disabled.int)
+        get() = preferences.getInt(
+            "EmulationMenuSettings_ButtonSlideMode",
+            ButtonSlidingMode.Disabled.int
+        )
         set(value) {
             preferences.edit()
                 .putInt("EmulationMenuSettings_ButtonSlideMode", value)
@@ -49,8 +52,8 @@ object EmulationMenuSettings {
         get() = preferences.getBoolean("EmulationMenuSettings_HapticFeedback", true)
         set(value) {
             preferences.edit()
-                    .putBoolean("EmulationMenuSettings_HapticFeedback", value)
-                    .apply()
+                .putBoolean("EmulationMenuSettings_HapticFeedback", value)
+                .apply()
         }
     var swapScreens: Boolean
         get() = false

@@ -11,7 +11,6 @@ object EmulationLifecycleUtil {
     private var shutdownHooks: MutableList<Runnable> = ArrayList()
     private var pauseResumeHooks: MutableList<Runnable> = ArrayList()
 
-
     fun closeGame() {
         val activity = NativeLibrary.sEmulationActivity.get()
         if (activity != null && activity is VrActivity) {
@@ -27,7 +26,9 @@ object EmulationLifecycleUtil {
 
     fun addShutdownHook(hook: Runnable) {
         if (shutdownHooks.contains(hook)) {
-            Log.warning("[EmulationLifecycleUtil] Tried to add shutdown hook for function that already existed. Skipping.")
+            Log.warning(
+                "[EmulationLifecycleUtil] Tried to add shutdown hook for function that already existed. Skipping."
+            )
         } else {
             shutdownHooks.add(hook)
         }
@@ -35,7 +36,9 @@ object EmulationLifecycleUtil {
 
     fun addPauseResumeHook(hook: Runnable) {
         if (pauseResumeHooks.contains(hook)) {
-            Log.warning("[EmulationLifecycleUtil] Tried to add pause resume hook for function that already existed. Skipping.")
+            Log.warning(
+                "[EmulationLifecycleUtil] Tried to add pause resume hook for function that already existed. Skipping."
+            )
         } else {
             pauseResumeHooks.add(hook)
         }

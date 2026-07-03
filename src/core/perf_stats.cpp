@@ -31,6 +31,8 @@ constexpr std::size_t IgnoreFrames = 5;
 
 namespace Core {
 
+bool PerfStats::game_frames_updated = true;
+
 PerfStats::PerfStats(u64 title_id) : title_id(title_id) {}
 
 PerfStats::~PerfStats() {
@@ -177,6 +179,7 @@ void PerfStats::EndGameFrame() {
     std::scoped_lock lock{object_mutex};
 
     game_frames += 1;
+    PerfStats::game_frames_updated = true;
 }
 
 double PerfStats::GetMeanFrametime() const {

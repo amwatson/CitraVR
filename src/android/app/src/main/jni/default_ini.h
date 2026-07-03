@@ -576,6 +576,10 @@ vr_immersive_eye_indicator =
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(renderer_debug) BOOST_HANA_STRING(R"(
 
+# Whether to enable PICA200 debugging (does nothing on Android)
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(pica_debugging) BOOST_HANA_STRING(R"(
+
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 )") DECLARE_KEY(instant_debug_log) BOOST_HANA_STRING(R"(

@@ -877,6 +877,11 @@ class EmulationFragment :
                     true
                 }
 
+                R.id.menu_emulation_adjust_scale_button_turbo -> {
+                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_TURBO)
+                    true
+                }
+
                 R.id.menu_emulation_adjust_scale_button_combo -> {
                     showAdjustScaleDialog("controlScale-" + Hotkey.COMBO_BUTTON.button)
                     true
@@ -1435,6 +1440,7 @@ class EmulationFragment :
         resetScale("controlScale-" + NativeLibrary.ButtonType.STICK_C)
         resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_HOME)
         resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_SWAP)
+        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_TURBO)
         resetScale("controlScale-" + Hotkey.COMBO_BUTTON.button)
         binding.surfaceInputOverlay.refreshControls()
     }

@@ -808,6 +808,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+
         sl.apply {
             add(
                 RunnableSetting(
@@ -819,6 +820,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     onLongClick = { settingsAdapter.onLongClickAutoMap() }
                 )
             )
+
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
@@ -870,6 +872,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, VRUtils.hotkeyTitles[i]))
             }
+
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(
@@ -878,6 +881,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.use_artic_base_controller_description,
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.key,
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
+                )
+            )
+
+            add(
+                MultiChoiceSetting(
+                    IntListSetting.COMBO_BUTTON_BUTTONS,
+                    R.string.combo_button_settings,
+                    R.string.combo_button_settings_description,
+                    R.array.comboOptions,
+                    R.array.comboOptionValues,
+                    IntListSetting.COMBO_BUTTON_BUTTONS.key,
+                    IntListSetting.COMBO_BUTTON_BUTTONS.defaultValue
                 )
             )
         }

@@ -148,7 +148,12 @@ void Config::ReadValues() {
     Settings::values.use_gles = android_config->GetBoolean("Renderer", "use_gles", true);
     Settings::values.shaders_accurate_mul =
         android_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
-    ReadSetting("Renderer", Settings::values.graphics_api);
+    // CitraVR: default to OpenGL ES (the known-good renderer for the OpenXR
+    // pipeline) instead of Azahar's Android default of Vulkan. Users can still
+    // opt into Vulkan via config.ini.vr.
+    Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(
+        android_config->GetInteger("Renderer", Settings::values.graphics_api.GetLabel(),
+                                   static_cast<long>(Settings::GraphicsAPI::OpenGL)));
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
     ReadSetting("Renderer", Settings::values.spirv_shader_gen);
@@ -199,6 +204,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_blue);
     ReadSetting("Renderer", Settings::values.custom_second_layer_opacity);
     ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);
+    ReadSetting("Renderer", Settings::values.simulate_3ds_gpu_timings);
     ReadSetting("Renderer", Settings::values.disable_right_eye_render);
     ReadSetting("Renderer", Settings::values.swap_eyes_3d);
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
@@ -254,6 +260,7 @@ void Config::ReadValues() {
 
     // Storage
     ReadSetting("Storage", Settings::values.compress_cia_installs);
+    ReadSetting("Storage", Settings::values.async_fs_operations);
 
     // Utility
     ReadSetting("Utility", Settings::values.dump_textures);
@@ -264,6 +271,7 @@ void Config::ReadValues() {
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);
     ReadSetting("Audio", Settings::values.enable_realtime_audio);
+    ReadSetting("Audio", Settings::values.simulate_headphones_plugged);
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);
 
@@ -391,6 +399,7 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.instant_debug_log);
     ReadSetting("Debugging", Settings::values.enable_rpc_server);
     ReadSetting("Debugging", Settings::values.toggle_unique_data_console_type);
+    ReadSetting("Debugging", Settings::values.break_on_unmapped_memory_access);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle =

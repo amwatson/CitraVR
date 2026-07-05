@@ -15,7 +15,7 @@ namespace DefaultINI {
 
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
-constexpr std::array<std::string_view, 23> android_config_omitted_keys = {
+constexpr std::array<std::string_view, 25> android_config_omitted_keys = {
     Keys::enable_gamemode,
     Keys::use_custom_storage,
     Keys::init_time_offset,
@@ -37,7 +37,10 @@ constexpr std::array<std::string_view, 23> android_config_omitted_keys = {
     Keys::audio_encoder,
     Keys::audio_encoder_options,
     Keys::audio_bitrate,
-    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Keys::last_artic_base_addr,            // On Android, this value is stored as a "preference"
+    Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
+    Keys::use_gdbstub,                     // GDB functionality disabled by deafult on Android
+    Keys::gdbstub_port,
 };
 
 // clang-format off
@@ -92,7 +95,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 
 [Renderer]
 # Whether to render using OpenGL
-# 1: OpenGL ES, 2: Vulkan (default)
+# 1: OpenGL ES (CitraVR default), 2: Vulkan
 )") DECLARE_KEY(graphics_api) BOOST_HANA_STRING(R"(
 
 # Whether to compile shaders on multiple worker threads (Vulkan only)
@@ -198,6 +201,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Set to 0 for no delay, only useful in dynamic-fps games to simulate GPU delay.
 )") DECLARE_KEY(delay_game_render_thread_us) BOOST_HANA_STRING(R"(
 
+# Delays GPU completion events based on measurements taken from real hardware
+# 0: No delay, 1 (default): Enable delay
+)") DECLARE_KEY(simulate_3ds_gpu_timings) BOOST_HANA_STRING(R"(
+
 # Disables rendering the right eye image
 # Greatly improves performance in some games, but can cause flickering in others.
 # 0 : Enable right eye rendering, 1: Disable right eye rendering
@@ -272,6 +279,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Whether to compress the installed CIA contents
 # 0 (default): Do not compress, 1: Compress
 )") DECLARE_KEY(compress_cia_installs) BOOST_HANA_STRING(R"(
+
+# Whether to enable async filesystem operations
+# 0: Disabled, 1 (default): Enabled
+)") DECLARE_KEY(async_fs_operations) BOOST_HANA_STRING(R"(
 
 # Position of the performance overlay
 # 0: Top Left
@@ -405,6 +416,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Scales audio playback speed to account for drops in emulation framerate
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(enable_realtime_audio) BOOST_HANA_STRING(R"(
+
+# Simulates whether headphones are plugged in to the emulated 3DS system
+# 0 (default): No, 1: Yes
+)") DECLARE_KEY(simulate_headphones_plugged) BOOST_HANA_STRING(R"(
 
 # Output volume.
 # 1.0 (default): 100%, 0.0; mute
@@ -546,10 +561,6 @@ vr_immersive_eye_indicator =
 # Whether to enable additional debugging information during emulation
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(renderer_debug) BOOST_HANA_STRING(R"(
-
-# Port for listening to GDB connections.
-)") DECLARE_KEY(use_gdbstub) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(gdbstub_port) BOOST_HANA_STRING(R"(
 
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.

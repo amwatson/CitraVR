@@ -104,10 +104,27 @@ if (CITRA_USE_PRECOMPILED_HEADERS)
     endif()
 endif()
 
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
+set(CITRA_GIT_HOOKS_DIR "${PROJECT_SOURCE_DIR}/.git/hooks")
+if(EXISTS "${PROJECT_SOURCE_DIR}/.git" AND NOT IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
+    find_package(Git QUIET)
+    if(GIT_FOUND)
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" rev-parse --git-common-dir
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            OUTPUT_VARIABLE CITRA_GIT_COMMON_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        if(CITRA_GIT_COMMON_DIR)
+            set(CITRA_GIT_HOOKS_DIR "${CITRA_GIT_COMMON_DIR}/hooks")
+        endif()
+    endif()
+endif()
+
+if(EXISTS "${CITRA_GIT_HOOKS_DIR}" AND NOT EXISTS "${CITRA_GIT_HOOKS_DIR}/pre-commit")
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
-        DESTINATION ${PROJECT_SOURCE_DIR}/.git/hooks)
+        DESTINATION "${CITRA_GIT_HOOKS_DIR}")
 endif()
 
 # Use ccache for android if available

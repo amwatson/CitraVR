@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@
 #include <utility>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
+#include "network/artic_base/artic_base_client.h"
 
 namespace FileSys {
 class ArchiveBackend;
@@ -18,6 +19,10 @@ class ArchiveBackend;
 
 namespace Core {
 class System;
+}
+
+namespace HW::UniqueData {
+enum class SecureDataLoadStatus;
 }
 
 namespace Service::CFG {
@@ -188,6 +193,10 @@ public:
 
         std::shared_ptr<Module> GetModule() const;
 
+        void UseArticClient(std::shared_ptr<Network::ArticBase::Client>& client) {
+            GetModule()->artic_client = client;
+        }
+
         /**
          * CFG::GetCountryCodeString service function
          *  Inputs:
@@ -229,6 +238,18 @@ public:
          *      2 : Value loaded from SecureInfo offset 0x101
          */
         void SecureInfoGetByte101(Kernel::HLERequestContext& ctx);
+
+        /**
+         * CFG::SecureInfoGetSerialNo service function
+         *  Inputs:
+         *      1 : Buffer Size
+         *      2-3: Output mapped buffer
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2-3 : Output mapped buffer
+         */
+        void SecureInfoGetSerialNo(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::SetUUIDClockSequence service function
@@ -346,6 +367,27 @@ public:
         void UpdateConfigNANDSavegame(Kernel::HLERequestContext& ctx);
 
         /**
+         * CFG::GetLocalFriendCodeSeedData service function
+         *  Inputs:
+         *      1 : Buffer Size
+         *      2-3: Output mapped buffer
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetLocalFriendCodeSeedData(Kernel::HLERequestContext& ctx);
+
+        /**
+         * CFG::GetLocalFriendCodeSeed service function
+         *  Inputs:
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2-3 : Friend code seed
+         */
+        void GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx);
+
+        /**
          * CFG::FormatConfig service function
          *  Inputs:
          *      0 : 0x08060000
@@ -442,7 +484,9 @@ private:
     void LoadMCUConfig();
 
 public:
-    u32 GetRegionValue();
+    u32 GetRegionValue(bool from_secure_info);
+
+    static bool IsValidRegionCountry(u32 region, u8 country_code);
 
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.
@@ -580,6 +624,16 @@ public:
      */
     void SaveMCUConfig();
 
+    /**
+     * Get a reference to the console's MAC address
+     */
+    std::string& GetMacAddress();
+
+    /**
+     * Saves the current MAC address to the filesystem
+     */
+    void SaveMacAddress();
+
 private:
     void UpdatePreferredRegionCode();
     SystemLanguage GetRawSystemLanguage();
@@ -592,6 +646,9 @@ private:
     u32 preferred_region_code = 0;
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
+    std::string mac_address{};
+
+    std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -604,6 +661,18 @@ void InstallInterfaces(Core::System& system);
 
 /// Convenience function for getting a SHA256 hash of the Console ID
 std::string GetConsoleIdHash(Core::System& system);
+
+std::array<u8, 6> MacToArray(const std::string& mac);
+
+std::string MacToString(u64 mac);
+
+std::string MacToString(const std::array<u8, 6>& mac);
+
+u64 MacToU64(const std::string& mac);
+
+std::string GenerateRandomMAC();
+
+std::array<u8, 6> GetConsoleMacAddress(Core::System& system);
 
 } // namespace Service::CFG
 

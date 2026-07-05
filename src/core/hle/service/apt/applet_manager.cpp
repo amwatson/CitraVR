@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -120,6 +120,37 @@ static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
         return n3ds_title_id;
     }
     return itr->title_ids[region_value];
+}
+
+static constexpr std::size_t NumTitleIDConverts = 3;
+static constexpr std::array<std::array<u64, 7>, NumTitleIDConverts> TitleIDConvertTable = {{
+    // MSET
+    {{0x0004001000020000, 0x0004001000021000, 0x0004001000022000, 0x0004001000020000,
+      0x0004001000026000, 0x0004001000027000, 0x0004001000028000}},
+    // eShop
+    {{0x0004001000020900, 0x0004001000021900, 0x0004001000022900, 0x0004001000020900,
+      0x0004001000020900, 0x0004001000027900, 0x0004001000028900}},
+    // NNID Settings
+    {{0x000400100002BF00, 0x000400100002C000, 0x000400100002C100, 0x000400100002BF00,
+      0x000400100002BF00, 0x000400100002BF00, 0x000400100002BF00}},
+}};
+
+static u64 ConvertTitleID(Core::System& system, u64 base_title_id) {
+
+    auto cfg = Service::CFG::GetModule(system);
+    if (!cfg) {
+        return base_title_id;
+    }
+
+    u32 region_value = cfg->GetRegionValue(false);
+
+    for (auto& entry : TitleIDConvertTable) {
+        if (base_title_id == entry[0]) {
+            return entry[region_value];
+        }
+    }
+
+    return base_title_id;
 }
 
 static bool IsSystemAppletId(AppletId applet_id) {
@@ -365,6 +396,10 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     // Note: In the real console the title id of a given applet slot is set by the APT module when
     // calling StartApplication.
     slot_data->title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
+    if (app_id == AppletId::Application) {
+        slot_data->media_type = next_app_mediatype;
+        next_app_mediatype = static_cast<FS::MediaType>(UINT32_MAX);
+    }
     slot_data->attributes.raw = attributes.raw;
 
     // Applications need to receive a Wakeup signal to actually start up, this signal is usually
@@ -373,7 +408,10 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     if (active_slot == AppletSlot::Error) {
         active_slot = slot;
 
-        // Wake up the application.
+        // APT automatically calls enable on the first registered applet.
+        Enable(attributes);
+
+        // Wake up the applet.
         SendParameter({
             .sender_id = AppletId::None,
             .destination_id = app_id,
@@ -398,7 +436,8 @@ Result AppletManager::Enable(AppletAttributes attributes) {
     auto slot_data = GetAppletSlot(slot);
     slot_data->registered = true;
 
-    if (slot_data->attributes.applet_pos == AppletPos::System &&
+    if (slot_data->applet_id != AppletId::None &&
+        slot_data->attributes.applet_pos == AppletPos::System &&
         slot_data->attributes.is_home_menu) {
         slot_data->attributes.raw |= attributes.raw;
         LOG_DEBUG(Service_APT, "Updated home menu attributes to {:08X}.",
@@ -569,9 +608,11 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     capture_buffer_info.reset();
 
     if (Settings::values.lle_applets) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (process) {
             return ResultSuccess;
         }
@@ -598,9 +639,11 @@ Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     last_prepared_library_applet = applet_id;
 
     if (Settings::values.lle_applets) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (process) {
             return ResultSuccess;
         }
@@ -786,16 +829,23 @@ Result AppletManager::PrepareToStartSystemApplet(AppletId applet_id) {
 
 Result AppletManager::StartSystemApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
                                         const std::vector<u8>& buffer) {
-    auto source_applet_id = AppletId::None;
+    auto source_applet_id = AppletId::Application;
     if (last_system_launcher_slot != AppletSlot::Error) {
-        const auto slot_data = GetAppletSlot(last_system_launcher_slot);
-        source_applet_id = slot_data->applet_id;
+        const auto launcher_slot_data = GetAppletSlot(last_system_launcher_slot);
+        source_applet_id = launcher_slot_data->applet_id;
 
-        // If a system applet is launching another system applet, reset the slot to avoid conflicts.
-        // This is needed because system applets won't necessarily call CloseSystemApplet before
-        // exiting.
-        if (last_system_launcher_slot == AppletSlot::SystemApplet) {
-            slot_data->Reset();
+        // APT generally clears and terminates the caller of StartSystemApplet. This helps in
+        // situations such as a system applet launching another system applet, which would
+        // otherwise deadlock.
+        // TODO: In real APT, the check for AppletSlot::Application does not exist; there is
+        // TODO: something wrong with our implementation somewhere that makes this necessary.
+        // TODO: Otherwise, games that attempt to launch system applets will be cleared and
+        // TODO: emulation will crash.
+        if (!launcher_slot_data->registered ||
+            (last_system_launcher_slot != AppletSlot::Application &&
+             !launcher_slot_data->attributes.no_exit_on_system_applet)) {
+            launcher_slot_data->Reset();
+            // TODO: Implement launcher process termination.
         }
     }
 
@@ -803,9 +853,11 @@ Result AppletManager::StartSystemApplet(AppletId applet_id, std::shared_ptr<Kern
     const auto slot_id =
         applet_id == AppletId::HomeMenu ? AppletSlot::HomeMenu : AppletSlot::SystemApplet;
     if (!GetAppletSlot(slot_id)->registered) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (!process) {
             // TODO: Find the right error code.
             return {ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotSupported,
@@ -996,6 +1048,22 @@ Result AppletManager::LeaveHomeMenu(std::shared_ptr<Kernel::Object> object,
     return ResultSuccess;
 }
 
+Result AppletManager::LoadSysMenuArg(std::vector<u8>& buffer) {
+    if (sys_menu_arg.has_value()) {
+        std::memcpy(buffer.data(), sys_menu_arg.value().data(),
+                    std::min(buffer.size(), sys_menu_arg.value().size()));
+    }
+    // Always succeed, even if there is no data to copy.
+    return ResultSuccess;
+}
+
+Result AppletManager::StoreSysMenuArg(const std::vector<u8>& buffer) {
+    sys_menu_arg = std::array<u8, SysMenuArgSize>();
+    std::memcpy(sys_menu_arg.value().data(), buffer.data(),
+                std::min(buffer.size(), sys_menu_arg.value().size()));
+    return ResultSuccess;
+}
+
 Result AppletManager::OrderToCloseApplication() {
     if (active_slot == AppletSlot::Error) {
         return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
@@ -1143,7 +1211,14 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
                       ErrorLevel::Status);
     }
 
-    auto media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    FS::MediaType media_type;
+    if (slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        media_type = slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    }
+
     return AppletInfo{
         .title_id = slot_data->title_id,
         .media_type = media_type,
@@ -1170,7 +1245,13 @@ ResultVal<Service::FS::MediaType> AppletManager::Unknown54(u32 in_param) {
         in_param >= 0x40 ? Service::FS::MediaType::GameCard : Service::FS::MediaType::SDMC;
     auto check_update = in_param == 0x01 || in_param == 0x42;
 
-    auto app_media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    FS::MediaType app_media_type;
+    if (slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        app_media_type = slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        app_media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    }
     auto app_update_media_type =
         Service::AM::GetTitleMediaType(Service::AM::GetTitleUpdateId(slot_data->title_id));
     if (app_media_type == check_target || (check_update && app_update_media_type == check_target)) {
@@ -1196,8 +1277,8 @@ ApplicationRunningMode AppletManager::GetApplicationRunningMode() {
 
     // APT checks whether the system is a New 3DS and the 804MHz CPU speed is enabled to determine
     // the result.
-    auto new_3ds_mode = GetTargetPlatform() == TargetPlatform::New3ds &&
-                        system.Kernel().GetNew3dsHwCapabilities().enable_804MHz_cpu;
+    auto new_3ds_mode =
+        GetTargetPlatform() == TargetPlatform::New3ds && system.Kernel().GetRunning804MHz();
     if (slot_data->registered) {
         return new_3ds_mode ? ApplicationRunningMode::New3dsRegistered
                             : ApplicationRunningMode::Old3dsRegistered;
@@ -1219,13 +1300,21 @@ Result AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType med
     // Save the title data to send it to the Home Menu when DoApplicationJump is called.
     auto application_slot_data = GetAppletSlot(AppletSlot::Application);
     app_jump_parameters.current_title_id = application_slot_data->title_id;
-    app_jump_parameters.current_media_type =
-        Service::AM::GetTitleMediaType(application_slot_data->title_id);
+
+    FS::MediaType curr_media_type;
+    if (application_slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        curr_media_type = application_slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        curr_media_type = Service::AM::GetTitleMediaType(application_slot_data->title_id);
+    }
+
+    app_jump_parameters.current_media_type = curr_media_type;
     if (flags == ApplicationJumpFlags::UseCurrentParameters) {
         app_jump_parameters.next_title_id = app_jump_parameters.current_title_id;
         app_jump_parameters.next_media_type = app_jump_parameters.current_media_type;
     } else {
-        app_jump_parameters.next_title_id = title_id;
+        app_jump_parameters.next_title_id = ConvertTitleID(system, title_id);
         app_jump_parameters.next_media_type = media_type;
     }
     app_jump_parameters.flags = flags;
@@ -1284,7 +1373,7 @@ Result AppletManager::DoApplicationJump(const DeliverArg& arg) {
         */
 
         NS::RebootToTitle(system, app_jump_parameters.next_media_type,
-                          app_jump_parameters.next_title_id);
+                          app_jump_parameters.next_title_id, std::nullopt);
         return ResultSuccess;
     }
 }
@@ -1303,6 +1392,61 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
                 ErrorLevel::Status};
     }
 
+    title_id = ConvertTitleID(system, title_id);
+
+    std::string path;
+    if (media_type == FS::MediaType::GameCard) {
+        path = system.GetCartridge();
+    } else {
+        path = AM::GetTitleContentPath(media_type, title_id);
+    }
+
+    next_app_mediatype = media_type;
+
+    auto loader = Loader::GetLoader(path);
+
+    if (!loader) {
+        LOG_ERROR(Service_APT, "Could not find .app for title 0x{:016x}", title_id);
+        // TODO: Find proper error code
+        return ResultUnknown;
+    }
+
+    auto plg_ldr = Service::PLGLDR::GetService(system);
+    if (plg_ldr) {
+        const auto& plg_context = plg_ldr->GetPluginLoaderContext();
+        if (plg_context.is_enabled && plg_context.use_user_load_parameters &&
+            plg_context.user_load_parameters.low_title_Id == static_cast<u32>(title_id) &&
+            plg_context.user_load_parameters.plugin_memory_strategy ==
+                PLGLDR::PLG_LDR::PluginMemoryStrategy::PLG_STRATEGY_MODE3) {
+            loader->SetKernelMemoryModeOverride(Kernel::MemoryMode::Dev2);
+        }
+    }
+
+    auto mem_mode = loader->LoadKernelMemoryMode();
+    if (mem_mode.second != Loader::ResultStatus::Success || !mem_mode.first.has_value()) {
+        // This cannot happen on real HW at this point of execution
+        LOG_ERROR(Service_APT, "Could not determine memory mode");
+        return ResultUnknown;
+    }
+
+    auto curr_mem_mode = system.Kernel().GetMemoryMode();
+
+    if (mem_mode.first.value() != curr_mem_mode) {
+        if (system.Kernel().GetMemoryMode() == Kernel::MemoryMode::NewProd) {
+            // On New 3DS prod memory mode, only incorrect state is if the app
+            // reports having the "unused" memory mode 1. TODO: Figure out
+            // how this works and if it is even used.
+            if (mem_mode.first.value() == static_cast<Kernel::MemoryMode>(1)) {
+                return {ErrCodes::IncorrectMemoryMode, ErrorModule::Applet,
+                        ErrorSummary::InvalidState, ErrorLevel::Status};
+            }
+        } else {
+            // On other memory modes, the state is incorrect.
+            return {ErrCodes::IncorrectMemoryMode, ErrorModule::Applet, ErrorSummary::InvalidState,
+                    ErrorLevel::Status};
+        }
+    }
+
     ASSERT_MSG(!app_start_parameters,
                "Trying to prepare an application when another is already prepared");
 
@@ -1311,6 +1455,8 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
     app_start_parameters->next_media_type = media_type;
 
     capture_buffer_info.reset();
+
+    app_jump_parameters.Invalidate();
 
     return ResultSuccess;
 }
@@ -1335,8 +1481,8 @@ Result AppletManager::StartApplication(const std::vector<u8>& parameter,
     active_slot = AppletSlot::Application;
 
     // Launch the title directly.
-    auto process =
-        NS::LaunchTitle(app_start_parameters->next_media_type, app_start_parameters->next_title_id);
+    auto process = NS::LaunchTitle(system, app_start_parameters->next_media_type,
+                                   app_start_parameters->next_title_id);
     if (!process) {
         LOG_CRITICAL(Service_APT, "Failed to launch title during application start, exiting.");
         system.RequestShutdown();
@@ -1386,6 +1532,44 @@ Result AppletManager::CancelApplication() {
     return ResultSuccess;
 }
 
+Result AppletManager::PrepareToStartNewestHomeMenu() {
+    if (active_slot == AppletSlot::Error ||
+        GetAppletSlot(active_slot)->attributes.applet_pos != AppletPos::System) {
+        return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
+                ErrorLevel::Status};
+    }
+
+    bool is_standard;
+    if (Settings::values.is_new_3ds) {
+        // Memory layout is standard if it is not NewDev1 (178MB)
+        is_standard = system.Kernel().GetMemoryMode() != Kernel::MemoryMode::NewDev1;
+    } else {
+        // Memory layout is standard if it is Prod (64MB)
+        is_standard = system.Kernel().GetMemoryMode() == Kernel::MemoryMode::Prod;
+    }
+
+    if (is_standard) {
+        return Result{ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                      ErrorSummary::InvalidState, ErrorLevel::Status};
+    }
+
+    home_menu_tid_to_start = GetAppletSlot(active_slot)->title_id;
+    return ResultSuccess;
+}
+
+Result AppletManager::StartNewestHomeMenu() {
+    if (!home_menu_tid_to_start) {
+        return Result{ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                      ErrorSummary::InvalidState, ErrorLevel::Status};
+    }
+
+    u64 titleID = home_menu_tid_to_start;
+    home_menu_tid_to_start = 0;
+
+    NS::RebootToTitle(system, Service::FS::MediaType::NAND, titleID, std::nullopt);
+    return ResultSuccess;
+}
+
 void AppletManager::SendApplicationParameterAfterRegistration(const MessageParameter& parameter) {
     auto slot = GetAppletSlotFromId(parameter.destination_id);
 
@@ -1411,8 +1595,8 @@ void AppletManager::EnsureHomeMenuLoaded() {
     }
 
     auto cfg = Service::CFG::GetModule(system);
-    auto menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, cfg->GetRegionValue());
-    auto process = NS::LaunchTitle(FS::MediaType::NAND, menu_title_id);
+    auto menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, cfg->GetRegionValue(false));
+    auto process = NS::LaunchTitle(system, FS::MediaType::NAND, menu_title_id);
     if (!process) {
         LOG_WARNING(Service_APT,
                     "The Home Menu failed to launch, application jumping will not work.");

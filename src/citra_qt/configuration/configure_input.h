@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,7 +30,7 @@ class ConfigureInput : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureInput(QWidget* parent = nullptr);
+    explicit ConfigureInput(Core::System& system, QWidget* parent = nullptr);
     ~ConfigureInput() override;
 
     /// Save all button configurations to settings file
@@ -50,6 +50,7 @@ signals:
     void InputKeysChanged(QList<QKeySequence> new_key_list);
 
 private:
+    Core::System& system;
     std::unique_ptr<Ui::ConfigureInput> ui;
 
     std::unique_ptr<QTimer> timeout_timer;
@@ -61,7 +62,7 @@ private:
     std::array<Common::ParamPackage, Settings::NativeButton::NumButtons> buttons_param;
     std::array<Common::ParamPackage, Settings::NativeAnalog::NumAnalogs> analogs_param;
 
-    static constexpr int ANALOG_SUB_BUTTONS_NUM = 5;
+    static constexpr int ANALOG_SUB_BUTTONS_NUM = 9;
 
     /// Each button input is represented by a QPushButton.
     std::array<QPushButton*, Settings::NativeButton::NumButtons> button_map;

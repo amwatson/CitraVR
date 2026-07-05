@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,6 +22,7 @@ using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
+constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
 // Purposefully ignore the first five frames, as there's a significant amount of overhead in
 // booting that we shouldn't account for
 constexpr std::size_t IgnoreFrames = 5;
@@ -47,6 +48,38 @@ PerfStats::~PerfStats() {
     file.WriteString(stream.str());
 }
 
+void PerfStats::BeginSVCProcessing() {
+    start_svc_time = Clock::now();
+}
+
+void PerfStats::EndSVCProcessing() {
+    accumulated_svc_time += (Clock::now() - start_svc_time);
+}
+
+void PerfStats::BeginIPCProcessing() {
+    start_ipc_time = Clock::now();
+}
+
+void PerfStats::EndIPCProcessing() {
+    accumulated_ipc_time += (Clock::now() - start_ipc_time);
+}
+
+void PerfStats::BeginGPUProcessing() {
+    start_gpu_time = Clock::now();
+}
+
+void PerfStats::EndGPUProcessing() {
+    accumulated_gpu_time += (Clock::now() - start_gpu_time);
+}
+
+void PerfStats::StartSwap() {
+    start_swap_time = Clock::now();
+}
+
+void PerfStats::EndSwap() {
+    accumulated_swap_time += (Clock::now() - start_swap_time);
+}
+
 void PerfStats::BeginSystemFrame() {
     std::scoped_lock lock{object_mutex};
 
@@ -64,6 +97,9 @@ void PerfStats::EndSystemFrame() {
     }
     accumulated_frametime += frame_time;
     system_frames += 1;
+
+    // TODO: Track previous frame times in a less stupid way. -OS
+    previous_previous_frame_length = previous_frame_length;
 
     previous_frame_length = frame_end - previous_frame_end;
     previous_frame_end = frame_end;
@@ -98,16 +134,50 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
 
     last_stats.system_fps = static_cast<double>(system_frames) / interval;
     last_stats.game_fps = static_cast<double>(game_frames) / interval;
-    last_stats.frametime = duration_cast<DoubleSecs>(accumulated_frametime).count() /
-                           static_cast<double>(system_frames);
+    last_stats.time_vblank_interval =
+        system_frames ? (duration_cast<DoubleSecs>(accumulated_frametime).count() /
+                         static_cast<double>(system_frames))
+                      : 0;
+    last_stats.time_hle_svc =
+        system_frames
+            ? (duration_cast<DoubleSecs>(accumulated_svc_time - accumulated_ipc_time).count() /
+               static_cast<double>(system_frames))
+            : 0;
+    last_stats.time_hle_ipc =
+        system_frames
+            ? (duration_cast<DoubleSecs>(accumulated_ipc_time - accumulated_gpu_time).count() /
+               static_cast<double>(system_frames))
+            : 0;
+    last_stats.time_gpu = system_frames ? (duration_cast<DoubleSecs>(accumulated_gpu_time).count() /
+                                           static_cast<double>(system_frames))
+                                        : 0;
+    last_stats.time_swap = system_frames
+                               ? (duration_cast<DoubleSecs>(accumulated_swap_time).count() /
+                                  static_cast<double>(system_frames))
+                               : 0;
+
+    last_stats.time_remaining =
+        system_frames ? (duration_cast<DoubleSecs>((accumulated_frametime - accumulated_svc_time) -
+                                                   accumulated_swap_time)
+                             .count() /
+                         static_cast<double>(system_frames))
+                      : 0;
     last_stats.emulation_speed = system_us_per_second.count() / 1'000'000.0;
+    last_stats.artic_transmitted = static_cast<double>(artic_transmitted) / interval;
+    last_stats.artic_events.raw = artic_events.raw | prev_artic_event.raw;
 
     // Reset counters
     reset_point = now;
     reset_point_system_us = current_system_time_us;
     accumulated_frametime = Clock::duration::zero();
     system_frames = 0;
+    accumulated_svc_time = Clock::duration::zero();
+    accumulated_ipc_time = Clock::duration::zero();
+    accumulated_gpu_time = Clock::duration::zero();
+    accumulated_swap_time = Clock::duration::zero();
     game_frames = 0;
+    artic_transmitted = 0;
+    prev_artic_event.raw &= artic_events.raw;
 
     return last_stats;
 }
@@ -121,8 +191,17 @@ PerfStats::Results PerfStats::GetLastStats() {
 double PerfStats::GetLastFrameTimeScale() const {
     std::scoped_lock lock{object_mutex};
 
-    constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
+}
+
+double PerfStats::GetStableFrameTimeScale() const {
+    std::scoped_lock lock{object_mutex};
+
+    const double stable_previous_frame_length =
+        (duration_cast<DoubleSecs>(previous_frame_length).count() +
+         duration_cast<DoubleSecs>(previous_previous_frame_length).count()) /
+        2;
+    return stable_previous_frame_length / FRAME_LENGTH;
 }
 
 void FrameLimiter::WaitOnce() {
@@ -142,9 +221,9 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     }
 
     auto now = Clock::now();
-    double sleep_scale = Settings::values.frame_limit.GetValue() / 100.0;
+    double sleep_scale = Settings::GetFrameLimit() / 100.0;
 
-    if (Settings::values.frame_limit.GetValue() == 0) {
+    if (Settings::GetFrameLimit() == 0) {
         return;
     }
 

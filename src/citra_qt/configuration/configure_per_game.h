@@ -18,6 +18,7 @@ class System;
 class ConfigureAudio;
 class ConfigureGeneral;
 class ConfigureEnhancements;
+class ConfigureLayout;
 class ConfigureGraphics;
 class ConfigureSystem;
 class ConfigureDebug;
@@ -64,13 +65,14 @@ private:
 
     QGraphicsScene* scene;
 
-    std::unique_ptr<Config> game_config;
+    std::unique_ptr<QtConfig> game_config;
 
     Core::System& system;
 
     std::unique_ptr<ConfigureAudio> audio_tab;
     std::unique_ptr<ConfigureGeneral> general_tab;
     std::unique_ptr<ConfigureEnhancements> enhancements_tab;
+    std::unique_ptr<ConfigureLayout> layout_tab;
     std::unique_ptr<ConfigureGraphics> graphics_tab;
     std::unique_ptr<ConfigureSystem> system_tab;
     std::unique_ptr<ConfigureDebug> debug_tab;

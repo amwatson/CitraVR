@@ -1,4 +1,8 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +11,7 @@
 // Directory separators, do we need this?
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'
+#define DIR_SEP_CHR_WIN '\\'
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
@@ -18,18 +23,28 @@
 #define EMU_DATA_DIR USER_DIR
 #else
 #ifdef _WIN32
-#define EMU_DATA_DIR "Citra"
+#define EMU_DATA_DIR "Azahar"
+#define LEGACY_CITRA_DATA_DIR "Citra"
+#define LEGACY_LIME3DS_DATA_DIR "Lime3DS"
 #elif defined(__APPLE__)
 #include <TargetConditionals.h>
 #if TARGET_OS_IPHONE
-#define APPLE_EMU_DATA_DIR "Documents" DIR_SEP "Citra"
+#define EMU_APPLE_DATA_DIR "Documents" DIR_SEP "Azahar"
+#define LEGACY_CITRA_APPLE_DATA_DIR "Documents" DIR_SEP "Citra"
+#define LEGACY_LIME3DS_APPLE_DATA_DIR "Documents" DIR_SEP "Lime3DS"
 #else
-#define APPLE_EMU_DATA_DIR "Library" DIR_SEP "Application Support" DIR_SEP "Citra"
+#define EMU_APPLE_DATA_DIR "Library" DIR_SEP "Application Support" DIR_SEP "Azahar"
+#define LEGACY_CITRA_APPLE_DATA_DIR "Library" DIR_SEP "Application Support" DIR_SEP "Citra"
+#define LEGACY_LIME3DS_APPLE_DATA_DIR "Library" DIR_SEP "Application Support" DIR_SEP "Lime3DS"
 #endif
 // For compatibility with XDG paths.
-#define EMU_DATA_DIR "citra-emu"
+#define EMU_DATA_DIR "azahar-emu"
+#define LEGACY_CITRA_DATA_DIR "citra-emu"
+#define LEGACY_LIME3DS_DATA_DIR "lime3ds-emu"
 #else
-#define EMU_DATA_DIR "citra-emu"
+#define EMU_DATA_DIR "azahar-emu"
+#define LEGACY_CITRA_DATA_DIR "citra-emu"
+#define LEGACY_LIME3DS_DATA_DIR "lime3ds-emu"
 #endif
 #endif
 
@@ -52,10 +67,11 @@
 #define LOAD_DIR "load"
 #define SHADER_DIR "shaders"
 #define STATES_DIR "states"
+#define ICONS_DIR "icons"
 
 // Filenames
 // Files in the directory returned by GetUserPath(UserPath::LogDir)
-#define LOG_FILE "citra_log.txt"
+#define LOG_FILE "azahar_log.txt"
 
 // Files in the directory returned by GetUserPath(UserPath::ConfigDir)
 #define EMU_CONFIG "emu.ini"
@@ -64,6 +80,6 @@
 
 // Sys files
 #define SHARED_FONT "shared_font.bin"
-#define AES_KEYS "aes_keys.txt"
+#define KEYS_FILE "keys.txt"
 #define BOOTROM9 "boot9.bin"
 #define SECRET_SECTOR "sector0x96.bin"

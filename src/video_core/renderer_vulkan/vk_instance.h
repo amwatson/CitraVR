@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,10 +9,6 @@
 #include "video_core/pica/regs_pipeline.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_platform.h"
-
-namespace Core {
-class TelemetrySession;
-}
 
 namespace Frontend {
 class EmuWindow;
@@ -34,16 +30,19 @@ struct FormatTraits {
     bool needs_conversion = false;
     bool needs_emulation = false;
     vk::ImageUsageFlags usage{};
-    vk::ImageAspectFlags aspect;
+    vk::ImageAspectFlags aspect{};
     vk::Format native = vk::Format::eUndefined;
+
+    auto operator<=>(const FormatTraits&) const = default;
 };
 
 class Instance {
 public:
+    struct NoInit {};
     explicit Instance(bool validation = false, bool dump_command_buffers = false);
-    explicit Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& window,
-                      u32 physical_device_index);
-    ~Instance();
+    explicit Instance(Frontend::EmuWindow& window, u32 physical_device_index);
+    explicit Instance(NoInit) {} // For LibRetro inheritance - does minimal setup
+    virtual ~Instance();
 
     /// Returns the FormatTraits struct for the provided pixel format
     const FormatTraits& GetTraits(VideoCore::PixelFormat pixel_format) const;
@@ -53,11 +52,15 @@ public:
     const FormatTraits& GetTraits(Pica::PipelineRegs::VertexAttributeFormat format,
                                   u32 count) const;
 
+    const std::array<FormatTraits, 16>& GetAllTraits() const {
+        return attrib_table;
+    }
+
     /// Returns a formatted string for the driver version
     std::string GetDriverVersionName();
 
     /// Returns the Vulkan instance
-    vk::Instance GetInstance() const {
+    virtual vk::Instance GetInstance() const {
         return *instance;
     }
 
@@ -67,7 +70,7 @@ public:
     }
 
     /// Returns the Vulkan device
-    vk::Device GetDevice() const {
+    virtual vk::Device GetDevice() const {
         return *device;
     }
 
@@ -234,7 +237,7 @@ public:
     }
 
     /// Returns the maximum supported elements in a texel buffer
-    u32 MaxTexelBufferElements() const {
+    u64 MaxTexelBufferElements() const {
         return properties.limits.maxTexelBufferElements;
     }
 
@@ -246,6 +249,16 @@ public:
     /// Returns true if triangle fan is an accepted primitive topology
     bool IsTriangleFanSupported() const {
         return triangle_fan_supported;
+    }
+
+    /// Returns true if dynamic indices can be used inside shaders.
+    bool IsImageArrayDynamicIndexSupported() const {
+        return features.shaderSampledImageArrayDynamicIndexing;
+    }
+
+    /// Returns true if layered rendering (array attachments) is supported
+    bool IsLayeredRenderingSupported() const {
+        return layered_rendering_supported;
     }
 
     /// Returns the minimum vertex stride alignment
@@ -264,7 +277,7 @@ public:
                driver_id == vk::DriverIdKHR::eQualcommProprietary;
     }
 
-private:
+protected:
     /// Returns the optimal supported usage for the requested format
     [[nodiscard]] FormatTraits DetermineTraits(VideoCore::PixelFormat pixel_format,
                                                vk::Format format);
@@ -285,11 +298,10 @@ private:
     /// Creates the VMA allocator handle
     void CreateAllocator();
 
-    /// Collects telemetry information from the device.
-    void CollectTelemetryParameters(Core::TelemetrySession& telemetry);
+    // Collects logging gpu info
     void CollectToolingInfo();
 
-private:
+protected:
     std::shared_ptr<Common::DynamicLibrary> library;
     vk::UniqueInstance instance;
     vk::PhysicalDevice physical_device;
@@ -323,6 +335,7 @@ private:
     bool shader_stencil_export{};
     bool external_memory_host{};
     u64 min_imported_host_pointer_alignment{};
+    bool layered_rendering_supported{true};
     bool tooling_info{};
     bool debug_utils_supported{};
     bool has_nsight_graphics{};

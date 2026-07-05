@@ -209,7 +209,9 @@ void MerryAudioFixture::initSharedMem(AudioState& state) {
             config.sync_count_dirty.Assign(true);
         }
 
-        { config.reset_flag.Assign(true); }
+        {
+            config.reset_flag.Assign(true);
+        }
     }
 
     {

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,7 +30,7 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
-    void ClearExclusiveState() override{};
+    void ClearExclusiveState() override {};
 
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
@@ -50,6 +50,10 @@ public:
 
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PrepareReschedule() override;
+
+    bool HasSingleInstructionBreakAccuracy() override {
+        return true;
+    }
 
 protected:
     std::shared_ptr<Memory::PageTable> GetPageTable() const override;

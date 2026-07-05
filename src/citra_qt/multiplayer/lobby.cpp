@@ -1,12 +1,12 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <QInputDialog>
 #include <QList>
 #include <QtConcurrent/QtConcurrentRun>
+#include "citra_qt/citra_qt.h"
 #include "citra_qt/game_list_p.h"
-#include "citra_qt/main.h"
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/lobby_p.h"
 #include "citra_qt/multiplayer/message.h"
@@ -174,8 +174,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         }
 #endif
         if (auto room_member = Network::GetRoomMember().lock()) {
-            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(), port, 0,
-                              Network::NoPreferredMac, password, token);
+            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(),
+                              static_cast<u16>(port), 0, Service::CFG::GetConsoleMacAddress(system),
+                              password, token);
         }
     });
     watcher->setFuture(f);
@@ -197,7 +198,8 @@ void Lobby::ResetModel() {
     model->insertColumns(0, Column::TOTAL);
     model->setHeaderData(Column::EXPAND, Qt::Horizontal, QString(), Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, tr("Room Name"), Qt::DisplayRole);
-    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Game"), Qt::DisplayRole);
+    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Application"),
+                         Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, tr("Host"), Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, tr("Players"), Qt::DisplayRole);
 }

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -35,9 +35,12 @@ private:
     void SetInputTypeFromInputType();
     void SetInputDeviceFromDeviceID();
     void SetVolumeIndicatorText(int percentage);
+    void SetHleFeaturesEnabled();
 
     void SetupPerGameUI();
 
     ConfigurationShared::CheckState audio_stretching;
+    ConfigurationShared::CheckState realtime_audio;
+    ConfigurationShared::CheckState simulate_headphones_plugged;
     std::unique_ptr<Ui::ConfigureAudio> ui;
 };

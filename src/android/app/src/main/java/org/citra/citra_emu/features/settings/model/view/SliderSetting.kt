@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,6 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.utils.Log
-import kotlin.math.roundToInt
 
 class SliderSetting(
     setting: AbstractSetting?,
@@ -20,24 +19,25 @@ class SliderSetting(
     val max: Int,
     val units: String,
     val key: String? = null,
-    val defaultValue: Float? = null
+    val defaultValue: Float? = null,
+    override var isEnabled: Boolean = true
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SLIDER
-
-    val selectedValue: Int
+    val selectedFloat: Float
         get() {
-            val setting = setting ?: return defaultValue!!.toInt()
-            return when (setting) {
-                is AbstractIntSetting -> setting.int
-                is FloatSetting -> setting.float.roundToInt()
-                is ScaledFloatSetting -> setting.float.roundToInt()
+            val setting = setting ?: return defaultValue!!.toFloat()
+
+            val ret = when (setting) {
+                is AbstractIntSetting -> setting.int.toFloat()
+                is FloatSetting -> setting.float
+                is ScaledFloatSetting -> setting.float
                 else -> {
                     Log.error("[SliderSetting] Error casting setting type.")
-                    -1
+                    -1f
                 }
             }
+            return ret.coerceIn(min.toFloat(), max.toFloat())
         }
-
     /**
      * Write a value to the backing int. If that int was previously null,
      * initializes a new one and returns it, so it can be added to the Hashmap.

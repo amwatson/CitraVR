@@ -1,11 +1,13 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <boost/optional/optional.hpp>
 #include <boost/serialization/export.hpp>
@@ -30,6 +32,8 @@ class SharedMemory;
 namespace Service::GSP {
 
 struct FrameBufferInfo {
+    static constexpr u32 PIXEL_FORMAT_MASK = 0x7;
+
     u32 active_fb; // 0 = first, 1 = second
     u32 address_left;
     u32 address_right;
@@ -37,6 +41,10 @@ struct FrameBufferInfo {
     u32 format;   // maps to 0x1EF00X70 ?
     u32 shown_fb; // maps to 0x1EF00X78 ?
     u32 unknown;
+
+    u32 GetPixelFormat() {
+        return format & PIXEL_FORMAT_MASK;
+    }
 };
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
 
@@ -98,7 +106,7 @@ public:
      * Signals that the specified interrupt type has occurred to userland code
      * @param interrupt_id ID of interrupt that is being signalled
      */
-    void SignalInterrupt(InterruptId interrupt_id);
+    void SignalInterrupt(InterruptId interrupt_id, u64 wait_delay_ns);
 
     /**
      * Retrieves the framebuffer info stored in the GSP shared memory for the
@@ -123,6 +131,13 @@ public:
         return active_thread_id;
     }
 
+    /**
+     * Retreives the ID of the client thread with GPU rights.
+     */
+    u32 GetActiveClientThreadId() {
+        return active_client_thread_id;
+    }
+
 private:
     /**
      * Signals that the specified interrupt type has occurred to userland code for the specified GSP
@@ -130,7 +145,11 @@ private:
      * @param interrupt_id ID of interrupt that is being signalled.
      * @param thread_id GSP thread that will receive the interrupt.
      */
-    void SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id);
+    void SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id, u64 wait_delay_ns);
+
+    void ProcessPendingInterrupt(size_t pending_interrupt_id);
+
+    void ProcessPendingInterruptImpl(InterruptId interrupt_id, u32 thread_id);
 
     /**
      * GSP_GPU::WriteHWRegs service function
@@ -226,6 +245,10 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx);
+
+    void SetPerfLogMode(Kernel::HLERequestContext& ctx);
+
+    void GetPerfLog(Kernel::HLERequestContext& ctx);
 
     /**
      * GSP_GPU::RegisterInterruptRelayQueue service function
@@ -378,6 +401,9 @@ private:
     /// Thread id that currently has GPU rights or std::numeric_limits<u32>::max() if none.
     u32 active_thread_id = std::numeric_limits<u32>::max();
 
+    /// Thread id of the client thread that has GPU rights
+    u32 active_client_thread_id = std::numeric_limits<u32>::max();
+
     bool first_initialization = true;
 
     /// VRAM copy saved using SaveVramSysArea.
@@ -388,6 +414,118 @@ private:
 
     /// Thread ids currently in use by the sessions connected to the GSPGPU service.
     std::array<bool, MaxGSPThreads> used_thread_ids{};
+
+    /// The current thread needs a longer emulated texture copy completion
+    bool delay_texture_copy_completion{};
+
+    class PendingInterruptArray {
+    public:
+        PendingInterruptArray() {
+            for (size_t i = 0; i < array_size; i++) {
+                elements[i].first = InterruptId::COUNT;
+            }
+        }
+
+        size_t Push(const std::pair<InterruptId, u32> elem) {
+            if (elements[head].first != InterruptId::COUNT) {
+                // If the head position is occupied, the queue is full
+                return std::numeric_limits<size_t>::max();
+            }
+
+            elements[head] = elem;
+            size_t index = head;
+            head = (head + 1) % array_size;
+            return index;
+        }
+
+        std::optional<std::pair<InterruptId, u32>> Pop(size_t at) {
+            if (at >= array_size || elements[at].first == InterruptId::COUNT) {
+                // Invalid index or already free
+                return std::nullopt;
+            }
+
+            std::pair<InterruptId, u32> value = elements[at];
+            elements[at].first = InterruptId::COUNT;
+
+            return value;
+        }
+
+    private:
+        static constexpr size_t array_size = 512;
+        size_t head = 0;
+
+        std::array<std::pair<InterruptId, u32>, array_size> elements;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & elements;
+            ar & head;
+        }
+        friend class boost::serialization::access;
+    };
+
+    class PerformanceRecorder {
+    public:
+        struct PerformanceEntry {
+            u32 delta_time{};
+            u32 sum_time{};
+
+            template <class Archive>
+            void serialize(Archive& ar, const unsigned int) {
+                ar & delta_time;
+                ar & sum_time;
+            }
+            friend class boost::serialization::access;
+        };
+
+        using PerfArray = std::array<PerformanceEntry, static_cast<u8>(InterruptId::COUNT)>;
+
+        PerformanceRecorder() = default;
+
+        void Reset() {
+            entries.fill({});
+        }
+
+        bool IsEnabled() {
+            return enabled;
+        }
+
+        void SetEnabled(bool _enabled) {
+            enabled = _enabled;
+            if (enabled) {
+                Reset();
+            }
+        }
+
+        void UpdateTime(InterruptId id, u64 nanoseconds) {
+            // These counters may overflow, which is normal.
+            entries[static_cast<u8>(id)].delta_time = static_cast<u32>(nanoseconds);
+            entries[static_cast<u8>(id)].sum_time += static_cast<u32>(nanoseconds);
+        }
+
+        const PerfArray& GetResults() {
+            return entries;
+        }
+
+    private:
+        PerfArray entries{};
+        bool enabled{};
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & entries;
+            ar & enabled;
+        }
+        friend class boost::serialization::access;
+    };
+
+    // This array is only needed to keep track of delayed notifications and simulate the GPU
+    // taking some time to finish the work, it doesn't exist on real hardware.
+    PendingInterruptArray pending_interrupts;
+
+    PerformanceRecorder perf_recorder;
+
+    Core::TimingEventType* SignalInterruptEventType = nullptr;
 
     friend class SessionData;
 

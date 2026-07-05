@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <string name="app_disclaimer">Ce logiciel exécutera des jeux pour la console de jeu portable Nintendo 3DS. Aucun titre de jeu n\'est inclus.\n\nAvant de pouvoir commencer l\'émulation, veuillez sélectionner un dossier pour stocker les données utilisateur de CitraVR.\n\nQu\'est-ce que c\'est :\n<a href='https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage'>Wiki - Données utilisateur et stockage de CitraVR sur Android.</a></string>
+    <string name="app_disclaimer">Ce logiciel exécutera des jeux pour la console de jeu portable Nintendo 3DS. Aucun titre de jeu n\'est inclus.\n\nAvant de pouvoir commencer l\'émulation, veuillez sélectionner un dossier pour stocker les données utilisateur de CitraVR.\n\nQu\'est-ce que c\'est :\n<a href="https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage">Wiki - Données utilisateur et stockage de CitraVR sur Android.</a>
+    </string>
     <string name="app_notification_channel_description">Notifications de l\'émulateur 3DS CitraVR</string>
     <string name="app_notification_running">CitraVR est en fonctionnement</string>
     <string name="app_game_install_description">Ensuite, vous devrez sélectionner un dossier de jeux. CitraVR affichera tous les fichiers ROM 3DS présents dans le dossier sélectionné dans l\'application.\n\nLes fichiers ROM CIA, les mises à jour et les contenus téléchargeables devront être installés séparément en cliquant sur l\'icône du dossier et en sélectionnant \"Installer un CIA\".</string>
-
-    <!-- Home Strings -->
     <string name="grid_menu_core_settings">Paramètres</string>
     <string name="home_options">Options</string>
     <string name="home_search">Rechercher</string>
@@ -32,8 +30,6 @@
     <string name="select_citra_user_folder_home_description">Modifie les fichiers que CitraVR utilise pour charger les jeux</string>
     <string name="theme_and_color_description">Modifier l\'apparence de l\'application</string>
     <string name="install_cia_title">Installer un CIA</string>
-
-    <!-- GPU driver installation -->
     <string name="select_gpu_driver">Sélectionner le pilote du GPU</string>
     <string name="select_gpu_driver_title">Souhaitez vous remplacer votre pilote actuel ?</string>
     <string name="select_gpu_driver_install">Installer</string>
@@ -43,70 +39,89 @@
     <string name="select_gpu_driver_error">Pilote sélectionné non valide, utilisation du pilote système par défaut !</string>
     <string name="system_gpu_driver">Pilote du GPU du système</string>
     <string name="installing_driver">Installation du pilote...</string>
-
-    <!-- About screen strings -->
     <string name="copied_to_clipboard">Copié dans le presse-papiers</string>
     <string name="contributors">Contributeurs</string>
     <string name="contributors_description">Fait avec \u2764 de l\'équipe yuzu</string>
-    <string name="contributors_link">https://github.com/citra-emu/citra/graphs/contributors</string>
     <string name="licenses_description">Projets qui rendent CitraVR pour Android possible</string>
     <string name="build">Build</string>
     <string name="licenses">Licences</string>
-    <string name="support_link">https://discord.gg/FAXfZV9</string>
-    <string name="website_link">https://citra-emu.org/</string>
-    <string name="github_link">https://github.com/citra-emu</string>
-
-    <!-- Setup strings -->
     <string name="welcome">Bienvenue !</string>
-    <string name="welcome_description">Apprenez à configurer &lt;b>CitraVR&lt;/b> et passez à l\'émulation.</string>
+    <string name="welcome_description">Apprenez à configurer &lt;b&gt;CitraVR&lt;/b&gt; et passez à l\'émulation.</string>
     <string name="get_started">Démarrer</string>
     <string name="step_complete">Terminé !</string>
     <string name="games">Jeux</string>
-    <string name="games_description">Sélectionnez votre dossier &lt;b>de Jeux&lt;/b> avec le bouton ci-dessous.</string>
+    <string name="games_description">Sélectionnez votre dossier &lt;b&gt;de Jeux&lt;/b&gt; avec le bouton ci-dessous.</string>
     <string name="done">Terminé</string>
     <string name="done_description">Vous êtes prêt.\nProfitez de vos jeux !</string>
     <string name="text_continue">Continuer</string>
-    <string name="add_games">Ajouter des jeux</string>
     <string name="notifications">Notifications</string>
     <string name="notifications_description">Accorder la permission de notification avec le bouton ci-dessous.</string>
     <string name="give_permission">Accorder la permission</string>
     <string name="notification_warning">Ne pas accorder la permission de notification ?</string>
     <string name="notification_warning_description">CitraVR ne pourra pas vous communiquer d\'informations importantes.</string>
+    <string name="filesystem_permission_warning">Autorisations manquantes</string>
+    <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" pour continuer.</string>
     <string name="camera_permission">Caméra</string>
     <string name="camera_permission_description">Accorder la permission de la caméra ci-dessous pour émuler la caméra 3DS.</string>
     <string name="microphone_permission">Microphone</string>
     <string name="microphone_permission_description">Accorder la permission du microphone ci-dessous pour émuler le microphone 3DS.</string>
+    <string name="filesystem_permission">Accès à tous les fichiers</string>
+    <string name="filesystem_permission_description">Accordez l\'autorisation de l\'accès à tous les fichiers ci-dessous pour autoriser Azahar à stocker des fichiers.</string>
     <string name="permission_denied">Permission refusée</string>
     <string name="add_games_warning">Ne pas sélectionner le dossier des jeux ?</string>
     <string name="add_games_warning_description">Les jeux ne seront pas affichés dans la liste des jeux si aucun dossier n\'est sélectionné.</string>
-    <string name="add_games_warning_help">https://citra-emu.org/wiki/dumping-game-cartridges/</string>
+    <string name="permissions">Autorisations</string>
+    <string name="select_emulator_data_folders">Dossiers de données</string>
+    <string name="select_emulator_data_folders_description">Sélectionnez les dossiers de données&lt;br/&gt;(le dossier utilisateur est obligatoire)</string>
+    <string name="permissions_description">Accorder des autorisations facultatives pour utiliser des fonctionnalités spécifiques de l\'émulateur</string>
     <string name="warning_help">Aide</string>
     <string name="warning_skip">Sauter</string>
     <string name="warning_cancel">Annuler</string>
     <string name="select_citra_user_folder">Sélectionnez le dossier utilisateur
  </string>
-    <string name="select_citra_user_folder_description"><![CDATA[Sélectionnez votre <a href=\"https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage\">répertoire de données utilisateur</a> avec le bouton ci-dessous.]]></string>
+    <string name="select_citra_user_folder_description">Sélectionnez votre &lt;a href=\"https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage\"&gt;répertoire de données utilisateur&lt;/a&gt; avec le bouton ci-dessous.</string>
+    <string name="select_which_user_directory_to_use">Il semble que vous ayez défini des répertoires utilisateur pour Lime3DS et Azahar. Cela est probablement dû au fait que vous avez effectué une mise à niveau vers Azahar et que, lorsque vous y avez été invité, vous avez choisi un répertoire utilisateur différent de celui utilisé pour Lime3DS. \n\nCela vous a peut-être donné l\'impression d\'avoir perdu vos sauvegardes ou d\'autres paramètres. Nous vous prions de nous en excuser si tel est le cas.\n\nSouhaitez-vous revenir à votre répertoire utilisateur Lime3DS d\'origine, restaurer les paramètres et les sauvegardes de Lime3DS, ou conserver votre répertoire utilisateur Azahar actuel ?\n\nQuel que soit votre choix, aucun des deux répertoires ne sera supprimé et vous pourrez passer librement de l\'un à l\'autre à l\'aide de l\'option « Sélectionner le dossier utilisateur ».</string>
+    <string name="keep_current_azahar_directory">Conserver le répertoire Azahar actuel</string>
+    <string name="use_prior_lime3ds_directory">Utiliser l\'ancien répertoire Lime3DS</string>
     <string name="select">Sélectionner</string>
     <string name="cannot_skip">Vous ne pouvez pas sauter cette étape</string>
     <string name="cannot_skip_directory_description">Cette étape est nécessaire pour permettre à CitraVR de fonctionner. Veuillez sélectionner un répertoire, puis vous pourrez continuer.</string>
-    <string name="cannot_skip_directory_help">https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage</string>
-
-    <!-- Search Strings -->
+    <string name="selecting_user_directory_without_write_permissions">Vous avez perdu les droits d\'écriture sur votre répertoire de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">données utilisateur</a>, où sont stockées les sauvegardes et autres informations. Cela peut se produire après certaines mises à jour d\'applications ou d\'Android. Veuillez resélectionner le répertoire pour récupérer les droits d\'accès afin de pouvoir continuer.</string>
+    <string name="invalid_selection">Sélection Invalide</string>
+    <string name="invalid_user_directory">La sélection du répertoire utilisateur était invalide.\nVeuillez re-sélectionner le répertoire utilisateur, en s\'assurant de le sélectionner depuis la racine du stockage de votre appareil.</string>
+    <string name="filesystem_permission_lost">Azahar a perdu l\'autorisation de gérer les fichiers de cet appareil. Cela peut arriver suite à des mises à jour d\'applis ou d\'Android. Veuillez ré-accorder cette autorisation sur l\'écran suivant pour continuer d\'utiliser l\'appli.</string>
+    <string name="set_up_theme_settings">Paramètres du thème</string>
+    <string name="setup_theme_settings_description">Configurez les préférences de votre thème pour Azahar.</string>
+    <string name="setup_set_theme">Mettre le thème</string>
     <string name="search_and_filter_games">Rechercher et filtrer les jeux</string>
     <string name="home_search_games">Rechercher des jeux</string>
     <string name="search_recently_played">Joué récemment</string>
     <string name="search_recently_added">Ajouté récemment</string>
     <string name="search_installed">Installé</string>
-
-    <!-- Input related strings -->
+    <string name="controller_auto_map">Assigner les boutons de la manette automatiquement</string>
+    <string name="controller_auto_map_description">Applique un assignement standard de manette pour tous les boutons et axes</string>
+    <string name="auto_map_prompt">Appuyez sur ce bouton de votre manette !</string>
+    <string name="auto_map_image_description">Les quatre boutons situés à droite de la 3DS avec le bouton A surligné</string>
+    <string name="controller_clear_all">Réinitialiser toutes les assignations de touche</string>
+    <string name="controller_clear_all_confirm">Cela effacera toutes les assignations de touche de manette actuelles.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Raccourcis</string>
+    <string name="controller_hotkeys_description">Si la touche \"Activer les raccourcis\" est assignée, celle-ci doit être pressée en plus de tout autre touche de raccourci.</string>
+    <string name="controller_hotkey_enable_button">Activer les raccourcis</string>
     <string name="controller_triggers">Gachettes</string>
     <string name="controller_trigger">Déclencheur</string>
     <string name="controller_dpad">Croix directionnelle</string>
+    <string name="controller_dpad_axis">Manette + (axes)</string>
+    <string name="controller_dpad_axis_description">Certaines manettes ne sont pas en mesure d\'affecter leur manette + à un axe. Dans ce cas, utilisez la section manette + (boutons).</string>
+    <string name="controller_dpad_button">Manette + (bouton)</string>
+    <string name="controller_dpad_button_description">N\'affectez la manette + à ces boutons que si vous rencontrez des problèmes avec l\'affectation des boutons de la manette + (axes).</string>
     <string name="controller_axis_vertical">Axe Haut/Bas</string>
     <string name="controller_axis_horizontal">Axe Gauche/Droite</string>
+    <string name="direction_up">Haut</string>
+    <string name="direction_down">Bas</string>
+    <string name="direction_left">Gauche</string>
+    <string name="direction_right">Droite</string>
     <string name="input_dialog_title">Bind %1$s %2$s</string>
     <string name="input_dialog_description">Appuyez ou déplacez une entrée.</string>
     <string name="input_binding">Rattachement de saisie</string>
@@ -114,26 +129,48 @@
     <string name="input_binding_description_vertical_axis">Déplacez votre joystick vers le haut ou vers le bas.</string>
     <string name="input_binding_description_horizontal_axis">Déplacez votre joystick à gauche ou à droite.</string>
     <string name="button_home">HOME</string>
+    <string name="button_swap">Permuter les écrans</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Cette commande doit être rattachée à un stick analogique de manette ou à un axe de la croix directionnelle !</string>
     <string name="input_message_button_only">Cette commande doit être rattachée à un bouton de manette !</string>
-
-    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="turbo_limit_hotkey">Turbo Speed</string>
+    <string name="turbo_enabled_toast">Turbo Speed activé</string>
+    <string name="turbo_disabled_toast">Turbo Speed désactivé</string>
+    <string name="setup_system_files">Fichiers système</string>
+    <string name="setup_system_files_description">Effectuer des opérations sur les fichiers système, telles que l\'installation de fichiers système ou le démarrage du menu Home.</string>
+    <string name="setup_tool_connect">Connexion à Artic Setup Tool</string>
+    <string name="setup_system_files_preamble">Azahar a besoin des données et des fichiers de micrologiciel propres à une console réelle pour pouvoir utiliser certaines de ses fonctionnalités. Ces fichiers et données peuvent être configurés à l\'aide de l\'outil &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool&lt;/a&gt;.&lt;br&gt;Notes :&lt;ul&gt;&lt;li&gt;&lt;b&gt;Cette opération installera des données uniques à la console Azahar. Ne partagez pas vos dossiers utilisateur ou NAND après avoir effectué le processus d\'installation !&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Pendant le processus d\'installation, Azahar se connectera à la console exécutant l\'outil d\'installation. Vous pourrez ensuite déconnecter la console à partir de l\'onglet Fichiers système dans le menu des options de l\'émulateur.&lt;/li&gt;&lt;li&gt;Ne vous connectez pas à Internet avec Azahar et votre console 3DS en même temps après avoir configuré les fichiers système, car cela pourrait causer des problèmes.&lt;/li&gt;&lt;li&gt;La configuration de la OLD 3DS est nécessaire pour que la configuration de la New 3DS fonctionne (il est recommandé de configurer les deux).&lt;/li&gt;&lt;li&gt;Les deux modes de configuration fonctionnent quel que soit le modèle de console sur lequel l\'outil de configuration est exécuté.&lt;/li&gt;&lt;/ul&gt;</string>
+    <string name="setup_system_files_detect">Récupération de l\'état actuel des fichiers du système, veuillez patienter...</string>
+    <string name="delete_system_files">Dissocier les données uniques de la console</string>
+    <string name="delete_system_files_description">Cette action désassociera votre console réelle d\'Azahar, avec les conséquences suivantes :&lt;br&gt;&lt;ul&gt;&lt;li&gt;Votre OTP, SecureInfo et LocalFriendCodeSeed seront supprimés d\'Azahar.&lt;/li&gt;&lt;li&gt;Votre liste d\'amis sera réinitialisée et vous serez déconnecté de votre compte NNID/PNID.&lt;/li&gt;&lt;li&gt;Les fichiers système et les titres de la boutique en ligne obtenus via Azahar deviendront inaccessibles jusqu\'à ce que la même console soit à nouveau connectée à l\'aide de l\'outil de configuration (les données sauvegardées ne seront pas perdues).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;Continuer ?</string>
+    <string name="setup_system_files_o3ds">Configuration Old 3DS</string>
+    <string name="setup_system_files_n3ds">Configuration New 3DS</string>
+    <string name="setup_system_files_possible">Configuration possible.</string>
+    <string name="setup_system_files_o3ds_needed">La configuration Old 3DS est d\'abord requise.</string>
+    <string name="setup_system_files_completed">La configuration est déjà terminée.</string>
+    <string name="setup_system_files_enter_address">Entrer l\'adresse d\'Artic Setup Tool</string>
+    <string name="setup_system_files_preparing">Préparation de la configuration, veuillez patienter...</string>
+    <string name="boot_home_menu">Démarrer le menu HOME</string>
+    <string name="show_home_apps">Afficher les applications du menu HOME dans la liste des applications</string>
+    <string name="run_system_setup">Exécuter la configuration système lorsque le menu HOME est lancé</string>
+    <string name="home_menu">Menu HOME</string>
     <string name="generic_buttons">Boutons</string>
     <string name="button">Bouton</string>
-
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">Utilise le compilateur Just-in-Time (JIT) pour l\'émulation CPU. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
-    <string name="init_clock">Horloge</string>
-    <string name="init_clock_description">Définissez l\'horloge émulée de la 3DS pour qu\'elle corresponde à votre appareil ou démarrez à une date et heure simulée.</string>
-    <string name="cpu_clock_speed">Fréquence d\'horloge du CPU</string>
-
-    <!-- System settings strings -->
+    <string name="emulation_settings">Paramètres d\'émulation</string>
     <string name="username">Nom d\'utilisateur</string>
     <string name="new_3ds">Activer le mode New 3DS</string>
+    <string name="lle_applets">Utilise les applets LLE (si installés)</string>
+    <string name="apply_region_free_patch">Appliquer des correctifs pour désactiver les restrictions régionales des applications installées</string>
+    <string name="apply_region_free_patch_desc">Corrige la région des applications installées pour qu\'elles soient sans région, afin qu\'elles apparaissent toujours dans le menu home.</string>
+    <string name="enable_required_online_lle_modules">Activer les modules LLE requis pour les fonctionnalités en ligne (si installés)</string>
+    <string name="enable_required_online_lle_modules_desc">Active les modules LLE nécessaires pour le multijoueur en ligne, l\'accès à l\'eShop, etc.</string>
     <string name="clock">Horloge</string>
-    <string name="init_time">Décalage temporel</string>
-    <string name="init_time_description">Si l\'horloge est réglée sur \"Horloge simulée\", cela modifie la date et l\'heure fixes de début.</string>
+    <string name="init_clock">Horloge</string>
+    <string name="init_clock_description">Définissez l\'horloge émulée de la 3DS pour qu\'elle corresponde à votre appareil ou démarrez à une date et heure simulée.</string>
+    <string name="device_clock">Horloge de l\'appareil</string>
+    <string name="simulated_clock">Horloge simulée</string>
+    <string name="simulated_clock_description">Si l\'horloge est réglée sur « Horloge simulée », cela modifie la date et l\'heure fixes de démarrage.</string>
+    <string name="profile_settings">Paramètres du profil</string>
     <string name="emulated_region">Région</string>
     <string name="emulated_language">Langue</string>
     <string name="birthday">Anniversaire</string>
@@ -141,13 +178,26 @@
     <string name="birthday_day">Jour</string>
     <string name="country">Pays</string>
     <string name="play_coins">Pièces de jeu</string>
+    <string name="steps_per_hour">Nombre de pas en une heure</string>
+    <string name="steps_per_hour_description">Nombre de pas par heure reporté par le podomètre. Sur une échelle de 0 à 65 535.</string>
     <string name="console_id">ID de la console</string>
     <string name="regenerate_console_id">Régénérer l\'ID de la console</string>
     <string name="regenerate_console_id_description">Cela remplacera votre 3DS virtuelle actuelle par une nouvelle. Votre 3DS virtuelle actuelle ne pourra pas être récupérée. Cela pourrait avoir des effets inattendus dans les jeux. Cela pourrait échouer si vous utilisez une sauvegarde de configuration obsolète. Continuer ?</string>
+    <string name="mac_address">Adresse MAC</string>
+    <string name="regenerate_mac_address">Régénérer l\'adresse MAC</string>
+    <string name="regenerate_mac_address_description">Cela remplacera votre adresse MAC actuelle par une nouvelle. Il n\'est pas recommandé d\'effectuer cette opération si vous avez obtenu l\'adresse MAC de votre console réelle à l\'aide de l\'outil de configuration. Continuer ?</string>
     <string name="plugin_loader">Chargeur de plugin 3GX</string>
     <string name="plugin_loader_description">Charge les plugins 3GX à partir de la carte SD émulée s\'ils sont disponibles.</string>
     <string name="allow_plugin_loader">Autoriser les jeux à changer l\'état du chargeur de plugin</string>
     <string name="allow_plugin_loader_description">Autoriser les applications homebrew à activer le chargeur de plugins même lorsqu\'il est désactivé.</string>
+    <string name="region_mismatch">Avertissement d\'incompatibilité de région</string>
+    <string name="region_mismatch_emulated">Le paramètre de pays n\'est pas valide pour la région émulée sélectionnée.</string>
+    <string name="region_mismatch_console">Le paramètre de pays n\'est pas valide pour la console actuellement connectée.</string>
+    <string name="storage">Stockage</string>
+    <string name="compress_cia_installs">Compresser le contenu CIA installé</string>
+    <string name="compress_cia_installs_description">Compresse le contenu des fichiers CIA lorsqu\'ils sont installés sur la carte SD émulée. N\'affecte que le contenu CIA installé lorsque le paramètre est activé.</string>
+    <string name="async_fs_operations">Opérations du système de fichiers asynchrones</string>
+    <string name="async_fs_operations_description">Rend les accès au système de fichier émulé asynchrones. Réduit grandement les saccades liées au système de fichiers, mais peut légèrement augmenter les temps de chargement.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Caméra intérieure</string>
@@ -161,24 +211,27 @@
     <string name="camera_facing_back">Arrière</string>
     <string name="camera_facing_external">Extérieure</string>
     <string name="image_flip">Retournement</string>
-
-    <!-- Graphics settings strings -->
     <string name="renderer">Rendu graphique</string>
     <string name="graphics_api">API graphique</string>
     <string name="spirv_shader_gen">Activer la génération de shaders SPIR-V</string>
     <string name="spirv_shader_gen_description">Émet le shader de fragment utilisé pour émuler PICA en utilisant SPIR-V plutôt que GLSL</string>
+    <string name="disable_spirv_optimizer">Désactiver l\'optimiseur SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Désactive le passage d\'optimisation SPIR-V, ce qui réduit considérablement les ralentissements sans affecter les performances.</string>
     <string name="async_shaders">Activer la compilation asynchrone des shaders</string>
     <string name="async_shaders_description">Compile les shaders en arrière-plan pour réduire les saccades pendant le jeu. Lorsqu\'il est activé, prévoyez des problèmes graphiques temporaires.</string>
-    <string name="renderer_debug">Rendu de débogage</string>
-    <string name="renderer_debug_description">Enregistre des informations de débogage supplémentaires liées aux graphiques. Lorsqu\'il est activé, les performances du jeu seront significativement réduites.</string>
-    <string name="vsync">Activer la synchronisation verticale (VSync)</string>
-    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil.</string>
     <string name="linear_filtering">Filtrage linéaire</string>
     <string name="linear_filtering_description">Active le filtrage linéaire, qui améliorera le lissage graphique du jeu.</string>
+    <string name="use_integer_scaling">Redimensionnement par nombre entier</string>
+    <string name="use_integer_scaling_description">Redimensionne les écrans avec un multiple entier de la taille de l\'écran original de la 3DS. Pour les dispositions avec deux tailles d\'écrans différentes, c\'est l\'écran le plus large qui est redimensionné par un multiple entier.</string>
     <string name="texture_filter_name">Filtrage des textures</string>
     <string name="texture_filter_description">Améliore l\'aspect graphique des jeux en appliquant un filtre aux textures. Les filtres supportés sont Anime4K Ultrafast, Bicubic, ScaleForce, et xBRZ freescale.</string>
-    <string name="hw_shaders">Activer le shader matériel</string>
-    <string name="hw_shaders_description">Utilise le matériel pour émuler les shaders de la 3DS. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
+    <string name="delay_render_thread">Retarder le fil de rendu du jeu</string>
+    <string name="delay_render_thread_description">Délai le thread de rendu du jeu lorsqu\'il soumet des données au GPU. Cela permet de résoudre les problèmes de performance dans les (très rares) applications avec des fréquences d\'images dynamiques.</string>
+    <string name="simulate_3ds_gpu_timings">Simuler les timings du GPU de la 3DS</string>
+    <string name="simulate_3ds_gpu_timings_description">Retarde les évènements de complétion du GPU en suivant des mesures prises sur du matériel réel, afin que les jeux aient des mesure de temps de GPU plus réalistes. Aide à stabiliser les jeux à taux de rafraichissement dynamique. Désactiver cette fonctionnalité peut améliorer la performance dans de rares cas, au détriment de la stabilité.</string>
+    <string name="advanced">Avancé</string>
+    <string name="texture_sampling_name">Échantillonnage de texture</string>
+    <string name="texture_sampling_description">Remplace le filtre d\'échantillonnage utilisé par les jeux. Cela peut être utile dans certains cas où les jeux se comportent mal lors de la conversion ascendante. En cas de doute, réglez ce paramètre sur « Contrôlé par le jeu ».</string>
     <string name="shaders_accurate_mul">Multiplication précise</string>
     <string name="shaders_accurate_mul_description">Utilise une multiplication plus précise dans les shaders matériels, ce qui peut corriger certains bugs graphiques. Lorsqu\'elle est activée, la performance sera réduite.</string>
     <string name="asynchronous_gpu">Active l\'émulation asynchone du GPU</string>
@@ -187,14 +240,41 @@
     <string name="frame_limit_enable_description">Lorsqu\'elle est activée, la vitesse d\'émulation sera limitée par un pourcentage spécifique de la vitesse normale.</string>
     <string name="frame_limit_slider">Limiter le pourcentage de vitesse</string>
     <string name="frame_limit_slider_description">Définit le taux de limitation de la vitesse d\'émulation. A 100%, par défaut, l\'émulation sera limitée à la vitesse normale. Des valeurs supérieures ou inférieures augmenteront ou diminueront  la limite de la vitesse.</string>
+    <string name="android_hide_images">Cacher à Android les images 3DS</string>
+    <string name="android_hide_images_description">Empêche les photos, captures d\'écran et textures personnalisées 3DS d\'être indexées par Android et affichées dans la galerie. Votre appareil pourrait nécessiter un redémarrage pour que ce paramètre prenne effet après son changement.</string>
+    <string name="turbo_limit">Turbo Speed Limite</string>
+    <string name="turbo_limit_description">Limite de vitesse d\'émulation utilisée lorsque la touche de raccourci turbo est active.</string>
+    <string name="expand_to_cutout_area">Étendre à la zone de découpe</string>
+    <string name="expand_to_cutout_area_description">Agrandit la zone d\'affichage pour inclure la zone découpée (ou encoche).</string>
     <string name="internal_resolution">Résolution interne</string>
     <string name="internal_resolution_description">Spécifie la définition utilisée pour le rendu. Une définition élevée améliorera de beaucoup la qualité graphique mais aura un impact important sur les performances et pourra créer des bugs dans certains jeux.</string>
+    <string name="internal_resolution_setting_auto">Automatique (taille de l\'écran)</string>
+    <string name="internal_resolution_setting_1x">Native (400x240)</string>
+    <string name="internal_resolution_setting_2x">2x Native (800x480)</string>
+    <string name="internal_resolution_setting_3x">3x Native (1200x720)</string>
+    <string name="internal_resolution_setting_4x">4x Native (1600x960)</string>
+    <string name="internal_resolution_setting_5x">5x Native (2000x1200)</string>
+    <string name="internal_resolution_setting_6x">6x Native (2400x1440)</string>
+    <string name="internal_resolution_setting_7x">7x Native (2800x1680)</string>
+    <string name="internal_resolution_setting_8x">8x Native (3200x1920)</string>
+    <string name="internal_resolution_setting_9x">9x Native (3600x2160)</string>
+    <string name="internal_resolution_setting_10x">10x Native (4000x2400)</string>
     <string name="performance_warning">Désactiver cette option va considérablement réduire la performance de l\'émulateur ! Pour bénéficier de la meilleure expérience, nous vous recommandons de laisser ce paramètre activé.</string>
     <string name="debug_warning">Attention: Modifier ces paramètres ralentira l\'émulation</string>
     <string name="stereoscopy">Stéréoscopie</string>
     <string name="render3d">Mode 3D stéréoscopique</string>
+    <string name="render3d_description">Choisissez le mode de 3D stéréoscopique pour l\'affichage 3D. Les modes Côte à Côte sont les plus courants en utilisation moderne. Les modes Anaglyphe et Entrelacé seront toujours appliqués à tout les écrans connectés.</string>
     <string name="factor3d">Profondeur</string>
     <string name="factor3d_description">Spécifie la valeur du curseur 3D. Cette valeur doit être supérieure à 0% lorsque la 3D stéréoscopique est activée.</string>
+    <string name="disable_right_eye_render">Désactiver le rendu de l\'œil droit</string>
+    <string name="disable_right_eye_render_description">Améliore considérablement les performances dans certaines applications, mais peut provoquer des scintillements dans d\'autres.</string>
+    <string name="swap_eyes_3d">Intervertir les yeux</string>
+    <string name="swap_eyes_3d_description">Intervertis quel œil est affiché de quel côté. Combiné avec le mode Côte à Côte il est possible de voir en 3D en croisant vos yeux !</string>
+    <string name="render_3d_which_display">Afficher la 3D stéréoscopique</string>
+    <string name="render_3d_which_display_description">Choisir s\'il faut activer la 3D stéréoscopique, et sur quel(s) écran(s). Les options d\'écran unique ne sont utiles que lorsque plusieurs écrans sont connectés.</string>
+    <string name="render_3d_which_display_both">Activé (Tous les écrans)</string>
+    <string name="render_3d_which_display_primary">Activé (Écran principal uniquement)</string>
+    <string name="render_3d_which_display_secondary">Activé (Écran secondaire uniquement)</string>
     <string name="cardboard_vr">Réalité virtuelle Cardboard</string>
     <string name="cardboard_screen_size">Taille de l\'écran Cardboard</string>
     <string name="cardboard_screen_size_description">Redimensionne l\'écran à un pourcentage de sa taille d\'origine.</string>
@@ -214,27 +294,62 @@
     <string name="preload_textures_description">Charge toutes les textures personnalisées en mémoire. Cette fonctionnalité peut utiliser beaucoup de mémoire.</string>
     <string name="async_custom_loading">Chargement asynchrone des textures personnalisées</string>
     <string name="async_custom_loading_description">Charge des textures personnalisées de manière asynchrone avec des threads en arrière-plan pour réduire les saccades de chargement.</string>
-
-    <!-- Audio settings strings -->
     <string name="audio_volume">Volume</string>
     <string name="audio_stretch">Étirement audio</string>
     <string name="audio_stretch_description">Étire le son pour réduire les saccades. Lorsqu\'il est activé, la latence est augmentée et les performances sont légèrement réduites.</string>
+    <string name="realtime_audio">Activer l\'audio en temps réel</string>
+    <string name="realtime_audio_description">Adapte la vitesse de lecture de l\'audio afin de ne pas être perturbé par les pertes de framerate. Ceci veut dire que l\'audio sera joué correctement même si le jeu n\'est pas aussi rapide. Peut provoquer des problèmes de synchronisation audio.</string>
+    <string name="simulate_headphones_plugged">Simuler le branchement d\'écouteurs</string>
+    <string name="simulate_headphones_plugged_description">Simule si des écouteurs sont branchés à la console 3DS émulée.</string>
     <string name="audio_input_type">Périphérique d\'entrée audio</string>
     <string name="sound_output_mode">Mode de sortie audio</string>
-
-    <!-- Miscellaneous -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Utilise le compilateur Just-in-Time (JIT) pour l\'émulation CPU. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
+    <string name="hw_shaders">Activer le shader matériel</string>
+    <string name="hw_shaders_description">Utilise le matériel pour émuler les shaders de la 3DS. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
+    <string name="cpu_clock_speed">Fréquence d\'horloge du CPU</string>
+    <string name="vsync">Activer la synchronisation verticale (VSync)</string>
+    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil.</string>
+    <string name="renderer_debug">Rendu de débogage</string>
+    <string name="renderer_debug_description">Enregistre des informations de débogage supplémentaires liées aux graphiques. Lorsqu\'il est activé, les performances du jeu seront significativement réduites.</string>
+    <string name="instant_debug_log">Vider la sortie des logs à chaque message</string>
+    <string name="instant_debug_log_description">Enregistre immédiatement le log de débogage dans un fichier. A utiliser si Azahar se plante et que la sortie du journal est coupée.</string>
+    <string name="delay_start_lle_modules">Démarrage différé avec les modules LLE</string>
+    <string name="delay_start_lle_modules_description">Retarde le démarrage de l\'application lorsque les modules LLE sont activés.</string>
+    <string name="deterministic_async_operations">Opérations asynchrones déterministes</string>
+    <string name="deterministic_async_operations_description">Rend les opérations asynchrones déterministes pour le débogage. L\'activation de cette fonction peut entraîner des blocages.</string>
+    <string name="enable_rpc_server">Activer le serveur RPC</string>
+    <string name="enable_rpc_server_desc">Active le serveur RPC sur le port 45987. Cela permet de lire/écrire à distance la mémoire invitée.</string>
+    <string name="toggle_unique_data_console_type">Basculer le type de console des données uniques</string>
+    <string name="toggle_unique_data_console_type_desc">Change le type de console des données uniques (Old 3DS ↔ New 3DS) afin de pouvoir télécharger le firmware système opposé depuis les paramètres de la console.</string>
+    <string name="shader_jit">Activer Shader JIT</string>
+    <string name="shader_jit_description">Utilisez le moteur JIT à la place de l\'interpréteur pour l\'émulation des shaders logiciels.</string>
+    <string name="layout_screen_orientation">Orientation de l\'écran</string>
+    <string name="layout_screen_orientation_auto_sensor">Auto</string>
+    <string name="layout_screen_orientation_landscape">Paysage</string>
+    <string name="layout_screen_orientation_landscape_reverse">Paysage inversé</string>
+    <string name="layout_screen_orientation_portrait">Portait</string>
+    <string name="layout_screen_orientation_portrait_reverse">Portait inversé</string>
+    <string name="layouts_to_cycle">Dispositions à alterner</string>
+    <string name="layouts_to_cycle_description">Quelles dispositions sont alternées par le raccourci Alterner les dispositions</string>
+    <string name="aspect_ratio_default">Par défaut</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Étirement</string>
     <string name="clear">Effacer</string>
     <string name="slider_default">Par défaut</string>
     <string name="ini_saved">Paramètres sauvegardés</string>
     <string name="gameid_saved">Paramètres sauvegardés pour %1$s</string>
     <string name="error_saving">Erreur lors de l\'enregistrement de %1$s.ini: %2$s</string>
+    <string name="saving">Enregistrement...</string>
     <string name="loading">Chargement...</string>
     <string name="next">Suivant</string>
     <string name="back">Retour</string>
     <string name="learn_more">En savoir plus</string>
     <string name="close">Fermer</string>
-    <string name="reset_to_default">Réinitialiser par défaut</string>
-    <string name="redump_games"><![CDATA[Veuillez suivre les guides pour refaire un dump de vos <a href=\"https://citra-emu.org/wiki/dumping-game-cartridges/\">cartouches de jeu</a> ou de vos <a href=\"https://citra-emu.org/wiki/dumping-installed-titles/\">titres installés</a>.]]></string>
+    <string name="reset_to_default">Par défaut</string>
     <string name="option_default">Par défaut</string>
     <string name="none">Aucun</string>
     <string name="auto">Auto</string>
@@ -248,17 +363,17 @@
     <string name="select_rtc_time">Sélectionner l\'heure RTC</string>
     <string name="reset_setting_confirmation">Voulez-vous réinitialiser ce paramètre à sa valeur par défaut ?</string>
     <string name="setting_not_editable">Vous ne pouvez pas modifier cela maintenant</string>
+    <string name="setting_disabled">Paramètre désactivé</string>
+    <string name="setting_disabled_description">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
     <string name="setting_not_editable_description">Cette option ne peut pas être modifiée pendant l\'exécution d\'un jeu.</string>
     <string name="auto_select">Sélection Automatique</string>
-
-    <!-- Add Directory Screen-->
+    <string name="start">Commencer</string>
+    <string name="cancelling">Annulation...</string>
+    <string name="visibility">Visibilité</string>
+    <string name="information">Information</string>
     <string name="select_game_folder">Choisir un répertoire de jeu</string>
-
-    <!-- Game Properties -->
     <string name="properties">Propriétés</string>
     <string name="properties_not_loaded">Les propriétés du jeu n\'ont pas pu être chargées.</string>
-
-    <!-- Preferences Screen -->
     <string name="preferences_settings">Paramètres</string>
     <string name="preferences_general">Généralités</string>
     <string name="preferences_system">Système</string>
@@ -268,12 +383,41 @@
     <string name="preferences_audio">Son</string>
     <string name="preferences_debug">Débogguer</string>
     <string name="preferences_theme">Thème et couleur</string>
+    <string name="preferences_layout">Disposition</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Erreur lors du chargement de l\'application</string>
+    <string name="loader_error_invalid_format">Format d\'application invalide</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Le format de fichier d\'application n\'est pas supporté.<br>Assurez vous d\'utiliser un des formats compatibles : <ul><li>Images de cartouche : <b>.cci/.zcci/.3ds</b></li><li>Archives installables : <b>.cia/.zcia</b></li><li>Applications Homebrew : <b>.3dsx/.z3dsx</b></li><li>Conteneurs NCCH : <b>.cxi/.zcxi/.app</b></li><li>Fichiers ELF : <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Mode système invalide</string>
+    <string name="loader_error_invalid_system_mode_description">Les applications exclusives à la New 3DS ne peuvent pas être chargées sans activer le mode New 3DS.</string>
+    <string name="loader_error_applying_patches">Erreur lors de l\'application de patchs</string>
+    <string name="loader_error_applying_patches_description">Une erreur générique s\'est produite lors de l\'application de correctifs à l\'application. Veuillez consulter les logs pour plus de détails.</string>
+    <string name="loader_error_patch_wrong_application">Échec de l\'application d\'un correctif car il est conçu pour une autre application. Veuillez vous assurer que vous utilisez les correctifs pour la bonne application, région et version.</string>
     <string name="loader_error_encrypted">Votre ROM est chiffrée</string>
-    <string name="loader_error_invalid_format">Format de ROM non valide</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar ne supporte pas les applications encryptées. Lisez notre <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">article</a> pour plus d\'informations.]]></string>
     <string name="loader_error_file_not_found">Le fichier ROM n\'existe pas</string>
-    <string name="no_game_present">Aucun jeu démarreable présent !</string>
+    <string name="no_game_present">Aucun jeu démarrable présent !</string>
+
+    <string name="loader_error_generic">Une erreur s\'est produite lors du chargement de la ROM : \"%s (%d)\"</string>
+    <string name="core_error_success">Réussite</string>
+    <string name="core_error_not_initialized">Non initialisé</string>
+    <string name="core_error_get_loader">Aucun lanceur trouvé pour ce fichier, type de fichier incompatible</string>
+    <string name="core_error_system_mode">Échec lors de l\'analyse du fichier</string>
+    <string name="core_error_loader">Erreur de chargement générique</string>
+    <string name="core_error_loader_encrypted">Fichier encrypté</string>
+    <string name="core_error_loader_invalid_format">Fichier corrompu</string>
+    <string name="core_error_loader_gba_title">Le fichier est une application GBA</string>
+    <string name="core_error_loader_error_patches">Erreur lors de l\'application de patchs</string>
+    <string name="core_error_loader_patches_invalid_title">Les correctifs sont pour une application différente</string>
+    <string name="core_error_system_files">Fichiers systèmes manquants</string>
+    <string name="core_error_savestate">Échec de la sauvegarde du point de récupération</string>
+    <string name="core_error_artic_disconnected">Artic Base déconnecté</string>
+    <string name="core_error_n3ds_application">Le fichier est une application New 3DS</string>
+    <string name="core_error_core_exception_raised">Une erreur du cœur s\'est produite</string>
+    <string name="core_error_memory_exception_raised">Une erreur de mémoire s\'est produite</string>
+    <string name="core_error_shutdown_requested">Arrêt demandé</string>
+    <string name="core_error_unknown">Erreur inconnue</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Appuyez sur Retour pour accéder au menu.</string>
@@ -282,28 +426,78 @@
     <string name="emulation_empty_state_slot">Slot %1$d</string>
     <string name="emulation_occupied_state_slot">Slot %1$d - %2$tF %2$tR</string>
     <string name="emulation_show_fps">Afficher les FPS</string>
+    <string name="emulation_haptic_feedback">Retour haptique</string>
     <string name="emulation_overlay_options">Options de l\'overlay</string>
     <string name="emulation_configure_controls">Configurer les commandes</string>
     <string name="emulation_edit_layout">Éditer la disposition</string>
     <string name="emulation_done">Terminé</string>
+    <string name="emulation_button_sliding">Bouton coulissant</string>
+    <string name="emulation_button_sliding_disabled">Maintenez le bouton initialement enfoncé</string>
+    <string name="emulation_button_sliding_enabled">Maintenez le bouton enfoncé</string>
+    <string name="emulation_button_sliding_alternative">Maintenez enfoncé le bouton d\'origine et celui qui est actuellement enfoncé</string>
     <string name="emulation_toggle_controls">Alterner les commandes</string>
     <string name="emulation_control_scale">Ajuster l\'échelle</string>
+    <string name="emulation_control_scale_global">Taille globale</string>
+    <string name="emulation_control_scale_reset_all">Réinitialiser tout</string>
+    <string name="emulation_control_opacity">Ajuster l\'opacité</string>
     <string name="emulation_control_joystick_rel_center">Centre du stick relatif</string>
     <string name="emulation_control_dpad_slide_enable">Défilement de la croix directionnelle</string>
     <string name="emulation_open_settings">Ouvrir les paramètres</string>
     <string name="emulation_open_cheats">Ouvrir les codes de triche</string>
+    <string name="emulation_aspect_ratio">Rapport d\'aspect</string>
     <string name="emulation_switch_screen_layout">Disposition en mode paysage</string>
-    <string name="emulation_screen_layout_landscape">Par défaut</string>
+    <string name="emulation_switch_portrait_layout">Disposition en mode portait</string>
+    <string name="emulation_switch_secondary_layout">Disposition de l\'écran secondaire</string>
+    <string name="emulation_switch_secondary_layout_description">La disposition utilisée par un écran secondaire connecté par câble ou sans fil (Chromecast, Miracast)</string>
+    <string name="emulation_screen_layout_largescreen">Écran large</string>
     <string name="emulation_screen_layout_portrait">Mode portrait</string>
     <string name="emulation_screen_layout_single">Un seul écran</string>
     <string name="emulation_screen_layout_sidebyside">Écrans côte à côte</string>
     <string name="emulation_screen_layout_hybrid">Écrans hybrides</string>
+    <string name="emulation_screen_layout_original">Original</string>
+    <string name="emulation_portrait_layout_top_full">Défaut</string>
+    <string name="emulation_secondary_display_default">Par défaut (dupliquer)</string>
+    <string name="emulation_screen_layout_custom">Disposition personnalisée</string>
+    <string name="bg_color">Couleur de fond</string>
+    <string name="bg_color_description">La couleur qui apparaît derrière les écrans pendant l\'émulation, représentée par une valeur RGB.</string>
+    <string name="bg_red">Rouge</string>
+    <string name="bg_green">Vert</string>
+    <string name="bg_blue">Bleu</string>
+    <string name="second_screen_opacity">Opacité du deuxième écran dans la disposition personnalisée</string>
+    <string name="second_screen_opacity_description">L\'opacité du deuxième écran 3DS lors de l\'utilisation d\'une disposition personnalisée. Utile si le deuxième écran est au-dessus du premier.</string>
+    <string name="emulation_small_screen_position">Position petit écran</string>
+    <string name="small_screen_position_description">Où le petit écran doit-il apparaître par rapport au grand écran dans la disposition Écran large ?</string>
+    <string name="small_screen_position_top_right">En haut à droite</string>
+    <string name="small_screen_position_middle_right">Au milieu à droite</string>
+    <string name="small_screen_position_bottom_right">En bas à droite (par défaut)</string>
+    <string name="small_screen_position_top_left">En haut à gauche</string>
+    <string name="small_screen_position_middle_left">Au milieu à gauche</string>
+    <string name="small_screen_position_bottom_left">En bas à gauche</string>
+    <string name="small_screen_position_above">Au dessus</string>
+    <string name="small_screen_position_below">En dessous</string>
+    <string name="screen_gap">Écart d\'écran</string>
+    <string name="screen_gap_description">Écart entre les écrans dans tous les modes à deux écrans. Mesuré en px par rapport à la hauteur de 240 px de l\'écran le plus grand.</string>
+    <string name="large_screen_proportion">Proportions du grand écran</string>
+    <string name="large_screen_proportion_description">Combien de fois le grand écran est-il plus grand que le petit écran dans la disposition Écran large ?</string>
+    <string name="emulation_adjust_custom_layout">Ajuster la disposition personnalisée dans les paramètres</string>
+    <string name="emulation_landscape_custom_layout">Disposition personnalisée en mode paysage</string>
+    <string name="emulation_portrait_custom_layout">Disposition personnalisée en mode portrait</string>
+    <string name="emulation_top_screen">Écran supérieur</string>
+    <string name="emulation_bottom_screen">Écran inférieur</string>
+    <string name="emulation_custom_layout_x">Position X</string>
+    <string name="emulation_custom_layout_y">Position Y</string>
+    <string name="emulation_custom_layout_width">Largeur</string>
+    <string name="emulation_custom_layout_height">Hauteur</string>
     <string name="emulation_cycle_landscape_layouts">Cycle des mises en page en mode paysage</string>
     <string name="emulation_swap_screens">Permuter les écrans</string>
+    <string name="emulation_rotate_upright">Tourner l\'écran à la verticale</string>
     <string name="emulation_touch_overlay_reset">Réinitialiser l\'overlay</string>
-    <string name="emulation_show_overlay">Afficher l\'overlay</string>
+    <string name="emulation_show_controller_overlay">Afficher l\'overlay du contrôleur</string>
     <string name="emulation_close_game">Fermer le jeu</string>
     <string name="emulation_toggle_pause">Pause</string>
+    <string name="miscellaneous">Divers</string>
+    <string name="use_artic_base_controller">Utilise l\'Artic Controller quand connecté à un serveur Artic Base</string>
+    <string name="use_artic_base_controller_description">Utilisez les commandes fournies par le serveur Artic Base lorsque vous y êtes connecté, au lieu du périphérique d\'entrée configuré.</string>
     <string name="emulation_close_game_message">Êtes-vous sûr de vouloir fermer le jeu en cours ?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Charger</string>
@@ -315,15 +509,11 @@
     <string name="resume_emulation">Reprendre l\'émulation</string>
     <string name="lock_drawer">Verrouiller le tiroir</string>
     <string name="unlock_drawer">Déverrouiller le tiroir</string>
-
     <string name="write_permission_needed">Vous devez autoriser l\'accès en écriture à un stockage externe pour que l\'émulateur fonctionne</string>
     <string name="load_settings">Chargement des paramètres…</string>
-
     <string name="external_storage_not_mounted">Le stockage externe doit être disponible pour utiliser CitraVR</string>
-
     <string name="select_dir">Choisissez ce répertoire</string>
     <string name="empty_gamelist">Aucun fichier n\'a été trouvé ou aucun répertoire de jeu n\'a encore été sélectionné.</string>
-
     <string name="do_not_show_this_again">Ne pas afficher à nouveau cela</string>
     <string name="searching_directory">Recherche dans le répertoire : %s</string>
     <string name="move_data">Déplacer les données</string>
@@ -332,8 +522,6 @@
     <string name="copy_complete">Copie terminée</string>
     <string name="savestates">Save States</string>
     <string name="savestate_warning_message">Avertissement : Les sauvegardes d\'état NE remplacent PAS les sauvegardes dans le jeu et ne sont pas fiables.\n\nUtilisez-les à vos propres risques !</string>
-
-    <!-- Software Keyboard -->
     <string name="software_keyboard">Clavier logiciel</string>
     <string name="i_forgot">J\'ai oublié</string>
     <string name="fixed_length_required">La longueur du texte est incorrecte (elle devrait être de %dcaractères)</string>
@@ -341,21 +529,13 @@
     <string name="blank_input_not_allowed">Une entrée vide n\'est pas autorisée</string>
     <string name="empty_input_not_allowed">Une entrée vide n\'est pas autorisée</string>
     <string name="invalid_input">Entrée non valide</string>
-
-    <!-- Mii Selector -->
     <string name="mii_selector">Sélectionneur de Mii</string>
     <string name="standard_mii">Mii standard</string>
-
-    <!-- Camera -->
     <string name="camera_select_image">Sélection de l\'image</string>
     <string name="camera">Caméra</string>
     <string name="camera_permission_needed">CitraVR a besoin d\'accéder à votre caméra pour émuler les caméras de la 3DS.\n\nSinon, vous pouvez définir \"Image Source\" sur \"Image fixe\" dans les paramètres de la caméra.</string>
-
-    <!-- Microphone -->
     <string name="microphone">Microphone</string>
     <string name="microphone_permission_needed">CitraVR a besoin d\'accéder à votre microphone pour émuler le microphone de la 3DS.\n\nAlternativement, vous pouvez également modifier le \"Périphérique d\'entrée audio\" dans les paramètres audio.</string>
-
-    <!-- Core Errors -->
     <string name="abort_button">Abandonner</string>
     <string name="continue_button">Continuer</string>
     <string name="system_archive_not_found">Archive système introuvable</string>
@@ -365,12 +545,64 @@
     <string name="save_load_error">Erreur de sauvegarde/de chargement</string>
     <string name="fatal_error">Erreur fatale</string>
     <string name="fatal_error_message">Une erreur fatale s\'est produite. Veuillez consulter le journal pour plus de détails.\nPoursuivre l\'émulation peut entraîner des plantages et des bugs.</string>
-
-    <!-- Disk shader cache -->
+    <string name="unsupported_encrypted">Application encryptée non supportée</string>
+    <string name="invalid_system_mode">Mode système invalide</string>
+    <string name="invalid_system_mode_message">Les applications exclusives à la New 3DS ne peuvent pas être chargées sans activer le mode New 3DS.</string>
     <string name="preparing_shaders">Préparation des shaders</string>
     <string name="building_shaders">Construction des shaders</string>
-
-    <!-- Cheats -->
+    <string name="delete_shader_cache">Supprimer le cache de shaders</string>
+    <string name="delete_cache_select_backend">Sélectionnez l\'API graphique pour laquelle vous voulez supprimer le cache de shaders</string>
+    <string name="deleting_shader_cache">Suppression du cache de shaders pour cette application, veuillez patienter ...</string>
+    <string name="shader_cache_deleted">Le cache de shaders a été supprimé.</string>
+    <string name="play">Jouer</string>
+    <string name="uninstall_cia">Désinstaller l\'application</string>
+    <string name="uninstalling">Désinstallation...</string>
+    <string name="game_context_open_save_dir">Ouvrir le dossier de sauvegarde des données</string>
+    <string name="game_context_open_app">Ouvrir le dossier d\'application</string>
+    <string name="game_context_open_mods">Ouvrir le dossier Mods</string>
+    <string name="game_context_open_textures">Ouvrir le dossier Textures</string>
+    <string name="game_context_open_dlc">Ouvrir le dossier DLC</string>
+    <string name="game_context_open_updates">Ouvrir le dossier Mises à jour</string>
+    <string name="game_context_open_extra">Ouvrir le dossier supplémentaire</string>
+    <string name="game_context_uninstall_dlc">Désinstaller le DLC</string>
+    <string name="game_context_uninstall_updates">Désinstaller les mises à jour</string>
+    <string name="shortcut">Raccourci</string>
+    <string name="shortcut_name">Nom du raccourci</string>
+    <string name="edit_icon">Modifier l\'icône</string>
+    <string name="create_shortcut">Créer un raccourci</string>
+    <string name="shortcut_name_empty">Le nom du raccourci ne peut pas être vide</string>
+    <string name="shortcut_image_stretch_toggle">Étirer pour ajuster l\'image</string>
+    <string name="game_context_id">ID :</string>
+    <string name="game_context_file">Fichier :</string>
+    <string name="game_context_type">Type :</string>
+    <string name="game_context_insert">Insérer Cartouche</string>
+    <string name="game_context_eject">Éjecter Cartouche</string>
+    <string name="performance_overlay_show">Afficher l\'overlay des performances</string>
+    <string name="performance_overlay_options">Overlay des performances</string>
+    <string name="performance_overlay_enable">Activer l\'overlay des performances</string>
+    <string name="performance_overlay_options_description">Configurez si l\'overlay des performances doit être affichée et quelles informations doivent être affichées.</string>
+    <string name="performance_overlay_show_fps">Afficher IPS</string>
+    <string name="performance_overlay_show_fps_description">Afficher le nombre actuel d\'images par seconde.</string>
+    <string name="performance_overlay_show_frametime">Afficher le temps d\'affichage d\'une image</string>
+    <string name="performance_overlay_show_frametime_description">Afficher le temps d\'affichage actuel d\'une image.</string>
+    <string name="performance_overlay_show_speed">Afficher la vitesse</string>
+    <string name="performance_overlay_show_speed_description">Afficher le pourcentage actuel de la vitesse d\'émulation.</string>
+    <string name="performance_overlay_show_app_ram_usage">Afficher l\'utilisation de la mémoire par l\'application</string>
+    <string name="performance_overlay_show_app_ram_usage_description">Affichez la quantité de RAM utilisée par l\'émulateur.</string>
+    <string name="performance_overlay_show_available_ram">Afficher la mémoire disponible</string>
+    <string name="performance_overlay_show_available_ram_description">Afficher la quantité de RAM disponible.</string>
+    <string name="performance_overlay_show_battery_temp">Afficher la température de la batterie</string>
+    <string name="performance_overlay_show_battery_temp_description">Afficher la température actuelle de la batterie en degrés Celsius et Fahrenheit.</string>
+    <string name="performance_overlay_position">Position de l\'overlay</string>
+    <string name="performance_overlay_position_description">Choisissez l\'emplacement d\'affichage de l\'overlay des performances à l\'écran.</string>
+    <string name="performance_overlay_position_top_left">En haut à gauche</string>
+    <string name="performance_overlay_position_top_right">En haut à droite</string>
+    <string name="performance_overlay_position_bottom_left">En bas à gauche</string>
+    <string name="performance_overlay_position_bottom_right">En bas à droite</string>
+    <string name="performance_overlay_position_center_top">Au centre en haut</string>
+    <string name="performance_overlay_position_center_bottom">Au centre en bas</string>
+    <string name="performance_overlay_background">Arrière-plan de l\'overlay</string>
+    <string name="performance_overlay_background_description">Ajoute un arrière-plan derrière l\'overlay pour faciliter la lecture.</string>
     <string name="cheats">Codes de triche</string>
     <string name="cheats_add">Ajouter un code de triche</string>
     <string name="cheats_name">Nom</string>
@@ -382,8 +614,6 @@
     <string name="cheats_error_no_name">Le nom ne peut pas être vide</string>
     <string name="cheats_error_no_code_lines">Le code ne peut pas être vide</string>
     <string name="cheats_error_on_line">Erreur à la ligne %1$d</string>
-
-    <!-- CIA Install -->
     <plurals name="cia_install_toast">
         <item quantity="one">Installation de %d fichier. Consultez la notification pour plus de détails.</item>
         <item quantity="many">Installation de %d fichiers. Consultez la notification pour plus de détails.</item>
@@ -399,24 +629,25 @@
     <string name="cia_install_error_invalid">\"%s\" n\'est pas un CIA valide</string>
     <string name="cia_install_error_encrypted">\"%s\" doit être décrypté avant d\'être utilisé avec CitraVR. Une véritable 3DS est nécessaire.</string>
     <string name="cia_install_error_unknown">Une erreur inconnue s\'est produite lors de l\'installation de \"%s\".\n Veuillez consulter les logs pour plus de détails.</string>
-
-    <!-- Theme Modes -->
+    <string name="memory_formatted">%1$s%2$s</string>
+    <string name="memory_byte">Octet</string>
+    <string name="memory_byte_shorthand">O</string>
+    <string name="memory_kilobyte">Ko</string>
+    <string name="memory_megabyte">Mo</string>
+    <string name="memory_gigabyte">Go</string>
+    <string name="memory_terabyte">To</string>
+    <string name="memory_petabyte">Po</string>
+    <string name="memory_exabyte">Eo</string>
     <string name="change_theme_mode">Changer le mode de thème</string>
     <string name="theme_mode_follow_system">Automatique</string>
     <string name="theme_mode_light">Lumineux</string>
     <string name="theme_mode_dark">Sombre</string>
     <string name="material_you">Material You</string>
     <string name="material_you_description">Utiliser les couleurs système dans toute l\'application</string>
-
-    <!-- Black backgrounds theme -->
+    <string name="static_theme_color">Couleur de thème</string>
+    <string name="static_theme_color_description">Change la couleur du thème du menu de l\'app</string>
     <string name="use_black_backgrounds">Arrière-plan noir</string>
     <string name="use_black_backgrounds_description">Lorsque vous utilisez le thème sombre, appliquer un arrière-plan noir.</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">Horloge de l\'appareil</string>
-    <string name="simulated_clock">Horloge simulée</string>
-
-    <!-- Region names -->
     <string name="system_region_jpn">JPN</string>
     <string name="system_region_usa">USA</string>
     <string name="system_region_eur">EUR</string>
@@ -424,8 +655,6 @@
     <string name="system_region_chn">CHN</string>
     <string name="system_region_kor">KOR</string>
     <string name="system_region_twn">TWN</string>
-
-    <!-- Language names -->
     <string name="language_japanese">Japonais (日本語)</string>
     <string name="language_english">Anglais (English)</string>
     <string name="language_french">Français</string>
@@ -438,50 +667,35 @@
     <string name="language_portuguese">Portugais (português)</string>
     <string name="language_russian">Russe (Русский)</string>
     <string name="language_traditional_chinese">Chinois traditionnel (正體中文)</string>
-
-    <!-- Camera image sources -->
     <string name="blank">Vide</string>
     <string name="still_image">Image fixe</string>
     <string name="device_camera">Caméra de l\'appareil</string>
-
-    <!-- Camera device names -->
     <string name="any_front_camera">N\'importe quelle caméra avant</string>
     <string name="any_back_camera">N\'importe quelle caméra arrière</string>
-
-    <!-- Camera flip names -->
     <string name="horizontal">Horizontal</string>
     <string name="vertical">Vertical</string>
     <string name="reverse">Inverser</string>
-
-    <!-- Audio input types -->
     <string name="static_noise">Bruit statique</string>
     <string name="real_cubeb">Appareil réel (cubeb)</string>
     <string name="real_openal">Appareil réel (OpenAL)</string>
-
-    <!-- Render 3D modes -->
     <string name="side_by_side">Côte à côte</string>
+    <string name="side_by_side_full">Côte à côte largeur maximale</string>
     <string name="anaglyph">Anaglyphe</string>
     <string name="interlaced">Entrelacé</string>
     <string name="reverse_interlaced">Entrelacement inversé</string>
-
-    <!-- Graphics API names -->
     <string name="opengles">OpenGLES</string>
     <string name="vulkan">Vulkan</string>
-
-    <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubique</string>
-    <string name="nearest_neighbor">Plus proche voisin</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
-
-    <!-- Sound output modes -->
+    <string name="game_controlled">Contrôlé par le jeu</string>
+    <string name="nearest_neighbor">Plus proche voisin</string>
+    <string name="linear">Linéaire</string>
     <string name="mono">Mono</string>
     <string name="stereo">Stéreo</string>
     <string name="surround">Surround</string>
-
-    <!-- Countries -->
     <string name="japan">Japon</string>
     <string name="anguilla">Anguilla</string>
     <string name="antigua_and_barbuda">Antigua et Barbuda</string>
@@ -615,8 +829,6 @@
     <string name="san_marino">Saint-Marin</string>
     <string name="vatican_city">Vatican</string>
     <string name="bermuda">Bermudes</string>
-
-    <!-- Months -->
     <string name="january">Janvier</string>
     <string name="february">Février</string>
     <string name="march">Mars</string>
@@ -629,8 +841,40 @@
     <string name="october">Octobre</string>
     <string name="november">Novembre</string>
     <string name="december">Décembre</string>
-
-    <!-- VR-specific -->
+    <string name="artic_server_comm_error">La communication avec le serveur Artic Base a échoué. L\'émulation va s\'arrêter</string>
+    <string name="artic_base">Artic Base</string>
+    <string name="artic_base_connect_description">Se connecter à une vraie console exécutant un serveur Artic Base</string>
+    <string name="artic_base_connect">Se connecter à Artic Base</string>
+    <string name="artic_base_enter_address">Entrez l\'adresse du serveur Artic Base</string>
+    <string name="emulation_quicksave_slot">Sauvegarde rapide</string>
+    <string name="emulation_quicksave">Sauvegarde rapide</string>
+    <string name="emulation_quickload">Recharge rapide</string>
+    <string name="emulation_occupied_quicksave_slot">Sauvegarde rapide - %1$tF %1$tR</string>
+    <string name="quickload_not_found">Aucune sauvegarde rapide disponible.</string>
+    <string name="compress">Compresser</string>
+    <string name="compressing">Compression ...</string>
+    <string name="decompress">Décompresser</string>
+    <string name="decompressing">Décompression ...</string>
+    <string name="compress_success">La compression a été réalisée avec succès.</string>
+    <string name="compress_unsupported">La compression n\'est pas supportée pour ce fichier.</string>
+    <string name="compress_already">Le fichier est déjà compressé.</string>
+    <string name="compress_failed">Échec de la compression.</string>
+    <string name="decompress_success">La décompression a été réalisée avec succès.</string>
+    <string name="decompress_unsupported">La décompression n\'est pas supportée pour ce fichier.</string>
+    <string name="decompress_not_compressed">Le fichier n\'est pas compressé.</string>
+    <string name="decompress_failed">Échec de la décompression.</string>
+    <string name="compress_decompress_installed_app">Les applications déjà installées ne peuvent pas être compressées ou décompressées.</string>
+    <string name="contributors_link">https://github.com/citra-emu/citra/graphs/contributors</string>
+    <string name="support_link">https://discord.gg/FAXfZV9</string>
+    <string name="website_link">https://citra-emu.org/</string>
+    <string name="github_link">https://github.com/citra-emu</string>
+    <string name="add_games">Ajouter des jeux</string>
+    <string name="add_games_warning_help">https://citra-emu.org/wiki/dumping-game-cartridges/</string>
+    <string name="cannot_skip_directory_help">https://github.com/citra-emu/citra/wiki/CitraVR-Android-user-data-and-storage</string>
+    <string name="init_time">Décalage temporel</string>
+    <string name="init_time_description">Si l\'horloge est réglée sur \"Horloge simulée\", cela modifie la date et l\'heure fixes de début.</string>
+    <string name="emulation_screen_layout_landscape">Par défaut</string>
+    <string name="emulation_show_overlay">Afficher l\'overlay</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">Environnement VR</string>
     <string name="vr_error_two_instances_title">Erreur : Deux instances de CitraVR détectées</string>
@@ -659,8 +903,6 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="vr_immersive_pos_factor_description">Ajuste la mesure dans laquelle le mouvement gauche/droite/haut/bas affecte la caméra du jeu (0 = désactivé).</string>
     <string name="vr_immersive_pos_game_scaler_title">Multiplicateur du Facteur de Mouvement Positionnel</string>
     <string name="vr_immersive_pos_game_scaler_description">Ajuste la façon dont le mouvement gauche/droite/haut/bas affecte la caméra du jeu, certains jeux nécessitent des valeurs plus grandes, donc cela multiplie le facteur de mouvement positionnel.</string>
-    <string name="cancelling">Annulation...</string>
-    <string name="start">Commencer</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>
     <string name="header_instructions_text">Pour déplacer un panneau :</string>
     <string name="vertical_header_text">Mouvement Vertical</string>

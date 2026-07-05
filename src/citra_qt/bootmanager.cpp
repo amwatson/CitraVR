@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,7 +9,8 @@
 #include <QPainter>
 #include <QWindow>
 #include "citra_qt/bootmanager.h"
-#include "citra_qt/main.h"
+#include "citra_qt/citra_qt.h"
+#include "citra_qt/util/util.h"
 #include "common/color.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -17,6 +18,7 @@
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/frontend/framebuffer_layout.h"
+#include "core/loader/loader.h"
 #include "core/perf_stats.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
@@ -27,8 +29,9 @@
 #include "video_core/renderer_software/renderer_software.h"
 
 #ifdef ENABLE_OPENGL
-#include <glad/glad.h>
-
+// clang-format off
+#include <glad/glad.h> // Must be included first
+// clang-format on
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
@@ -36,9 +39,7 @@
 #if defined(__APPLE__)
 #include <objc/message.h>
 #include <objc/objc.h>
-#endif
-
-#if !defined(WIN32)
+#elif !defined(WIN32)
 #include <qpa/qplatformnativeinterface.h>
 #endif
 
@@ -64,21 +65,32 @@ void EmuThread::run() {
     MicroProfileOnThreadCreate("EmuThread");
     const auto scope = core_context.Acquire();
 
-    if (Settings::values.preload_textures) {
-        emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0);
+    if (Settings::values.custom_textures && Settings::values.preload_textures) {
+        emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0, "");
         system.CustomTexManager().PreloadTextures(
-            stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value,
-                             std::size_t total) { emit LoadProgress(stage, value, total); });
+            stop_run,
+            [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                   const std::string& object) { emit LoadProgress(stage, value, total, object); });
     }
 
-    emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
-
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
-        stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
-            emit LoadProgress(stage, value, total);
+    system.GPU().Renderer().Rasterizer()->SetSwitchDiskResourcesCallback(
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+               const std::string& object) {
+            emit SwitchDiskResources(stage, value, total, object);
         });
 
-    emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
+    emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+
+    u64 program_id{};
+    system.GetAppLoader().ReadProgramId(program_id);
+    system.GPU().ApplyPerProgramSettings(program_id);
+
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
+        stop_run,
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+               const std::string& object) { emit LoadProgress(stage, value, total, object); });
+
+    emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
 
     core_context.MakeCurrent();
 
@@ -714,7 +726,7 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
         screenshot_image.bits(),
         [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();
-            if (screenshot_image.mirrored(false, invert_y).save(screenshot_path)) {
+            if (GetMirroredImage(screenshot_image, false, invert_y).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
             } else {
                 LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);
@@ -749,7 +761,7 @@ bool GRenderWindow::InitializeOpenGL() {
     child->SetContext(std::move(child_context));
 
     auto format = child_widget->windowHandle()->format();
-    format.setSwapInterval(Settings::values.use_vsync_new.GetValue());
+    format.setSwapInterval(Settings::values.use_vsync.GetValue());
     child_widget->windowHandle()->setFormat(format);
 
     return true;

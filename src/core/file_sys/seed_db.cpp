@@ -102,6 +102,16 @@ void SeedDB::Add(const Seed& seed) {
     seeds.push_back(seed);
 }
 
+bool SeedDB::Delete(u64 title_id) {
+    auto it = std::find_if(seeds.begin(), seeds.end(),
+                           [title_id](const auto& seed) { return seed.title_id == title_id; });
+    if (it == seeds.end()) {
+        return false;
+    }
+    seeds.erase(it);
+    return true;
+}
+
 std::size_t SeedDB::GetCount() const {
     return seeds.size();
 }
@@ -136,6 +146,21 @@ std::optional<Seed::Data> GetSeed(u64 title_id) {
         return found_seed_iter->data;
     }
     return std::nullopt;
+}
+
+bool DeleteSeed(u64 title_id) {
+    SeedDB db;
+    if (!db.Load()) {
+        LOG_ERROR(Service_FS, "Failed to load seed database");
+        return false;
+    }
+    bool found = db.Delete(title_id);
+    if (found) {
+        if (!db.Save()) {
+            LOG_ERROR(Service_FS, "Failed to save seed database");
+        }
+    }
+    return found;
 }
 
 u32 GetSeedCount() {

@@ -1,15 +1,16 @@
-// Copyright 2019 yuzu Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <mutex>
 #include <utility>
 #include "common/microprofile.h"
-#include "common/settings.h"
 #include "common/thread.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
-#include "video_core/renderer_vulkan/vk_renderpass_cache.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
+#ifdef HAVE_LIBRETRO
+#include "citra_libretro/libretro_vk.h"
+#endif
 
 MICROPROFILE_DEFINE(Vulkan_WaitForWorker, "Vulkan", "Wait for worker", MP_RGB(255, 192, 192));
 MICROPROFILE_DEFINE(Vulkan_Submit, "Vulkan", "Submit Exectution", MP_RGB(255, 192, 255));
@@ -19,11 +20,15 @@ namespace Vulkan {
 namespace {
 
 std::unique_ptr<MasterSemaphore> MakeMasterSemaphore(const Instance& instance) {
+#ifdef HAVE_LIBRETRO
+    return CreateLibRetroMasterSemaphore(instance);
+#else
     if (instance.IsTimelineSemaphoreSupported()) {
         return std::make_unique<MasterSemaphoreTimeline>(instance);
     } else {
         return std::make_unique<MasterSemaphoreFence>(instance);
     }
+#endif
 }
 
 } // Anonymous namespace
@@ -97,6 +102,8 @@ void Scheduler::DispatchWork() {
     if (!use_worker_thread || chunk->Empty()) {
         return;
     }
+
+    on_dispatch();
 
     {
         std::scoped_lock ql{queue_mutex};
@@ -173,11 +180,15 @@ void Scheduler::SubmitExecution(vk::Semaphore signal_semaphore, vk::Semaphore wa
     state = StateFlags::AllDirty;
     const u64 signal_value = master_semaphore->NextTick();
 
+    on_submit();
+
     Record([signal_semaphore, wait_semaphore, signal_value, this](vk::CommandBuffer cmdbuf) {
         MICROPROFILE_SCOPE(Vulkan_Submit);
         std::scoped_lock lock{submit_mutex};
         master_semaphore->SubmitWork(cmdbuf, wait_semaphore, signal_semaphore, signal_value);
     });
+
+    master_semaphore->Refresh();
 
     if (!use_worker_thread) {
         AllocateWorkerCommandBuffers();

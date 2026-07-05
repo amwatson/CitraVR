@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <memory>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
@@ -39,8 +40,8 @@ struct AdpcmState {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& predictor;
-        ar& step_index;
+        ar & predictor;
+        ar & step_index;
     }
     friend class boost::serialization::access;
 };
@@ -66,22 +67,22 @@ struct Channel {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& block1_address;
-        ar& block2_address;
-        ar& block1_size;
-        ar& block2_size;
-        ar& block1_adpcm_state;
-        ar& block2_adpcm_state;
-        ar& block2_adpcm_reload;
-        ar& left_channel_volume;
-        ar& right_channel_volume;
-        ar& left_capture_volume;
-        ar& right_capture_volume;
-        ar& sample_rate;
-        ar& linear_interpolation;
-        ar& loop_mode;
-        ar& encoding;
-        ar& psg_duty;
+        ar & block1_address;
+        ar & block2_address;
+        ar & block1_size;
+        ar & block2_size;
+        ar & block1_adpcm_state;
+        ar & block2_adpcm_state;
+        ar & block2_adpcm_reload;
+        ar & left_channel_volume;
+        ar & right_channel_volume;
+        ar & left_capture_volume;
+        ar & right_capture_volume;
+        ar & sample_rate;
+        ar & linear_interpolation;
+        ar & loop_mode;
+        ar & encoding;
+        ar & psg_duty;
     }
     friend class boost::serialization::access;
 };
@@ -257,16 +258,17 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        DEBUG_SERIALIZATION_POINT;
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& mutex;
-        ar& shared_memory;
-        ar& capture_units;
-        ar& channels;
-        ar& master_state_offset;
-        ar& channel_state_offset;
-        ar& capture_state_offset;
-        ar& type1_command_offset;
-        ar& acquired_channel_mask;
+        ar & mutex;
+        ar & shared_memory;
+        ar & capture_units;
+        ar & channels;
+        ar & master_state_offset;
+        ar & channel_state_offset;
+        ar & capture_state_offset;
+        ar & type1_command_offset;
+        ar & acquired_channel_mask;
     }
     friend class boost::serialization::access;
 };

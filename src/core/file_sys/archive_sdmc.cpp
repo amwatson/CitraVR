@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,8 +43,8 @@ public:
     SERIALIZE_DELAY_GENERATOR
 };
 
-ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
-                                                              const Mode& mode) const {
+ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path, const Mode& mode,
+                                                              u32 attributes) {
     Mode modified_mode;
     modified_mode.hex = mode.hex;
 
@@ -83,14 +83,14 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
         return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Path not found {}", full_path);
+        LOG_DEBUG(Service_FS, "Path not found {}", full_path);
         return ResultNotFound;
     case PathParser::DirectoryFound:
-        LOG_ERROR(Service_FS, "{} is not a file", full_path);
+        LOG_DEBUG(Service_FS, "{} is not a file", full_path);
         return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::NotFound:
         if (!mode.create_flag) {
-            LOG_ERROR(Service_FS, "Non-existing file {} can't be open without mode create.",
+            LOG_DEBUG(Service_FS, "Non-existing file {} can't be open without mode create.",
                       full_path);
             return ResultNotFound;
         } else {
@@ -185,7 +185,7 @@ static Result DeleteDirectoryHelper(const Path& path, const std::string& mount_p
     }
 
     if (path_parser.IsRootDirectory())
-        return ResultNotFound;
+        return ResultInvalidOpenFlags;
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
 
@@ -222,7 +222,7 @@ Result SDMCArchive::DeleteDirectoryRecursively(const Path& path) const {
         path, mount_point, [](const std::string& p) { return FileUtil::DeleteDirRecursively(p); });
 }
 
-Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
+Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size, u32 attributes) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -267,7 +267,7 @@ Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
                   ErrorLevel::Info);
 }
 
-Result SDMCArchive::CreateDirectory(const Path& path) const {
+Result SDMCArchive::CreateDirectory(const Path& path, u32 attributes) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -331,7 +331,7 @@ Result SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_path)
                   ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Path& path) const {
+ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Path& path) {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -348,10 +348,10 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
     case PathParser::PathNotFound:
     case PathParser::NotFound:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "{} not found", full_path);
+        LOG_DEBUG(Service_FS, "{} not found", full_path);
         return ResultNotFound;
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
+        LOG_DEBUG(Service_FS, "Unexpected file in path {}", full_path);
         return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case
@@ -392,7 +392,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path&
 }
 
 Result ArchiveFactory_SDMC::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
-                                   u64 program_id) {
+                                   u64 program_id, u32 directory_buckets, u32 file_buckets) {
     // This is kind of an undesirable operation, so let's just ignore it. :)
     return ResultSuccess;
 }

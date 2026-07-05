@@ -1,10 +1,11 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.model.view
 
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 
 /**
@@ -21,10 +22,17 @@ abstract class SettingsItem(
 ) {
     abstract val type: Int
 
-    val isEditable: Boolean
+    open val isEditable: Boolean
         get() {
-            if (!NativeLibrary.isRunning()) return true
+            if (!EmulationActivity.isRunning()) return true
             return setting?.isRuntimeEditable ?: false
+        }
+
+    open var isEnabled: Boolean = true
+
+    val isActive: Boolean
+        get() {
+            return this.isEditable && this.isEnabled
         }
 
     companion object {
@@ -38,5 +46,7 @@ abstract class SettingsItem(
         const val TYPE_RUNNABLE = 7
         const val TYPE_INPUT_BINDING = 8
         const val TYPE_STRING_INPUT = 9
+        const val TYPE_FLOAT_INPUT = 10
+        const val TYPE_MULTI_CHOICE = 11
     }
 }

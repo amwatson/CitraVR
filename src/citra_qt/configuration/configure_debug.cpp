@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "ui_configure_debug.h"
 #ifdef ENABLE_VULKAN
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -32,6 +33,17 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureDebug>()), is_powered_on{is_powered_on_} {
     ui->setupUi(this);
     SetConfiguration();
+
+    connect(ui->toggle_gdbstub, &QCheckBox::clicked,
+            [this](bool checked) { ui->debug_next_process->setEnabled(checked); });
+
+    connect(ui->debug_next_process, &QCheckBox::clicked, [](bool checked) {
+        if (checked) {
+            Core::System::GetInstance().SetDebugNextProcessFlag();
+        } else {
+            Core::System::GetInstance().ClearDebugNextProcessFlag();
+        }
+    });
 
     connect(ui->open_log_button, &QPushButton::clicked, []() {
         QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
@@ -73,6 +85,8 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
     ui->toggle_dump_command_buffers->setEnabled(!is_powered_on);
+    ui->enable_rpc_server->setEnabled(!is_powered_on);
+    ui->toggle_unique_data_console_type->setEnabled(!is_powered_on);
 
     // Set a minimum width for the label to prevent the slider from changing size.
     // This scales across DPIs. (This value should be enough for "xxx%")
@@ -85,6 +99,10 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     ui->clock_speed_label->setVisible(Settings::IsConfiguringGlobal());
     ui->clock_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
 
+#ifndef ENABLE_GDBSTUB
+    ui->gdb_groupbox->setVisible(false);
+#endif
+
     SetupPerGameUI();
 }
 
@@ -92,14 +110,30 @@ ConfigureDebug::~ConfigureDebug() = default;
 
 void ConfigureDebug::SetConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub.GetValue());
+    if (!ui->toggle_gdbstub->isChecked()) {
+        ui->debug_next_process->setEnabled(false);
+    }
     ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port.GetValue());
     ui->toggle_console->setEnabled(!is_powered_on);
     ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
+    ui->log_regex_filter_edit->setText(
+        QString::fromStdString(Settings::values.log_regex_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
     ui->delay_start_for_lle_modules->setChecked(
         Settings::values.delay_start_for_lle_modules.GetValue());
+    ui->deterministic_async_operations->setChecked(
+        Settings::values.deterministic_async_operations.GetValue());
+    ui->enable_rpc_server->setChecked(Settings::values.enable_rpc_server.GetValue());
+#ifndef ENABLE_SCRIPTING
+    ui->enable_rpc_server->setVisible(false);
+#endif // !ENABLE_SCRIPTING
+    ui->toggle_unique_data_console_type->setChecked(
+        Settings::values.toggle_unique_data_console_type.GetValue());
+    ui->break_on_unmapped_memory_access->setChecked(
+        Settings::values.break_on_unmapped_memory_access.GetValue());
+
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
@@ -119,21 +153,36 @@ void ConfigureDebug::SetConfiguration() {
         SettingsToSlider(Settings::values.cpu_clock_percentage.GetValue()));
     ui->clock_display_label->setText(
         QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage.GetValue()));
+    ui->instant_debug_log->setChecked(Settings::values.instant_debug_log.GetValue());
+
+    if (Core::System::GetInstance().GetDebugNextProcessFlag()) {
+        ui->debug_next_process->setChecked(true);
+    }
 }
 
 void ConfigureDebug::ApplyConfiguration() {
     Settings::values.use_gdbstub = ui->toggle_gdbstub->isChecked();
-    Settings::values.gdbstub_port = ui->gdbport_spinbox->value();
+    Settings::values.gdbstub_port = static_cast<u16>(ui->gdbport_spinbox->value());
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
+    Settings::values.log_regex_filter = ui->log_regex_filter_edit->text().toStdString();
     Debugger::ToggleConsole();
     Common::Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Common::Log::SetGlobalFilter(filter);
+    Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::values.delay_start_for_lle_modules = ui->delay_start_for_lle_modules->isChecked();
+    Settings::values.deterministic_async_operations =
+        ui->deterministic_async_operations->isChecked();
+    Settings::values.enable_rpc_server = ui->enable_rpc_server->isChecked();
+    Settings::values.toggle_unique_data_console_type =
+        ui->toggle_unique_data_console_type->isChecked();
+    Settings::values.break_on_unmapped_memory_access =
+        ui->break_on_unmapped_memory_access->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
+    Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
 
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.cpu_clock_percentage, ui->clock_speed_combo,
@@ -152,8 +201,11 @@ void ConfigureDebug::SetupPerGameUI() {
         ConfigurationShared::SetHighlight(ui->clock_speed_widget, index == 1);
     });
 
-    ui->groupBox->setVisible(false);
+    ui->gdb_groupbox->setVisible(false);
     ui->groupBox_2->setVisible(false);
+    ui->enable_rpc_server->setVisible(false);
+    ui->toggle_unique_data_console_type->setVisible(false);
+    ui->break_on_unmapped_memory_access->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
 }
 

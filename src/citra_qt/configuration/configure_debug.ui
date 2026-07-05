@@ -17,7 +17,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="gdb_groupbox">
        <property name="title">
         <string>GDB</string>
        </property>
@@ -60,6 +60,13 @@
           </item>
          </layout>
         </item>
+        <item>
+          <widget class="QCheckBox" name="debug_next_process">
+            <property name="text">
+              <string>Pause next non-sysmodule process at start</string>
+            </property>
+          </widget>
+        </item>
        </layout>
       </widget>
      </item>
@@ -86,11 +93,25 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="horizontalLayout1">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Regex Log Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="log_regex_filter_edit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout2">
         <item>
          <widget class="QCheckBox" name="toggle_console">
           <property name="text">
-           <string>Show Log Console (Windows Only)</string>
+           <string>Show log output in console</string>
           </property>
          </widget>
         </item>
@@ -103,6 +124,16 @@
         </item>
        </layout>
       </item>
+      <item>
+        <widget class="QCheckBox" name="instant_debug_log">
+          <property name="text">
+            <string>Flush log output on every message</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;body&gt;Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.&lt;br&gt;Enabling this feature will decrease performance, only use it for debugging purposes.&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -111,7 +142,7 @@
      <property name="title">
       <string>CPU</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="clock_speed_GLayout">
       <item row="1" column="0">
        <widget class="QWidget" name="clock_speed_widget" native="true">
         <layout class="QHBoxLayout" name="clock_speed_layout">
@@ -154,7 +185,7 @@
          <item>
           <widget class="QSlider" name="slider_clock_speed">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;body&gt;Changes the emulated CPU clock frequency.&lt;br&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;body&gt;Changes the emulated CPU clock frequency.&lt;br&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br&gt;Overclocking may reduce application lag but also might cause freezes&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="minimum">
             <number>0</number>
@@ -193,6 +224,16 @@
        </widget>
       </item>
       <item row="2" column="0">
+       <widget class="QLabel" name="label_cpu_clock_info">
+        <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
+      <item row="3" column="0">
        <widget class="QCheckBox" name="toggle_cpu_jit">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don't disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -202,14 +243,14 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QCheckBox" name="toggle_renderer_debug">
         <property name="text">
          <string>Enable debug renderer</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QCheckBox" name="toggle_dump_command_buffers">
         <property name="text">
          <string>Dump command buffers</string>
@@ -219,33 +260,63 @@
      </layout>
     </widget>
    </item>
-    <item>
-      <widget class="QGroupBox" name="groupBox_5">
-        <property name="title">
-          <string>Miscellaneus</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-          <item row="1" column="0">
-            <widget class="QCheckBox" name="delay_start_for_lle_modules">
-              <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-                <string>Delay app start for LLE module initialization</string>
-              </property>
-            </widget>
-          </item>
-        </layout>
-      </widget>
-    </item>
    <item>
-    <widget class="QLabel" name="label_cpu_clock_info">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CPU Clock Speed Information&lt;br/&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br/&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="title">
+      <string>Miscellaneous</string>
      </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="delay_start_for_lle_modules">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Delay app start for LLE module initialization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="toggle_unique_data_console_type">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggles the unique data console type (Old 3DS &#8596; New 3DS) to be able to download the opposite system firmware type from system settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Toggle unique data console type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="deterministic_async_operations">
+        <property name="text">
+         <string>Force deterministic async operations</string>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+        <widget class="QCheckBox" name="enable_rpc_server">
+          <property name="text">
+            <string>Enable RPC server</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server on port 45987. This allows remotely reading/writing guest memory, do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="break_on_unmapped_memory_access">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pauses emulation and shows an error message if an unmapped memory access is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Break on unmapped memory access</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

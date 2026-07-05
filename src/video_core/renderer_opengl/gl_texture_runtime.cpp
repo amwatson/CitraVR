@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -127,7 +127,8 @@ u32 TextureRuntime::RemoveThreshold() {
     return SWAP_CHAIN_SIZE;
 }
 
-bool TextureRuntime::NeedsConversion(VideoCore::PixelFormat pixel_format) const {
+bool TextureRuntime::NeedsConversion(const Surface& surface) const {
+    const auto& pixel_format = surface.pixel_format;
     const bool should_convert = pixel_format == PixelFormat::RGBA8 || // Needs byteswap
                                 pixel_format == PixelFormat::RGB8;    // Is converted to RGBA8
     return driver.IsOpenGLES() && should_convert;
@@ -260,16 +261,19 @@ void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
 }
 
 bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
-                                  const VideoCore::TextureCopy& copy) {
+                                  std::span<const VideoCore::TextureCopy> copies) {
     const GLenum src_textarget = source.texture_type == VideoCore::TextureType::CubeMap
                                      ? GL_TEXTURE_CUBE_MAP
                                      : GL_TEXTURE_2D;
     const GLenum dest_textarget =
         dest.texture_type == VideoCore::TextureType::CubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-    glCopyImageSubData(source.Handle(), src_textarget, copy.src_level, copy.src_offset.x,
-                       copy.src_offset.y, copy.src_layer, dest.Handle(), dest_textarget,
-                       copy.dst_level, copy.dst_offset.x, copy.dst_offset.y, copy.dst_layer,
-                       copy.extent.width, copy.extent.height, 1);
+
+    for (const auto& copy : copies) {
+        glCopyImageSubData(source.Handle(), src_textarget, copy.src_level, copy.src_offset.x,
+                           copy.src_offset.y, copy.src_layer, dest.Handle(), dest_textarget,
+                           copy.dst_level, copy.dst_offset.x, copy.dst_offset.y, copy.dst_layer,
+                           copy.extent.width, copy.extent.height, 1);
+    }
     return true;
 }
 
@@ -287,7 +291,7 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     // Note: shadow map is treated as RGBA8 format in PICA, as well as in the rasterizer cache, but
     // doing linear intepolation componentwise would cause incorrect value.
     const GLbitfield buffer_mask = MakeBufferMask(source.type);
-    const bool is_shadow_map = True(source.flags & SurfaceFlagBits::ShadowMap);
+    const bool is_shadow_map = True(source.flags & SurfaceFlagBits::ShadowSource);
     const GLenum filter =
         buffer_mask == GL_COLOR_BUFFER_BIT && !is_shadow_map ? GL_LINEAR : GL_NEAREST;
     glBlitFramebuffer(blit.src_rect.left, blit.src_rect.bottom, blit.src_rect.right,
@@ -313,8 +317,9 @@ void TextureRuntime::GenerateMipmaps(Surface& surface) {
     }
 }
 
-Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params)
-    : SurfaceBase{params}, driver{&runtime_.GetDriver()}, runtime{&runtime_},
+Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params,
+                 const VideoCore::SurfaceFlagBits& initial_flag_bits)
+    : SurfaceBase{params, initial_flag_bits}, driver{&runtime_.GetDriver()}, runtime{&runtime_},
       tuple{runtime->GetFormatTuple(pixel_format)} {
     if (pixel_format == PixelFormat::Invalid) {
         return;
@@ -331,9 +336,10 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     }
 }
 
-Surface::Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
+Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface,
                  const VideoCore::Material* mat)
-    : SurfaceBase{surface}, tuple{runtime.GetFormatTuple(mat->format)} {
+    : SurfaceBase{surface, {}}, driver{&runtime_.GetDriver()}, runtime{&runtime_},
+      tuple{runtime_.GetFormatTuple(mat->format)} {
     if (mat && !driver->IsCustomFormatSupported(mat->format)) {
         return;
     }
@@ -599,8 +605,8 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
                          const Surface* color, const Surface* depth)
-    : VideoCore::FramebufferParams{params}, res_scale{color ? color->res_scale
-                                                            : (depth ? depth->res_scale : 1u)} {
+    : VideoCore::FramebufferParams{params},
+      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
 
     if (shadow_rendering && !color) {
         return;

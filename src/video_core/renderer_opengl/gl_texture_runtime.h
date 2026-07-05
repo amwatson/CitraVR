@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -49,7 +49,7 @@ public:
     void Finish() {}
 
     /// Returns true if the provided pixel format cannot be used natively by the runtime.
-    bool NeedsConversion(VideoCore::PixelFormat pixel_format) const;
+    bool NeedsConversion(const Surface& surface) const;
 
     /// Maps an internal staging buffer of the provided size of pixel uploads/downloads
     VideoCore::StagingData FindStaging(u32 size, bool upload);
@@ -65,7 +65,12 @@ public:
     void ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
 
     /// Copies a rectangle of source to another rectange of dest
-    bool CopyTextures(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
+    bool CopyTextures(Surface& source, Surface& dest,
+                      std::span<const VideoCore::TextureCopy> copies);
+
+    bool CopyTextures(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy) {
+        return CopyTextures(source, dest, std::array{copy});
+    }
 
     /// Blits a rectangle of source to another rectange of dest
     bool BlitTextures(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
@@ -92,7 +97,8 @@ private:
 
 class Surface : public VideoCore::SurfaceBase {
 public:
-    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
+    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params,
+                     const VideoCore::SurfaceFlagBits& initial_flag_bits = {});
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* material);
     ~Surface();

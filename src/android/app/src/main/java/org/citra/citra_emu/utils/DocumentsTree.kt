@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,10 +6,14 @@ package org.citra.citra_emu.utils
 
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.model.CheapDocument
+import org.citra.citra_emu.utils.BuildUtil
+import java.io.IOException
 import java.net.URLDecoder
+import java.nio.file.Paths
 import java.util.StringTokenizer
 import java.util.concurrent.ConcurrentHashMap
 
@@ -17,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
  * A cached document tree for Citra user directory.
  * For every filepath which is not startsWith "content://" will need to use this class to traverse.
  * For example:
- * C++ Citra log file directory will be /log/citra_log.txt.
+ * C++ Citra log file directory will be /log/azahar_log.txt.
  * After DocumentsTree.resolvePath() it will become content URI.
  */
 class DocumentsTree {
@@ -75,8 +79,9 @@ class DocumentsTree {
 
     @Synchronized
     fun getFilename(filepath: String): String {
-        val node = resolvePath(filepath) ?: return ""
-        return node.name
+        val components = filepath.split(DELIMITER).filter { it.isNotEmpty() }
+        val filename = components.last()
+        return filename
     }
 
     @Synchronized
@@ -98,6 +103,46 @@ class DocumentsTree {
         } else {
             FileUtil.getFileSize(node.uri.toString())
         }
+    }
+
+    @Synchronized
+    fun getUri(filepath: String): Uri {
+        val node = resolvePath(filepath) ?: return Uri.EMPTY
+        return node.uri ?: return Uri.EMPTY
+    }
+
+    @Synchronized
+    fun folderUriHelper(path: String, createIfNotExists: Boolean = false): Uri? {
+        root ?: return null
+        val components = path.split(DELIMITER).filter { it.isNotEmpty() }
+        var current = root
+
+        for (component in components) {
+            if (!current!!.loaded) {
+                structTree(current)
+            }
+
+            var child = current.findChild(component)
+
+            // Create directory if it doesn't exist and creation is enabled
+            if (child == null && createIfNotExists) {
+                try {
+                    val createdDir = FileUtil.createDir(current.uri.toString(), component) ?: return null
+                    child = DocumentsNode(createdDir, true).apply {
+                        parent = current
+                    }
+                    current.addChild(child)
+                } catch (e: Exception) {
+                    error("[DocumentsTree]: Cannot create directory, error: " + e.message)
+                    return null
+                }
+            } else if (child == null) {
+                return null
+            }
+
+            current = child
+        }
+        return current?.uri
     }
 
     @Synchronized
@@ -151,15 +196,29 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
+    fun renameFile(filepath: String, destinationFilename: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
-            DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
-            node.rename(filename)
+            val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
+            node.rename(filename, newUri)
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
+        }
+    }
+
+    @Synchronized
+    fun moveFile(filename: String, sourceDirPath: String, destDirPath: String): Boolean {
+        val sourceFileNode = resolvePath(sourceDirPath + "/" + filename) ?: return false
+        val sourceDirNode = resolvePath(sourceDirPath) ?: return false
+        val destDirNode = resolvePath(destDirPath) ?: return false
+        try {
+            val newUri = DocumentsContract.moveDocument(context.contentResolver, sourceFileNode.uri!!, sourceDirNode.uri!!, destDirNode.uri!!)
+            updateDocumentLocation("$sourceDirPath/$filename", "$destDirPath/$filename")
+            return true
+        } catch (e: Exception) {
+            error("[DocumentsTree]: Cannot move file, error: " + e.message)
         }
     }
 
@@ -180,7 +239,41 @@ class DocumentsTree {
     }
 
     @Synchronized
+    fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean {
+        val sourceNode = resolvePath(sourcePath)
+        val newName = Paths.get(destinationPath).fileName.toString()
+        val parentPath = Paths.get(destinationPath).parent.toString()
+        val newParent = resolvePath(parentPath)
+        val newUri = (getUri(parentPath).toString() + "%2F$newName").toUri() // <- Is there a better way?
+
+        if (sourceNode == null || newParent == null) {
+            return false
+        }
+
+        sourceNode.parent!!.removeChild(sourceNode)
+
+        sourceNode.name = newName
+        sourceNode.parent = newParent
+        sourceNode.uri = newUri
+
+        newParent.addChild(sourceNode)
+
+        return true
+    }
+
+    @Synchronized
     private fun resolvePath(filepath: String): DocumentsNode? {
+        if (!BuildUtil.isGooglePlayBuild) {
+            var isLegalPath = false
+            kotlinDirectoryAccessWhitelist.forEach {
+                if (filepath.startsWith(it)) {
+                    isLegalPath = true
+                }
+            }
+            if (!isLegalPath) {
+                throw IOException("Attempted to resolve forbidden path: " + filepath)
+            }
+        }
         root ?: return null
         val tokens = StringTokenizer(filepath, DELIMITER, false)
         var iterator = root
@@ -249,10 +342,11 @@ class DocumentsTree {
         }
 
         @Synchronized
-        fun rename(name: String) {
+        fun rename(name: String, uri: Uri?) {
             parent ?: return
             parent!!.removeChild(this)
             this.name = name
+            this.uri = uri
             parent!!.addChild(this)
         }
 
@@ -271,5 +365,10 @@ class DocumentsTree {
 
     companion object {
         const val DELIMITER = "/"
+        val kotlinDirectoryAccessWhitelist = arrayOf(
+            "/config/",
+            "/log/",
+            "/gpu_drivers/",
+        )
     }
 }

@@ -1,9 +1,7 @@
-add_library(web_service STATIC
+add_library(web_service STATIC EXCLUDE_FROM_ALL
     announce_room_json.cpp
     announce_room_json.h
     precompiled_headers.h
-    telemetry_json.cpp
-    telemetry_json.h
     verify_login.cpp
     verify_login.h
     verify_user_jwt.cpp

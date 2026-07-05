@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -29,11 +29,12 @@ namespace Vulkan {
 
 namespace {
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
-    const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
+    vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type,
+    const vk::DebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
 
-    switch (callback_data->messageIdNumber) {
+    switch (static_cast<u32>(callback_data->messageIdNumber)) {
     case 0x609a13b: // Vertex attribute at location not consumed by shader
+    case 0xc81ad50e:
         return VK_FALSE;
     default:
         break;
@@ -41,14 +42,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
 
     Common::Log::Level level{};
     switch (severity) {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:
         level = Common::Log::Level::Error;
         break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
         level = Common::Log::Level::Info;
         break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
         level = Common::Log::Level::Debug;
         break;
     default:
@@ -62,35 +63,34 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
     return VK_FALSE;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags,
-                                                          VkDebugReportObjectTypeEXT objectType,
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(vk::DebugReportFlagsEXT flags,
+                                                          vk::DebugReportObjectTypeEXT objectType,
                                                           uint64_t object, std::size_t location,
                                                           int32_t messageCode,
                                                           const char* pLayerPrefix,
                                                           const char* pMessage, void* pUserData) {
 
-    const VkDebugReportFlagBitsEXT severity = static_cast<VkDebugReportFlagBitsEXT>(flags);
+    const auto severity = static_cast<vk::DebugReportFlagBitsEXT>(flags.operator VkFlags());
     Common::Log::Level level{};
     switch (severity) {
-    case VK_DEBUG_REPORT_ERROR_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eError:
         level = Common::Log::Level::Error;
         break;
-    case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eInformation:
         level = Common::Log::Level::Warning;
         break;
-    case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-    case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-    case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eDebug:
+    case vk::DebugReportFlagBitsEXT::eWarning:
+    case vk::DebugReportFlagBitsEXT::ePerformanceWarning:
         level = Common::Log::Level::Debug;
         break;
     default:
         level = Common::Log::Level::Info;
     }
 
-    const vk::DebugReportObjectTypeEXT type = static_cast<vk::DebugReportObjectTypeEXT>(objectType);
     LOG_GENERIC(Common::Log::Class::Render_Vulkan, level,
                 "type = {}, object = {} | MessageCode = {:#x}, LayerPrefix = {} | {}",
-                vk::to_string(type), object, messageCode, pLayerPrefix, pMessage);
+                vk::to_string(objectType), object, messageCode, pLayerPrefix, pMessage);
 
     return VK_FALSE;
 }
@@ -128,6 +128,7 @@ std::shared_ptr<Common::DynamicLibrary> OpenLibrary(
 vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& emu_window) {
     const auto& window_info = emu_window.GetWindowInfo();
     vk::SurfaceKHR surface{};
+    vk::Result res;
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     if (window_info.type == Frontend::WindowSystemType::Windows) {
@@ -136,8 +137,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .hwnd = static_cast<HWND>(window_info.render_surface),
         };
 
-        if (instance.createWin32SurfaceKHR(&win32_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Win32 surface");
+        if ((res = instance.createWin32SurfaceKHR(&win32_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Win32 surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -148,8 +151,9 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .window = reinterpret_cast<Window>(window_info.render_surface),
         };
 
-        if (instance.createXlibSurfaceKHR(&xlib_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_ERROR(Render_Vulkan, "Failed to initialize Xlib surface");
+        if ((res = instance.createXlibSurfaceKHR(&xlib_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_ERROR(Render_Vulkan, "Failed to initialize Xlib surface: {}", vk::to_string(res));
             UNREACHABLE();
         }
     } else if (window_info.type == Frontend::WindowSystemType::Wayland) {
@@ -158,9 +162,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .surface = static_cast<wl_surface*>(window_info.render_surface),
         };
 
-        if (instance.createWaylandSurfaceKHR(&wayland_ci, nullptr, &surface) !=
+        if ((res = instance.createWaylandSurfaceKHR(&wayland_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
-            LOG_ERROR(Render_Vulkan, "Failed to initialize Wayland surface");
+            LOG_ERROR(Render_Vulkan, "Failed to initialize Wayland surface: {}",
+                      vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -170,8 +175,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .pLayer = static_cast<const CAMetalLayer*>(window_info.render_surface),
         };
 
-        if (instance.createMetalSurfaceEXT(&macos_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize MacOS surface");
+        if ((res = instance.createMetalSurfaceEXT(&macos_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize MacOS surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -181,9 +188,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .window = reinterpret_cast<ANativeWindow*>(window_info.render_surface),
         };
 
-        if (instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface) !=
+        if ((res = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface");
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }

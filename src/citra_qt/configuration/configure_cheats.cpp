@@ -1,10 +1,11 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <QCheckBox>
 #include <QMessageBox>
 #include <QTableWidgetItem>
+#include <QtGlobal>
 #include "configure_cheats.h"
 #include "core/cheats/cheat_base.h"
 #include "core/cheats/cheats.h"
@@ -12,9 +13,8 @@
 #include "ui_configure_cheats.h"
 
 ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_id_, QWidget* parent)
-    : QWidget(parent),
-      ui(std::make_unique<Ui::ConfigureCheats>()), cheat_engine{cheat_engine_}, title_id{
-                                                                                    title_id_} {
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureCheats>()), cheat_engine{cheat_engine_},
+      title_id{title_id_} {
     // Setup gui control settings
     ui->setupUi(this);
     ui->tableCheats->setColumnWidth(0, 30);
@@ -60,7 +60,11 @@ void ConfigureCheats::LoadCheats() {
             i, 2, new QTableWidgetItem(QString::fromStdString(cheats[i]->GetType())));
         enabled->setProperty("row", static_cast<int>(i));
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
         connect(enabled, &QCheckBox::stateChanged, this, &ConfigureCheats::OnCheckChanged);
+#else
+        connect(enabled, &QCheckBox::checkStateChanged, this, &ConfigureCheats::OnCheckChanged);
+#endif
     }
 }
 

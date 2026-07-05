@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Citra</string>
+   <string>Azahar</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>dist/citra.png</normaloff>dist/citra.png</iconset>
+    <normaloff>dist/azahar.png</normaloff>dist/azahar.png</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -50,7 +50,7 @@
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
-     <string>&amp;File</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menu_Boot_Home_Menu">
      <property name="title">
@@ -78,6 +78,9 @@
     </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
+    <addaction name="action_Connect_Artic"/>
+    <addaction name="separator"/>
+    <addaction name="action_Setup_System_Files"/>
     <addaction name="menu_Boot_Home_Menu"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
@@ -90,13 +93,14 @@
    </widget>
    <widget class="QMenu" name="menu_Emulation">
     <property name="title">
-     <string>&amp;Emulation</string>
+     <string>Emulation</string>
     </property>
     <widget class="QMenu" name="menu_Save_State">
      <property name="title">
       <string>Save State</string>
      </property>
      <addaction name="action_Save_to_Oldest_Slot"/>
+     <addaction name="action_Quick_Save"/>
      <addaction name="separator"/>
     </widget>
     <widget class="QMenu" name="menu_Load_State">
@@ -104,6 +108,7 @@
       <string>Load State</string>
      </property>
      <addaction name="action_Load_from_Newest_Slot"/>
+     <addaction name="action_Quick_Load"/>
      <addaction name="separator"/>
     </widget>
     <addaction name="action_Pause"/>
@@ -118,7 +123,7 @@
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
-     <string>&amp;View</string>
+     <string>View</string>
     </property>
     <widget class="QMenu" name="menu_View_Debugging">
      <property name="title">
@@ -134,12 +139,30 @@
      <addaction name="action_Screen_Layout_Default"/>
      <addaction name="action_Screen_Layout_Single_Screen"/>
      <addaction name="action_Screen_Layout_Large_Screen"/>
-     <addaction name="action_Screen_Layout_Hybrid_Screen"/>
      <addaction name="action_Screen_Layout_Side_by_Side"/>
      <addaction name="action_Screen_Layout_Separate_Windows"/>
+     <addaction name="action_Screen_Layout_Hybrid_Screen"/>
+     <addaction name="action_Screen_Layout_Custom_Layout"/>
      <addaction name="separator"/>
      <addaction name="action_Screen_Layout_Upright_Screens"/>
      <addaction name="action_Screen_Layout_Swap_Screens"/>
+     <widget class="QMenu" name="menu_Small_Screen_Position">
+      <property name="enabled">
+     <bool>true</bool>
+    </property>
+      <property name="title">
+       <string>Small Screen Position</string>
+      </property>
+      <addaction name="action_Small_Screen_TopRight"/>
+      <addaction name="action_Small_Screen_MiddleRight"/>
+      <addaction name="action_Small_Screen_BottomRight"/>
+      <addaction name="action_Small_Screen_TopLeft"/>
+      <addaction name="action_Small_Screen_MiddleLeft"/>
+      <addaction name="action_Small_Screen_BottomLeft"/>
+      <addaction name="action_Small_Screen_Above"/>
+      <addaction name="action_Small_Screen_Below"/>
+     </widget>
+     <addaction name="menu_Small_Screen_Position"/>
     </widget>
     <addaction name="action_Fullscreen"/>
     <addaction name="action_Single_Window_Mode"/>
@@ -180,28 +203,33 @@
      <addaction name="action_Movie_Read_Only_Mode"/>
      <addaction name="action_Save_Movie"/>
     </widget>
-    <widget class="QMenu" name="menu_Frame_Advance">
-     <property name="title">
-      <string>Frame Advance</string>
-     </property>
-     <addaction name="action_Enable_Frame_Advancing"/>
-     <addaction name="action_Advance_Frame"/>
-    </widget>
+    <addaction name="action_Advance_Frame"/>
     <addaction name="menu_Movie"/>
-    <addaction name="menu_Frame_Advance"/>
+    <addaction name="separator"/>
+    <widget class="QMenu" name="menu_Debug">
+     <property name="title">
+      <string>Debug</string>
+     </property>
+     <addaction name="action_Debug_Pause"/>
+     <addaction name="action_Debug_Resume"/>
+     <addaction name="action_Debug_Step"/>
+    </widget>
+     <addaction name="menu_Debug"/>
     <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
     <addaction name="action_Dump_Video"/>
+    <addaction name="separator"/>
+    <addaction name="action_Compress_ROM_File"/>
+    <addaction name="action_Decompress_ROM_File"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
-     <string>&amp;Help</string>
+     <string>Help</string>
     </property>
-    <addaction name="action_Check_For_Updates"/>
-    <addaction name="action_Open_Maintenance_Tool"/>
     <addaction name="separator"/>
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
+    <addaction name="action_Open_Log_Folder"/>
     <addaction name="action_FAQ"/>
     <addaction name="action_About"/>
    </widget>
@@ -221,6 +249,16 @@
    <property name="text">
     <string>Install CIA...</string>
    </property>
+  </action>
+  <action name="action_Connect_Artic">
+    <property name="text">
+      <string>Connect to Artic Base...</string>
+    </property>
+  </action>
+  <action name="action_Setup_System_Files">
+    <property name="text">
+      <string>Set Up System Files...</string>
+    </property>
   </action>
   <action name="action_Boot_Home_Menu_JPN">
    <property name="text">
@@ -259,7 +297,7 @@
   </action>
   <action name="action_Exit">
    <property name="text">
-    <string>E&amp;xit</string>
+    <string>Exit</string>
    </property>
   </action>
   <action name="action_Pause">
@@ -267,7 +305,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Pause</string>
+    <string>Pause</string>
    </property>
   </action>
   <action name="action_Stop">
@@ -275,7 +313,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Stop</string>
+    <string>Stop</string>
    </property>
   </action>
   <action name="action_Save">
@@ -301,7 +339,7 @@
   </action>
   <action name="action_About">
    <property name="text">
-    <string>About Citra</string>
+    <string>About Azahar</string>
    </property>
    <property name="menuRole">
     <enum>QAction::AboutRole</enum>
@@ -320,9 +358,19 @@
     <string>Save to Oldest Slot</string>
    </property>
   </action>
+  <action name="action_Quick_Save">
+   <property name="text">
+    <string>Quick Save</string>
+   </property>
+  </action>
   <action name="action_Load_from_Newest_Slot">
    <property name="text">
     <string>Load from Newest Slot</string>
+   </property>
+  </action>
+  <action name="action_Quick_Load">
+   <property name="text">
+    <string>Quick Load</string>
    </property>
   </action>
   <action name="action_Configure">
@@ -376,6 +424,9 @@
    <property name="text">
     <string>Close</string>
    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="action_Save_Movie">
    <property name="enabled">
@@ -396,14 +447,6 @@
     <string>Read-Only Mode</string>
    </property>
   </action>
-  <action name="action_Enable_Frame_Advancing">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable Frame Advancing</string>
-   </property>
-  </action>
   <action name="action_Advance_Frame">
    <property name="enabled">
     <bool>false</bool>
@@ -420,6 +463,30 @@
     <string>Capture Screenshot</string>
    </property>
   </action>
+  <action name="action_Debug_Pause">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Pause</string>
+   </property>
+  </action>
+  <action name="action_Debug_Resume">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Resume</string>
+   </property>
+  </action>
+  <action name="action_Debug_Step">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Step</string>
+   </property>
+  </action>
   <action name="action_Dump_Video">
    <property name="checkable">
     <bool>true</bool>
@@ -428,12 +495,22 @@
     <string>Dump Video</string>
    </property>
   </action>
+  <action name="action_Compress_ROM_File">
+   <property name="text">
+    <string>Compress ROM File...</string>
+   </property>
+  </action>
+  <action name="action_Decompress_ROM_File">
+   <property name="text">
+    <string>Decompress ROM File...</string>
+   </property>
+  </action>
   <action name="action_View_Lobby">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Browse Public Game Lobby</string>
+    <string>Browse Public Rooms</string>
    </property>
   </action>
   <action name="action_Start_Room">
@@ -473,12 +550,12 @@
     <string>Fullscreen</string>
    </property>
   </action>
-  <action name="action_Open_Maintenance_Tool">
+  <action name="action_Open_Log_Folder">
    <property name="text">
-    <string>Modify Citra Install</string>
+    <string>Open Log Folder</string>
    </property>
    <property name="toolTip">
-    <string>Opens the maintenance tool to modify your Citra installation</string>
+    <string>Opens the Azahar Log folder</string>
    </property>
   </action>
   <action name="action_Screen_Layout_Default">
@@ -505,14 +582,6 @@
     <string>Large Screen</string>
    </property>
   </action>
-  <action name="action_Screen_Layout_Hybrid_Screen">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Hybrid Screen</string>
-   </property>
-  </action>
   <action name="action_Screen_Layout_Side_by_Side">
    <property name="checkable">
     <bool>true</bool>
@@ -527,6 +596,86 @@
    </property>
    <property name="text">
     <string>Separate Windows</string>
+   </property>
+  </action>
+  <action name="action_Screen_Layout_Hybrid_Screen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hybrid Screen</string>
+   </property>
+  </action>
+  <action name="action_Screen_Layout_Custom_Layout">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Custom Layout</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_TopRight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Top Right</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_MiddleRight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Middle Right</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_BottomRight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bottom Right</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_TopLeft">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Top Left</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_MiddleLeft">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Middle Left</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_BottomLeft">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bottom Left</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_Above">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Above</string>
+   </property>
+  </action>
+  <action name="action_Small_Screen_Below">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Below</string>
    </property>
   </action>
   <action name="action_Screen_Layout_Swap_Screens">
@@ -545,20 +694,9 @@
     <string>Rotate Upright</string>
    </property>
   </action>
-  <action name="action_Check_For_Updates">
-   <property name="text">
-    <string>Check for Updates</string>
-   </property>
-  </action>
   <action name="action_Report_Compatibility">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Report Compatibility</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="action_Restart">
@@ -587,7 +725,7 @@
   </action>
   <action name="action_Open_Citra_Folder">
    <property name="text">
-    <string>Open Citra Folder</string>
+    <string>Open Azahar Folder</string>
    </property>
   </action>
   <action name="action_Configure_Current_Game">
@@ -595,7 +733,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Configure Current Game...</string>
+    <string>Configure Current Application...</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -74,6 +74,7 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     SUB(Core, Timing)                                                                              \
     SUB(Core, Cheats)                                                                              \
     CLS(Config)                                                                                    \
+    CLS(Savestate)                                                                                 \
     CLS(Debug)                                                                                     \
     SUB(Debug, Emulated)                                                                           \
     SUB(Debug, GPU)                                                                                \
@@ -121,6 +122,8 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     SUB(HW, LCD)                                                                                   \
     SUB(HW, GPU)                                                                                   \
     SUB(HW, AES)                                                                                   \
+    SUB(HW, RSA)                                                                                   \
+    SUB(HW, ECC)                                                                                   \
     CLS(Frontend)                                                                                  \
     CLS(Render)                                                                                    \
     SUB(Render, Software)                                                                          \

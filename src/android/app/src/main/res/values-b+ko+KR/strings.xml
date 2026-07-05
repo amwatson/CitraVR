@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <string name="auto">자동 규모</string>
+    <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR 환경</string>
+    <string name="vr_error_two_instances_title">오류: 두 개의 CitraVR 인스턴스 감지됨</string>
+    <string name="vr_error_two_instances_message">CitraVR과 관련된 치명적인 실행 버그가 감지되었습니다. 이는 알려진 문제입니다. \n\n문제가 현재 해결되었습니다. 게임을 다시 시작해 보십시오.</string>
+    <string name="vr_extra_performance_mode">VR 추가 성능 모드</string>
+    <string name="vr_cpu_level">CPU 레벨</string>
+    <string name="vr_cpu_level_description">더 높은 레벨은 오디오/에뮬레이션 성능을 향상시킬 수 있지만 배터리 소모가 빨라집니다</string>
+    <string name="vr_immersive_mode_title">[경고: 그래픽 아티팩트] 몰입 모드 (실험적)</string>
+    <string name="vr_immersive_mode_description">몰입감 있는 게임플레이를 위해 상단 화면을 원통형으로 확장합니다</string>
+    <string name="vr_graphics_warning">위험: 모든 게임/레벨이 몰입 모드에서 좋아 보이는 것은 아닙니다. 이 옵션을 선택할 때 큰 시각적 아티팩트가 흔합니다</string>
+    <string name="vr_graphics_warning_short">경고: 대부분의 콘텐츠에서 시각적 아티팩트를 유발할 것입니다</string>
+    <string name="vr_new_3ds_description">대부분의 타이틀에 대해 활성화되어야 합니다. 비활성화하면 특정 타이틀(예: 스타 폭스 64 3D)의 성능이 향상됩니다</string>
+    <string name="release_notes_title">릴리스 노트</string>
+    <string name="vr_licenses_description">Citra 및 CitraVR을 가능하게 하는 프로젝트</string>
+    <string name="game_compat_tooltip">게임 호환성 시트</string>
+    <string name="vr_extra_performance_mode_description">오버헤드를 최소화하고 성능을 극대화하기 위해 다른 설정의 값을 덮어씁니다. 주의: 이 설정이 활성화되면, 다음 설정에 대한 사용자의 값은 무시됩니다: VR 환경(항상 공허 선택), 오디오 스트레칭(비활성화)</string>
+     <string name="vr_notice_title">주의:</string>
+    <string name="vr_notice_description">게임이나 레벨의 첫 플레이 중에 잠시 멈춤이나 오디오 끊김이 발생할 수 있습니다.셰이더가 로드된 후에는 이러한 끊김이 이후에 발생하는 실행에서 방지되도록 기기에 저장됩니다.</string>
+    <string name="vr_notice_description2">일부 게임들은 잘 실행되지 않을 수 있습니다. 어떤 게임들이 가장 좋은 성능을 보이는지 확인하기 위해 CitraVR 게임 호환성 목록을 꼭 확인하세요.</string>
+    <string name="vr_input_binding_subtitle">문제가 있나요? 게임패드 주시 모드를 비활성화하기 위해 선택 + 시작을 누르세요, 그리고 다시 시도해보세요.</string>
+    <string name="immersive_mode">몰입 모드</string>
+    <string name="vr_si_mode_register_offset_title">레지스터 오프셋</string>
+    <string name="vr_si_mode_register_offset_description">게임마다 다양한 Super Immersive Mode Profile 2를 사용할 때 뷰에 사용되는 레지스터 오프셋을 설정합니다.</string>
+    <string name="vr_immersive_pos_factor_title">위치 이동 요인</string>
+    <string name="vr_immersive_pos_factor_description">게임 카메라에 좌/우/상/하로 움직임이 얼마나 영향을 미치는지 조절합니다 (0 = 비활성화)</string>
+    <string name="vr_immersive_pos_game_scaler_title">위치 이동 요소 배수</string>
+    <string name="vr_immersive_pos_game_scaler_description">게임 카메라에 좌/우/위/아래로 이동이 얼마나 영향을 미치는지 조정합니다. 일부 게임에서는 더 큰 값이 필요할 수 있으므로 이 설정은 위치 이동 계수에 곱해집니다.</string>
+    <string name="cancelling">취소 중...</string>
+    <string name="start">시작</string>
+    <string name="vr_ribbon_menus_text_label">메뉴:</string>
+    <string name="header_instructions_text">패널을 이동시키려면:</string>
+    <string name="vertical_header_text">수직 이동</string>
+    <string name="vertical_instruction_1_text">패널을 향하면서 색인 트리거를 누른 채로 길게 누르세요.</string>
+    <string name="vertical_instruction_2_text">패널의 수직 위치를 조절하려면 모션 컨트롤러를 위로 또는 아래로 슬라이드하십시오.</string>
+    <string name="depth_header_text">깊이 조절 (Depth Adjustment)</string>
+    <string name="depth_top_panel_instruction_text">(상단 패널) 썸스틱을 앞으로 밀어서 더 깊게 연장하거나 뒤로 당겨서 더 가까이 가져오세요.</string>
+    <string name="depth_lower_panel_instruction_text">(밑 패널) 패널 각도를 조정하려면 썸스틱을 움직이십시오.</string>
+    <string name="horizontal_instruction_toggle_text">토글을 사용하여 수평 이동을 활성화 또는 비활성화하세요. (Toggle 을 사용하여 수평 이동을 활성화 또는 비활성화하세요.)</string>
+    <string name="horizontal_instruction_slide_text">수평 이동이 활성화되어 있으면 왼쪽이나 오른쪽으로 슬라이드하여 수평을 조절하세요.</string>
+    <string name="reset_button_text">재설정</string>
+    <string name="reset_header_text">재설정</string>
+    <string name="reset_instruction_text">이 버튼을 눌러 위치를 재설정하세요.</string>
+    <string name="horizontal_header_text">수평 이동</string>
+    <string name="toggle_off_text">끄기</string>
+    <string name="toggle_on_text">켜짐</string>
+    <string name="vr_stats_game_label">게임</string>
+    <string name="vr_stats_game_frame_time_label">프레임 시간</string>
+    <string name="vr_stats_ms_unit">밀리초</string>
+    <string name="vr_stats_emulation_speed_label">KO: 에뮬레이션 속도</string>
+    <string name="vr_stats_cpu_util_label">중앙처리장치 사용률</string>
+    <string name="vr_stats_gpu_util_label">GPU 사용량</string>
+    <string name="vr_stats_vr_app_label">VR 앱</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU 프레임 시간</string>
+    <string name="vr_stats_cpu_frame_time_label">CPU 프레임 시간</string>
+    <string name="vr_stats_vr_compositor_label">가상 현실 조합자</string>
+    <string name="vr_stats_comp_tear_count">스크린 티어 수 (합계)</string>
+    <string name="vr_stats_build_version_label">앱 버전</string>
+    <string name="vr_stats_input_latency_label">입력 지연</string>
+</resources>

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -37,6 +37,7 @@ constexpr u64 FRAME_TICKS = 4481136ull;
 
 class GraphicsDebugger;
 class RendererBase;
+class RightEyeDisabler;
 
 /**
  * The GPU class is the high level interface to the video_core for core services.
@@ -74,9 +75,6 @@ public:
     /// Writes the provided value to the GPU virtual address.
     void WriteReg(VAddr addr, u32 data);
 
-    /// Synchronizes fixed function renderer state with PICA registers.
-    void Sync();
-
     /// Returns a mutable reference to the renderer.
     [[nodiscard]] VideoCore::RendererBase& Renderer();
 
@@ -92,10 +90,23 @@ public:
     /// Returns a mutable reference to the GSP command debugger.
     [[nodiscard]] GraphicsDebugger& Debugger();
 
+    RightEyeDisabler& GetRightEyeDisabler() {
+        return *right_eye_disabler;
+    }
+
+    void ApplyPerProgramSettings(u64 program_ID);
+
+    /// Recreates the renderer (for GL context reset in libretro)
+    void RecreateRenderer(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window);
+
+    /// Releases the renderer (for GL context destroy in libretro)
+    void ReleaseRenderer();
+
 private:
     void SubmitCmdList(u32 index);
 
-    void MemoryFill(u32 index);
+    // Interrupt index must be 0 or 1 to signal the relative PSC interrupt.
+    void MemoryFill(u32 index, u32 intr_index);
 
     void MemoryTransfer();
 
@@ -105,7 +116,10 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version);
 
+    std::unique_ptr<RightEyeDisabler> right_eye_disabler;
+
 private:
+    friend class RightEyeDisabler;
     struct Impl;
     std::unique_ptr<Impl> impl;
 

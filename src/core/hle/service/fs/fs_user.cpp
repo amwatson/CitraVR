@@ -1,7 +1,11 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cryptopp/aes.h>
+#include <cryptopp/cmac.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -25,6 +29,8 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hw/aes/key.h"
+#include "core/hw/unique_data.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::FS::FS_USER)
 SERIALIZE_EXPORT_IMPL(Service::FS::FS_USER)
@@ -54,26 +60,73 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
     const auto filename_size = rp.Pop<u32>();
     const FileSys::Mode mode{rp.Pop<u32>()};
-    const auto attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
+    const auto attributes = rp.Pop<u32>();
     std::vector<u8> filename = rp.PopStaticBuffer();
     ASSERT(filename.size() == filename_size);
     const FileSys::Path file_path(filename_type, std::move(filename));
 
     LOG_DEBUG(Service_FS, "path={}, mode={} attrs={}", file_path.DebugStr(), mode.hex, attributes);
 
-    const auto [file_res, open_timeout_ns] =
-        archives.OpenFileFromArchive(archive_handle, file_path, mode);
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(file_res.Code());
-    if (file_res.Succeeded()) {
-        std::shared_ptr<File> file = *file_res;
-        rb.PushMoveObjects(file->Connect());
-    } else {
-        rb.PushMoveObjects<Kernel::Object>(nullptr);
-        LOG_DEBUG(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        const auto [file_res, open_timeout_ns] =
+            archives.OpenFileFromArchive(archive_handle, file_path, mode, attributes);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(file_res.Code());
+        if (file_res.Succeeded()) {
+            std::shared_ptr<File> file = *file_res;
+            rb.PushMoveObjects(file->Connect());
+        } else {
+            rb.PushMoveObjects<Kernel::Object>(nullptr);
+            LOG_DEBUG(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
+        }
+
+        ctx.SleepClientThread("fs_user::open", open_timeout_ns, nullptr);
+        return;
     }
 
-    ctx.SleepClientThread("fs_user::open", open_timeout_ns, nullptr);
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path file_path;
+        FileSys::Mode mode;
+        u32 attributes;
+        std::chrono::steady_clock::time_point pre_timer;
+
+        std::pair<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds> file;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->file_path = file_path;
+    async_data->mode = mode;
+    async_data->attributes = attributes;
+    async_data->pre_timer = std::chrono::steady_clock::now();
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->file =
+                archives.OpenFileFromArchive(async_data->archive_handle, async_data->file_path,
+                                             async_data->mode, async_data->attributes);
+            const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - async_data->pre_timer);
+            return static_cast<s64>(((async_data->file.second > time_took)
+                                         ? (async_data->file.second - time_took)
+                                         : std::chrono::nanoseconds())
+                                        .count());
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 2);
+
+            rb.Push(async_data->file.first.Code());
+            if (async_data->file.first.Succeeded()) {
+                std::shared_ptr<File> file = *async_data->file.first;
+                rb.PushMoveObjects(file->Connect());
+            } else {
+                rb.PushMoveObjects<Kernel::Object>(nullptr);
+                LOG_DEBUG(Service_FS, "failed to get a handle for file {}",
+                          async_data->file_path.DebugStr());
+            }
+        },
+        true);
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
@@ -97,35 +150,101 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "archive_id=0x{:08X} archive_path={} file_path={}, mode={} attributes={}",
               archive_id, archive_path.DebugStr(), file_path.DebugStr(), mode.hex, attributes);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    u64 program_id = GetSessionData(ctx.Session())->program_id;
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (!archives.ArchiveIsSlow(archive_id) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
-    ResultVal<ArchiveHandle> archive_handle =
-        archives.OpenArchive(archive_id, archive_path, slot->program_id);
-    if (archive_handle.Failed()) {
-        LOG_ERROR(Service_FS,
-                  "Failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
-                  archive_id, archive_path.DebugStr());
-        rb.Push(archive_handle.Code());
-        rb.PushMoveObjects<Kernel::Object>(nullptr);
+        ResultVal<ArchiveHandle> archive_handle =
+            archives.OpenArchive(archive_id, archive_path, program_id);
+        if (archive_handle.Failed()) {
+            LOG_ERROR(Service_FS,
+                      "Failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                      archive_id, archive_path.DebugStr());
+            rb.Push(archive_handle.Code());
+            rb.PushMoveObjects<Kernel::Object>(nullptr);
+            return;
+        }
+        SCOPE_EXIT({ archives.CloseArchive(*archive_handle); });
+
+        const auto [file_res, open_timeout_ns] =
+            archives.OpenFileFromArchive(*archive_handle, file_path, mode, attributes);
+        rb.Push(file_res.Code());
+        if (file_res.Succeeded()) {
+            std::shared_ptr<File> file = *file_res;
+            rb.PushMoveObjects(file->Connect());
+        } else {
+            rb.PushMoveObjects<Kernel::Object>(nullptr);
+            LOG_DEBUG(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
+                      file_path.DebugStr(), mode.hex, attributes);
+        }
+
+        ctx.SleepClientThread("fs_user::open_directly", open_timeout_ns, nullptr);
         return;
     }
-    SCOPE_EXIT({ archives.CloseArchive(*archive_handle); });
 
-    const auto [file_res, open_timeout_ns] =
-        archives.OpenFileFromArchive(*archive_handle, file_path, mode);
-    rb.Push(file_res.Code());
-    if (file_res.Succeeded()) {
-        std::shared_ptr<File> file = *file_res;
-        rb.PushMoveObjects(file->Connect());
-    } else {
-        rb.PushMoveObjects<Kernel::Object>(nullptr);
-        LOG_ERROR(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
-                  file_path.DebugStr(), mode.hex, attributes);
-    }
+    struct AsyncData {
+        ArchiveIdCode archive_id;
+        FileSys::Path archive_path;
+        FileSys::Path file_path;
+        u64 program_id;
+        FileSys::Mode mode;
+        u32 attributes;
+        std::chrono::steady_clock::time_point pre_timer;
 
-    ctx.SleepClientThread("fs_user::open_directly", open_timeout_ns, nullptr);
+        ResultVal<ArchiveHandle> archive_handle;
+        std::pair<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds> file;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_id = archive_id;
+    async_data->archive_path = archive_path;
+    async_data->file_path = file_path;
+    async_data->program_id = program_id;
+    async_data->mode = mode;
+    async_data->attributes = attributes;
+    async_data->pre_timer = std::chrono::steady_clock::now();
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->archive_handle = archives.OpenArchive(
+                async_data->archive_id, async_data->archive_path, async_data->program_id);
+            if (async_data->archive_handle.Failed()) {
+                LOG_ERROR(Service_FS,
+                          "Failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                          async_data->archive_id, async_data->archive_path.DebugStr());
+                return s64();
+            }
+            async_data->file =
+                archives.OpenFileFromArchive(*async_data->archive_handle, async_data->file_path,
+                                             async_data->mode, async_data->attributes);
+            archives.CloseArchive(*async_data->archive_handle);
+            const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - async_data->pre_timer);
+            return static_cast<s64>(((async_data->file.second > time_took)
+                                         ? (async_data->file.second - time_took)
+                                         : std::chrono::nanoseconds())
+                                        .count());
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 2);
+
+            if (async_data->archive_handle.Failed()) {
+                rb.Push(async_data->archive_handle.Code());
+                rb.PushMoveObjects<Kernel::Object>(nullptr);
+            }
+
+            rb.Push(async_data->file.first.Code());
+            if (async_data->file.first.Succeeded()) {
+                std::shared_ptr<File> file = *async_data->file.first;
+                rb.PushMoveObjects(file->Connect());
+            } else {
+                rb.PushMoveObjects<Kernel::Object>(nullptr);
+                LOG_DEBUG(Service_FS, "failed to get a handle for file {}",
+                          async_data->file_path.DebugStr());
+            }
+        },
+        true);
 }
 
 void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
@@ -142,8 +261,34 @@ void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} size={} data={}", filename_type, filename_size,
               file_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.DeleteFileFromArchive(archive_handle, file_path));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.DeleteFileFromArchive(archive_handle, file_path));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path file_path;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->file_path = file_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res =
+                archives.DeleteFileFromArchive(async_data->archive_handle, async_data->file_path);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
@@ -169,9 +314,41 @@ void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
               src_filename_type, src_filename_size, src_file_path.DebugStr(), dest_filename_type,
               dest_filename_size, dest_file_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.RenameFileBetweenArchives(src_archive_handle, src_file_path,
-                                               dest_archive_handle, dest_file_path));
+    if (!archives.ArchiveIsSlow(src_archive_handle) &&
+        !archives.ArchiveIsSlow(dest_archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.RenameFileBetweenArchives(src_archive_handle, src_file_path,
+                                                   dest_archive_handle, dest_file_path));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle src_archive_handle;
+        FileSys::Path src_file_path;
+        ArchiveHandle dest_archive_handle;
+        FileSys::Path dest_file_path;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->src_archive_handle = src_archive_handle;
+    async_data->src_file_path = src_file_path;
+    async_data->dest_archive_handle = dest_archive_handle;
+    async_data->dest_file_path = dest_file_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.RenameFileBetweenArchives(
+                async_data->src_archive_handle, async_data->src_file_path,
+                async_data->dest_archive_handle, async_data->dest_file_path);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
@@ -189,8 +366,34 @@ void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} size={} data={}", dirname_type, dirname_size,
               dir_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.DeleteDirectoryFromArchive(archive_handle, dir_path));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.DeleteDirectoryFromArchive(archive_handle, dir_path));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path dir_path;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->dir_path = dir_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.DeleteDirectoryFromArchive(async_data->archive_handle,
+                                                                  async_data->dir_path);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
@@ -208,8 +411,34 @@ void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} size={} data={}", dirname_type, dirname_size,
               dir_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path dir_path;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->dir_path = dir_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.DeleteDirectoryRecursivelyFromArchive(
+                async_data->archive_handle, async_data->dir_path);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
@@ -229,8 +458,39 @@ void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} attributes={} size={:x} data={}", filename_type, attributes,
               file_size, file_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.CreateFileInArchive(archive_handle, file_path, file_size));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.CreateFileInArchive(archive_handle, file_path, file_size, attributes));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path file_path;
+        u64 file_size;
+        u32 attributes;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->file_path = file_path;
+    async_data->file_size = file_size;
+    async_data->attributes = attributes;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res =
+                archives.CreateFileInArchive(async_data->archive_handle, async_data->file_path,
+                                             async_data->file_size, async_data->attributes);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
@@ -239,7 +499,7 @@ void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
     const auto dirname_size = rp.Pop<u32>();
-    [[maybe_unused]] const auto attributes = rp.Pop<u32>();
+    const auto attributes = rp.Pop<u32>();
     std::vector<u8> dirname = rp.PopStaticBuffer();
     ASSERT(dirname.size() == dirname_size);
     const FileSys::Path dir_path(dirname_type, std::move(dirname));
@@ -247,8 +507,36 @@ void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} size={} data={}", dirname_type, dirname_size,
               dir_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.CreateDirectoryFromArchive(archive_handle, dir_path));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.CreateDirectoryFromArchive(archive_handle, dir_path, attributes));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path dir_path;
+        u32 attributes;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->dir_path = dir_path;
+    async_data->attributes = attributes;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.CreateDirectoryFromArchive(
+                async_data->archive_handle, async_data->dir_path, async_data->attributes);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
@@ -273,9 +561,41 @@ void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
               src_dirname_type, src_dirname_size, src_dir_path.DebugStr(), dest_dirname_type,
               dest_dirname_size, dest_dir_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path,
-                                                    dest_archive_handle, dest_dir_path));
+    if (!archives.ArchiveIsSlow(src_archive_handle) &&
+        !archives.ArchiveIsSlow(dest_archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path,
+                                                        dest_archive_handle, dest_dir_path));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle src_archive_handle;
+        FileSys::Path src_dir_path;
+        ArchiveHandle dest_archive_handle;
+        FileSys::Path dest_dir_path;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->src_archive_handle = src_archive_handle;
+    async_data->src_dir_path = src_dir_path;
+    async_data->dest_archive_handle = dest_archive_handle;
+    async_data->dest_dir_path = dest_dir_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.RenameDirectoryBetweenArchives(
+                async_data->src_archive_handle, async_data->src_dir_path,
+                async_data->dest_archive_handle, async_data->dest_dir_path);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
@@ -291,20 +611,57 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "type={} size={} data={}", dirname_type, dirname_size,
               dir_path.DebugStr());
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    ResultVal<std::shared_ptr<Directory>> dir_res =
-        archives.OpenDirectoryFromArchive(archive_handle, dir_path);
-    rb.Push(dir_res.Code());
-    if (dir_res.Succeeded()) {
-        std::shared_ptr<Directory> directory = *dir_res;
-        auto [server, client] = system.Kernel().CreateSessionPair(directory->GetName());
-        directory->ClientConnected(server);
-        rb.PushMoveObjects(client);
-    } else {
-        LOG_ERROR(Service_FS, "failed to get a handle for directory type={} size={} data={}",
-                  dirname_type, dirname_size, dir_path.DebugStr());
-        rb.PushMoveObjects<Kernel::Object>(nullptr);
+    if (!archives.ArchiveIsSlow(archive_handle) && Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        ResultVal<std::shared_ptr<Directory>> dir_res =
+            archives.OpenDirectoryFromArchive(archive_handle, dir_path);
+        rb.Push(dir_res.Code());
+        if (dir_res.Succeeded()) {
+            std::shared_ptr<Directory> directory = *dir_res;
+            auto [server, client] = system.Kernel().CreateSessionPair(directory->GetName());
+            directory->ClientConnected(server);
+            rb.PushMoveObjects(client);
+        } else {
+            LOG_DEBUG(Service_FS, "failed to get a handle for directory type={} size={} data={}",
+                      dirname_type, dirname_size, dir_path.DebugStr());
+            rb.PushMoveObjects<Kernel::Object>(nullptr);
+        }
+        return;
     }
+
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        FileSys::Path dir_path;
+
+        ResultVal<std::shared_ptr<Directory>> dir_res;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->dir_path = dir_path;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->dir_res =
+                archives.OpenDirectoryFromArchive(async_data->archive_handle, async_data->dir_path);
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 2);
+
+            rb.Push(async_data->dir_res.Code());
+            if (async_data->dir_res.Succeeded()) {
+                std::shared_ptr<Directory> directory = *async_data->dir_res;
+                auto [server, client] = system.Kernel().CreateSessionPair(directory->GetName());
+                directory->ClientConnected(server);
+                rb.PushMoveObjects(client);
+            } else {
+                LOG_DEBUG(Service_FS, "failed to get a handle for directory path={}",
+                          async_data->dir_path.DebugStr());
+                rb.PushMoveObjects<Kernel::Object>(nullptr);
+            }
+        },
+        true);
 }
 
 void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
@@ -318,20 +675,60 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_FS, "archive_id=0x{:08X} archive_path={}", archive_id,
               archive_path.DebugStr());
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     ClientSlot* slot = GetSessionData(ctx.Session());
-    const ResultVal<ArchiveHandle> handle =
-        archives.OpenArchive(archive_id, archive_path, slot->program_id);
-    rb.Push(handle.Code());
-    if (handle.Succeeded()) {
-        rb.PushRaw(*handle);
-    } else {
-        rb.Push<u64>(0);
-        LOG_ERROR(Service_FS,
-                  "failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
-                  archive_id, archive_path.DebugStr());
+    u64 program_id = slot->program_id;
+
+    // Conventional opening
+    if (!archives.ArchiveIsSlow(archive_id) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+        const ResultVal<ArchiveHandle> handle =
+            archives.OpenArchive(archive_id, archive_path, program_id);
+        rb.Push(handle.Code());
+        if (handle.Succeeded()) {
+            rb.PushRaw(*handle);
+        } else {
+            rb.Push<u64>(0);
+            LOG_ERROR(Service_FS,
+                      "failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                      archive_id, archive_path.DebugStr());
+        }
+        return;
     }
+
+    struct AsyncData {
+        // Input
+        ArchiveIdCode archive_id;
+        FileSys::Path archive_path;
+        u64 program_id;
+
+        // Output
+        ResultVal<ArchiveHandle> handle;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_id = archive_id;
+    async_data->archive_path = archive_path;
+    async_data->program_id = program_id;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->handle = archives.OpenArchive(
+                async_data->archive_id, async_data->archive_path, async_data->program_id);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 3, 0);
+            rb.Push(async_data->handle.Code());
+            if (async_data->handle.Succeeded()) {
+                rb.PushRaw(*async_data->handle);
+            } else {
+                rb.Push<u64>(0);
+                LOG_ERROR(Service_FS,
+                          "failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                          async_data->archive_id, async_data->archive_path.DebugStr());
+            }
+        },
+        true);
 }
 
 void FS_USER::ControlArchive(Kernel::HLERequestContext& ctx) {
@@ -340,24 +737,98 @@ void FS_USER::ControlArchive(Kernel::HLERequestContext& ctx) {
     const auto action = rp.Pop<u32>();
     const auto input_size = rp.Pop<u32>();
     const auto output_size = rp.Pop<u32>();
-    [[maybe_unused]] const auto input = rp.PopMappedBuffer();
-    [[maybe_unused]] const auto output = rp.PopMappedBuffer();
 
-    LOG_WARNING(Service_FS,
-                "(STUBBED) called, archive_handle={:016X}, action={:08X}, input_size={:08X}, "
-                "output_size={:08X}",
-                archive_handle, action, input_size, output_size);
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        auto input = rp.PopMappedBuffer();
+        auto output = rp.PopMappedBuffer();
+        std::vector<u8> in_data(input_size);
+        input.Read(in_data.data(), 0, in_data.size());
+        std::vector<u8> out_data(output_size);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
+        const Result res =
+            archives.ControlArchive(archive_handle, action, in_data.data(), in_data.size(),
+                                    out_data.data(), out_data.size());
+
+        if (res.IsSuccess() && output_size != 0) {
+            output.Write(out_data.data(), 0, out_data.size());
+        }
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(res);
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle handle;
+        u32 action;
+        Kernel::MappedBuffer* in_buffer;
+        u32 in_size;
+        u32 out_size;
+
+        Result res{0};
+        std::vector<u8> out_data;
+        Kernel::MappedBuffer* out_buffer;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->handle = archive_handle;
+    async_data->action = action;
+    async_data->in_size = input_size;
+    async_data->out_size = output_size;
+    async_data->in_buffer = &rp.PopMappedBuffer();
+    async_data->out_buffer = &rp.PopMappedBuffer();
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            std::vector<u8> in_data(async_data->in_size);
+            async_data->in_buffer->Read(in_data.data(), 0, in_data.size());
+            async_data->out_data.resize(async_data->out_size);
+
+            async_data->res = archives.ControlArchive(
+                async_data->handle, async_data->action, in_data.data(), in_data.size(),
+                async_data->out_data.data(), async_data->out_data.size());
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            if (async_data->res.IsSuccess() && async_data->out_size != 0) {
+                async_data->out_buffer->Write(async_data->out_data.data(), 0,
+                                              async_data->out_data.size());
+            }
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.CloseArchive(archive_handle));
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(archives.CloseArchive(archive_handle));
+        return;
+    }
+
+    struct AsyncData {
+        ArchiveHandle handle;
+
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->handle = archive_handle;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.CloseArchive(async_data->handle);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
@@ -377,8 +848,6 @@ void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
-    LOG_WARNING(Service_FS, "(STUBBED)");
-
     IPC::RequestParser rp(ctx);
     const auto archive_id = rp.PopEnum<ArchiveIdCode>();
     const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
@@ -386,8 +855,8 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     const auto block_size = rp.Pop<u32>();
     const auto number_directories = rp.Pop<u32>();
     const auto number_files = rp.Pop<u32>();
-    [[maybe_unused]] const auto directory_buckets = rp.Pop<u32>();
-    [[maybe_unused]] const auto file_buckets = rp.Pop<u32>();
+    const auto directory_buckets = rp.Pop<u32>();
+    const auto file_buckets = rp.Pop<u32>();
     const bool duplicate_data = rp.Pop<bool>();
     std::vector<u8> archivename = rp.PopStaticBuffer();
     ASSERT(archivename.size() == archivename_size);
@@ -417,7 +886,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
 
     ClientSlot* slot = GetSessionData(ctx.Session());
     rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info, archive_path,
-                                   slot->program_id));
+                                   slot->program_id, directory_buckets, file_buckets));
 }
 
 void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
@@ -425,8 +894,8 @@ void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
     const auto block_size = rp.Pop<u32>();
     const auto number_directories = rp.Pop<u32>();
     const auto number_files = rp.Pop<u32>();
-    [[maybe_unused]] const auto directory_buckets = rp.Pop<u32>();
-    [[maybe_unused]] const auto file_buckets = rp.Pop<u32>();
+    const auto directory_buckets = rp.Pop<u32>();
+    const auto file_buckets = rp.Pop<u32>();
     const auto duplicate_data = rp.Pop<bool>();
 
     FileSys::ArchiveFormatInfo format_info;
@@ -438,7 +907,7 @@ void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     ClientSlot* slot = GetSessionData(ctx.Session());
     rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info, FileSys::Path(),
-                                   slot->program_id));
+                                   slot->program_id, directory_buckets, file_buckets));
 
     LOG_TRACE(Service_FS, "called");
 }
@@ -457,10 +926,18 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(0); // CTR Card
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
+}
+
 void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
 
     auto resource = archives.GetArchiveResource(MediaType::SDMC);
 
@@ -478,7 +955,7 @@ void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
 
     auto resource = archives.GetArchiveResource(MediaType::NAND);
     if (resource.Failed()) {
@@ -495,10 +972,7 @@ void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Figure out the other parameters.
     IPC::RequestParser rp(ctx);
-    MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
-    u32 save_low = rp.Pop<u32>();
-    u32 save_high = rp.Pop<u32>();
-    u32 unknown = rp.Pop<u32>();
+    auto ext_data_info = rp.PopRaw<ExtSaveDataInfo>();
     u32 directories = rp.Pop<u32>();
     u32 files = rp.Pop<u32>();
     u64 size_limit = rp.Pop<u64>();
@@ -512,41 +986,42 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     format_info.number_directories = directories;
     format_info.number_files = files;
     format_info.duplicate_data = false;
-    format_info.total_size = 0;
+    format_info.total_size = static_cast<u32>(size_limit);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     ClientSlot* slot = GetSessionData(ctx.Session());
-    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info,
-                                       slot->program_id));
+    rb.Push(archives.CreateExtSaveData(static_cast<MediaType>(ext_data_info.media_type),
+                                       ext_data_info.unknown, ext_data_info.save_id_high,
+                                       ext_data_info.save_id_low, icon, format_info,
+                                       slot->program_id, size_limit));
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,
               "called, savedata_high={:08X} savedata_low={:08X} unknown={:08X} "
               "files={:08X} directories={:08X} size_limit={:016x} icon_size={:08X}",
-              save_high, save_low, unknown, directories, files, size_limit, icon_size);
+              ext_data_info.save_id_high, ext_data_info.save_id_low, ext_data_info.unknown,
+              directories, files, size_limit, icon_size);
 }
 
 void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
-    u32 save_low = rp.Pop<u32>();
-    u32 save_high = rp.Pop<u32>();
-    u32 unknown = rp.Pop<u32>(); // TODO(Subv): Figure out what this is
+    ExtSaveDataInfo info = rp.PopRaw<ExtSaveDataInfo>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.DeleteExtSaveData(media_type, save_high, save_low));
+    rb.Push(archives.DeleteExtSaveData(static_cast<MediaType>(info.media_type), info.unknown,
+                                       info.save_id_high, info.save_id_low));
 
     LOG_DEBUG(Service_FS,
-              "called, save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}", save_low,
-              save_high, media_type, unknown);
+              "called, save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}",
+              info.save_id_low, info.save_id_high, info.media_type, info.unknown);
 }
 
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(false);
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    rb.Push(!system.GetCartridge().empty());
+    LOG_DEBUG(Service_FS, "called");
 }
 
 void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
@@ -578,7 +1053,9 @@ void FS_USER::CreateSystemSaveData(Kernel::HLERequestContext& ctx) {
         file_buckets, duplicate);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.CreateSystemSaveData(savedata_high, savedata_low));
+    rb.Push(archives.CreateSystemSaveData(savedata_high, savedata_low, total_size, block_size,
+                                          directories, files, directory_buckets, file_buckets,
+                                          duplicate ? 1 : 0));
 }
 
 void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
@@ -600,7 +1077,8 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     // With this command, the SystemSaveData always has save_high = 0 (Always created in the NAND)
-    rb.Push(archives.CreateSystemSaveData(0, savedata_id));
+    rb.Push(archives.CreateSystemSaveData(0, savedata_id, total_size, block_size, directories,
+                                          files, directory_buckets, file_buckets, duplicate));
 }
 
 void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
@@ -646,7 +1124,7 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<MediaType>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x{:08X}", media_type);
+    LOG_DEBUG(Service_FS, "(STUBBED) called Media type=0x{:08X}", media_type);
 
     auto resource = archives.GetArchiveResource(media_type);
     if (resource.Failed()) {
@@ -658,6 +1136,47 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
+}
+
+void FS_USER::ExportIntegrityVerificationSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto buf = rp.PopMappedBuffer();
+
+    constexpr size_t hashed_movable_size = 0x110;
+    constexpr size_t cipher_movable_size = 0x120;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto& movable_struct = HW::UniqueData::GetMovableSed();
+    if (!movable_struct.IsValid()) {
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    std::vector<u8> movable(cipher_movable_size);
+    memcpy(movable.data(), &movable_struct, cipher_movable_size);
+
+    auto movable_cmac = HW::AES::GetMovableKey(true);
+    auto movable_key = HW::AES::GetMovableKey(false);
+
+    CryptoPP::SHA256 hash;
+    std::array<u8, CryptoPP::SHA256::DIGESTSIZE> movable_digest;
+    hash.CalculateDigest(movable_digest.data(), movable.data(), hashed_movable_size);
+
+    CryptoPP::CMAC<CryptoPP::AES> cmac(movable_cmac.data(), movable_cmac.size());
+    std::array<u8, CryptoPP::AES::BLOCKSIZE> cmac_hash;
+    cmac.Update(movable_digest.data(), movable_digest.size());
+    cmac.Final(cmac_hash.data());
+
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption{movable_key.data(), movable_key.size(),
+                                                  cmac_hash.data()}
+        .ProcessData(movable.data(), movable.data(), cipher_movable_size);
+
+    movable.insert(movable.begin(), cmac_hash.begin(), cmac_hash.end());
+
+    buf.Write(movable.data(), 0, std::min(buf.GetSize(), movable.size()));
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
@@ -757,13 +1276,12 @@ void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
     FileSys::ArchiveFormatInfo format_info;
     format_info.number_directories = directories;
     format_info.number_files = files;
-    format_info.duplicate_data = false;
-    format_info.total_size = 0;
+    format_info.total_size = -1;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     ClientSlot* slot = GetSessionData(ctx.Session());
-    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info,
-                                       slot->program_id));
+    rb.Push(archives.CreateExtSaveData(media_type, 0, save_high, save_low, icon, format_info,
+                                       slot->program_id, -1));
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,
@@ -778,7 +1296,7 @@ void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     u32 save_low = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.DeleteExtSaveData(media_type, 0, save_low));
+    rb.Push(archives.DeleteExtSaveData(media_type, 0, 0, save_low));
 
     LOG_DEBUG(Service_FS, "called, save_low={:08X} media_type={:08X}", save_low, media_type);
 }
@@ -812,6 +1330,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    LOG_DEBUG(Service_FS, "");
     rb.Push(ResultSuccess);
     rb.Push<u32>(FileSys::GetSeedCount());
 }
@@ -819,10 +1338,67 @@ void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
 void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u64 title_id{rp.Pop<u64>()};
+    LOG_INFO(Service_FS, "Adding seed for title_id={:016X}", title_id);
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
     FileSys::AddSeed({title_id, seed, {}});
     IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(ResultSuccess);
+}
+
+void FS_USER::DeleteSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    bool found = FileSys::DeleteSeed(title_id);
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(found ? ResultSuccess
+                  : Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS,
+                           ErrorSummary::NotFound, ErrorLevel::Status));
+}
+
+void FS_USER::GetSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    auto seed = FileSys::GetSeed(title_id);
+    if (!seed.has_value()) {
+        IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+        rb.Push(Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
+        return;
+    }
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(5, 0)};
+    rb.Push(ResultSuccess);
+    rb.PushRaw<FileSys::Seed::Data>(seed.value());
+}
+
+void FS_USER::SetUnknown0x80Data(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    [[maybe_unused]]
+    std::array<u8, 0x80> unknown_data = rp.PopRaw<std::array<u8, 0x80>>();
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_FS, "(STUBBED) title_id={:016X}", title_id);
+}
+
+void FS_USER::GetUnknown0x80Data(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u64 title_id{rp.Pop<u64>()};
+
+    std::array<u8, 0x80> unknown_data = {0};
+
+    IPC::RequestBuilder rb{rp.MakeBuilder(0x21, 0)};
+    rb.Push(Result(FileSys::ErrCodes::RomFSNotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                   ErrorLevel::Status));
+    rb.PushRaw(unknown_data);
+
+    LOG_WARNING(Service_FS, "(STUBBED) title_id={:016X}", title_id);
 }
 
 void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -832,16 +1408,40 @@ void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     const u32 unique_id = rp.Pop<u32>();
     const u8 title_variation = rp.Pop<u8>();
 
-    // TODO: Generate and Save the Secure Value
+    if (!secure_value_backend->BackendIsSlow() && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(secure_value_backend->ObsoletedSetSaveDataSecureValue(unique_id, title_variation,
+                                                                      secure_value_slot, value));
+        return;
+    }
 
-    LOG_WARNING(Service_FS,
-                "(STUBBED) called, value=0x{:016x} secure_value_slot=0x{:08X} "
-                "unqiue_id=0x{:08X} title_variation=0x{:02X}",
-                value, secure_value_slot, unique_id, title_variation);
+    struct AsyncData {
+        u64 value;
+        u32 secure_value_slot;
+        u32 unique_id;
+        u8 title_variation;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->value = value;
+    async_data->secure_value_slot = secure_value_slot;
+    async_data->unique_id = unique_id;
+    async_data->title_variation = title_variation;
 
-    rb.Push(ResultSuccess);
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = secure_value_backend->ObsoletedSetSaveDataSecureValue(
+                async_data->unique_id, async_data->title_variation, async_data->secure_value_slot,
+                async_data->value);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::ObsoletedGetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -850,19 +1450,75 @@ void FS_USER::ObsoletedGetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     const u32 unique_id = rp.Pop<u32>();
     const u8 title_variation = rp.Pop<u8>();
 
-    LOG_WARNING(
-        Service_FS,
-        "(STUBBED) called secure_value_slot=0x{:08X} unqiue_id=0x{:08X} title_variation=0x{:02X}",
-        secure_value_slot, unique_id, title_variation);
+    if (!secure_value_backend->BackendIsSlow() && !Settings::values.async_fs_operations) {
+        auto res = secure_value_backend->ObsoletedGetSaveDataSecureValue(unique_id, title_variation,
+                                                                         secure_value_slot);
+        if (res.Failed()) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(res.Code());
+        } else {
+            IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
+            rb.Push(res.Code());
+            rb.Push<bool>(std::get<0>(*res)); // indicates if the secure value exists
+            rb.Push<u64>(std::get<1>(*res));  // the secure value
+        }
+        return;
+    }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
+    struct AsyncData {
+        u32 secure_value_slot;
+        u32 unique_id;
+        u8 title_variation;
 
-    rb.Push(ResultSuccess);
+        ResultVal<std::tuple<bool, u64>> res;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->secure_value_slot = secure_value_slot;
+    async_data->unique_id = unique_id;
+    async_data->title_variation = title_variation;
 
-    // TODO: Implement Secure Value Lookup & Generation
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = secure_value_backend->ObsoletedGetSaveDataSecureValue(
+                async_data->unique_id, async_data->title_variation, async_data->secure_value_slot);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->res.Failed()) {
+                IPC::RequestBuilder rb(ctx, 1, 0);
+                rb.Push(async_data->res.Code());
+            } else {
+                IPC::RequestBuilder rb(ctx, 4, 0);
+                rb.Push(async_data->res.Code());
+                rb.Push<bool>(
+                    std::get<0>(*async_data->res));          // indicates if the secure value exists
+                rb.Push<u64>(std::get<1>(*async_data->res)); // the secure value
+            }
+        },
+        true);
+}
 
-    rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<u64>(0);      // the secure value
+void FS_USER::ControlSecureSave(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto action = rp.Pop<u32>();
+    const auto input_size = rp.Pop<u32>();
+    const auto output_size = rp.Pop<u32>();
+    auto input = rp.PopMappedBuffer();
+    auto output = rp.PopMappedBuffer();
+
+    std::vector<u8> in_data(input_size);
+    input.Read(in_data.data(), 0, in_data.size());
+    std::vector<u8> out_data(output_size);
+
+    Result res = secure_value_backend->ControlSecureSave(action, in_data.data(), in_data.size(),
+                                                         out_data.data(), out_data.size());
+
+    if (res.IsSuccess() && output_size != 0) {
+        output.Write(out_data.data(), 0, out_data.size());
+    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(res);
 }
 
 void FS_USER::SetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -870,31 +1526,87 @@ void FS_USER::SetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     const u32 secure_value_slot = rp.Pop<u32>();
     const u64 value = rp.Pop<u64>();
 
-    // TODO: Generate and Save the Secure Value
+    if (!secure_value_backend->BackendIsSlow() && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(secure_value_backend->SetThisSaveDataSecureValue(secure_value_slot, value));
+        return;
+    }
 
-    LOG_WARNING(Service_FS, "(STUBBED) called, value=0x{:016x} secure_value_slot=0x{:08X}", value,
-                secure_value_slot);
+    struct AsyncData {
+        u64 value;
+        u32 secure_value_slot;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->value = value;
+    async_data->secure_value_slot = secure_value_slot;
 
-    rb.Push(ResultSuccess);
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = secure_value_backend->SetThisSaveDataSecureValue(
+                async_data->secure_value_slot, async_data->value);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 secure_value_slot = rp.Pop<u32>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called secure_value_slot=0x{:08X}", secure_value_slot);
+    if (!secure_value_backend->BackendIsSlow() && !Settings::values.async_fs_operations) {
+        auto res = secure_value_backend->GetThisSaveDataSecureValue(secure_value_slot);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+        if (res.Failed()) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(res.Code());
+        } else {
+            IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+            rb.Push(res.Code());
+            rb.Push<bool>(std::get<0>(*res)); // indicates if the secure value exists
+            rb.Push<bool>(std::get<1>(
+                *res)); // indicates if the requesting process is a gamecard, overriding the check
+            rb.Push<u64>(std::get<2>(*res)); // the secure value
+        }
+        return;
+    }
 
-    rb.Push(ResultSuccess);
+    struct AsyncData {
+        u32 secure_value_slot;
 
-    // TODO: Implement Secure Value Lookup & Generation
+        ResultVal<std::tuple<bool, bool, u64>> res;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->secure_value_slot = secure_value_slot;
 
-    rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<bool>(true);  // indicates the requesting process is a gamecard, overriding the check
-    rb.Push<u64>(0);      // the secure value
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res =
+                secure_value_backend->GetThisSaveDataSecureValue(async_data->secure_value_slot);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->res.Failed()) {
+                IPC::RequestBuilder rb(ctx, 1, 0);
+                rb.Push(async_data->res.Code());
+            } else {
+                IPC::RequestBuilder rb(ctx, 5, 0);
+                rb.Push(async_data->res.Code());
+                rb.Push<bool>(
+                    std::get<0>(*async_data->res)); // indicates if the secure value exists
+                rb.Push<bool>(std::get<1>(*async_data->res)); // indicates if the requesting process
+                                                              // is a gamecard, overriding the check
+                rb.Push<u64>(std::get<2>(*async_data->res));  // the secure value
+            }
+        },
+        true);
 }
 
 void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -904,16 +1616,40 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     const u64 value = rp.Pop<u64>();
     const bool flush = rp.Pop<bool>();
 
-    // TODO: Generate and Save the Secure Value
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    LOG_WARNING(Service_FS,
-                "(STUBBED) called, value=0x{:016x} secure_value_slot=0x{:04X} "
-                "archive_handle=0x{:08X} flush={}",
-                value, secure_value_slot, archive_handle, flush);
+        rb.Push(archives.SetSaveDataSecureValue(archive_handle, secure_value_slot, value, flush));
+        return;
+    }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        u64 value;
+        u32 secure_value_slot;
+        bool flush;
 
-    rb.Push(ResultSuccess);
+        Result res{0};
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->value = value;
+    async_data->secure_value_slot = secure_value_slot;
+    async_data->flush = flush;
+
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.SetSaveDataSecureValue(async_data->archive_handle,
+                                                              async_data->secure_value_slot,
+                                                              async_data->value, async_data->flush);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(async_data->res);
+        },
+        true);
 }
 
 void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -921,29 +1657,71 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     const u32 secure_value_slot = rp.Pop<u32>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called secure_value_slot=0x{:08X} archive_handle=0x{:08X}",
-                secure_value_slot, archive_handle);
+    if (!archives.ArchiveIsSlow(archive_handle) && !Settings::values.async_fs_operations) {
+        auto res = archives.GetSaveDataSecureValue(archive_handle, secure_value_slot);
+        if (res.Failed()) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(res.Code());
+        } else {
+            IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+            rb.Push(res.Code());
+            rb.Push<bool>(std::get<0>(*res)); // indicates if the secure value exists
+            rb.Push<bool>(std::get<1>(
+                *res)); // indicates if the requesting process is a gamecard, overriding the check
+            rb.Push<u64>(std::get<2>(*res)); // the secure value
+        }
+        return;
+    }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    struct AsyncData {
+        ArchiveHandle archive_handle;
+        u32 secure_value_slot;
 
-    rb.Push(ResultSuccess);
+        ResultVal<std::tuple<bool, bool, u64>> res;
+    };
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->archive_handle = archive_handle;
+    async_data->secure_value_slot = secure_value_slot;
 
-    // TODO: Implement Secure Value Lookup & Generation
-
-    rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<bool>(true);  // indicates the requesting process is a gamecard, overriding the check
-    rb.Push<u64>(0);      // the secure value
+    ctx.RunOnThreadWorker(
+        fs_async_worker,
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->res = archives.GetSaveDataSecureValue(async_data->archive_handle,
+                                                              async_data->secure_value_slot);
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->res.Failed()) {
+                IPC::RequestBuilder rb(ctx, 1, 0);
+                rb.Push(async_data->res.Code());
+            } else {
+                IPC::RequestBuilder rb(ctx, 5, 0);
+                rb.Push(async_data->res.Code());
+                rb.Push<bool>(
+                    std::get<0>(*async_data->res)); // indicates if the secure value exists
+                rb.Push<bool>(std::get<1>(*async_data->res)); // indicates if the requesting process
+                                                              // is a gamecard, overriding the check
+                rb.Push<u64>(std::get<2>(*async_data->res));  // the secure value
+            }
+        },
+        true);
 }
 
 void FS_USER::RegisterProgramInfo(u32 process_id, u64 program_id, const std::string& filepath) {
-    const MediaType media_type = GetMediaTypeFromPath(filepath);
+    MediaType media_type;
+    if (filepath == system.GetCartridge()) {
+        media_type = MediaType::GameCard;
+    } else {
+        media_type = GetMediaTypeFromPath(filepath);
+    }
+
     program_info_map.insert_or_assign(process_id, ProgramInfo{program_id, media_type});
     if (media_type == MediaType::GameCard) {
         current_gamecard_path = filepath;
     }
 }
 
-std::string FS_USER::GetCurrentGamecardPath() const {
+std::string FS_USER::GetRegisteredGamecardPath() const {
     return current_gamecard_path;
 }
 
@@ -1034,7 +1812,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0810, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
         {0x0811, nullptr, "DeleteSystemSaveData"},
         {0x0812, &FS_USER::GetFreeBytes, "GetFreeBytes"},
-        {0x0813, nullptr, "GetCardType"},
+        {0x0813, &FS_USER::GetCardType, "GetCardType"},
         {0x0814, &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
         {0x0815, &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
         {0x0816, nullptr, "GetSdmcFatfsError"},
@@ -1089,7 +1867,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0847, nullptr, "FormatCtrCardUserSaveData"},
         {0x0848, nullptr, "GetSdmcCtrRootPath"},
         {0x0849, &FS_USER::GetArchiveResource, "GetArchiveResource"},
-        {0x084A, nullptr, "ExportIntegrityVerificationSeed"},
+        {0x084A, &FS_USER::ExportIntegrityVerificationSeed, "ExportIntegrityVerificationSeed"},
         {0x084B, nullptr, "ImportIntegrityVerificationSeed"},
         {0x084C, &FS_USER::FormatSaveData, "FormatSaveData"},
         {0x084D, nullptr, "GetLegacySubBannerData"},
@@ -1118,7 +1896,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0864, nullptr, "GetNandInfo"},
         {0x0865, &FS_USER::ObsoletedSetSaveDataSecureValue, "SetSaveDataSecureValue"},
         {0x0866, &FS_USER::ObsoletedGetSaveDataSecureValue, "GetSaveDataSecureValue"},
-        {0x0867, nullptr, "ControlSecureSave"},
+        {0x0867, &FS_USER::ControlSecureSave, "ControlSecureSave"},
         {0x0868, nullptr, "GetMediaType"},
         {0x0869, nullptr, "GetNandEraseCount"},
         {0x086A, nullptr, "ReadNandReport"},
@@ -1127,11 +1905,26 @@ FS_USER::FS_USER(Core::System& system)
         {0x0875, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue" },
         {0x0876, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue" },
         {0x087A, &FS_USER::AddSeed, "AddSeed"},
+        {0x087B, &FS_USER::GetSeed, "GetSeed"},
+        {0x087C, &FS_USER::DeleteSeed, "GetSeed"},
         {0x087D, &FS_USER::GetNumSeeds, "GetNumSeeds"},
+        {0x0880, &FS_USER::SetUnknown0x80Data, "SetUnknown0x80Data"},
+        {0x0881, &FS_USER::GetUnknown0x80Data, "GetUnknown0x80Data"},
         {0x0886, nullptr, "CheckUpdatedDat"},
         // clang-format on
     };
     RegisterHandlers(functions);
+    secure_value_backend = std::make_shared<FileSys::DefaultSecureValueBackend>();
+}
+template <class Archive>
+void Service::FS::FS_USER::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
+    if (!Archive::is_loading::value) {
+        fs_async_worker.WaitForRequests();
+    }
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar & priority;
+    ar & secure_value_backend;
 }
 
 void InstallInterfaces(Core::System& system) {

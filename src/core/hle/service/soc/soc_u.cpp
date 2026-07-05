@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,6 +19,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/soc/soc_u.h"
+#include "network/socket_manager.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -261,6 +262,14 @@ static const std::unordered_map<int, int> error_map = {{
     {ERRNO(ETIMEDOUT), 76},
 }};
 
+static const std::unordered_map<int, int> gai_error_map = {{
+    {EAI_AGAIN, 302},
+    {EAI_FAMILY, 303},
+    {EAI_MEMORY, 304},
+    {EAI_NONAME, 305},
+    {EAI_SOCKTYPE, 307},
+}};
+
 /// Converts a network error from platform-specific to 3ds-specific
 static int TranslateError(int error) {
     const auto& found = error_map.find(error);
@@ -268,6 +277,15 @@ static int TranslateError(int error) {
         return -found->second;
     }
     return error;
+}
+
+/// Converts a getaddrinfo/getnameinfo error from platform-specific to 3ds-specific
+static int TranslateGaiError(int gai_error) {
+    if (const auto& known_soc_errno = gai_error_map.find(gai_error);
+        known_soc_errno != gai_error_map.end()) {
+        return -known_soc_errno->second;
+    }
+    return gai_error;
 }
 
 struct CTRLinger {
@@ -1014,8 +1032,8 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
                 ctr_addr_buf.resize(async_data->max_addr_len);
             }
 
-            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->socket_handle,
-                      static_cast<s32>(async_data->ret));
+            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->pid,
+                      async_data->socket_handle, static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x04, 2, 2);
             rb.Push(ResultSuccess);
@@ -1096,6 +1114,8 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
 
     if (ret != 0) {
         ret = TranslateError(GET_ERRNO);
+    } else {
+        created_sockets.erase(socket_handle);
     }
 
     LOG_DEBUG(Service_SOC, "pid={}, fd={}, ret={}", pid, socket_handle, static_cast<s32>(ret));
@@ -1166,9 +1186,10 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
 
     LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(ResultSuccess);
     rb.Push(ret);
+    rb.PushMappedBuffer(input_mapped_buff);
 }
 
 s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
@@ -2046,14 +2067,18 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     std::vector<u8> out_buff(out_size);
     u32 count = 0;
 
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+    if (ret != 0) {
+#ifdef _WIN32
+        ret = TranslateGaiError(ret);
+#else
+        ret = ret == EAI_SYSTEM ? TranslateError(GET_ERRNO) : TranslateGaiError(ret);
+#endif
         out_buff.resize(0);
     } else {
         std::size_t pos = 0;
         addrinfo* cur = out;
         while (cur != nullptr) {
-            if (pos <= out_size - sizeof(CTRAddrInfo)) {
+            if (sizeof(CTRAddrInfo) <= out_size - pos) {
                 // According to 3dbrew, this function fills whatever it can and does not error even
                 // if the buffer is not big enough. However the count returned is always correct.
                 CTRAddrInfo ctr_addr = CTRAddrInfo::FromPlatform(*cur);
@@ -2093,8 +2118,12 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
 
     s32 ret = getnameinfo(reinterpret_cast<sockaddr*>(&sa), sa_len, host_data, hostlen, serv_data,
                           servlen, flags);
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+    if (ret != 0) {
+#ifdef _WIN32
+        ret = TranslateGaiError(ret);
+#else
+        ret = ret == EAI_SYSTEM ? TranslateError(GET_ERRNO) : TranslateGaiError(ret);
+#endif
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
@@ -2221,17 +2250,12 @@ SOC_U::SOC_U() : ServiceFramework("soc:U", 18) {
 
     RegisterHandlers(functions);
 
-#ifdef _WIN32
-    WSADATA data;
-    WSAStartup(MAKEWORD(2, 2), &data);
-#endif
+    Network::SocketManager::EnableSockets();
 }
 
 SOC_U::~SOC_U() {
     CloseAndDeleteAllSockets();
-#ifdef _WIN32
-    WSACleanup();
-#endif
+    Network::SocketManager::DisableSockets();
 }
 
 std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
@@ -2240,18 +2264,15 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
     }
 
     InterfaceInfo ret;
-#ifdef _WIN32
-    SOCKET sock_fd = -1;
-#else
-    int sock_fd = -1;
-#endif
+
+    SocketHolder::SOCKET sock_fd = -1;
     bool interface_found = false;
     struct sockaddr_in s_in = {.sin_family = AF_INET, .sin_port = htons(53), .sin_addr = {}};
     s_in.sin_addr.s_addr = inet_addr("8.8.8.8");
     socklen_t s_info_len = sizeof(struct sockaddr_in);
     sockaddr_in s_info;
 
-    if ((sock_fd = ::socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    if ((sock_fd = ::socket(AF_INET, SOCK_STREAM, 0)) == static_cast<SocketHolder::SOCKET>(-1)) {
         return std::nullopt;
     }
 
@@ -2269,7 +2290,7 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
 
 #ifdef _WIN32
     sock_fd = WSASocket(AF_INET, SOCK_DGRAM, 0, 0, 0, 0);
-    if (sock_fd == SOCKET_ERROR) {
+    if (sock_fd == static_cast<SocketHolder::SOCKET>(SOCKET_ERROR)) {
         return std::nullopt;
     }
 
@@ -2313,7 +2334,9 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
             break;
         }
     }
-#else
+#elif !(defined(ANDROID) && defined(HAVE_LIBRETRO))
+    // Libretro Android builds target API 21, but getifaddrs() requires API 24+.
+    // Standalone Android (minSdk 29) and other platforms have getifaddrs().
     struct ifaddrs* ifaddr;
     struct ifaddrs* ifa;
     if (getifaddrs(&ifaddr) == -1) {

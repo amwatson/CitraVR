@@ -37,7 +37,7 @@
           <item>
            <widget class="QLabel" name="language_label">
             <property name="text">
-             <string>Interface language:</string>
+             <string>Interface Language</string>
             </property>
            </widget>
           </item>
@@ -51,7 +51,7 @@
           <item>
            <widget class="QLabel" name="theme_label">
             <property name="text">
-             <string>Theme:</string>
+             <string>Theme</string>
             </property>
            </widget>
           </item>
@@ -68,7 +68,7 @@
    <item>
     <widget class="QGroupBox" name="game_list_groupBox">
      <property name="title">
-      <string>Game List</string>
+      <string>Application List</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
@@ -78,7 +78,7 @@
           <item>
            <widget class="QLabel" name="icon_size_label">
             <property name="text">
-             <string>Icon Size:</string>
+             <string>Icon Size</string>
             </property>
            </widget>
           </item>
@@ -108,7 +108,7 @@
           <item>
            <widget class="QLabel" name="row_1_text_label">
             <property name="text">
-             <string>Row 1 Text:</string>
+             <string>Row 1 Text</string>
             </property>
            </widget>
           </item>
@@ -148,7 +148,7 @@
           <item>
            <widget class="QLabel" name="row_2_text_label">
             <property name="text">
-             <string>Row 2 Text:</string>
+             <string>Row 2 Text</string>
             </property>
            </widget>
           </item>
@@ -191,14 +191,14 @@
         <item>
          <widget class="QCheckBox" name="toggle_hide_no_icon">
           <property name="text">
-           <string>Hide Titles without Icon</string>
+           <string>Hide titles without icon</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="toggle_single_line_mode">
           <property name="text">
-           <string>Single Line Mode</string>
+           <string>Single line mode</string>
           </property>
          </widget>
         </item>
@@ -208,6 +208,26 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="status_bar_groupBox">
+     <property name="title">
+      <string>Status Bar</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_13">
+        <item>
+         <widget class="QCheckBox" name="show_advanced_frametime_info">
+          <property name="text">
+           <string>Show advanced frame time info</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+    <item>
     <spacer>
      <property name="orientation">
       <enum>Qt::Vertical</enum>

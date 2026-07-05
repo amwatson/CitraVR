@@ -1,10 +1,12 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
+#include "common/common_types.h"
 #include "core/hle/service/gsp/gsp_interrupt.h"
+#include "video_core/pica/dirty_regs.h"
 #include "video_core/pica/geometry_pipeline.h"
 #include "video_core/pica/packed_attribute.h"
 #include "video_core/pica/primitive_assembly.h"
@@ -27,6 +29,86 @@ namespace Pica {
 class DebugContext;
 class ShaderEngine;
 
+class DelayGenerator {
+private:
+    // A GPU is a very complex system, the timings resulting from
+    // a 3D draw depend on many factors, including triangle counts,
+    // texture sizes and format, shader complexity, cache
+    // and memory layout, etc. At this point in time, we don't
+    // have enough information nor implemented hw emulation
+    // capabilities to achieve a proper timing estimate.
+    //
+    // Instead, we will try to measure how complex a scene is based
+    // on the amount of geometry that is drawn, the amount of GPU
+    // commands and the shader complexity. We will ignore all
+    // the other factors for now.
+
+    // Using Mario Kart 7 as the reference, it is understood that on
+    // average the console can handle around 20k triangles per frame.
+    // This game uses standard GPU features, with no fancy stuff,
+    // so we can consider it an average. To prevent hurting performance,
+    // we will also assume the GPU is twice as powerful. Afterall we only
+    // want timing accuracy to fix bugs at this point.
+    // This average already takes into account shader complexity averages.
+    static constexpr float nanoseconds_per_triangle = 800.f / 2;
+
+    // Of the total amount of submitted triangles, many of them will be culled.
+    // This heavily depends on the specific scene, so we will assume 35% of the
+    // triangles being culled. Furthermore, the culled triangles will take way less
+    // processing time as they will skip most of the pipeline processing, so we
+    // can assume that a culled triangle will only take about 20% of the time.
+    static constexpr float culled_triangle_threshold = 0.35f; // 35%
+    static constexpr float culled_triangle_time_cost = 0.20f; // 20%
+
+    // We will assume that each command will take around 6 cycles @ 268MHz
+    // There are no real measurements to support this claim, but it sounds
+    // reasonable. TODO: Measure on real HW.
+    static constexpr float nanoseconds_per_command = 22.4f;
+
+public:
+    inline void AddCommands(size_t commands) {
+        command_count += commands;
+    }
+
+    inline void AddVertices(size_t vertices, PipelineRegs::TriangleTopology topology) {
+        size_t triangles{};
+        if (topology == PipelineRegs::TriangleTopology::Fan ||
+            topology == PipelineRegs::TriangleTopology::Strip) {
+            triangles = (vertices >= 3) ? (vertices - 2) : 1;
+        } else {
+            // Geometry shaders produce more vertices per given vertex,
+            // but they are not that relevant for timing emulation.
+            triangles = vertices / 3;
+        }
+
+        triangle_count += triangles;
+    }
+
+    u64 CalculateAndResetDelay() {
+        float result = command_count * nanoseconds_per_command;
+
+        result += (1.f - culled_triangle_threshold) * triangle_count * nanoseconds_per_triangle;
+        result += culled_triangle_threshold * triangle_count *
+                  (nanoseconds_per_triangle * culled_triangle_time_cost);
+
+        triangle_count = 0;
+        command_count = 0;
+
+        return static_cast<u64>(result);
+    }
+
+private:
+    size_t triangle_count{};
+    size_t command_count{};
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const u32 file_version) {
+        ar & triangle_count;
+        ar & command_count;
+    }
+};
+
 class PicaCore {
 public:
     explicit PicaCore(Memory::MemorySystem& memory, std::shared_ptr<DebugContext> debug_context_);
@@ -36,12 +118,12 @@ public:
 
     void SetInterruptHandler(Service::GSP::InterruptHandler& signal_interrupt);
 
-    void ProcessCmdList(PAddr list, u32 size);
+    void ProcessCmdList(PAddr list, u32 size, bool ignore_list);
 
 private:
     void InitializeRegs();
 
-    void WriteInternalReg(u32 id, u32 value, u32 mask);
+    void WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requested);
 
     void SubmitImmediate(u32 data);
 
@@ -109,14 +191,16 @@ public:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
-            ar& input_vertex;
-            ar& current_attribute;
-            ar& reset_geometry_pipeline;
-            ar& queue;
+            ar & input_vertex;
+            ar & current_attribute;
+            ar & reset_geometry_pipeline;
+            ar & queue;
         }
     };
 
     struct ProcTex {
+        static constexpr u8 TableAllDirty = 0xFF;
+
         union ValueEntry {
             u32 raw;
 
@@ -167,16 +251,29 @@ public:
         std::array<ValueEntry, 128> alpha_map_table;
         std::array<ColorEntry, 256> color_table;
         std::array<ColorDifferenceEntry, 256> color_diff_table;
+        union {
+            u8 table_dirty = TableAllDirty;
+            BitField<0, 1, u8> noise_lut_dirty;
+            BitField<2, 1, u8> color_map_dirty;
+            BitField<3, 1, u8> alpha_map_dirty;
+            BitField<4, 1, u8> lut_dirty;
+            BitField<5, 1, u8> diff_lut_dirty;
+        };
 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(ProcTex));
+            if (Archive::is_loading::value) {
+                table_dirty = TableAllDirty;
+            }
         }
     };
 
     struct Lighting {
+        static constexpr u32 LutAllDirty = 0xFFFFFF;
+
         union LutEntry {
             // Used for raw access
             u32 raw;
@@ -199,17 +296,21 @@ public:
 
             template <class Archive>
             void serialize(Archive& ar, const u32 file_version) {
-                ar& raw;
+                ar & raw;
             }
         };
 
         std::array<std::array<LutEntry, 256>, 24> luts;
+        u32 lut_dirty = LutAllDirty;
 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(Lighting));
+            if (Archive::is_loading::value) {
+                lut_dirty = LutAllDirty;
+            }
         }
     };
 
@@ -231,18 +332,22 @@ public:
         };
 
         std::array<LutEntry, 128> lut;
+        bool lut_dirty = true;
 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(Fog));
+            if (Archive::is_loading::value) {
+                lut_dirty = true;
+            }
         }
     };
 
     RegsLcd regs_lcd{};
     Regs regs{};
-    // TODO: Move these to a separate shader scheduler class
+    DirtyRegs dirty_regs{};
     GeometryShaderUnit gs_unit;
     ShaderSetup vs_setup;
     ShaderSetup gs_setup;
@@ -252,24 +357,40 @@ public:
     AttributeBuffer input_default_attributes{};
     ImmediateModeState immediate{};
 
+    DelayGenerator delay_generator{};
+
 private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version) {
-        ar& regs_lcd;
-        ar& regs.reg_array;
-        ar& gs_unit;
-        ar& vs_setup;
-        ar& gs_setup;
-        ar& proctex;
-        ar& lighting;
-        ar& fog;
-        ar& input_default_attributes;
-        ar& immediate;
-        ar& geometry_pipeline;
-        ar& primitive_assembler;
-        ar& cmd_list;
+        ar & regs_lcd;
+        ar & regs.reg_array;
+        ar & gs_unit;
+        ar & vs_setup;
+        ar & gs_setup;
+        ar & proctex;
+        ar & lighting;
+        ar & fog;
+        ar & input_default_attributes;
+        ar & immediate;
+        ar & delay_generator;
+        ar & geometry_pipeline;
+        ar & primitive_assembler;
+        ar & cmd_list;
+        if (Archive::is_loading::value) {
+            dirty_regs.SetAllDirty();
+        }
     }
+
+public:
+    struct RenderPropertiesGuess {
+        u32 vp_height;
+        PAddr paddr;
+        bool vp_heigh_found = false;
+        bool paddr_found = false;
+    };
+
+    RenderPropertiesGuess GuessCmdRenderProperties(PAddr list, u32 size);
 
 private:
     Memory::MemorySystem& memory;

@@ -7,10 +7,6 @@
 #include <string_view>
 #include "common/common_types.h"
 
-namespace Core {
-class TelemetrySession;
-}
-
 namespace VideoCore {
 enum class CustomPixelFormat : u32;
 }
@@ -40,6 +36,9 @@ enum class DriverBug {
     BrokenTextureView = 1 << 2,
     // On Haswell and Broadwell Intel drivers glClearTexSubImage produces a black screen
     BrokenClearTexture = 1 << 3,
+    // On some Mali GPUs, the texture buffer size is small and has reduced performance
+    // if the buffer is close to the maximum texture size
+    SlowTextureBufferWithBigSize = 1 << 4,
 };
 
 /**
@@ -48,7 +47,7 @@ enum class DriverBug {
  */
 class Driver {
 public:
-    Driver(Core::TelemetrySession& telemetry_session);
+    Driver();
     ~Driver();
 
     /// Returns true of the driver has a particular bug stated in the DriverBug enum
@@ -143,7 +142,6 @@ private:
     void FindBugs();
 
 private:
-    Core::TelemetrySession& telemetry_session;
     Vendor vendor = Vendor::Unknown;
     DriverBug bugs{};
     bool is_suitable{};

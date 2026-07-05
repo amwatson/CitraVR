@@ -1,6 +1,6 @@
 add_subdirectory(host_shaders)
 
-add_library(video_core STATIC
+add_library(video_core STATIC EXCLUDE_FROM_ALL
     custom_textures/custom_format.cpp
     custom_textures/custom_format.h
     custom_textures/custom_tex_manager.cpp
@@ -12,6 +12,7 @@ add_library(video_core STATIC
     gpu.cpp
     gpu.h
     gpu_debugger.h
+    gpu_impl.h
     pica_types.h
     precompiled_headers.h
     rasterizer_accelerated.cpp
@@ -19,6 +20,7 @@ add_library(video_core STATIC
     rasterizer_interface.h
     renderer_base.cpp
     renderer_base.h
+    pica/dirty_regs.h
     pica/geometry_pipeline.cpp
     pica/geometry_pipeline.h
     pica/pica_core.cpp
@@ -63,6 +65,8 @@ add_library(video_core STATIC
     # Needed as a fallback regardless of enabled renderers.
     renderer_software/sw_blitter.cpp
     renderer_software/sw_blitter.h
+    right_eye_disabler.cpp
+    right_eye_disabler.h
     shader/debug_data.h
     shader/generator/glsl_fs_shader_gen.cpp
     shader/generator/glsl_fs_shader_gen.h
@@ -160,8 +164,8 @@ if (ENABLE_VULKAN)
         renderer_vulkan/vk_blit_helper.h
         renderer_vulkan/vk_common.cpp
         renderer_vulkan/vk_common.h
-        renderer_vulkan/vk_descriptor_pool.cpp
-        renderer_vulkan/vk_descriptor_pool.h
+        renderer_vulkan/vk_descriptor_update_queue.cpp
+        renderer_vulkan/vk_descriptor_update_queue.h
         renderer_vulkan/vk_graphics_pipeline.cpp
         renderer_vulkan/vk_graphics_pipeline.h
         renderer_vulkan/vk_master_semaphore.cpp
@@ -179,24 +183,30 @@ if (ENABLE_VULKAN)
         renderer_vulkan/vk_instance.h
         renderer_vulkan/vk_pipeline_cache.cpp
         renderer_vulkan/vk_pipeline_cache.h
-        renderer_vulkan/vk_platform.cpp
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_platform.cpp>
         renderer_vulkan/vk_platform.h
-        renderer_vulkan/vk_present_window.cpp
-        renderer_vulkan/vk_present_window.h
-        renderer_vulkan/vk_renderpass_cache.cpp
-        renderer_vulkan/vk_renderpass_cache.h
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_present_window.cpp>
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_present_window.h>
+        renderer_vulkan/vk_render_manager.cpp
+        renderer_vulkan/vk_render_manager.h
+        renderer_vulkan/vk_shader_disk_cache.cpp
+        renderer_vulkan/vk_shader_disk_cache.h
         renderer_vulkan/vk_shader_util.cpp
         renderer_vulkan/vk_shader_util.h
         renderer_vulkan/vk_stream_buffer.cpp
         renderer_vulkan/vk_stream_buffer.h
-        renderer_vulkan/vk_swapchain.cpp
-        renderer_vulkan/vk_swapchain.h
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_swapchain.cpp>
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_swapchain.h>
         renderer_vulkan/vk_texture_runtime.cpp
         renderer_vulkan/vk_texture_runtime.h
         shader/generator/spv_fs_shader_gen.cpp
         shader/generator/spv_fs_shader_gen.h
     )
     target_link_libraries(video_core PRIVATE vulkan-headers vma sirit SPIRV glslang)
+endif()
+
+if(ENABLE_SDL2)
+    target_link_libraries(video_core PRIVATE SDL2::SDL2)
 endif()
 
 add_dependencies(video_core host_shaders)

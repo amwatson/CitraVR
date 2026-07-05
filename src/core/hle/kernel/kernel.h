@@ -1,4 +1,8 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// PPSSPP Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -107,6 +111,9 @@ enum class MemoryMode : u8 {
     Dev2 = 3, ///< 80MB app memory
     Dev3 = 4, ///< 72MB app memory
     Dev4 = 5, ///< 32MB app memory
+
+    NewProd = 6, ///< 124MB app memory
+    NewDev1 = 7, ///< 178MB app memory
 };
 
 /// New 3DS memory modes.
@@ -129,12 +136,48 @@ private:
     friend class boost::serialization::access;
 };
 
+enum class Core1ScheduleMode : u32 {
+    // https://github.com/LumaTeam/Luma3DS/blob/e35972ea/sysmodules/pm/source/reslimit.c#L144
+    // Starting by "sysmodule" threads, alternatively allow (if preemptible) only sysmodule
+    // threads, and then only application threads to run. This happens at a rate of 2ms *
+    // (cpuTime/100).
+    Multi,
+    // This divides the core1 time into slices of 25ms. Only one application thread is allowed to be
+    // created on core1. The "application" thread is given cpuTime% of the slice. The "sysmodules"
+    // threads are given a total of (90 - cpuTime)% of the slice. 10% remain for other threads. This
+    // mode is half-broken due to a kernel bug.
+    Single,
+};
+
+class Core1CpuTime {
+public:
+    Core1CpuTime() = default;
+    constexpr Core1CpuTime(s32 value) : raw(value) {}
+
+    static const Core1CpuTime PREEMPTION_DISABLED;
+    static const Core1CpuTime PREEMPTION_SYSMODULE;
+    static const Core1CpuTime PREEMPTION_EXCEMPTED;
+
+    operator s32() const {
+        return raw;
+    }
+
+private:
+    s32 raw{};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
+};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_DISABLED{0};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_SYSMODULE{1000};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_EXCEMPTED{10000};
+
 class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                           std::function<void()> prepare_reschedule_callback, MemoryMode memory_mode,
-                          u32 num_cores, const New3dsHwCapabilities& n3ds_hw_caps,
-                          u64 override_init_time = 0);
+                          u32 num_cores, u64 override_init_time = 0);
     ~KernelSystem();
 
     using PortPair = std::pair<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>>;
@@ -266,6 +309,9 @@ public:
     /// Retrieves a process from the current list of processes.
     std::shared_ptr<Process> GetProcessById(u32 process_id) const;
 
+    /// Retrieves a thread from the current list of threads.
+    std::shared_ptr<Thread> GetThreadByID(u32 thread_id) const;
+
     std::span<const std::shared_ptr<Process>> GetProcessList() const {
         return process_list;
     }
@@ -298,6 +344,8 @@ public:
 
     IPCDebugger::Recorder& GetIPCRecorder();
     const IPCDebugger::Recorder& GetIPCRecorder() const;
+    std::unique_ptr<IPCDebugger::Recorder> BackupIPCRecorder();
+    void RestoreIPCRecorder(std::unique_ptr<IPCDebugger::Recorder> recorder);
 
     std::shared_ptr<MemoryRegionInfo> GetMemoryRegion(MemoryRegion region);
 
@@ -320,8 +368,12 @@ public:
         return memory_mode;
     }
 
-    const New3dsHwCapabilities& GetNew3dsHwCapabilities() const {
-        return n3ds_hw_caps;
+    void SetRunning804MHz(bool enable) {
+        running_804MHz = enable;
+    }
+
+    bool GetRunning804MHz() const {
+        return running_804MHz;
     }
 
     std::recursive_mutex& GetHLELock() {
@@ -346,13 +398,39 @@ public:
         return main_thread_extended_sleep;
     }
 
+    void ReportAsyncState(bool state) {
+        if (state) {
+            pending_async_operations++;
+        } else {
+            pending_async_operations--;
+        }
+    }
+
+    bool AreAsyncOperationsPending() {
+        return pending_async_operations != 0;
+    }
+
+    void UpdateCPUAndMemoryState(u64 title_id, MemoryMode memory_mode,
+                                 New3dsHwCapabilities n3ds_hw_cap);
+
+    void RestoreMemoryState(u64 title_id);
+
+    void SetCore1ScheduleMode(Core1ScheduleMode mode);
+
+    void UpdateCore1AppCpuLimit();
+
 private:
-    void MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode, u64 override_init_time);
+    void MemoryInit(MemoryMode memory_mode, u64 override_init_time);
+
+    void UpdateReportedMemory(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode);
+    void RestoreReportedMemory();
 
     std::function<void()> prepare_reschedule_callback;
 
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
+
+    std::atomic<int> pending_async_operations{};
 
     // Note: keep the member order below in order to perform correct destruction.
     // Thread manager is destructed before process list in order to Stop threads and clear thread
@@ -383,7 +461,7 @@ private:
     u32 next_thread_id;
 
     MemoryMode memory_mode;
-    New3dsHwCapabilities n3ds_hw_caps;
+    bool running_804MHz = false;
 
     /*
      * Synchronizes access to the internal HLE kernel structures, it is acquired when a guest
@@ -410,3 +488,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::New3dsHwCapabilities)
+BOOST_CLASS_EXPORT_KEY(Kernel::Core1CpuTime)

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,6 +27,9 @@ SERIALIZE_EXPORT_IMPL(Service::HTTP::HTTP_C)
 SERIALIZE_EXPORT_IMPL(Service::HTTP::SessionData)
 
 namespace Service::HTTP {
+
+#include "ctr-common-1-cert.h"
+#include "ctr-common-1-key.h"
 
 namespace ErrCodes {
 enum {
@@ -381,10 +384,10 @@ void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_in
 
     if (!client->send(request, response, error)) {
         LOG_ERROR(Service_HTTP, "Request failed: {}: {}", error, httplib::to_string(error));
-        state = RequestState::TimedOut;
+        state = RequestState::Completed;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
-        state = RequestState::ReadyToDownloadContent;
+        state = RequestState::ReceivingBody;
     }
 }
 
@@ -439,10 +442,10 @@ void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
 
     if (!client->send(request, response, error)) {
         LOG_ERROR(Service_HTTP, "Request failed: {}: {}", error, httplib::to_string(error));
-        state = RequestState::TimedOut;
+        state = RequestState::Completed;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
-        state = RequestState::ReadyToDownloadContent;
+        state = RequestState::ReceivingBody;
     }
 }
 
@@ -576,10 +579,15 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
     // For now make every request async in it's own thread.
 
     // This always returns success, but the request is only performed when it hasn't started
+
     if (http_context.state == RequestState::NotStarted) {
-        http_context.request_future =
-            std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
-        http_context.current_copied_data = 0;
+        if (http_context.method == RequestMethod::Post && !http_context.post_data_added) {
+            http_context.post_pending_request = true;
+        } else {
+            http_context.current_copied_data = 0;
+            http_context.request_future =
+                std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -615,9 +623,13 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
 
     // This always returns success, but the request is only performed when it hasn't started
     if (http_context.state == RequestState::NotStarted) {
-        http_context.request_future =
-            std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
-        http_context.current_copied_data = 0;
+        if (http_context.method == RequestMethod::Post && !http_context.post_data_added) {
+            http_context.post_pending_request = true;
+        } else {
+            http_context.current_copied_data = 0;
+            http_context.request_future =
+                std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -696,6 +708,7 @@ void HTTP_C::ReceiveDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
                                               http_context.current_copied_data,
                                           0, remaining_data);
                 http_context.current_copied_data += remaining_data;
+                http_context.state = RequestState::Completed;
                 rb.Push(ResultSuccess);
             } else {
                 async_data->buffer->Write(http_context.response.body.data() +
@@ -727,8 +740,8 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
 
     // Copy the buffer into a string without the \0 at the end of the buffer
-    std::string url(url_size, '\0');
-    buffer.Read(&url[0], 0, url_size - 1);
+    std::string url(url_size - 1, '\0');
+    buffer.Read(url.data(), 0, url_size - 1);
 
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url, method);
 
@@ -945,6 +958,7 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
 
     Context::Param param_value(name, value);
     http_context.post_data.emplace(name, param_value);
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1003,6 +1017,7 @@ void HTTP_C::AddPostDataBinary(Kernel::HLERequestContext& ctx) {
     Context::Param param_value(name, value);
     http_context.post_data.emplace(name, param_value);
     http_context.force_multipart = true;
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1052,6 +1067,7 @@ void HTTP_C::AddPostDataRaw(Kernel::HLERequestContext& ctx) {
 
     http_context.post_data_raw.resize(buffer.GetSize());
     buffer.Read(http_context.post_data_raw.data(), 0, buffer.GetSize());
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1143,8 +1159,8 @@ void HTTP_C::SendPostDataAsciiImpl(Kernel::HLERequestContext& ctx, bool timeout)
 
     Context& http_context = GetContext(context_handle);
 
-    if (http_context.state == RequestState::NotStarted) {
-        LOG_ERROR(Service_HTTP, "Tried to send Post data on a context that has not been started");
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP, "Tried to send Post data on a context that has been started");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ErrorInvalidRequestState);
         rb.PushMappedBuffer(value_buffer);
@@ -1162,6 +1178,7 @@ void HTTP_C::SendPostDataAsciiImpl(Kernel::HLERequestContext& ctx, bool timeout)
 
     Context::Param param_value(name, value);
     http_context.post_data.emplace(name, param_value);
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1226,6 +1243,7 @@ void HTTP_C::SendPostDataBinaryImpl(Kernel::HLERequestContext& ctx, bool timeout
 
     Context::Param param_value(name, value);
     http_context.post_data.emplace(name, param_value);
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1294,6 +1312,7 @@ void HTTP_C::SendPostDataRawImpl(Kernel::HLERequestContext& ctx, bool timeout) {
     Context::Param raw_param(value);
     std::string value_string(value.begin(), value.end());
     http_context.post_data.emplace(value_string, raw_param);
+    http_context.post_data_added = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -1359,18 +1378,127 @@ void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
 
     Context& http_context = GetContext(context_handle);
 
-    if (http_context.state == RequestState::NotStarted) {
-        LOG_ERROR(Service_HTTP,
-                  "Tried to notfy finish Post on a context that has not been started");
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP, "Tried to notfy finish Post on a context that has been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    if (!http_context.post_pending_request) {
+        LOG_ERROR(Service_HTTP, "Tried to notfy finish Post on a context that has not begun");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    if (!http_context.post_data_added) {
+        LOG_ERROR(Service_HTTP, "Tried to notfy finish Post on a context that has no post data");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ErrorInvalidRequestState);
         return;
     }
 
     http_context.finish_post_data.Set();
+    http_context.post_pending_request = false;
+
+    http_context.current_copied_data = 0;
+    http_context.request_future =
+        std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
+}
+
+void HTTP_C::GetResponseData(Kernel::HLERequestContext& ctx) {
+    GetResponseDataImpl(ctx, false);
+}
+
+void HTTP_C::GetResponseDataTimeout(Kernel::HLERequestContext& ctx) {
+    GetResponseDataImpl(ctx, true);
+}
+
+void HTTP_C::GetResponseDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+
+    struct AsyncData {
+        // Input
+        u32 context_handle;
+        bool timeout;
+        u64 timeout_nanos;
+        u32 data_max_len;
+        Kernel::MappedBuffer* data_buffer;
+        // Output
+        Result async_res = ResultSuccess;
+    };
+    std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
+
+    async_data->timeout = timeout;
+    async_data->context_handle = rp.Pop<u32>();
+    async_data->data_max_len = rp.Pop<u32>();
+    if (timeout) {
+        async_data->timeout_nanos = rp.Pop<u64>();
+    }
+    async_data->data_buffer = &rp.PopMappedBuffer();
+
+    if (!PerformStateChecks(ctx, rp, async_data->context_handle)) {
+        return;
+    }
+
+    ctx.RunAsync(
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            Context& http_context = GetContext(async_data->context_handle);
+
+            if (async_data->timeout) {
+                const auto wait_res = http_context.request_future.wait_for(
+                    std::chrono::nanoseconds(async_data->timeout_nanos));
+                if (wait_res == std::future_status::timeout) {
+                    async_data->async_res = ErrorTimeout;
+                }
+            } else {
+                http_context.request_future.wait();
+            }
+
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 2, 0);
+            if (async_data->async_res != ResultSuccess) {
+                rb.Push(async_data->async_res);
+                return;
+            }
+
+            Context& http_context = GetContext(async_data->context_handle);
+            auto& headers = http_context.response.headers;
+            std::vector<u8> out;
+
+            if (async_data->timeout) {
+                LOG_DEBUG(Service_HTTP, "timeout={}", async_data->timeout_nanos);
+            } else {
+                LOG_DEBUG(Service_HTTP, "");
+            }
+
+            // httplib does not keep the raw HTTP header data, so we need to reconstruct it.
+            // Sadly, the order of headers is lost, but for now it's good enough.
+            std::string hdr =
+                fmt::format("{} {} {}\r\n", http_context.response.version,
+                            http_context.response.status, http_context.response.reason);
+            out.insert(out.end(), hdr.begin(), hdr.end());
+
+            for (auto& h : headers) {
+                hdr = fmt::format("{}: {}\r\n", h.first, h.second);
+                out.insert(out.end(), hdr.begin(), hdr.end());
+            }
+
+            hdr = "\r\n";
+            out.insert(out.end(), hdr.begin(), hdr.end());
+
+            size_t write_size = std::min(out.size(), async_data->data_buffer->GetSize());
+            async_data->data_buffer->Write(out.data(), 0, write_size);
+
+            rb.Push(ResultSuccess);
+            rb.Push(static_cast<u32>(write_size));
+        });
 }
 
 void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
@@ -1645,9 +1773,8 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
-    const u32 unk = rp.Pop<u32>();
 
-    LOG_WARNING(Service_HTTP, "(STUBBED) called, context_handle={}, unk={}", context_handle, unk);
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, context_handle={}", context_handle);
 
     [[maybe_unused]] Context& http_context = GetContext(context_handle);
 
@@ -1745,9 +1872,6 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
 
     if (!ClCertA.init) {
         LOG_ERROR(Service_HTTP, "called but ClCertA is missing");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(static_cast<Result>(-1));
-        return;
     }
 
     const auto& it = std::find_if(client_certs.begin(), client_certs.end(),
@@ -1960,7 +2084,15 @@ bool HTTP_C::PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestPars
 }
 
 void HTTP_C::DecryptClCertA() {
+    if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::SSLKey)) {
+        LOG_ERROR(Service_HTTP, "NormalKey in KeySlot 0x0D missing");
+        return;
+    }
+
+    HW::AES::AESKey key = HW::AES::GetNormalKey(HW::AES::KeySlotID::SSLKey);
     static constexpr u32 iv_length = 16;
+    std::vector<u8> cert_file_data;
+    std::vector<u8> key_file_data;
 
     FileSys::NCCHArchive archive(0x0004001b00010002, Service::FS::MediaType::NAND);
 
@@ -1969,65 +2101,70 @@ void HTTP_C::DecryptClCertA() {
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::RomFS, exefs_filepath);
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
-    auto file_result = archive.OpenFile(file_path, open_mode);
+    auto file_result = archive.OpenFile(file_path, open_mode, 0);
     if (file_result.Failed()) {
-        LOG_ERROR(Service_HTTP, "ClCertA file missing");
-        return;
+        LOG_ERROR(Service_HTTP, "ClCertA file missing, using default");
+
+        cert_file_data.resize(ctr_common_1_cert_bin_size);
+        memcpy(cert_file_data.data(), ctr_common_1_cert_bin, cert_file_data.size());
+
+        key_file_data.resize(ctr_common_1_key_bin_size);
+        memcpy(key_file_data.data(), ctr_common_1_key_bin, key_file_data.size());
+    } else {
+        auto romfs = std::move(file_result).Unwrap();
+        std::vector<u8> romfs_buffer(romfs->GetSize());
+        romfs->Read(0, romfs_buffer.size(), romfs_buffer.data());
+        romfs->Close();
+
+        const RomFS::RomFSFile cert_file =
+            RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-cert.bin"});
+        if (cert_file.Length() == 0) {
+            LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin missing");
+            return;
+        }
+        if (cert_file.Length() <= iv_length) {
+            LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin size is too small. Size: {}",
+                      cert_file.Length());
+            return;
+        }
+
+        cert_file_data.resize(cert_file.Length());
+        memcpy(cert_file_data.data(), cert_file.Data(), cert_file.Length());
+
+        const RomFS::RomFSFile key_file =
+            RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-key.bin"});
+        if (key_file.Length() == 0) {
+            LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin missing");
+            return;
+        }
+        if (key_file.Length() <= iv_length) {
+            LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin size is too small. Size: {}",
+                      key_file.Length());
+            return;
+        }
+
+        key_file_data.resize(key_file.Length());
+        memcpy(key_file_data.data(), key_file.Data(), key_file.Length());
     }
 
-    auto romfs = std::move(file_result).Unwrap();
-    std::vector<u8> romfs_buffer(romfs->GetSize());
-    romfs->Read(0, romfs_buffer.size(), romfs_buffer.data());
-    romfs->Close();
-
-    if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::SSLKey)) {
-        LOG_ERROR(Service_HTTP, "NormalKey in KeySlot 0x0D missing");
-        return;
-    }
-    HW::AES::AESKey key = HW::AES::GetNormalKey(HW::AES::KeySlotID::SSLKey);
-
-    const RomFS::RomFSFile cert_file =
-        RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-cert.bin"});
-    if (cert_file.Length() == 0) {
-        LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin missing");
-        return;
-    }
-    if (cert_file.Length() <= iv_length) {
-        LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin size is too small. Size: {}",
-                  cert_file.Length());
-        return;
-    }
-
-    std::vector<u8> cert_data(cert_file.Length() - iv_length);
+    std::vector<u8> cert_data(cert_file_data.size() - iv_length);
 
     using CryptoPP::AES;
     CryptoPP::CBC_Mode<AES>::Decryption aes_cert;
     std::array<u8, iv_length> cert_iv;
-    std::memcpy(cert_iv.data(), cert_file.Data(), iv_length);
+    std::memcpy(cert_iv.data(), cert_file_data.data(), iv_length);
     aes_cert.SetKeyWithIV(key.data(), AES::BLOCKSIZE, cert_iv.data());
-    aes_cert.ProcessData(cert_data.data(), cert_file.Data() + iv_length,
-                         cert_file.Length() - iv_length);
+    aes_cert.ProcessData(cert_data.data(), cert_file_data.data() + iv_length,
+                         cert_file_data.size() - iv_length);
 
-    const RomFS::RomFSFile key_file =
-        RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-key.bin"});
-    if (key_file.Length() == 0) {
-        LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin missing");
-        return;
-    }
-    if (key_file.Length() <= iv_length) {
-        LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin size is too small. Size: {}",
-                  key_file.Length());
-        return;
-    }
-
-    std::vector<u8> key_data(key_file.Length() - iv_length);
+    std::vector<u8> key_data(key_file_data.size() - iv_length);
 
     CryptoPP::CBC_Mode<AES>::Decryption aes_key;
     std::array<u8, iv_length> key_iv;
-    std::memcpy(key_iv.data(), key_file.Data(), iv_length);
+    std::memcpy(key_iv.data(), key_file_data.data(), iv_length);
     aes_key.SetKeyWithIV(key.data(), AES::BLOCKSIZE, key_iv.data());
-    aes_key.ProcessData(key_data.data(), key_file.Data() + iv_length,
-                        key_file.Length() - iv_length);
+    aes_key.ProcessData(key_data.data(), key_file_data.data() + iv_length,
+                        key_file_data.size() - iv_length);
 
     ClCertA.certificate = std::move(cert_data);
     ClCertA.private_key = std::move(key_data);
@@ -2068,8 +2205,8 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x001D, &HTTP_C::NotifyFinishSendPostData, "NotifyFinishSendPostData"},
         {0x001E, &HTTP_C::GetResponseHeader, "GetResponseHeader"},
         {0x001F, &HTTP_C::GetResponseHeaderTimeout, "GetResponseHeaderTimeout"},
-        {0x0020, nullptr, "GetResponseData"},
-        {0x0021, nullptr, "GetResponseDataTimeout"},
+        {0x0020, &HTTP_C::GetResponseData, "GetResponseData"},
+        {0x0021, &HTTP_C::GetResponseDataTimeout, "GetResponseDataTimeout"},
         {0x0022, &HTTP_C::GetResponseStatusCode, "GetResponseStatusCode"},
         {0x0023, &HTTP_C::GetResponseStatusCodeTimeout, "GetResponseStatusCodeTimeout"},
         {0x0024, &HTTP_C::AddTrustedRootCA, "AddTrustedRootCA"},

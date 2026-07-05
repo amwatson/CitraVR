@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -59,6 +59,12 @@ enum class GameListText : s32 {
     ListEnd,       ///< Keep this at the end of the enum.
 };
 
+class UpdateCheckChannels {
+public:
+    static constexpr int STABLE = 0;
+    static constexpr int PRERELEASE = 1;
+};
+
 struct Values {
     QByteArray geometry;
     QByteArray state;
@@ -75,6 +81,7 @@ struct Values {
     Settings::Setting<bool> display_titlebar{true, "displayTitleBars"};
     Settings::Setting<bool> show_filter_bar{true, "showFilterBar"};
     Settings::Setting<bool> show_status_bar{true, "showStatusBar"};
+    Settings::Setting<bool> show_advanced_frametime_info{false, "show_advanced_frametime_info"};
 
     Settings::Setting<bool> confirm_before_closing{true, "confirmClose"};
     Settings::Setting<bool> save_state_warning{true, "saveStateWarning"};
@@ -82,13 +89,18 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
     Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
-
-    bool updater_found;
-    Settings::Setting<bool> update_on_close{false, "update_on_close"};
+#ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
+    Settings::Setting<int> update_check_channel{UpdateCheckChannels::STABLE,
+                                                "update_check_channel"};
+#endif
 
+    Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
+
+#ifdef USE_DISCORD_PRESENCE
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
+#endif
 
     // Game List
     Settings::Setting<GameListIconSize> game_list_icon_size{GameListIconSize::LargeIcon,
@@ -103,6 +115,7 @@ struct Values {
     Settings::Setting<bool> show_region_column{true, "show_region_column"};
     Settings::Setting<bool> show_type_column{true, "show_type_column"};
     Settings::Setting<bool> show_size_column{true, "show_size_column"};
+    Settings::Setting<bool> show_play_time_column{true, "show_play_time_column"};
 
     Settings::Setting<u16> screenshot_resolution_factor{0, "screenshot_resolution_factor"};
     Settings::SwitchableSetting<std::string> screenshot_path{"", "screenshotPath"};
@@ -116,6 +129,9 @@ struct Values {
     bool game_dir_deprecated_deepscan;
     QVector<UISettings::GameDir> game_dirs;
     QStringList recent_files;
+    QString last_artic_base_addr;
+    QVector<u64> favorited_ids;
+
     QString language;
 
     QString theme;
@@ -145,6 +161,8 @@ struct Values {
 
     // logging
     Settings::Setting<bool> show_console{false, "showConsole"};
+
+    bool shortcut_already_warned = false;
 };
 
 extern Values values;

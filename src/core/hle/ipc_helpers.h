@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -32,8 +32,9 @@ public:
     }
 
     void ValidateHeader() {
-        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd {:#x})",
-                         header.raw);
+        DEBUG_ASSERT_MSG(index == TotalSize(),
+                         "Operations do not match the header (cmd {:#x}, session: {})", header.raw,
+                         context->Session()->GetName());
     }
 
     void Skip(unsigned size_in_words, bool set_to_null) {
@@ -57,6 +58,11 @@ public:
                    unsigned translate_params_size)
         : RequestBuilder(
               context, Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {}
+
+    RequestBuilder(Kernel::HLERequestContext& context, unsigned normal_params_size,
+                   unsigned translate_params_size)
+        : RequestBuilder(context, Header{MakeHeader(context.CommandID(), normal_params_size,
+                                                    translate_params_size)}) {}
 
     // Validate on destruction, as there shouldn't be any case where we don't want it
     ~RequestBuilder() {

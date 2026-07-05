@@ -1,12 +1,15 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <functional>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <boost/serialization/array.hpp>
@@ -16,10 +19,12 @@
 #include "common/swap.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
+#include "core/file_sys/ncch_container.h"
 #include "core/global.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
+#include "network/artic_base/artic_base_client.h"
 
 namespace Core {
 class System;
@@ -37,11 +42,15 @@ namespace Kernel {
 class Mutex;
 }
 
+namespace IPC {
+class RequestParser;
+}
+
 namespace Service::AM {
 
 namespace ErrCodes {
 enum {
-    CIACurrentlyInstalling = 4,
+    InvalidImportState = 4,
     InvalidTID = 31,
     EmptyCIA = 32,
     TryingToUninstallSystemApp = 44,
@@ -68,6 +77,43 @@ enum class InstallStatus : u32 {
     ErrorEncrypted,
 };
 
+enum class ImportTitleContextState : u8 {
+    NONE = 0,
+    WAITING_FOR_IMPORT = 1,
+    RESUMABLE = 2,
+    WAITING_FOR_COMMIT = 3,
+    ALREADY_EXISTS = 4,
+    DELETING = 5,
+    NEEDS_CLEANUP = 6,
+};
+
+struct ImportTitleContext {
+    u64 title_id;
+    u16 version;
+    ImportTitleContextState state;
+    u32 type;
+    u64 size;
+};
+static_assert(sizeof(ImportTitleContext) == 0x18, "Invalid ImportTitleContext size");
+
+struct ImportContentContext {
+    u32 content_id;
+    u16 index;
+    ImportTitleContextState state;
+    u64 size;
+    u64 current_size;
+};
+static_assert(sizeof(ImportContentContext) == 0x18, "Invalid ImportContentContext size");
+
+struct TitleInfo {
+    u64_le tid;
+    u64_le size;
+    u16_le version;
+    u16_le unused;
+    u32_le type;
+};
+static_assert(sizeof(TitleInfo) == 0x18, "Title info structure size is wrong");
+
 // Title ID valid length
 constexpr std::size_t TITLE_ID_VALID_LENGTH = 16;
 
@@ -76,25 +122,131 @@ constexpr u64 TWL_TITLE_ID_FLAG = 0x0000800000000000ULL;
 // Progress callback for InstallCIA, receives bytes written and total bytes
 using ProgressCallback = void(std::size_t, std::size_t);
 
+class NCCHCryptoFile final {
+public:
+    NCCHCryptoFile(const std::string& out_file, bool encrypted_content);
+
+    void Write(const u8* buffer, std::size_t length);
+    bool IsError() {
+        return is_error;
+    }
+
+private:
+    friend class CIAFile;
+    std::unique_ptr<FileUtil::IOFile> file;
+    bool is_error = false;
+    bool is_not_ncch = false;
+    bool decryption_authorized = false;
+
+    std::size_t written = 0;
+
+    NCCH_Header ncch_header{};
+    std::size_t header_size = 0;
+    bool header_parsed = false;
+
+    bool is_encrypted = false;
+    std::array<u8, 16>
+        primary_key{}; // for decrypting exheader, exefs header and icon/banner section
+    std::array<u8, 16> secondary_key{}; // for decrypting romfs and .code section
+    std::array<u8, 16> exheader_ctr{};
+    std::array<u8, 16> exefs_ctr{};
+    std::array<u8, 16> romfs_ctr{};
+
+    struct CryptoRegion {
+        enum Type {
+            EXHEADER = 0,
+            EXEFS_HDR = 1,
+            EXEFS_PRI = 2,
+            EXEFS_SEC = 3,
+            ROMFS = 4,
+        };
+        Type type;
+        size_t offset;
+        size_t size;
+        size_t seek_from;
+    };
+
+    std::vector<CryptoRegion> regions;
+
+    ExeFs_Header exefs_header{};
+    std::size_t exefs_header_written = 0;
+    bool exefs_header_processed = false;
+};
+
+class CIAFile;
+void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ctx);
+
 // A file handled returned for CIAs to be written into and subsequently installed.
 class CIAFile final : public FileSys::FileBackend {
 public:
-    explicit CIAFile(Core::System& system_, Service::FS::MediaType media_type);
+    class InstallResult {
+    public:
+        enum class Type {
+            NONE,
+            TIK,
+            TMD,
+            APP,
+        };
+        Type type{Type::NONE};
+        std::string install_full_path{};
+        Result result{0};
+    };
+
+    explicit CIAFile(Core::System& system_, Service::FS::MediaType media_type,
+                     bool from_cdn = false);
     ~CIAFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    Result WriteTicket();
-    Result WriteTitleMetadata();
+    InstallResult WriteTicket();
+    InstallResult WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t offset);
     ResultVal<std::size_t> WriteContentData(u64 offset, std::size_t length, const u8* buffer);
-    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
                                  const u8* buffer) override;
+
+    Result PrepareToImportContent(const FileSys::TitleMetadata& tmd);
+    Result ProvideTicket(const FileSys::Ticket& ticket);
+    Result ProvideTMDForAdditionalContent(const FileSys::TitleMetadata& tmd);
+    const FileSys::TitleMetadata& GetTMD();
+    FileSys::Ticket& GetTicket();
+    CIAInstallState GetCiaInstallState() {
+        return install_state;
+    }
+
+    ResultVal<std::size_t> WriteContentDataIndexed(u16 content_index, u64 offset,
+                                                   std::size_t length, const u8* buffer);
+
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
-    bool Close() const override;
+    bool Close() override;
     void Flush() const override;
 
+    void SetDone() {
+        is_done = true;
+    }
+
+    void Cancel() {
+        is_cancel = true;
+        Close();
+    }
+
+    const std::vector<InstallResult>& GetInstallResults() const {
+        return install_results;
+    }
+
+    void AuthorizeDecryptionFromHLE();
+
 private:
+    friend void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ctx);
+
     Core::System& system;
+
+    // Sections (tik, tmd, contents) are being imported individually
+    bool from_cdn;
+    bool decryption_authorized;
+    bool is_done = false;
+    bool is_closed = false;
+    bool is_cancel = false;
+    bool is_additional_content = false;
 
     // Whether it's installing an update, and what step of installation it is at
     bool is_update = false;
@@ -107,11 +259,28 @@ private:
     FileSys::CIAContainer container;
     std::vector<u8> data;
     std::vector<u64> content_written;
-    std::vector<FileUtil::IOFile> content_files;
+    std::vector<std::string> content_file_paths;
+    u16 current_content_index = -1;
+    std::unique_ptr<NCCHCryptoFile> current_content_file;
+    InstallResult current_content_install_result{};
+    std::vector<InstallResult> install_results;
     Service::FS::MediaType media_type;
 
     class DecryptionState;
     std::unique_ptr<DecryptionState> decryption_state;
+};
+
+class CurrentImportingTitle {
+public:
+    explicit CurrentImportingTitle(Core::System& system_, u64 title_id_,
+                                   Service::FS::MediaType media_type_)
+        : cia_file(system_, media_type_, true), title_id(title_id_), media_type(media_type_),
+          tmd_provided(false) {}
+
+    CIAFile cia_file;
+    u64 title_id;
+    Service::FS::MediaType media_type;
+    bool tmd_provided;
 };
 
 // A file handled returned for Tickets to be written into and subsequently installed.
@@ -121,16 +290,82 @@ public:
     ~TicketFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
                                  const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
-    bool Close() const override;
+    bool Close() override;
     void Flush() const override;
+
+    Result Commit();
+    u64 GetTitleID() {
+        return title_id;
+    }
+    u64 GetTicketID() {
+        return ticket_id;
+    }
+
+private:
+    u64 written = 0;
+    u64 title_id, ticket_id;
+    std::vector<u8> data;
+};
+
+// A file handled returned for TMDs to be written into and subsequently installed.
+class TMDFile final : public FileSys::FileBackend {
+public:
+    explicit TMDFile(const std::shared_ptr<CurrentImportingTitle>& import_context)
+        : importing_title(import_context) {}
+    ~TMDFile();
+
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
+                                 const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() override;
+    void Flush() const override;
+
+    Result Commit();
 
 private:
     u64 written = 0;
     std::vector<u8> data;
+    std::shared_ptr<CurrentImportingTitle> importing_title;
+};
+
+// A file handled returned for contents to be written into and subsequently installed.
+class ContentFile final : public FileSys::FileBackend {
+public:
+    explicit ContentFile(const std::shared_ptr<CurrentImportingTitle>& import_context, u16 index_,
+                         ImportContentContext& import_context_)
+        : import_context(import_context_), importing_title(import_context), index(index_) {}
+    ~ContentFile();
+
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
+                                 const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() override;
+    void Flush() const override;
+
+    void Cancel(FS::MediaType media_type, u64 title_id);
+
+    ImportContentContext& GetImportContext() {
+        return import_context;
+    }
+
+    void SetWritten(u64 written_) {
+        written = written_;
+    }
+
+private:
+    ImportContentContext& import_context;
+
+    u64 written = 0;
+    std::shared_ptr<CurrentImportingTitle> importing_title;
+    u16 index;
 };
 
 /**
@@ -143,11 +378,17 @@ InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback = nullptr);
 
 /**
- * Downloads and installs title form the Nintendo Update Service.
- * @param title_id the title_id to download
- * @returns  whether the install was successful or error code
+ * Checks if the provided path is a valid CIA file
+ * that can be installed.
+ * @param path file path of the CIA file to check to install
  */
-InstallStatus InstallFromNus(u64 title_id, int version = -1);
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
+                                bool check_encryption);
+
+/**
+ * Get CIA metadata information from file.
+ */
+ResultVal<std::pair<TitleInfo, std::unique_ptr<Loader::SMDH>>> GetCIAInfos(const std::string& path);
 
 /**
  * Get the update title ID for a title
@@ -162,6 +403,11 @@ u64 GetTitleUpdateId(u64 title_id);
  * @returns MediaType which the installed title will reside on
  */
 Service::FS::MediaType GetTitleMediaType(u64 titleId);
+
+/**
+ * Get the .tik path for a title_id and ticket_id.
+ */
+std::string GetTicketPath(u64 title_id, u64 ticket_id);
 
 /**
  * Get the .tmd path for a title
@@ -216,7 +462,20 @@ public:
         Interface(std::shared_ptr<Module> am, const char* name, u32 max_session);
         ~Interface();
 
+        std::shared_ptr<Module> GetModule() const {
+            return am;
+        }
+
+        void UseArticClient(std::shared_ptr<Network::ArticBase::Client>& client) {
+            artic_client = client;
+        }
+
     protected:
+        void GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool ignore_platform);
+
+        void CommitImportTitlesImpl(Kernel::HLERequestContext& ctx, bool is_update_firm_auto,
+                                    bool is_titles);
+
         /**
          * AM::GetNumPrograms service function
          * Gets the number of installed titles in the requested media type
@@ -416,6 +675,46 @@ public:
         void GetTicketList(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::GetDeviceID service function
+         *  Inputs:
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Unknown
+         *      3 : DeviceID
+         */
+        void GetDeviceID(Kernel::HLERequestContext& ctx);
+
+        void GetNumImportTitleContextsImpl(IPC::RequestParser& rp, FS::MediaType media_type,
+                                           bool include_installing, bool include_finalizing);
+
+        void GetImportTitleContextListImpl(IPC::RequestParser& rp, FS::MediaType media_type,
+                                           u32 list_count, bool include_installing,
+                                           bool include_finalizing);
+
+        void GetNumImportTitleContexts(Kernel::HLERequestContext& ctx);
+
+        void GetImportTitleContextList(Kernel::HLERequestContext& ctx);
+
+        void GetImportTitleContexts(Kernel::HLERequestContext& ctx);
+
+        void DeleteImportTitleContext(Kernel::HLERequestContext& ctx);
+
+        void GetNumImportContentContextsImpl(IPC::RequestParser& rp, u64 title_id,
+                                             FS::MediaType media_type);
+
+        void GetImportContentContextListImpl(IPC::RequestParser& rp, u32 list_count, u64 title_id,
+                                             FS::MediaType media_type);
+
+        void GetImportContentContextsImpl(IPC::RequestParser& rp, u32 list_count, u64 title_id,
+                                          FS::MediaType media_type);
+
+        void GetNumImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        void GetImportContentContextList(Kernel::HLERequestContext& ctx);
+
+        void GetImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::NeedsCleanup service function
          *  Inputs:
          *      1 : Media Type
@@ -524,6 +823,17 @@ public:
          *      2-3 : CIAFile handle for application to write to
          */
         void BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::CancelImportProgram service function
+         * Cancel importing a CTR Installable Archive
+         *  Inputs:
+         *      0 : Command header (0x04040002)
+         *      1-2 : CIAFile handle application wrote to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void CancelImportProgram(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::EndImportProgram service function
@@ -636,6 +946,8 @@ public:
          */
         void GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx);
 
+        void CommitImportProgramsAndUpdateFirmwareAuto(Kernel::HLERequestContext& ctx);
+
         /**
          * AM::DeleteProgram service function
          * Deletes a program
@@ -702,16 +1014,103 @@ public:
          */
         void EndImportTicket(Kernel::HLERequestContext& ctx);
 
+        void BeginImportTitle(Kernel::HLERequestContext& ctx);
+
+        void StopImportTitle(Kernel::HLERequestContext& ctx);
+
+        void ResumeImportTitle(Kernel::HLERequestContext& ctx);
+
+        void CancelImportTitle(Kernel::HLERequestContext& ctx);
+
+        void EndImportTitle(Kernel::HLERequestContext& ctx);
+
+        void CommitImportTitles(Kernel::HLERequestContext& ctx);
+
+        void BeginImportTmd(Kernel::HLERequestContext& ctx);
+
+        void EndImportTmd(Kernel::HLERequestContext& ctx);
+
+        void CreateImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        void BeginImportContent(Kernel::HLERequestContext& ctx);
+
+        void ResumeImportContent(Kernel::HLERequestContext& ctx);
+
+        void StopImportContent(Kernel::HLERequestContext& ctx);
+
+        void CancelImportContent(Kernel::HLERequestContext& ctx);
+
+        void EndImportContent(Kernel::HLERequestContext& ctx);
+
+        void GetNumCurrentImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        void GetCurrentImportContentContextList(Kernel::HLERequestContext& ctx);
+
+        void GetCurrentImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        void Sign(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetDeviceCert service function
+         *  Inputs:
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Unknown
+         *      3-4 : Device cert
+         */
+        void GetDeviceCert(Kernel::HLERequestContext& ctx);
+
+        void CommitImportTitlesAndUpdateFirmwareAuto(Kernel::HLERequestContext& ctx);
+
+        void DeleteTicketId(Kernel::HLERequestContext& ctx);
+
+        void GetNumTicketIds(Kernel::HLERequestContext& ctx);
+
+        void GetTicketIdList(Kernel::HLERequestContext& ctx);
+
+        void GetNumTicketsOfProgram(Kernel::HLERequestContext& ctx);
+
+        void ListTicketInfos(Kernel::HLERequestContext& ctx);
+
+        void GetNumCurrentContentInfos(Kernel::HLERequestContext& ctx);
+
+        void FindCurrentContentInfos(Kernel::HLERequestContext& ctx);
+
+        void ListCurrentContentInfos(Kernel::HLERequestContext& ctx);
+
+        void CalculateContextRequiredSize(Kernel::HLERequestContext& ctx);
+
+        void UpdateImportContentContexts(Kernel::HLERequestContext& ctx);
+
+        void ExportTicketWrapped(Kernel::HLERequestContext& ctx);
+
     protected:
         std::shared_ptr<Module> am;
+
+        // Placed on the interface level so that only am:net and am:app have it.
+        std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
     };
 
+    void ForceO3DSDeviceID() {
+        force_old_device_id = true;
+    }
+
+    void ForceN3DSDeviceID() {
+        force_new_device_id = true;
+    }
+
 private:
+    void ScanForTickets();
+
+    void ScanForTicketsImpl();
+
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
      */
     void ScanForTitles(Service::FS::MediaType media_type);
+
+    void ScanForTitlesImpl(Service::FS::MediaType media_type);
 
     /**
      * Scans all storage mediums for titles for listing.
@@ -720,13 +1119,28 @@ private:
 
     Core::System& system;
     bool cia_installing = false;
+    bool force_old_device_id = false;
+    bool force_new_device_id = false;
+
+    std::atomic<bool> stop_scan_flag = false;
+    std::future<void> scan_tickets_future;
+    std::future<void> scan_titles_future;
+    std::future<void> scan_all_future;
+    std::mutex am_lists_mutex;
     std::array<std::vector<u64_le>, 3> am_title_list;
+    std::multimap<u64, u64> am_ticket_list;
+
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
+    std::shared_ptr<CurrentImportingTitle> importing_title;
+    std::map<u64, ImportTitleContext> import_title_contexts;
+    std::multimap<u64, ImportContentContext> import_content_contexts;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
+
+std::shared_ptr<Module> GetModule(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 

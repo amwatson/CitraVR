@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -29,26 +29,28 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hle/service/pm/pm_app.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
-#include "core/telemetry_session.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 
 namespace Service::APT {
 
+constexpr u32 max_wireless_reboot_info_size = 0x10;
+
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
-    ar& shared_font_mem;
-    ar& shared_font_loaded;
-    ar& shared_font_relocated;
-    ar& cpu_percent;
-    ar& screen_capture_post_permission;
-    ar& applet_manager;
-    ar& wireless_reboot_info;
+    DEBUG_SERIALIZATION_POINT;
+    ar & shared_font_mem;
+    ar & shared_font_loaded;
+    ar & shared_font_relocated;
+    ar & screen_capture_post_permission;
+    ar & applet_manager;
+    ar & wireless_reboot_info;
 }
 
 SERIALIZE_IMPL(Module)
@@ -64,7 +66,7 @@ std::shared_ptr<Module> Module::NSInterface::GetModule() const {
 
 void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto size = rp.Pop<u32>();
+    const auto size = std::min(rp.Pop<u32>(), max_wireless_reboot_info_size);
     const auto buffer = rp.PopStaticBuffer();
 
     apt->wireless_reboot_info = std::move(buffer);
@@ -73,6 +75,20 @@ void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) 
     rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_APT, "called size={}", size);
+}
+
+void Module::NSInterface::CardUpdateInitialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    rp.Pop<u32>(); // Shared mem size
+    rp.Pop<u32>(); // Always 0
+    rp.Pop<u32>(); // Shared mem handle
+
+    LOG_WARNING(Service_APT, "(stubbed) called");
+    const Result update_not_needed(11, ErrorModule::CUP, ErrorSummary::NothingHappened,
+                                   ErrorLevel::Status);
+
+    auto rb = rp.MakeBuilder(1, 0);
+    rb.Push(update_not_needed);
 }
 
 void Module::NSInterface::ShutdownAsync(Kernel::HLERequestContext& ctx) {
@@ -92,16 +108,15 @@ void Module::NSInterface::RebootSystem(Kernel::HLERequestContext& ctx) {
     const auto title_id = rp.Pop<u64>();
     const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     rp.Skip(1, false); // Skip padding
-    // TODO: Utilize requested memory type.
     const auto mem_type = rp.Pop<u8>();
 
     LOG_WARNING(Service_APT,
                 "called launch_title={}, title_id={:016X}, media_type={:02X}, mem_type={:02X}",
                 launch_title, title_id, media_type, mem_type);
 
-    // TODO: Handle mem type.
     if (launch_title) {
-        NS::RebootToTitle(apt->system, media_type, title_id);
+        NS::RebootToTitle(apt->system, media_type, title_id,
+                          static_cast<Kernel::MemoryMode>(mem_type));
     } else {
         apt->system.RequestReset();
     }
@@ -196,7 +211,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 bool Module::LoadSharedFont() {
     auto cfg = Service::CFG::GetModule(system);
     u8 font_region_code;
-    switch (cfg->GetRegionValue()) {
+    switch (cfg->GetRegionValue(false)) {
     case 4: // CHN
         font_region_code = 2;
         break;
@@ -218,7 +233,7 @@ bool Module::LoadSharedFont() {
     const FileSys::Path file_path(std::vector<u8>(20, 0));
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
-    auto file_result = archive.OpenFile(file_path, open_mode);
+    auto file_result = archive.OpenFile(file_path, open_mode, 0);
     if (file_result.Failed())
         return false;
 
@@ -229,10 +244,18 @@ bool Module::LoadSharedFont() {
 
     const char16_t* file_name[4] = {u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
                                     u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
-    const RomFS::RomFSFile font_file =
+    RomFS::RomFSFile font_file =
         RomFS::GetFile(romfs_buffer.data(), {file_name[font_region_code - 1]});
-    if (font_file.Data() == nullptr)
-        return false;
+    if (font_file.Data() == nullptr) {
+        if (font_region_code != 1) {
+            font_file = RomFS::GetFile(romfs_buffer.data(), {file_name[0]});
+            if (font_file.Data() == nullptr) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 
     struct {
         u32_le status;
@@ -273,10 +296,6 @@ bool Module::LoadLegacySharedFont() {
 void Module::APTInterface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-
-    // Log in telemetry if the game uses the shared font
-    apt->system.TelemetrySession().AddField(Common::Telemetry::FieldType::Session,
-                                            "RequiresSharedFont", true);
 
     if (!apt->shared_font_loaded) {
         // On real 3DS, font loading happens on booting. However, we load it on demand to coordinate
@@ -712,29 +731,39 @@ void Module::APTInterface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     const auto must_be_one = rp.Pop<u32>();
     const auto value = rp.Pop<u32>();
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, must_be_one={}, value={}", must_be_one, value);
     if (must_be_one != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", must_be_one);
     }
 
-    apt->cpu_percent = value;
-
+    auto pm_app = Service::PM::GetServiceAPP(apt->system);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess); // No error
+    if (pm_app) {
+        rb.Push(pm_app->UpdateResourceLimit(Kernel::ResourceLimitType::CpuTime, value));
+    } else {
+        LOG_ERROR(Service_APT, "Failed to get PM:APP module");
+        rb.Push(ResultUnknown);
+    }
 }
 
 void Module::APTInterface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto must_be_one = rp.Pop<u32>();
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, must_be_one={}", must_be_one);
     if (must_be_one != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", must_be_one);
     }
 
+    auto pm_app = Service::PM::GetServiceAPP(apt->system);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(ResultSuccess); // No error
-    rb.Push(apt->cpu_percent);
+    if (pm_app) {
+        auto res = pm_app->GetResourceLimit(Kernel::ResourceLimitType::CpuTime);
+        rb.Push(res.Code());
+        rb.Push(res.ValueOr(u32{}));
+    } else {
+        LOG_ERROR(Service_APT, "Failed to get PM:APP module");
+        rb.Push(ResultUnknown);
+        rb.Push(u32{});
+    }
 }
 
 void Module::APTInterface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -759,16 +788,12 @@ void Module::APTInterface::PrepareToStartSystemApplet(Kernel::HLERequestContext&
 
 void Module::APTInterface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     LOG_DEBUG(Service_APT, "called");
 
-    // TODO(Subv): This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
-
-    // This command must return an error when called, otherwise the Home Menu will try to reboot the
-    // system.
-    rb.Push(Result(ErrorDescription::AlreadyExists, ErrorModule::Applet, ErrorSummary::InvalidState,
-                   ErrorLevel::Status));
+    rb.Push(apt->applet_manager->PrepareToStartNewestHomeMenu());
 }
 
 void Module::APTInterface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -815,6 +840,19 @@ void Module::APTInterface::StartSystemApplet(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->StartSystemApplet(applet_id, object, buffer));
+}
+
+void Module::APTInterface::StartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    const auto buffer_size = rp.Pop<u32>();
+    [[maybe_unused]] const auto object = rp.PopGenericObject();
+    [[maybe_unused]] const auto buffer = rp.PopStaticBuffer();
+
+    LOG_DEBUG(Service_APT, "called, size={:08X}", buffer_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->StartNewestHomeMenu());
 }
 
 void Module::APTInterface::OrderToCloseApplication(Kernel::HLERequestContext& ctx) {
@@ -1007,10 +1045,10 @@ void Module::APTInterface::LoadSysMenuArg(Kernel::HLERequestContext& ctx) {
 
     // This service function does not clear the buffer.
     std::vector<u8> buffer(size);
-    std::copy_n(apt->sys_menu_arg_buffer.cbegin(), size, buffer.begin());
+    Result res = apt->applet_manager->LoadSysMenuArg(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess);
+    rb.Push(res);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
@@ -1022,10 +1060,10 @@ void Module::APTInterface::StoreSysMenuArg(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called");
     ASSERT_MSG(buffer.size() >= size, "Buffer too small to hold requested data");
 
-    std::copy_n(buffer.cbegin(), size, apt->sys_menu_arg_buffer.begin());
+    Result res = apt->applet_manager->StoreSysMenuArg(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
+    rb.Push(res);
 }
 
 void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
@@ -1222,24 +1260,28 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     std::vector<u8> param;
     bool exists = false;
 
-    if (auto arg = apt->applet_manager->ReceiveDeliverArg()) {
-        param = std::move(arg->param);
+    const auto& jump_parameters = apt->applet_manager->GetApplicationJumpParameters();
 
-        // TODO: This is a complete guess based on observations. It is unknown how the OtherMedia
-        // type is handled and how it interacts with the OtherApp type, and it is unknown if
-        // this (checking the jump parameters) is indeed the way the 3DS checks the types.
-        const auto& jump_parameters = apt->applet_manager->GetApplicationJumpParameters();
-        switch (startup_argument_type) {
-        case StartupArgumentType::OtherApp:
-            exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
-                     jump_parameters.current_media_type == jump_parameters.next_media_type;
-            break;
-        case StartupArgumentType::Restart:
-            exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
-            break;
-        case StartupArgumentType::OtherMedia:
-            exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
-            break;
+    // TODO: This is a complete guess based on observations. It is unknown how the
+    // OtherMedia type is handled and how it interacts with the OtherApp type, and it is
+    // unknown if this (checking the jump parameters) is indeed the way the 3DS checks the
+    // types.
+    if (jump_parameters.Valid()) {
+        if (auto arg = apt->applet_manager->ReceiveDeliverArg()) {
+            param = std::move(arg->param);
+
+            switch (startup_argument_type) {
+            case StartupArgumentType::OtherApp:
+                exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
+                         jump_parameters.current_media_type == jump_parameters.next_media_type;
+                break;
+            case StartupArgumentType::Restart:
+                exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
+                break;
+            case StartupArgumentType::OtherMedia:
+                exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
+                break;
+            }
         }
     }
 
@@ -1361,8 +1403,8 @@ void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
                 "called title_id={:016X}, media_type={:02X}, mem_type={:02X}, firm_tid_low={:08X}",
                 title_id, media_type, mem_type, firm_tid_low);
 
-    // TODO: Handle mem type and FIRM TID low.
-    NS::RebootToTitle(apt->system, media_type, title_id);
+    // TODO: Handle FIRM TID low.
+    NS::RebootToTitle(apt->system, media_type, title_id, static_cast<Kernel::MemoryMode>(mem_type));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -1416,8 +1458,7 @@ void Module::APTInterface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx
     bool is_standard;
     if (Settings::values.is_new_3ds) {
         // Memory layout is standard if it is not NewDev1 (178MB)
-        is_standard = apt->system.Kernel().GetNew3dsHwCapabilities().memory_mode !=
-                      Kernel::New3dsMemoryMode::NewDev1;
+        is_standard = apt->system.Kernel().GetMemoryMode() != Kernel::MemoryMode::NewDev1;
     } else {
         // Memory layout is standard if it is Prod (64MB)
         is_standard = apt->system.Kernel().GetMemoryMode() == Kernel::MemoryMode::Prod;
@@ -1466,6 +1507,14 @@ Module::~Module() {}
 
 std::shared_ptr<AppletManager> Module::GetAppletManager() const {
     return applet_manager;
+}
+
+std::vector<u8> Module::GetWirelessRebootInfoBuffer() const {
+    return wireless_reboot_info;
+}
+
+void Module::SetWirelessRebootInfoBuffer(std::vector<u8> info_buf) {
+    wireless_reboot_info = info_buf;
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {

@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -75,8 +75,7 @@ static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, cons
 RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
                                Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
     : VideoCore::RendererBase{system, window, secondary_window}, pica{pica_},
-      driver{system.TelemetrySession()}, rasterizer{system.Memory(), pica,
-                                                    system.CustomTexManager(), *this, driver},
+      rasterizer{system.Memory(), pica, system.CustomTexManager(), *this, driver},
       frame_dumper{system, window} {
     const bool has_debug_tool = driver.HasDebugTool();
     window.mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
@@ -90,17 +89,31 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 RendererOpenGL::~RendererOpenGL() = default;
 
 void RendererOpenGL::SwapBuffers() {
+    system.perf_stats->StartSwap();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
 
+    render_window.SetupFramebuffer();
+
     PrepareRendertarget();
     RenderScreenshot();
-
+#ifdef HAVE_LIBRETRO
+    DrawScreens(render_window.GetFramebufferLayout(), false);
+    render_window.SwapBuffers();
+#else
     const auto& main_layout = render_window.GetFramebufferLayout();
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
-#ifndef ANDROID
+#ifdef ANDROID
+    // On Android, if secondary_window is defined at all,
+    // it means we have a second display
+    if (secondary_window) {
+        const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        secondary_window->PollEvents();
+    }
+#else
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
@@ -108,6 +121,7 @@ void RendererOpenGL::SwapBuffers() {
         secondary_window->PollEvents();
     }
 #endif
+
     if (frame_dumper.IsDumping()) {
         try {
             RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
@@ -115,7 +129,9 @@ void RendererOpenGL::SwapBuffers() {
             LOG_DEBUG(Render_OpenGL, "Frame dumper exception caught: {}", exception.what());
         }
     }
+#endif
 
+    system.perf_stats->EndSwap();
     EndFrame();
     prev_state.Apply();
     rasterizer.TickFrame();
@@ -164,15 +180,16 @@ void RendererOpenGL::PrepareRendertarget() {
 
         const auto color_fill = fb_id == 0 ? regs_lcd.color_fill_top : regs_lcd.color_fill_bottom;
         if (color_fill.is_enabled) {
-            FillScreen(color_fill.AsVector(), texture);
-            continue;
+            // Resize the texture to let it be reconfigured
+            texture.width = 1;
+            texture.height = 1;
         }
 
         if (texture.width != framebuffer.width || texture.height != framebuffer.height ||
             texture.format != framebuffer.color_format) {
-            ConfigureFramebufferTexture(texture, framebuffer);
+            ConfigureFramebufferTexture(texture, framebuffer, color_fill);
         }
-        LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1);
+        LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1, color_fill);
     }
 }
 
@@ -230,7 +247,8 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
  * Loads framebuffer from emulated memory into the active OpenGL texture.
  */
 void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer,
-                                        ScreenInfo& screen_info, bool right_eye) {
+                                        ScreenInfo& screen_info, bool right_eye,
+                                        const Pica::ColorFill& color_fill) {
 
     if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0)
         right_eye = false;
@@ -254,15 +272,27 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
 
-    if (!rasterizer.AccelerateDisplay(framebuffer, framebuffer_addr, static_cast<u32>(pixel_stride),
+    if (color_fill.is_enabled ||
+        !rasterizer.AccelerateDisplay(framebuffer, framebuffer_addr, static_cast<u32>(pixel_stride),
                                       screen_info)) {
+        u32 width = framebuffer.width;
+        u32 height = framebuffer.height;
+        u8 fill_pixel[3];
         // Reset the screen info's display texture to its own permanent texture
         screen_info.display_texture = screen_info.texture.resource.handle;
         screen_info.display_texcoords = Common::Rectangle<f32>(0.f, 0.f, 1.f, 1.f);
 
         rasterizer.FlushRegion(framebuffer_addr, framebuffer.stride * framebuffer.height);
 
-        const u8* framebuffer_data = system.Memory().GetPhysicalPointer(framebuffer_addr);
+        u8* framebuffer_data = system.Memory().GetPhysicalPointer(framebuffer_addr);
+
+        if (color_fill.is_enabled) {
+            memcpy(fill_pixel, color_fill.AsVector().AsArray(), sizeof(fill_pixel));
+            framebuffer_data = fill_pixel;
+            width = 1;
+            height = 1;
+            pixel_stride = 0;
+        }
 
         state.texture_units[0].texture_2d = screen_info.texture.resource.handle;
         state.Apply();
@@ -275,9 +305,8 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
         //       they differ from the LCD resolution.
         // TODO: Applications could theoretically crash Citra here by specifying too large
         //       framebuffer sizes. We should make sure that this cannot happen.
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
-                        screen_info.texture.gl_format, screen_info.texture.gl_type,
-                        framebuffer_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, screen_info.texture.gl_format,
+                        screen_info.texture.gl_type, framebuffer_data);
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
@@ -286,29 +315,12 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     }
 }
 
-void RendererOpenGL::FillScreen(Common::Vec3<u8> color, TextureInfo& texture) {
-    state.texture_units[0].texture_2d = texture.resource.handle;
-    state.Apply();
-
-    glActiveTexture(GL_TEXTURE0);
-
-    // Update existing texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, color.AsArray());
-
-    state.texture_units[0].texture_2d = 0;
-    state.Apply();
-
-    // Resize the texture in case the framebuffer size has changed
-    texture.width = 1;
-    texture.height = 1;
-}
-
 /**
  * Initializes the OpenGL state and creates persistent objects.
  */
 void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                 Settings::values.bg_blue.GetValue(), 0.0f);
+                 Settings::values.bg_blue.GetValue(), 1.0f);
 
     for (std::size_t i = 0; i < samplers.size(); i++) {
         samplers[i].Create();
@@ -320,7 +332,7 @@ void RendererOpenGL::InitOpenGLObjects() {
         glSamplerParameteri(samplers[i].handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
-    ReloadShader();
+    ReloadShader(Settings::values.render_3d.GetValue());
 
     // Generate VBO handle for drawing
     vertex_buffer.Create();
@@ -366,11 +378,11 @@ void RendererOpenGL::InitOpenGLObjects() {
     state.Apply();
 }
 
-void RendererOpenGL::ReloadShader() {
+void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     // Link shaders and get variable locations
     std::string shader_data = fragment_shader_precision_OES;
-    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
-        if (Settings::values.anaglyph_shader_name.GetValue() == "dubois (builtin)") {
+    if (render_3d == Settings::StereoRenderOption::Anaglyph) {
+        if (Settings::values.anaglyph_shader_name.GetValue() == "Dubois (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_ANAGLYPH_FRAG;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
@@ -382,12 +394,11 @@ void RendererOpenGL::ReloadShader() {
                 shader_data += shader_text;
             }
         }
-    } else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
-               Settings::values.render_3d.GetValue() ==
-                   Settings::StereoRenderOption::ReverseInterlaced) {
+    } else if (render_3d == Settings::StereoRenderOption::Interlaced ||
+               render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         shader_data += HostShaders::OPENGL_PRESENT_INTERLACED_FRAG;
     } else {
-        if (Settings::values.pp_shader_name.GetValue() == "none (builtin)") {
+        if (Settings::values.pp_shader_name.GetValue() == "None (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_FRAG;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
@@ -405,17 +416,16 @@ void RendererOpenGL::ReloadShader() {
     state.Apply();
     uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
     uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
-    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph ||
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced) {
+    if (render_3d == Settings::StereoRenderOption::Anaglyph ||
+        render_3d == Settings::StereoRenderOption::Interlaced ||
+        render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
     }
-    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced) {
+    if (render_3d == Settings::StereoRenderOption::Interlaced ||
+        render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         GLuint uniform_reverse_interlaced =
             glGetUniformLocation(shader.handle, "reverse_interlaced");
-        if (Settings::values.render_3d.GetValue() ==
-            Settings::StereoRenderOption::ReverseInterlaced)
+        if (render_3d == Settings::StereoRenderOption::ReverseInterlaced)
             glUniform1i(uniform_reverse_interlaced, 1);
         else
             glUniform1i(uniform_reverse_interlaced, 0);
@@ -428,13 +438,20 @@ void RendererOpenGL::ReloadShader() {
 }
 
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
-                                                 const Pica::FramebufferConfig& framebuffer) {
+                                                 const Pica::FramebufferConfig& framebuffer,
+                                                 const Pica::ColorFill& color_fill) {
     Pica::PixelFormat format = framebuffer.color_format;
     GLint internal_format{};
+    u32 width, height;
 
     texture.format = format;
-    texture.width = framebuffer.width;
-    texture.height = framebuffer.height;
+    width = texture.width = framebuffer.width;
+    height = texture.height = framebuffer.height;
+    if (color_fill.is_enabled) {
+        width = 1;
+        height = 1;
+        format = Pica::PixelFormat::RGB8;
+    }
 
     switch (format) {
     case Pica::PixelFormat::RGBA8:
@@ -481,8 +498,8 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
     state.Apply();
 
     glActiveTexture(GL_TEXTURE0);
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
-                 texture.gl_format, texture.gl_type, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, texture.gl_format,
+                 texture.gl_type, nullptr);
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
@@ -667,21 +684,23 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                     Settings::values.bg_blue.GetValue(), 0.0f);
+                     Settings::values.bg_blue.GetValue(), 1.0f);
     }
 
     if (settings.shader_update_requested.exchange(false)) {
         // Update fragment shader before drawing
         shader.Release();
         // Link shaders and get variable locations
-        ReloadShader();
+        ReloadShader(layout.render_3d_mode);
     }
 
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
 
     glViewport(0, 0, layout.width, layout.height);
-    glClear(GL_COLOR_BUFFER_BIT);
+    if (render_window.NeedsClearing()) {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     // Set projection matrix
     std::array<GLfloat, 3 * 2> ortho_matrix =
@@ -692,9 +711,9 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     glUniform1i(uniform_color_texture, 0);
 
     const bool stereo_single_screen =
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph ||
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced;
+        layout.render_3d_mode == Settings::StereoRenderOption::Anaglyph ||
+        layout.render_3d_mode == Settings::StereoRenderOption::Interlaced ||
+        layout.render_3d_mode == Settings::StereoRenderOption::ReverseInterlaced;
 
     // Bind a second texture for the right eye if in Anaglyph mode
     if (stereo_single_screen) {
@@ -705,12 +724,12 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen);
         glUniform1i(uniform_layer, 0);
-        ApplySecondLayerOpacity();
+        ApplySecondLayerOpacity(layout.bottom_opacity);
         DrawBottomScreen(layout, bottom_screen);
     } else {
         DrawBottomScreen(layout, bottom_screen);
         glUniform1i(uniform_layer, 0);
-        ApplySecondLayerOpacity();
+        ApplySecondLayerOpacity(layout.top_opacity);
         DrawTopScreen(layout, top_screen);
     }
 
@@ -725,26 +744,20 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     ResetSecondLayerOpacity();
 }
 
-void RendererOpenGL::ApplySecondLayerOpacity() {
-    if (Settings::values.custom_layout &&
-        Settings::values.custom_second_layer_opacity.GetValue() < 100) {
-        state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
-        state.blend.src_a_func = GL_CONSTANT_ALPHA;
-        state.blend.dst_a_func = GL_ONE_MINUS_CONSTANT_ALPHA;
-        state.blend.dst_rgb_func = GL_ONE_MINUS_CONSTANT_ALPHA;
-        state.blend.color.alpha = Settings::values.custom_second_layer_opacity.GetValue() / 100.0f;
-    }
+void RendererOpenGL::ApplySecondLayerOpacity(float opacity) {
+    state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
+    state.blend.src_a_func = GL_CONSTANT_ALPHA;
+    state.blend.dst_a_func = GL_ONE_MINUS_CONSTANT_ALPHA;
+    state.blend.dst_rgb_func = GL_ONE_MINUS_CONSTANT_ALPHA;
+    state.blend.color.alpha = opacity;
 }
 
 void RendererOpenGL::ResetSecondLayerOpacity() {
-    if (Settings::values.custom_layout &&
-        Settings::values.custom_second_layer_opacity.GetValue() < 100) {
-        state.blend.src_rgb_func = GL_ONE;
-        state.blend.dst_rgb_func = GL_ZERO;
-        state.blend.src_a_func = GL_ONE;
-        state.blend.dst_a_func = GL_ZERO;
-        state.blend.color.alpha = 0.0f;
-    }
+    state.blend.src_rgb_func = GL_ONE;
+    state.blend.dst_rgb_func = GL_ZERO;
+    state.blend.src_a_func = GL_ONE;
+    state.blend.dst_a_func = GL_ZERO;
+    state.blend.color.alpha = 0.0f;
 }
 
 
@@ -754,6 +767,9 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     if (!layout.top_screen_enabled) {
         return;
     }
+    int leftside, rightside;
+    leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
+    rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
 
     const float top_screen_left = static_cast<float>(top_screen.left);
     const float top_screen_top = static_cast<float>(top_screen.top);
@@ -762,7 +778,7 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
 
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
-    switch (Settings::values.render_3d.GetValue()) {
+    switch (layout.render_3d_mode) {
     case Settings::StereoRenderOption::Off: {
         const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
         DrawSingleScreen(screen_infos[eye], top_screen_left, top_screen_top, top_screen_width,
@@ -770,20 +786,29 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
         break;
     }
     case Settings::StereoRenderOption::SideBySide: {
-        DrawSingleScreen(screen_infos[0], top_screen_left / 2, top_screen_top, top_screen_width / 2,
-                         top_screen_height, orientation);
+        DrawSingleScreen(screen_infos[leftside], top_screen_left / 2, top_screen_top,
+                         top_screen_width / 2, top_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[1],
+        DrawSingleScreen(screen_infos[rightside],
                          static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
                          top_screen_top, top_screen_width / 2, top_screen_height, orientation);
         break;
     }
+    case Settings::StereoRenderOption::SideBySideFull: {
+        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
+                         top_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(screen_infos[rightside],
+                         static_cast<float>(top_screen_left + layout.width / 2), top_screen_top,
+                         top_screen_width, top_screen_height, orientation);
+        break;
+    }
     case Settings::StereoRenderOption::CardboardVR: {
-        DrawSingleScreen(screen_infos[0], top_screen_left, top_screen_top, top_screen_width,
+        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
         DrawSingleScreen(
-            screen_infos[1],
+            screen_infos[rightside],
             static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
             top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
@@ -791,8 +816,8 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(screen_infos[0], screen_infos[1], top_screen_left, top_screen_top,
-                               top_screen_width, top_screen_height, orientation);
+        DrawSingleScreenStereo(screen_infos[leftside], screen_infos[rightside], top_screen_left,
+                               top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
     }
     }
@@ -813,19 +838,30 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
 
-    switch (Settings::values.render_3d.GetValue()) {
+    switch (layout.render_3d_mode) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
                          bottom_screen_width, bottom_screen_height, orientation);
         break;
     }
-    case Settings::StereoRenderOption::SideBySide: {
+    case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
+    {
+
         DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
                          bottom_screen_width / 2, bottom_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
         DrawSingleScreen(
             screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
             bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
+
+        break;
+    }
+    case Settings::StereoRenderOption::SideBySideFull: {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(screen_infos[2], bottom_screen_left + layout.width / 2, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
         break;
     }
     case Settings::StereoRenderOption::CardboardVR: {
@@ -908,10 +944,6 @@ void RendererOpenGL::CleanupVideoDumping() {
         mailbox->quit = true;
     }
     mailbox->free_cv.notify_one();
-}
-
-void RendererOpenGL::Sync() {
-    rasterizer.SyncEntireState();
 }
 
 } // namespace OpenGL

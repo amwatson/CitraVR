@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <array>
 #include <span>
 #include <vector>
+#include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -37,7 +38,23 @@ struct SMDH {
     u32_le region_lockout;
     u32_le match_maker_id;
     u64_le match_maker_bit_id;
-    u32_le flags;
+    union {
+        u32_le raw;
+
+        BitField<0, 1, u32> visible;
+        BitField<1, 1, u32> autoboot;
+        BitField<2, 1, u32> allow_3D;
+        BitField<3, 1, u32> require_eula;
+        BitField<4, 1, u32> autosave;
+        BitField<5, 1, u32> extended_banner;
+        BitField<6, 1, u32> rating_required;
+        BitField<7, 1, u32> uses_savedata;
+        BitField<8, 1, u32> record_usage;
+        BitField<10, 1, u32> disable_save_backup;
+        BitField<12, 1, u32> n3ds_exclusive;
+        BitField<14, 1, u32> parental_restricted;
+    } flags;
+
     u16_le eula_version;
     INSERT_PADDING_BYTES(2);
     float_le banner_animation_frame;
@@ -73,9 +90,10 @@ struct SMDH {
         Taiwan = 6,
     };
 
-    enum Flags {
-        Visible = 1 << 0,
-    };
+    /**
+     * Checks if SMDH is valid.
+     */
+    bool IsValid() const;
 
     /**
      * Gets game icon from SMDH

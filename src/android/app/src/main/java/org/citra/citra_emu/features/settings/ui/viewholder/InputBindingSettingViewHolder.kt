@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -45,15 +45,15 @@ class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter
         if (setting.isEditable) {
             adapter.onInputBindingClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
     }
 
     override fun onLongClick(clicked: View): Boolean {
         if (setting.isEditable) {
-            adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
+            adapter.onInputBindingLongClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
         return false
     }

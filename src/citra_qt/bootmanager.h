@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -108,7 +108,11 @@ signals:
 
     void ErrorThrown(Core::System::ResultStatus, std::string);
 
-    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
+    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                      const std::string& object);
+
+    void SwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
+                             std::size_t total, const std::string& object);
 
     void HideLoadingScreen();
 };

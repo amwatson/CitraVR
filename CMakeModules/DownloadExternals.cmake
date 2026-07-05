@@ -20,9 +20,9 @@ function(determine_qt_parameters target host_out type_out arch_out arch_path_out
                 set(arch_path "mingw_64")
             elseif (MSVC)
                 if ("arm64" IN_LIST ARCHITECTURE)
-                    set(arch_path "msvc2019_arm64")
+                    set(arch_path "msvc2022_arm64")
                 elseif ("x86_64" IN_LIST ARCHITECTURE)
-                    set(arch_path "msvc2019_64")
+                    set(arch_path "msvc2022_64")
                 else()
                     message(FATAL_ERROR "Unsupported bundled Qt architecture. Enable USE_SYSTEM_QT and provide your own.")
                 endif()
@@ -30,12 +30,13 @@ function(determine_qt_parameters target host_out type_out arch_out arch_path_out
 
                 # In case we're cross-compiling, prepare to also fetch the correct host Qt tools.
                 if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
-                    set(host_arch_path "msvc2019_64")
+                    set(host_arch_path "msvc2022_64")
                 elseif (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "ARM64")
                     # TODO: msvc2019_arm64 doesn't include some of the required tools for some reason,
                     # TODO: so until it does, just use msvc2019_64 under x86_64 emulation.
+                    # TODO: ^ Is this still true with msvc2022?
                     # set(host_arch_path "msvc2019_arm64")
-                    set(host_arch_path "msvc2019_64")
+                    set(host_arch_path "msvc2022_64")
                 endif()
                 set(host_arch "win64_${host_arch_path}")
             else()
@@ -105,7 +106,7 @@ function(download_qt_configuration prefix_out target host type arch arch_path ba
 
     if (NOT EXISTS "${prefix}")
         message(STATUS "Downloading Qt binaries for ${target}:${host}:${type}:${arch}:${arch_path}")
-        set(AQT_PREBUILD_BASE_URL "https://github.com/miurahr/aqtinstall/releases/download/v3.1.9")
+        set(AQT_PREBUILD_BASE_URL "https://github.com/miurahr/aqtinstall/releases/download/v3.3.0")
         if (WIN32)
             set(aqt_path "${base_path}/aqt.exe")
             if (NOT EXISTS "${aqt_path}")
@@ -171,16 +172,16 @@ endfunction()
 
 function(download_moltenvk)
     if (IOS)
-        set(MOLTENVK_PLATFORM "iOS")
+        set(MOLTENVK_PLATFORM "static/MoltenVK.xcframework/ios-arm64")
     else()
-        set(MOLTENVK_PLATFORM "macOS")
+        set(MOLTENVK_PLATFORM "dynamic/dylib/macOS")
     endif()
 
     set(MOLTENVK_DIR "${CMAKE_BINARY_DIR}/externals/MoltenVK")
     set(MOLTENVK_TAR "${CMAKE_BINARY_DIR}/externals/MoltenVK.tar")
     if (NOT EXISTS ${MOLTENVK_DIR})
         if (NOT EXISTS ${MOLTENVK_TAR})
-            file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.7-rc2/MoltenVK-all.tar
+            file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.9/MoltenVK-all.tar
                 ${MOLTENVK_TAR} SHOW_PROGRESS)
         endif()
 
@@ -189,7 +190,7 @@ function(download_moltenvk)
     endif()
 
     # Add the MoltenVK library path to the prefix so find_library can locate it.
-    list(APPEND CMAKE_PREFIX_PATH "${MOLTENVK_DIR}/MoltenVK/dylib/${MOLTENVK_PLATFORM}")
+    list(APPEND CMAKE_PREFIX_PATH "${MOLTENVK_DIR}/MoltenVK/${MOLTENVK_PLATFORM}")
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
 endfunction()
 

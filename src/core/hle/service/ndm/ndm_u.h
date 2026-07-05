@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -267,6 +267,7 @@ private:
         DaemonStatus::Idle,
         DaemonStatus::Idle,
     };
+    std::array<u32, 4> daemon_suspend_counter{};
     ExclusiveState exclusive_state = ExclusiveState::None;
     u32 scan_interval = DEFAULT_SCAN_INTERVAL;
     u32 retry_interval = DEFAULT_RETRY_INTERVAL;
@@ -274,14 +275,16 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        DEBUG_SERIALIZATION_POINT;
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& daemon_bit_mask;
-        ar& default_daemon_bit_mask;
-        ar& daemon_status;
-        ar& exclusive_state;
-        ar& scan_interval;
-        ar& retry_interval;
-        ar& daemon_lock_enabled;
+        ar & daemon_bit_mask;
+        ar & default_daemon_bit_mask;
+        ar & daemon_status;
+        ar & daemon_suspend_counter;
+        ar & exclusive_state;
+        ar & scan_interval;
+        ar & retry_interval;
+        ar & daemon_lock_enabled;
     }
     friend class boost::serialization::access;
 };

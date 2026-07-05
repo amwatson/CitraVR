@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,20 +30,17 @@ struct ShaderUnit;
 
 namespace Pica::Shader {
 
-/// Memory allocated for each compiled shader
-constexpr std::size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 256;
-
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
  * code that can be executed on the host machine directly.
  */
-class JitShader : private oaknut::CodeBlock, private oaknut::CodeGenerator {
+class JitShader : public oaknut::VectorCodeGenerator {
 public:
     JitShader();
 
     void Run(const ShaderSetup& setup, ShaderUnit& state, u32 offset) const {
         program(&setup.uniforms, &state,
-                reinterpret_cast<std::byte*>(oaknut::CodeBlock::ptr()) +
+                reinterpret_cast<const std::byte*>(code_mem->ptr()) +
                     instruction_labels[offset].offset());
     }
 
@@ -81,6 +78,9 @@ public:
     void Compile_SETE(Instruction instr);
 
 private:
+    std::vector<u32> code_vec;
+    std::unique_ptr<oaknut::CodeBlock> code_mem;
+
     void Compile_Block(u32 end);
     void Compile_NextInstr();
 
@@ -94,6 +94,9 @@ private:
      */
     void Compile_SanitizedMul(oaknut::QReg src1, oaknut::QReg src2, oaknut::QReg scratch0);
 
+    /**
+     * Emits the code to evaluate a conditional instruction and update the host's EQ/NE status-flags
+     */
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
 
@@ -120,9 +123,8 @@ private:
     /**
      * Emits data and code for utility functions.
      */
-    void CompilePrelude();
-    oaknut::Label CompilePrelude_Log2();
-    oaknut::Label CompilePrelude_Exp2();
+    void Compile_Log2(oaknut::Label subroutine);
+    void Compile_Exp2(oaknut::Label subroutine);
 
     const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code = nullptr;
     const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data = nullptr;
@@ -142,6 +144,10 @@ private:
 
     using CompiledShader = void(const void* setup, void* state, const std::byte* start_addr);
     CompiledShader* program = nullptr;
+
+    /// Library functions, emitted as used
+    bool log2_used : 1 = false;
+    bool exp2_used : 1 = false;
 
     oaknut::Label log2_subroutine;
     oaknut::Label exp2_subroutine;

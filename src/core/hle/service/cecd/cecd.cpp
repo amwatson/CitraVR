@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -35,10 +35,11 @@ namespace Service::CECD {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
-    ar& cecd_system_save_data_archive;
-    ar& cecinfo_event;
-    ar& cecinfosys_event;
-    ar& change_state_event;
+    DEBUG_SERIALIZATION_POINT;
+    ar & cecd_system_save_data_archive;
+    ar & cecinfo_event;
+    ar & cecinfosys_event;
+    ar & change_state_event;
 }
 SERIALIZE_IMPL(Module)
 
@@ -116,7 +117,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             std::vector<u8> program_id(8);
             u64_le le_program_id = cecd->system.Kernel().GetCurrentProcess()->codeset->program_id;
             std::memcpy(program_id.data(), &le_program_id, sizeof(u64));
-            session_data->file->Write(0, sizeof(u64), true, program_id.data());
+            session_data->file->Write(0, sizeof(u64), true, false, program_id.data());
             session_data->file->Close();
         }
     }
@@ -373,7 +374,7 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
         }
 
         [[maybe_unused]] const u32 bytes_written = static_cast<u32>(
-            session_data->file->Write(0, buffer.size(), true, buffer.data()).Unwrap());
+            session_data->file->Write(0, buffer.size(), true, false, buffer.data()).Unwrap());
         session_data->file->Close();
 
         rb.Push(ResultSuccess);
@@ -435,7 +436,7 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
                   msg_header.forward_count, msg_header.user_data);
 
         [[maybe_unused]] const u32 bytes_written =
-            static_cast<u32>(message->Write(0, buffer_size, true, buffer.data()).Unwrap());
+            static_cast<u32>(message->Write(0, buffer_size, true, false, buffer.data()).Unwrap());
         message->Close();
 
         rb.Push(ResultSuccess);
@@ -522,7 +523,7 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         std::memcpy(buffer.data() + hmac_offset, hmac_digest.data(), hmac_size);
 
         [[maybe_unused]] const u32 bytes_written =
-            static_cast<u32>(message->Write(0, buffer_size, true, buffer.data()).Unwrap());
+            static_cast<u32>(message->Write(0, buffer_size, true, false, buffer.data()).Unwrap());
         message->Close();
 
         rb.Push(ResultSuccess);
@@ -607,7 +608,7 @@ void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
 
             cecd->CheckAndUpdateFile(CecDataPathType::OutboxIndex, ncch_program_id, buffer);
 
-            file->Write(0, buffer.size(), true, buffer.data());
+            file->Write(0, buffer.size(), true, false, buffer.data());
             file->Close();
         }
     }
@@ -764,8 +765,8 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
                 cecd->CheckAndUpdateFile(path_type, ncch_program_id, buffer);
             }
 
-            [[maybe_unused]] const u32 bytes_written =
-                static_cast<u32>(file->Write(0, buffer.size(), true, buffer.data()).Unwrap());
+            [[maybe_unused]] const u32 bytes_written = static_cast<u32>(
+                file->Write(0, buffer.size(), true, false, buffer.data()).Unwrap());
             file->Close();
 
             rb.Push(ResultSuccess);
@@ -1409,7 +1410,7 @@ Module::Module(Core::System& system) : system(system) {
         cecd_system_save_data_archive = std::move(archive_result).Unwrap();
     } else {
         // Format the archive to create the directories
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0, 0, 0);
 
         // Open it again to get a valid archive now that the folder exists
         cecd_system_save_data_archive = systemsavedata_factory.Open(archive_path, 0).Unwrap();
@@ -1442,7 +1443,7 @@ Module::Module(Core::System& system) : system(system) {
         eventlog_buffer[1] = 0x41;
         eventlog_buffer[2] = 0x12;
 
-        eventlog->Write(0, eventlog_size, true, eventlog_buffer.data());
+        eventlog->Write(0, eventlog_size, true, false, eventlog_buffer.data());
         eventlog->Close();
 
         /// MBoxList____ resides within the root CEC/ directory.
@@ -1464,7 +1465,7 @@ Module::Module(Core::System& system) : system(system) {
         // mboxlist_buffer[2-3] are already zeroed
         mboxlist_buffer[4] = 0x01;
 
-        mboxlist->Write(0, mboxlist_size, true, mboxlist_buffer.data());
+        mboxlist->Write(0, mboxlist_size, true, false, mboxlist_buffer.data());
         mboxlist->Close();
     }
 }

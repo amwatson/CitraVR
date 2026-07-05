@@ -1,10 +1,11 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <QBrush>
 #include <QString>
 #include <QTreeWidgetItem>
+#include <QtGlobal>
 #include <fmt/format.h>
 #include "citra_qt/debugger/ipc/record_dialog.h"
 #include "citra_qt/debugger/ipc/recorder.h"
@@ -22,8 +23,13 @@ IPCRecorderWidget::IPCRecorderWidget(Core::System& system_, QWidget* parent)
     ui->setupUi(this);
     qRegisterMetaType<IPCDebugger::RequestRecord>();
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
     connect(ui->enabled, &QCheckBox::stateChanged, this,
             [this](int new_state) { SetEnabled(new_state == Qt::Checked); });
+#else
+    connect(ui->enabled, &QCheckBox::checkStateChanged, this,
+            [this](int new_state) { SetEnabled(new_state == Qt::Checked); });
+#endif
     connect(ui->clearButton, &QPushButton::clicked, this, &IPCRecorderWidget::Clear);
     connect(ui->filter, &QLineEdit::textChanged, this, &IPCRecorderWidget::ApplyFilterToAll);
     connect(ui->main, &QTreeWidget::itemDoubleClicked, this, &IPCRecorderWidget::OpenRecordDialog);
@@ -154,16 +160,23 @@ QString IPCRecorderWidget::GetFunctionName(const IPCDebugger::RequestRecord& rec
 
 void IPCRecorderWidget::ApplyFilter(int index) {
     auto* item = ui->main->invisibleRootItem()->child(index);
-    const QString filter = ui->filter->text();
-    if (filter.isEmpty()) {
+    const QString filter_full = ui->filter->text();
+    if (filter_full.isEmpty()) {
         item->setHidden(false);
         return;
     }
 
-    for (int i = 0; i < item->columnCount(); ++i) {
-        if (item->text(i).contains(filter)) {
-            item->setHidden(false);
-            return;
+    auto filters = filter_full.split(u' ');
+
+    for (auto& filter : filters) {
+        if (filter.isEmpty()) {
+            continue;
+        }
+        for (int i = 0; i < item->columnCount(); ++i) {
+            if (item->text(i).contains(filter)) {
+                item->setHidden(false);
+                return;
+            }
         }
     }
 

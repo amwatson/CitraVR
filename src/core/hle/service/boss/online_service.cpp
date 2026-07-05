@@ -32,17 +32,17 @@ OnlineService::OnlineService(u64 program_id_, u64 extdata_id_)
 
 template <class Archive>
 void OnlineService::serialize(Archive& ar, const unsigned int) {
-    ar& current_props;
-    ar& task_id_list;
-    ar& program_id;
-    ar& extdata_id;
+    ar & current_props;
+    ar & task_id_list;
+    ar & program_id;
+    ar & extdata_id;
 }
 SERIALIZE_IMPL(OnlineService)
 
 template <class Archive>
 void BossTaskProperties::serialize(Archive& ar, const unsigned int) {
-    ar& task_result;
-    ar& properties;
+    ar & task_result;
+    ar & properties;
 }
 SERIALIZE_IMPL(BossTaskProperties)
 
@@ -75,7 +75,7 @@ Result OnlineService::InitializeSession(u64 init_program_id) {
         boss_system_save_data_archive = std::move(archive_result).Unwrap();
     } else if (archive_result.Code() == FileSys::ResultNotFound) {
         // If the archive didn't exist, create the files inside
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0, 0, 0);
 
         // Open it again to get a valid archive now that the folder exists
         auto create_archive_result = systemsavedata_factory.Open(archive_path, 0);

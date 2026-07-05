@@ -1,11 +1,13 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
+import androidx.core.content.res.ResourcesCompat
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.ListItemSettingBinding
 import org.citra.citra_emu.features.settings.model.view.RunnableSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
@@ -17,6 +19,19 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
 
     override fun bind(item: SettingsItem) {
         setting = item as RunnableSetting
+        if (item.iconId == 0) {
+            binding.icon.visibility = View.GONE
+        } else {
+            binding.icon.visibility = View.VISIBLE
+            binding.icon.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    binding.icon.resources,
+                    item.iconId,
+                    binding.icon.context.theme
+                )
+            )
+        }
+
         binding.textSettingName.setText(item.nameId)
         if (item.descriptionId != 0) {
             binding.textSettingDescription.setText(item.descriptionId)
@@ -44,15 +59,18 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
     }
 
     override fun onClick(clicked: View) {
-        if (!setting.isRuntimeRunnable && !NativeLibrary.isRunning()) {
-            setting.runnable.invoke()
+        if (!setting.isRuntimeRunnable && EmulationActivity.isRunning()) {
+            adapter.onClickDisabledSetting(true)
         } else {
-            adapter.onClickDisabledSetting()
+            setting.runnable.invoke()
         }
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        // no-op
-        return true
+        if (!setting.isEditable) {
+            adapter.onClickDisabledSetting(true)
+            return true
+        }
+        return setting.onLongClick?.invoke() ?: true
     }
 }

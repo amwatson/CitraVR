@@ -4,9 +4,13 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+
 class SubmenuSetting(
-    titleId: Int,
-    descriptionId: Int,
+    @StringRes titleId: Int,
+    @StringRes descriptionId: Int,
+    @DrawableRes val iconId: Int,
     val menuKey: String
 ) : SettingsItem(null, titleId, descriptionId) {
     override val type = TYPE_SUBMENU

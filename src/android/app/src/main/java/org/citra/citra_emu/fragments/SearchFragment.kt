@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,11 +7,13 @@ package org.citra.citra_emu.fragments
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -26,12 +28,15 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import info.debatty.java.stringsimilarity.Jaccard
 import info.debatty.java.stringsimilarity.JaroWinkler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentSearchBinding
 import org.citra.citra_emu.model.Game
+import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 import java.time.temporal.ChronoField
@@ -43,6 +48,22 @@ class SearchFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
+    private lateinit var gameAdapter: GameAdapter
+
+    private val openImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        gameAdapter.handleShortcutImageResult(uri)
+    }
+
+    private var shouldCompress: Boolean = true
+    private var pendingCompressInvocation: String? = null
+    private val onCompressDecompressLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        GamesFragment.doCompression(this, gamesViewModel, pendingCompressInvocation, uri, shouldCompress)
+        pendingCompressInvocation = null
+    }
 
     private lateinit var preferences: SharedPreferences
 
@@ -71,12 +92,26 @@ class SearchFragment : Fragment() {
             binding.searchText.setText(savedInstanceState.getString(SEARCH_TEXT))
         }
 
+        val inflater = LayoutInflater.from(requireContext())
+
+        gameAdapter = GameAdapter(
+            requireActivity() as AppCompatActivity,
+            inflater,
+            openImageLauncher,
+            onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
+                pendingCompressInvocation = inputPath
+                onCompressDecompressLauncher.launch(suggestedName)
+                this.shouldCompress = shouldCompress
+            }
+
+        )
+
         binding.gridGamesSearch.apply {
             layoutManager = GridLayoutManager(
                 requireContext(),
                 resources.getInteger(R.integer.game_grid_columns)
             )
-            adapter = GameAdapter(requireActivity() as AppCompatActivity)
+            adapter = this@SearchFragment.gameAdapter
         }
 
         binding.chipGroup.setOnCheckedStateChangeListener { _, _ -> filterAndSearch() }

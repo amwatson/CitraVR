@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -28,6 +28,7 @@ static jclass s_native_library_class;
 static jmethodID s_on_core_error;
 static jmethodID s_is_portrait_mode;
 static jmethodID s_landscape_screen_layout;
+static jmethodID s_portrait_screen_layout;
 static jmethodID s_exit_emulation_activity;
 static jmethodID s_request_camera_permission;
 static jmethodID s_request_mic_permission;
@@ -40,6 +41,7 @@ static jfieldID s_game_info_pointer;
 
 static jclass s_disk_cache_progress_class;
 static jmethodID s_disk_cache_load_progress;
+static jmethodID s_compress_progress_method;
 static std::unordered_map<VideoCore::LoadCallbackStage, jobject> s_java_load_callback_stages;
 
 static jclass s_cia_install_helper_class;
@@ -91,6 +93,10 @@ jmethodID GetLandscapeScreenLayout() {
     return s_landscape_screen_layout;
 }
 
+jmethodID GetPortraitScreenLayout() {
+    return s_portrait_screen_layout;
+}
+
 jmethodID GetExitEmulationActivity() {
     return s_exit_emulation_activity;
 }
@@ -125,6 +131,10 @@ jclass GetDiskCacheProgressClass() {
 
 jmethodID GetDiskCacheLoadProgress() {
     return s_disk_cache_load_progress;
+}
+
+jmethodID GetCompressProgressMethod() {
+    return s_compress_progress_method;
 }
 
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage) {
@@ -173,8 +183,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         s_native_library_class, "onCoreError",
         "(Lorg/citra/citra_emu/NativeLibrary$CoreError;Ljava/lang/String;)Z");
     s_is_portrait_mode = env->GetStaticMethodID(s_native_library_class, "isPortraitMode", "()Z");
-    s_landscape_screen_layout =
-        env->GetStaticMethodID(s_native_library_class, "landscapeScreenLayout", "()I");
     s_exit_emulation_activity =
         env->GetStaticMethodID(s_native_library_class, "exitEmulationActivity", "(I)V");
     s_request_camera_permission =
@@ -200,9 +208,12 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress")));
     jclass load_callback_stage_class =
         env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage");
-    s_disk_cache_load_progress = env->GetStaticMethodID(
-        s_disk_cache_progress_class, "loadProgress",
-        "(Lorg/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage;II)V");
+    s_disk_cache_load_progress =
+        env->GetStaticMethodID(s_disk_cache_progress_class, "loadProgress",
+                               "(Lorg/citra/citra_emu/utils/"
+                               "DiskShaderCacheProgress$LoadCallbackStage;IILjava/lang/String;)V");
+    s_compress_progress_method =
+        env->GetStaticMethodID(s_native_library_class, "onCompressProgress", "(JJ)V");
     // Initialize LoadCallbackStage map
     const auto to_java_load_callback_stage = [env,
                                               load_callback_stage_class](const std::string& stage) {

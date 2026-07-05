@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,20 +13,25 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
-class SelectUserDirectoryDialogFragment : DialogFragment() {
+class SelectUserDirectoryDialogFragment(titleOverride: Int? = null, descriptionOverride: Int? = null) : DialogFragment() {
     private lateinit var mainActivity: MainActivity
+
+    private val title = titleOverride ?: R.string.select_citra_user_folder
+    private val description = descriptionOverride ?: R.string.selecting_user_directory_without_write_permissions
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         mainActivity = requireActivity() as MainActivity
 
         isCancelable = false
+
         return MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.select_citra_user_folder)
-            .setMessage(R.string.cannot_skip_directory_description)
+            .setTitle(title)
+            .setMessage(description)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                mainActivity.openCitraDirectory.launch(null)
+                PermissionsHandler.compatibleSelectDirectory(mainActivity.openCitraDirectoryLostPermission)
             }
             .show()
     }
@@ -34,9 +39,10 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
     companion object {
         const val TAG = "SelectUserDirectoryDialogFragment"
 
-        fun newInstance(activity: FragmentActivity): SelectUserDirectoryDialogFragment {
+        fun newInstance(activity: FragmentActivity, titleOverride: Int? = null, descriptionOverride: Int? = null):
+                SelectUserDirectoryDialogFragment {
             ViewModelProvider(activity)[HomeViewModel::class.java].setPickingUserDir(true)
-            return SelectUserDirectoryDialogFragment()
+            return SelectUserDirectoryDialogFragment(titleOverride, descriptionOverride)
         }
     }
 }

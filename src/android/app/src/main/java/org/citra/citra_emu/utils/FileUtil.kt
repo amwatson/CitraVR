@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.system.Os
 import android.util.Pair
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.model.CheapDocument
@@ -218,10 +219,20 @@ object FileUtil {
      */
     @JvmStatic
     fun getFilename(uri: Uri): String {
-        val columns = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
         var filename = ""
         var c: Cursor? = null
         try {
+            if (uri.scheme == "fd") {
+                return ""
+            }
+
+            if (uri.scheme == "file") {
+                BuildUtil.assertNotGooglePlay()
+                val file = File(uri.path!!);
+                return file.name
+            }
+
+            val columns = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             c = context.contentResolver.query(
                 uri,
                 columns,
@@ -435,6 +446,20 @@ object FileUtil {
     }
 
     @JvmStatic
+    fun moveFile(filename: String, sourceDirUriString: String, destDirUriString: String): Boolean {
+        try {
+            val sourceFileUri = ("$sourceDirUriString%2F$filename").toUri()
+            val sourceDirUri = sourceDirUriString.toUri()
+            val destDirUri = destDirUriString.toUri()
+            DocumentsContract.moveDocument(context.contentResolver, sourceFileUri, sourceDirUri, destDirUri)
+            return true
+        } catch (e: Exception) {
+            Log.error("[FileUtil]: Cannot move file, error: " + e.message)
+        }
+        return false
+    }
+
+    @JvmStatic
     fun deleteDocument(path: String): Boolean {
         try {
             val uri = Uri.parse(path)
@@ -522,7 +547,7 @@ object FileUtil {
     }
 
     @JvmStatic
-    fun isNativePath(path: String): Boolean =
+    fun isNativePath(path: String): Boolean = // FIXME: This function name is bullshit -OS
         try {
             path[0] == '/'
         } catch (e: StringIndexOutOfBoundsException) {

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/serialization/atomic.h"
+#include "common/settings.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
@@ -26,14 +27,13 @@ namespace Kernel {
 /// Initialize the kernel
 KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                            std::function<void()> prepare_reschedule_callback,
-                           MemoryMode memory_mode, u32 num_cores,
-                           const New3dsHwCapabilities& n3ds_hw_caps, u64 override_init_time)
+                           MemoryMode memory_mode, u32 num_cores, u64 override_init_time)
     : memory(memory), timing(timing),
-      prepare_reschedule_callback(std::move(prepare_reschedule_callback)), memory_mode(memory_mode),
-      n3ds_hw_caps(n3ds_hw_caps) {
+      prepare_reschedule_callback(std::move(prepare_reschedule_callback)),
+      memory_mode(memory_mode) {
     std::generate(memory_regions.begin(), memory_regions.end(),
                   [] { return std::make_shared<MemoryRegionInfo>(); });
-    MemoryInit(memory_mode, n3ds_hw_caps.memory_mode, override_init_time);
+    MemoryInit(memory_mode, override_init_time);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     for (u32 core_id = 0; core_id < num_cores; ++core_id) {
@@ -151,6 +151,14 @@ const IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() const {
     return *ipc_recorder;
 }
 
+std::unique_ptr<IPCDebugger::Recorder> KernelSystem::BackupIPCRecorder() {
+    return std::move(ipc_recorder);
+}
+
+void KernelSystem::RestoreIPCRecorder(std::unique_ptr<IPCDebugger::Recorder> recorder) {
+    ipc_recorder = std::move(recorder);
+}
+
 void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> port) {
     named_ports.emplace(std::move(name), std::move(port));
 }
@@ -163,29 +171,68 @@ void KernelSystem::ResetThreadIDs() {
     next_thread_id = 0;
 }
 
+void KernelSystem::UpdateCPUAndMemoryState(u64 title_id, MemoryMode memory_mode,
+                                           New3dsHwCapabilities n3ds_hw_cap) {
+    if (Settings::values.is_new_3ds) {
+        SetRunning804MHz(n3ds_hw_cap.enable_804MHz_cpu);
+    }
+
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+
+    constexpr u32 TID_HIGH_APPLET = 0x00040030;
+    constexpr u32 TID_HIGH_SYSMODULE = 0x00040130;
+
+    // PM only updates the reported memory for normal applications.
+    // TODO(PabloMK7): Using the title ID is not correct, but close enough.
+    if (tid_high != TID_HIGH_APPLET && tid_high != TID_HIGH_SYSMODULE) {
+        UpdateReportedMemory(memory_mode, n3ds_hw_cap.memory_mode);
+    }
+}
+
+void KernelSystem::RestoreMemoryState(u64 title_id) {
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+
+    constexpr u32 TID_HIGH_APPLET = 0x00040030;
+    constexpr u32 TID_HIGH_SYSMODULE = 0x00040130;
+
+    // PM only updates the reported memory for normal applications.
+    // TODO(PabloMK7): Using the title ID is not correct, but close enough.
+    if (tid_high != TID_HIGH_APPLET && tid_high != TID_HIGH_SYSMODULE) {
+        RestoreReportedMemory();
+    }
+}
+
+void KernelSystem::SetCore1ScheduleMode(Core1ScheduleMode mode) {
+    GetThreadManager(1).SetScheduleMode(mode);
+}
+
+void KernelSystem::UpdateCore1AppCpuLimit() {
+    GetThreadManager(1).UpdateAppCpuLimit();
+}
+
 template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int) {
-    ar& memory_regions;
-    ar& named_ports;
+    ar & memory_regions;
+    ar & named_ports;
     // current_cpu set externally
     // NB: subsystem references and prepare_reschedule_callback are constant
     ar&* resource_limits.get();
-    ar& next_object_id;
+    ar & next_object_id;
     ar&* timer_manager.get();
-    ar& next_process_id;
-    ar& process_list;
-    ar& current_process;
+    ar & next_process_id;
+    ar & process_list;
+    ar & current_process;
     // NB: core count checked in 'core'
     for (auto& thread_manager : thread_managers) {
         ar&* thread_manager.get();
     }
-    ar& config_mem_handler;
-    ar& shared_page_handler;
-    ar& stored_processes;
-    ar& next_thread_id;
-    ar& memory_mode;
-    ar& n3ds_hw_caps;
-    ar& main_thread_extended_sleep;
+    ar & config_mem_handler;
+    ar & shared_page_handler;
+    ar & stored_processes;
+    ar & next_thread_id;
+    ar & memory_mode;
+    ar & running_804MHz;
+    ar & main_thread_extended_sleep;
     // Deliberately don't include debugger info to allow debugging through loads
 
     if (Archive::is_loading::value) {
@@ -201,10 +248,16 @@ SERIALIZE_IMPL(KernelSystem)
 
 template <class Archive>
 void New3dsHwCapabilities::serialize(Archive& ar, const unsigned int) {
-    ar& enable_l2_cache;
-    ar& enable_804MHz_cpu;
-    ar& memory_mode;
+    ar & enable_l2_cache;
+    ar & enable_804MHz_cpu;
+    ar & memory_mode;
 }
 SERIALIZE_IMPL(New3dsHwCapabilities)
+
+template <class Archive>
+void Core1CpuTime::serialize(Archive& ar, const unsigned int) {
+    ar & raw;
+}
+SERIALIZE_IMPL(Core1CpuTime)
 
 } // namespace Kernel

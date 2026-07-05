@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,11 +16,15 @@ public:
     ~AACDecoder() override;
     BinaryMessage ProcessRequest(const BinaryMessage& request) override;
 
+    void Reset() override;
+
 private:
     BinaryMessage Decode(const BinaryMessage& request);
+    bool OpenNewDecoder();
 
     Memory::MemorySystem& memory;
     NeAACDecHandle decoder = nullptr;
+    bool decoder_initialized = false;
 };
 
 } // namespace AudioCore::HLE

@@ -1,15 +1,14 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <span>
 #include <boost/container/static_vector.hpp>
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
-#include "core/telemetry_session.h"
 #include "video_core/custom_textures/custom_format.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_platform.h"
@@ -133,17 +132,16 @@ std::string GetReadableVersion(u32 version) {
 } // Anonymous namespace
 
 Instance::Instance(bool enable_validation, bool dump_command_buffers)
-    : library{OpenLibrary()}, instance{CreateInstance(*library,
-                                                      Frontend::WindowSystemType::Headless,
-                                                      enable_validation, dump_command_buffers)},
+    : library{OpenLibrary()},
+      instance{CreateInstance(*library, Frontend::WindowSystemType::Headless, enable_validation,
+                              dump_command_buffers)},
       physical_devices{instance->enumeratePhysicalDevices()} {}
 
-Instance::Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& window,
-                   u32 physical_device_index)
-    : library{OpenLibrary(&window)}, instance{CreateInstance(
-                                         *library, window.GetWindowInfo().type,
-                                         Settings::values.renderer_debug.GetValue(),
-                                         Settings::values.dump_command_buffers.GetValue())},
+Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
+    : library{OpenLibrary(&window)},
+      instance{CreateInstance(*library, window.GetWindowInfo().type,
+                              Settings::values.renderer_debug.GetValue(),
+                              Settings::values.dump_command_buffers.GetValue())},
       debug_callback{CreateDebugCallback(*instance, debug_utils_supported)},
       physical_devices{instance->enumeratePhysicalDevices()} {
     const std::size_t num_physical_devices = static_cast<u16>(physical_devices.size());
@@ -161,10 +159,9 @@ Instance::Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& windo
             VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion)));
     }
 
-    CollectTelemetryParameters(telemetry);
     CreateDevice();
-    CollectToolingInfo();
     CreateFormatTable();
+    CollectToolingInfo();
     CreateCustomFormatTable();
     CreateAttribTable();
 }
@@ -401,17 +398,21 @@ bool Instance::CreateDevice() {
     const vk::StructureChain feature_chain = physical_device.getFeatures2<
         vk::PhysicalDeviceFeatures2, vk::PhysicalDevicePortabilitySubsetFeaturesKHR,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT,
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR,
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT, vk::PhysicalDeviceIndexTypeUint8FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT,
         vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
     const vk::StructureChain properties_chain =
-        physical_device.getProperties2<vk::PhysicalDeviceProperties2,
-                                       vk::PhysicalDevicePortabilitySubsetPropertiesKHR,
-                                       vk::PhysicalDeviceExternalMemoryHostPropertiesEXT>();
+        physical_device
+            .getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDriverProperties,
+                            vk::PhysicalDevicePortabilitySubsetPropertiesKHR,
+                            vk::PhysicalDeviceExternalMemoryHostPropertiesEXT>();
+    const vk::PhysicalDeviceDriverProperties driver =
+        properties_chain.get<vk::PhysicalDeviceDriverProperties>();
+
+    driver_id = driver.driverID;
+    vendor_name = driver.driverName.data();
 
     features = feature_chain.get().features;
     if (available_extensions.empty()) {
@@ -461,7 +462,9 @@ bool Instance::CreateDevice() {
     const bool has_custom_border_color =
         add_extension(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME, is_qualcomm,
                       "it is broken on most Qualcomm driver versions");
-    const bool has_index_type_uint8 = add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+    const bool has_index_type_uint8 =
+        add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME, is_moltenvk,
+                      "uint8 index conversion causes memory leaks in MoltenVK");
     const bool has_fragment_shader_interlock =
         add_extension(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
@@ -478,6 +481,9 @@ bool Instance::CreateDevice() {
         return false;
     }
 
+#ifndef HAVE_LIBRETRO
+    // Find graphics queue family. LibRetro builds skip this since queue_family_index
+    // is already set by LibRetroVKInstance from the frontend-provided context.
     bool graphics_queue_found = false;
     for (std::size_t i = 0; i < family_properties.size(); i++) {
         const u32 index = static_cast<u32>(i);
@@ -491,6 +497,7 @@ bool Instance::CreateDevice() {
         LOG_CRITICAL(Render_Vulkan, "Unable to find graphics and/or present queues.");
         return false;
     }
+#endif
 
     static constexpr std::array<f32, 1> queue_priorities = {1.0f};
 
@@ -520,8 +527,6 @@ bool Instance::CreateDevice() {
         vk::PhysicalDevicePortabilitySubsetFeaturesKHR{},
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR{},
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT{},
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT{},
         vk::PhysicalDeviceIndexTypeUint8FeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
@@ -609,6 +614,24 @@ bool Instance::CreateDevice() {
 #undef PROP_GET
 #undef FEAT_SET
 
+    // Check layered rendering support on MoltenVK
+    // MoltenVK maps Metal's layeredRendering capability to shaderOutputLayer
+    if (is_moltenvk) {
+        vk::PhysicalDeviceVulkan12Features vulkan12_features;
+        vk::PhysicalDeviceFeatures2 features2;
+        features2.pNext = &vulkan12_features;
+        physical_device.getFeatures2(&features2);
+        if (!vulkan12_features.shaderOutputLayer) {
+            LOG_INFO(Render_Vulkan,
+                     "Disabling layered rendering (shaderOutputLayer not supported by device)");
+            layered_rendering_supported = false;
+        }
+    }
+
+#ifdef HAVE_LIBRETRO
+    // LibRetro builds: device already created by frontend, just return after feature detection
+    return true;
+#else
     try {
         device = physical_device.createDeviceUnique(device_chain.get());
     } catch (vk::ExtensionNotPresentError& err) {
@@ -623,6 +646,7 @@ bool Instance::CreateDevice() {
 
     CreateAllocator();
     return true;
+#endif
 }
 
 void Instance::CreateAllocator() {
@@ -633,9 +657,9 @@ void Instance::CreateAllocator() {
 
     const VmaAllocatorCreateInfo allocator_info = {
         .physicalDevice = physical_device,
-        .device = *device,
+        .device = GetDevice(),
         .pVulkanFunctions = &functions,
-        .instance = *instance,
+        .instance = GetInstance(),
         .vulkanApiVersion = TargetVulkanApiVersion,
     };
 
@@ -645,7 +669,10 @@ void Instance::CreateAllocator() {
     }
 }
 
-void Instance::CollectTelemetryParameters(Core::TelemetrySession& telemetry) {
+void Instance::CollectToolingInfo() {
+    if (!tooling_info) {
+        return;
+    }
     const vk::StructureChain property_chain =
         physical_device
             .getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDriverProperties>();
@@ -664,19 +691,6 @@ void Instance::CollectTelemetryParameters(Core::TelemetrySession& telemetry) {
     LOG_INFO(Render_Vulkan, "VK_DRIVER: {}", driver_name);
     LOG_INFO(Render_Vulkan, "VK_DEVICE: {}", model_name);
     LOG_INFO(Render_Vulkan, "VK_VERSION: {}", api_version);
-
-    static constexpr auto field = Common::Telemetry::FieldType::UserSystem;
-    telemetry.AddField(field, "GPU_Vendor", vendor_name);
-    telemetry.AddField(field, "GPU_Model", model_name);
-    telemetry.AddField(field, "GPU_Vulkan_Driver", driver_name);
-    telemetry.AddField(field, "GPU_Vulkan_Version", api_version);
-    telemetry.AddField(field, "GPU_Vulkan_Extensions", extensions);
-}
-
-void Instance::CollectToolingInfo() {
-    if (!tooling_info) {
-        return;
-    }
     const auto tools = physical_device.getToolPropertiesEXT();
     for (const vk::PhysicalDeviceToolProperties& tool : tools) {
         const std::string_view name = tool.name;

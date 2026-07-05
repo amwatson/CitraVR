@@ -20,15 +20,16 @@ add_library(citra-android SHARED
     emu_window/emu_window.cpp
     emu_window/emu_window.h
     game_info.cpp
-    game_settings.cpp
-    game_settings.h
     id_cache.cpp
     id_cache.h
+    jni_setting_keys.cpp
     native.cpp
     ndk_motion.cpp
     ndk_motion.h
     system_save_game.cpp
     native_log.cpp
+    util.cpp
+    util.h
     # VR-specific
     vr/OpenXR.cpp
     vr/gl/Egl.cpp

@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,7 @@
 #include <QMediaDevices>
 #include <QMessageBox>
 #include <QWidget>
+#include <QtGlobal>
 #include "citra_qt/configuration/configure_camera.h"
 #include "common/settings.h"
 #include "core/frontend/camera/factory.h"
@@ -86,7 +87,11 @@ void ConfigureCamera::ConnectEvents() {
     });
     connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::OnToolButtonClicked);
     connect(ui->preview_button, &QPushButton::clicked, this, [this] { StartPreviewing(); });
+#if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
     connect(ui->prompt_before_load, &QCheckBox::stateChanged, this, [this](int state) {
+#else
+    connect(ui->prompt_before_load, &QCheckBox::checkStateChanged, this, [this](int state) {
+#endif
         ui->camera_file->setDisabled(state == Qt::Checked);
         ui->toolButton->setDisabled(state == Qt::Checked);
         if (state == Qt::Checked) {
@@ -201,8 +206,8 @@ void ConfigureCamera::StartPreviewing() {
     }
     previewing_camera->SetResolution(
         {static_cast<u16>(preview_width), static_cast<u16>(preview_height)});
-    previewing_camera->SetEffect(Service::CAM::Effect::None);
-    previewing_camera->SetFlip(Service::CAM::Flip::None);
+    previewing_camera->SetEffect(Service::CAM::Effect::NoEffect);
+    previewing_camera->SetFlip(Service::CAM::Flip::NoFlip);
     previewing_camera->SetFormat(Service::CAM::OutputFormat::RGB565);
     previewing_camera->SetFrameRate(Service::CAM::FrameRate::Rate_30);
     previewing_camera->StartCapture();

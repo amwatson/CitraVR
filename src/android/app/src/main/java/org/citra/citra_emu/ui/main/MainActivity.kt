@@ -1,12 +1,16 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.ui.main
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -16,6 +20,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -41,22 +46,30 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationBarView
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
+import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
+import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CiaInstallWorker
 import org.citra.citra_emu.utils.CitraDirectoryHelper
+import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -74,18 +87,29 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override var themeId: Int = 0
 
+    companion object {
+        const val KEY_SETUP_CURRENT_PAGE = "SetupCurrentPage"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        RefreshRateUtil.enforceRefreshRate(this)
+
         val splashScreen = installSplashScreen()
+        CitraDirectoryUtils.attemptAutomaticUpdateDirectory()
         splashScreen.setKeepOnScreenCondition {
             !DirectoryInitialization.areCitraDirectoriesReady() &&
-                    PermissionsHandler.hasWriteAccess(this)
+                    PermissionsHandler.hasWriteAccess(this) &&
+                    !CitraDirectoryUtils.needToUpdateManually()
         }
 
+
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
-            DirectoryInitialization.areCitraDirectoriesReady()) {
+            DirectoryInitialization.areCitraDirectoriesReady() &&
+            !CitraDirectoryUtils.needToUpdateManually()) {
             settingsViewModel.settings.loadSettings()
         }
 
+        ThemeUtil.ThemeChangeListener(this)
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
 
@@ -125,12 +149,22 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             )
         }
 
+        var applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        setUpNavigation(navHostFragment.navController)
+        setUpNavigation(savedInstanceState, navHostFragment.navController)
         (binding.navigationView as NavigationBarView).setOnItemReselectedListener {
             when (it.itemId) {
-                R.id.gamesFragment -> gamesViewModel.setShouldScrollToTop(true)
+                R.id.gamesFragment -> {
+                    if (applicationsClickTimestamp.elapsedNow() < 300.milliseconds) {
+                        Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG)
+                            .show()
+                    }
+                    applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
+                    gamesViewModel.setShouldScrollToTop(true)
+                }
                 R.id.searchFragment -> gamesViewModel.setSearchFocused(true)
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,
@@ -168,9 +202,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             }
         }
 
-        // Dismiss previous notifications (should not happen unless a crash occurred)
-        EmulationActivity.stopForegroundService(this)
-
         setInsets()
 
         // Check for the TWO_INSTANCES string extra
@@ -186,6 +217,14 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        // Save the user's current game state.
+        outState.putInt(KEY_SETUP_CURRENT_PAGE, homeViewModel.setupCurrentPage)
+
+        // Always call the superclass so it can save the view hierarchy state.
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onResume() {
         checkUserPermissions()
 
@@ -194,7 +233,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     }
 
     override fun onDestroy() {
-        EmulationActivity.stopForegroundService(this)
         super.onDestroy()
     }
 
@@ -207,11 +245,53 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
 
-        if (!firstTimeSetup && !PermissionsHandler.hasWriteAccess(this) &&
-            !homeViewModel.isPickingUserDir.value
-        ) {
+        if (firstTimeSetup) {
+            return
+        }
+
+        if (!BuildUtil.isGooglePlayBuild) {
+            fun requestMissingFilesystemPermission() =
+                GrantMissingFilesystemPermissionFragment.newInstance()
+                    .show(supportFragmentManager, GrantMissingFilesystemPermissionFragment.TAG)
+
+            if (supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (!Environment.isExternalStorageManager()) {
+                        requestMissingFilesystemPermission()
+                    }
+                } else {
+                    if (ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        requestMissingFilesystemPermission()
+                    }
+                }
+            }
+        }
+
+        if (homeViewModel.isPickingUserDir.value) {
+            return
+        }
+
+        if (!PermissionsHandler.hasWriteAccess(this)) {
             SelectUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+            return
+        } else if (CitraDirectoryUtils.needToUpdateManually()) {
+            UpdateUserDirectoryDialogFragment.newInstance(this)
+                .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
+            return
+        }
+
+        if (!BuildUtil.isGooglePlayBuild) {
+            if (supportFragmentManager.findFragmentByTag(SelectUserDirectoryDialogFragment.TAG) == null) {
+                if (NativeLibrary.getUserDirectory() == "") {
+                    SelectUserDirectoryDialogFragment.newInstance(this)
+                        .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                }
+            }
         }
     }
 
@@ -258,11 +338,12 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         showVrNotice()
     }
 
-    private fun setUpNavigation(navController: NavController) {
+    private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup && !homeViewModel.navigatedToSetup) {
+            homeViewModel.setupCurrentPage = savedInstanceState?.getInt(KEY_SETUP_CURRENT_PAGE) ?: 0
             navController.navigate(R.id.firstTimeSetupFragment)
             homeViewModel.navigatedToSetup = true
         } else {
@@ -365,15 +446,32 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             windowInsets
         }
 
-    val openCitraDirectory = registerForActivityResult<Uri, Uri>(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { result: Uri? ->
-        if (result == null) {
-            return@registerForActivityResult
-        }
+    private fun createOpenCitraDirectoryLauncher(
+        permissionsLost: Boolean
+    ): ActivityResultLauncher<Uri?> {
+        return registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { result: Uri? ->
+            if (result == null) {
+                return@registerForActivityResult
+            }
 
-        CitraDirectoryHelper(this@MainActivity).showCitraDirectoryDialog(result)
+            if (!BuildUtil.isGooglePlayBuild) {
+                if (NativeLibrary.getNativePath(result) == "") {
+                    SelectUserDirectoryDialogFragment.newInstance(
+                        this,
+                        R.string.invalid_selection,
+                        R.string.invalid_user_directory
+                    ).show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                    return@registerForActivityResult
+                }
+            }
+
+            CitraDirectoryHelper(this@MainActivity, permissionsLost)
+                .showCitraDirectoryDialog(result, buttonState = {})
+        }
     }
+
+    val openCitraDirectory = createOpenCitraDirectoryLauncher(permissionsLost = false)
+    val openCitraDirectoryLostPermission = createOpenCitraDirectoryLauncher(permissionsLost = true)
 
     val ciaFileInstaller = registerForActivityResult(
         OpenFileResultContract()
@@ -383,7 +481,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         }
 
         val selectedFiles =
-            FileBrowserHelper.getSelectedFiles(result, applicationContext, listOf("cia"))
+            FileBrowserHelper.getSelectedFiles(result, applicationContext, listOf("cia", "zcia"))
         if (selectedFiles == null) {
             Toast.makeText(applicationContext, R.string.cia_file_not_found, Toast.LENGTH_LONG)
                 .show()
@@ -401,5 +499,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
         )
+    }
+
+    val setupOpenCitraDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { result: Uri? ->
+        homeViewModel.selectedCitraDirectory = result
+    }
+
+    val setupGetGamesDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { result: Uri? ->
+        homeViewModel.selectedGamesDirectory = result
     }
 }

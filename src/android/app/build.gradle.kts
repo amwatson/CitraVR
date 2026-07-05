@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("de.undercouch.download") version "5.5.0"
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "2.0.20"
     id("androidx.navigation.safeargs.kotlin")
 }
 
@@ -22,14 +22,13 @@ plugins {
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
 val abiFilter = listOf("arm64-v8a")
 
-val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
+val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/downloadedJniLibs"
 
-@Suppress("UnstableApiUsage")
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-34"
-    ndkVersion = "26.1.10909125"
+    compileSdkVersion = "android-35"
+    ndkVersion = "27.3.13750724"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -51,6 +50,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
     lint {
@@ -80,7 +80,10 @@ android {
                 arguments(
                     "-DENABLE_QT=0", // Don't use QT
                     "-DENABLE_SDL2=0", // Don't use SDL
-                    "-DANDROID_ARM_NEON=true" // cryptopp requires Neon to work
+                    "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page sizes
+                    "-DENABLE_GDBSTUB=OFF", // Disable GDB stub
+                    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" // Allow older vendored CMake projects with CMake 4+
                 )
             }
         }
@@ -125,8 +128,7 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isShrinkResources = true // TODO: Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
@@ -134,6 +136,22 @@ android {
                 "proguard-rules.pro"
             )
             isDefault = true
+        }
+
+        // Same as above, but with isDebuggable disabled.
+        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS) without constantly tripping over years-old and seemingly harmless memory bugs.
+        // We should fix those bugs eventually, but for now this exists as a workaround to allow other work to be done.
+        register("relWithDebInfoLite") {
+            initWith(getByName("relWithDebInfo"))
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            installation {
+                enableBaselineProfile = false // Disabled by default when isDebuggable is true
+            }
+            lint {
+                checkReleaseBuilds = false // Ditto
+                                           // The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+            }
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -153,15 +171,11 @@ android {
             dimension = "version"
             applicationIdSuffix = ".playtest"
         }
-
-        create("nightly") {
-            dimension = "version"
-        }
     }
 
     externalNativeBuild {
         cmake {
-            version = "3.22.1"
+            version = "3.25.0+"
             path = file("../../../CMakeLists.txt")
         }
     }
@@ -175,24 +189,24 @@ android {
 }
 
 dependencies {
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.documentfile:documentfile:1.0.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("androidx.slidingpanelayout:slidingpanelayout:1.2.0")
-    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.work:work-runtime:2.9.0")
-    implementation("org.ini4j:ini4j:0.5.4")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
-    implementation("info.debatty:java-string-similarity:2.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("androidx.fragment:fragment-ktx:1.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.5")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.0")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.0")
     implementation("androidx.preference:preference-ktx:1.2.1")
-    implementation("io.coil-kt:coil:2.5.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.slidingpanelayout:slidingpanelayout:1.2.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.work:work-runtime:2.9.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("info.debatty:java-string-similarity:2.0.0")
+    implementation("io.coil-kt:coil:2.7.0")
+    implementation("org.ini4j:ini4j:0.5.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
 
     androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
     androidTestImplementation("junit:junit:4.12")
@@ -207,7 +221,7 @@ val validationLayersExtractedPath = file(downloadedJniLibsPath)
 
 // Download Vulkan Validation Layers only if not already downloaded or extracted
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
-    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-1.3.261.1/android-binaries-sdk-1.3.261.1-android.zip")
+    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.313.0/android-binaries-1.4.313.0.zip")
     dest(downloadedVulkanLayersZip)
     onlyIf {
         !validationLayersExtractedPath.exists() // Skip download if extracted files are already present

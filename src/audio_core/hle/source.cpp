@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,18 @@ void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const {
 void Source::Reset() {
     current_frame.fill({});
     state = {};
+}
+
+void Source::Sleep() {
+    backup_frame = current_frame;
+    backup_state = state;
+}
+
+void Source::Wakeup() {
+    current_frame = backup_frame;
+    state = backup_state;
+    backup_frame.fill({});
+    backup_state = {};
 }
 
 void Source::SetMemory(Memory::MemorySystem& memory) {
@@ -246,10 +258,11 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         // fix that, but as a stop gap, we can just prevent these underflowed values from playing in
         // the mean time
         if (static_cast<s32>(config.length) < 0) {
-            LOG_ERROR(Audio_DSP,
-                      "Skipping embedded buffer sample! Game passed in improper value for length. "
-                      "addr {:X} length {:X}",
-                      static_cast<u32>(config.physical_address), static_cast<u32>(config.length));
+            LOG_ERROR(
+                Audio_DSP,
+                "Skipping embedded buffer sample! Application passed in improper value for length. "
+                "addr {:X} length {:X}",
+                static_cast<u32>(config.physical_address), static_cast<u32>(config.length));
         } else {
             state.input_queue.emplace(Buffer{
                 config.physical_address,

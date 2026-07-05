@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,7 @@
 #include <QTime>
 #include <fmt/format.h>
 #include "citra_qt/loading_screen.h"
+#include "citra_qt/util/util.h"
 #include "common/logging/log.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
@@ -67,8 +68,7 @@ const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> stage
      QT_TRANSLATE_NOOP("LoadingScreen", "Preloading Textures %1 / %2")},
     {VideoCore::LoadCallbackStage::Decompile,
      QT_TRANSLATE_NOOP("LoadingScreen", "Preparing Shaders %1 / %2")},
-    {VideoCore::LoadCallbackStage::Build,
-     QT_TRANSLATE_NOOP("LoadingScreen", "Loading Shaders %1 / %2")},
+    {VideoCore::LoadCallbackStage::Build, QT_TRANSLATE_NOOP("LoadingScreen", "Loading %3 %1 / %2")},
     {VideoCore::LoadCallbackStage::Complete, QT_TRANSLATE_NOOP("LoadingScreen", "Launching...")},
 };
 const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> progressbar_style{
@@ -78,18 +78,6 @@ const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> progr
     {VideoCore::LoadCallbackStage::Build, PROGRESSBAR_STYLE_BUILD},
     {VideoCore::LoadCallbackStage::Complete, PROGRESSBAR_STYLE_COMPLETE},
 };
-
-static QPixmap GetQPixmapFromSMDH(std::vector<u8>& smdh_data) {
-    Loader::SMDH smdh;
-    std::memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
-
-    bool large = true;
-    std::vector<u16> icon_data = smdh.GetIcon(large);
-    const uchar* data = reinterpret_cast<const uchar*>(icon_data.data());
-    int size = large ? 48 : 24;
-    QImage icon(data, size, size, QImage::Format::Format_RGB16);
-    return QPixmap::fromImage(icon);
-}
 
 LoadingScreen::LoadingScreen(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::LoadingScreen>()),
@@ -142,7 +130,7 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     }
     ui->title->setText(tr("Now Loading\n%1").arg(QString::fromStdString(title)));
     eta_shown = false;
-    OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+    OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 }
 
 void LoadingScreen::OnLoadComplete() {
@@ -150,7 +138,7 @@ void LoadingScreen::OnLoadComplete() {
 }
 
 void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value,
-                                   std::size_t total) {
+                                   std::size_t total, const std::string& object) {
     using namespace std::chrono;
     const auto now = high_resolution_clock::now();
     // reset the timer if the stage changes
@@ -195,14 +183,7 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
     }
 
     // update labels and progress bar
-    const auto& stg = tr(stage_translations.at(stage));
-    if (stage == VideoCore::LoadCallbackStage::Decompile ||
-        stage == VideoCore::LoadCallbackStage::Build ||
-        stage == VideoCore::LoadCallbackStage::Preload) {
-        ui->stage->setText(stg.arg(value).arg(total));
-    } else {
-        ui->stage->setText(stg);
-    }
+    ui->stage->setText(GetStageTranslation(stage, value, total, object));
     ui->value->setText(estimate);
     ui->progress_bar->setValue(static_cast<int>(value));
     previous_time = now;
@@ -214,6 +195,19 @@ void LoadingScreen::paintEvent(QPaintEvent* event) {
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
     QWidget::paintEvent(event);
+}
+
+QString LoadingScreen::GetStageTranslation(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                           std::size_t total, const std::string& object) {
+    const auto& stg = tr(stage_translations.at(stage));
+    if (stage == VideoCore::LoadCallbackStage::Build) {
+        return stg.arg(value).arg(total).arg(QString::fromStdString(object));
+    } else if (stage == VideoCore::LoadCallbackStage::Decompile ||
+               stage == VideoCore::LoadCallbackStage::Preload) {
+        return stg.arg(value).arg(total);
+    } else {
+        return stg;
+    }
 }
 
 void LoadingScreen::Clear() {}

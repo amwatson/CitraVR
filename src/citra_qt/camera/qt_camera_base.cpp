@@ -1,8 +1,11 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QCoreApplication>
 #include <QMessageBox>
+#include <QMetaObject>
+#include <QThread>
 #include "citra_qt/camera/camera_util.h"
 #include "citra_qt/camera/qt_camera_base.h"
 #include "common/logging/log.h"
@@ -32,14 +35,23 @@ void QtCameraInterface::SetFlip(Service::CAM::Flip flip) {
 }
 
 void QtCameraInterface::SetEffect(Service::CAM::Effect effect) {
-    if (effect != Service::CAM::Effect::None) {
+    if (effect != Service::CAM::Effect::NoEffect) {
         LOG_ERROR(Service_CAM, "Unimplemented effect {}", static_cast<int>(effect));
     }
 }
 
 std::vector<u16> QtCameraInterface::ReceiveFrame() {
-    return CameraUtil::ProcessImage(QtReceiveFrame(), width, height, output_rgb, flip_horizontal,
-                                    flip_vertical);
+    QImage img;
+    // If executing from Qt thread, call directly as normal
+    if (QThread::currentThread() == QCoreApplication::instance()->thread()) {
+        img = QtReceiveFrame();
+    } else { // If not on Qt thread, switch to Qt thread to call QtReceiveFrame, as calling it from
+             // a different thread will cause deadlocks in msys2 builds
+        QMetaObject::invokeMethod(
+            QCoreApplication::instance(), [&]() { img = QtReceiveFrame(); },
+            Qt::BlockingQueuedConnection);
+    }
+    return CameraUtil::ProcessImage(img, width, height, output_rgb, flip_horizontal, flip_vertical);
 }
 
 std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(const std::string& config,

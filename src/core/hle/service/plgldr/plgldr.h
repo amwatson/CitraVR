@@ -1,6 +1,8 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+
+// Originally MIT-licensed code from The Pixellizer Group
 
 // Copyright 2022 The Pixellizer Group
 //
@@ -33,21 +35,27 @@ namespace Service::PLGLDR {
 
 class PLG_LDR final : public ServiceFramework<PLG_LDR> {
 public:
+    enum class PluginMemoryStrategy : u8 {
+        PLG_STRATEGY_NONE = 2,
+        PLG_STRATEGY_SWAP = 0,
+        PLG_STRATEGY_MODE3 = 1,
+    };
+
     struct PluginLoaderContext {
         struct PluginLoadParameters {
             u8 no_flash = 0;
-            u8 no_IR_Patch = 0;
+            PluginMemoryStrategy plugin_memory_strategy = PluginMemoryStrategy::PLG_STRATEGY_SWAP;
             u32_le low_title_Id = 0;
             char path[256] = {0};
             u32_le config[32] = {0};
 
             template <class Archive>
             void serialize(Archive& ar, const unsigned int) {
-                ar& no_flash;
-                ar& no_IR_Patch;
-                ar& low_title_Id;
-                ar& path;
-                ar& config;
+                ar & no_flash;
+                ar & plugin_memory_strategy;
+                ar & low_title_Id;
+                ar & path;
+                ar & config;
             }
             friend class boost::serialization::access;
         };
@@ -56,6 +64,9 @@ public:
         bool plugin_loaded = false;
         bool is_default_path = false;
         std::string plugin_path = "";
+        u32 plugin_process_id = UINT32_MAX;
+        Kernel::MemoryRegion memory_region{};
+        std::pair<u32, u32> memory_block{};
 
         bool use_user_load_parameters = false;
         PluginLoadParameters user_load_parameters;
@@ -69,8 +80,6 @@ public:
 
         std::vector<u32> load_exe_func;
         u32_le load_exe_args[4] = {0};
-
-        PAddr plugin_fb_addr = 0;
 
         template <class Archive>
         void serialize(Archive& ar, const unsigned int);
@@ -102,12 +111,6 @@ public:
     }
     bool GetAllowGameChangeState() {
         return plgldr_context.allow_game_change;
-    }
-    void SetPluginFBAddr(PAddr addr) {
-        plgldr_context.plugin_fb_addr = addr;
-    }
-    PAddr GetPluginFBAddr() {
-        return plgldr_context.plugin_fb_addr;
     }
 
 private:

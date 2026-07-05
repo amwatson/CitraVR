@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -59,7 +59,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<BackingMem>(*this);
-        ar& data;
+        ar & data;
     }
     friend class boost::serialization::access;
 };
@@ -151,9 +151,11 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& backing_mem;
-        ar& offset;
-        Init();
+        ar & backing_mem;
+        ar & offset;
+        if (Archive::is_loading::value) {
+            Init();
+        }
     }
     friend class boost::serialization::access;
 };

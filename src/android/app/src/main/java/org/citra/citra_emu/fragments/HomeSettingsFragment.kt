@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.widget.doOnTextChanged
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -23,14 +24,19 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.HomeSettingAdapter
+import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentHomeSettingsBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.SettingKeys
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
+import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.model.HomeSetting
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.GameHelper
@@ -77,6 +83,44 @@ class HomeSettingsFragment : Fragment() {
                 { SettingsActivity.launch(requireContext(), SettingsFile.FILE_NAME_CONFIG, "") }
             ),
             HomeSetting(
+                R.string.artic_base_connect,
+                R.string.artic_base_connect_description,
+                R.drawable.ic_network,
+                {
+                    val inflater = LayoutInflater.from(context)
+                    val inputBinding = DialogSoftwareKeyboardBinding.inflate(inflater)
+                    var textInputValue: String = preferences.getString(SettingKeys.last_artic_base_addr(), "")!!
+
+                    inputBinding.editTextInput.setText(textInputValue)
+                    inputBinding.editTextInput.doOnTextChanged { text, _, _, _ ->
+                        textInputValue = text.toString()
+                    }
+
+                    val dialog = context?.let {
+                        MaterialAlertDialogBuilder(it)
+                            .setView(inputBinding.root)
+                            .setTitle(getString(R.string.artic_base_enter_address))
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                if (textInputValue.isNotEmpty()) {
+                                    preferences.edit()
+                                        .putString(SettingKeys.last_artic_base_addr(), textInputValue)
+                                        .apply()
+                                    val menu = Game(
+                                        title = getString(R.string.artic_base),
+                                        path = "articbase://$textInputValue",
+                                        filename = ""
+                                    )
+                                    val action =
+                                        HomeNavigationDirections.actionGlobalEmulationActivity(menu)
+                                    binding.root.findNavController().navigate(action)
+                                }
+                            }
+                            .setNegativeButton(android.R.string.cancel) {_, _ -> }
+                            .show()
+                    }
+                }
+            ),
+            HomeSetting(
                 R.string.install_game_content,
                 R.string.install_game_content_description,
                 R.drawable.ic_install,
@@ -105,7 +149,7 @@ class HomeSettingsFragment : Fragment() {
                 R.string.select_citra_user_folder,
                 R.string.select_citra_user_folder_home_description,
                 R.drawable.ic_home,
-                { mainActivity.openCitraDirectory.launch(null) },
+                { PermissionsHandler.compatibleSelectDirectory(mainActivity.openCitraDirectory) },
                 details = homeViewModel.userDir
             ),
             HomeSetting(
@@ -185,8 +229,8 @@ class HomeSettingsFragment : Fragment() {
             requireContext(),
             PermissionsHandler.citraDirectory
         )?.findFile("log")
-        val currentLog = logDirectory?.findFile("citra_log.txt")
-        val oldLog = logDirectory?.findFile("citra_log.txt.old.txt")
+        val currentLog = logDirectory?.findFile("azahar_log.txt")
+        val oldLog = logDirectory?.findFile("azahar_log.old.txt")
 
         val intent = Intent().apply {
             action = Intent.ACTION_SEND

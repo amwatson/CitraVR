@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,18 +19,19 @@ namespace Service::BOSS {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
-    ar& task_finish_event;
-    ar& new_arrival_flag;
-    ar& ns_data_new_flag;
-    ar& ns_data_new_flag_privileged;
-    ar& output_flag;
+    DEBUG_SERIALIZATION_POINT;
+    ar & task_finish_event;
+    ar & new_arrival_flag;
+    ar & ns_data_new_flag;
+    ar & ns_data_new_flag_privileged;
+    ar & output_flag;
 }
 SERIALIZE_IMPL(Module)
 
 template <class Archive>
 void Module::SessionData::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(*this);
-    ar& online_service;
+    ar & online_service;
 }
 SERIALIZE_IMPL(Module::SessionData)
 

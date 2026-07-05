@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -20,7 +20,7 @@ namespace Vulkan {
 class Instance;
 class Swapchain;
 class Scheduler;
-class RenderpassCache;
+class RenderManager;
 
 struct Frame {
     u32 width;
@@ -37,7 +37,7 @@ struct Frame {
 class PresentWindow final {
 public:
     explicit PresentWindow(Frontend::EmuWindow& emu_window, const Instance& instance,
-                           Scheduler& scheduler);
+                           Scheduler& scheduler, bool low_refresh_rate);
     ~PresentWindow();
 
     /// Waits for all queued frames to finish presenting.
@@ -74,6 +74,7 @@ private:
     Frontend::EmuWindow& emu_window;
     const Instance& instance;
     Scheduler& scheduler;
+    bool low_refresh_rate;
     vk::SurfaceKHR surface;
     vk::SurfaceKHR next_surface{};
     Swapchain swapchain;

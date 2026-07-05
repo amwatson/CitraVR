@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,12 +10,14 @@
 #include <cryptopp/sha.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/patch.h"
 #include "core/file_sys/seed_db.h"
 #include "core/hw/aes/key.h"
+#include "core/hw/unique_data.h"
 #include "core/loader/loader.h"
 
 namespace FileSys {
@@ -112,7 +114,7 @@ static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decomp
 
 NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset, u32 partition)
     : ncch_offset(ncch_offset), partition(partition), filepath(filepath) {
-    file = FileUtil::IOFile(filepath, "rb");
+    file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
 }
 
 Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath_, u32 ncch_offset_,
@@ -120,9 +122,9 @@ Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath_, u32 n
     filepath = filepath_;
     ncch_offset = ncch_offset_;
     partition = partition_;
-    file = FileUtil::IOFile(filepath_, "rb");
+    file = std::make_unique<FileUtil::IOFile>(filepath_, "rb");
 
-    if (!file.IsOpen()) {
+    if (!file->IsOpen()) {
         LOG_WARNING(Service_FS, "Failed to open {}", filepath);
         return Loader::ResultStatus::Error;
     }
@@ -135,33 +137,64 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
     if (has_header) {
         return Loader::ResultStatus::Success;
     }
-    if (!file.IsOpen()) {
+
+    if (!file || !file->IsOpen()) {
         return Loader::ResultStatus::Error;
     }
 
-    // Reset read pointer in case this file has been read before.
-    file.Seek(ncch_offset, SEEK_SET);
-
-    if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header)) {
-        return Loader::ResultStatus::Error;
+    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+        // The file is compressed
+        file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
     }
 
-    // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
-    if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
-        NCSD_Header ncsd_header;
-        file.Seek(ncch_offset, SEEK_SET);
-        file.ReadBytes(&ncsd_header, sizeof(NCSD_Header));
-        ASSERT(Loader::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
-        ASSERT(partition < 8);
-        ncch_offset = ncsd_header.partitions[partition].offset * kBlockSize;
-        LOG_ERROR(Service_FS, "{}", ncch_offset);
-        file.Seek(ncch_offset, SEEK_SET);
-        file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
+    for (int i = 0; i < 2; i++) {
+        if (!file->IsOpen()) {
+            return Loader::ResultStatus::Error;
+        }
+
+        // Reset read pointer in case this file has been read before.
+        file->Seek(ncch_offset, SEEK_SET);
+
+        if (file->ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header)) {
+            return Loader::ResultStatus::Error;
+        }
+
+        // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
+        if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+            is_ncsd = true;
+            NCSD_Header ncsd_header;
+            file->Seek(ncch_offset, SEEK_SET);
+            file->ReadBytes(&ncsd_header, sizeof(NCSD_Header));
+            ASSERT(Loader::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
+            ASSERT(partition < 8);
+            ncch_offset = ncsd_header.partitions[partition].offset * kBlockSize;
+            file->Seek(ncch_offset, SEEK_SET);
+            file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
+        }
+
+        // Verify we are loading the correct file type...
+        if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
+            // We may be loading a crypto file, try again
+            if (i == 0) {
+                file = HW::UniqueData::OpenUniqueCryptoFile(
+                    filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+                if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+                    // The file is compressed
+                    file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
+                }
+            } else {
+                return Loader::ResultStatus::ErrorInvalidFormat;
+            }
+        }
     }
 
-    // Verify we are loading the correct file type...
-    if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
-        return Loader::ResultStatus::ErrorInvalidFormat;
+    if (file->IsCrypto()) {
+        LOG_DEBUG(Service_FS, "NCCH file has console unique crypto");
+    }
+
+    if (!ncch_header.no_crypto) {
+        // Encrypted NCCH are not supported
+        return Loader::ResultStatus::ErrorEncrypted;
     }
 
     has_header = true;
@@ -172,187 +205,94 @@ Loader::ResultStatus NCCHContainer::Load() {
     if (is_loaded)
         return Loader::ResultStatus::Success;
 
-    if (file.IsOpen()) {
-        // Reset read pointer in case this file has been read before.
-        file.Seek(ncch_offset, SEEK_SET);
+    if (!file)
+        return Loader::ResultStatus::Error;
 
-        if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
-            return Loader::ResultStatus::Error;
+    int block_size = kBlockSize;
 
-        // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
-        if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
-            NCSD_Header ncsd_header;
-            file.Seek(ncch_offset, SEEK_SET);
-            file.ReadBytes(&ncsd_header, sizeof(NCSD_Header));
-            ASSERT(Loader::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
-            ASSERT(partition < 8);
-            ncch_offset = ncsd_header.partitions[partition].offset * kBlockSize;
-            file.Seek(ncch_offset, SEEK_SET);
-            file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
+    if (file->IsOpen()) {
+
+        if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+            // The file is compressed
+            file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
         }
 
-        // Verify we are loading the correct file type...
-        if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic)
-            return Loader::ResultStatus::ErrorInvalidFormat;
-
-        has_header = true;
-        bool failed_to_decrypt = false;
-        if (!ncch_header.no_crypto) {
-            is_encrypted = true;
-
-            // Find primary and secondary keys
-            if (ncch_header.fixed_key) {
-                LOG_DEBUG(Service_FS, "Fixed-key crypto");
-                primary_key.fill(0);
-                secondary_key.fill(0);
-            } else {
-                using namespace HW::AES;
-                InitKeys();
-                std::array<u8, 16> key_y_primary, key_y_secondary;
-
-                std::copy(ncch_header.signature, ncch_header.signature + key_y_primary.size(),
-                          key_y_primary.begin());
-
-                if (!ncch_header.seed_crypto) {
-                    key_y_secondary = key_y_primary;
-                } else {
-                    auto opt{FileSys::GetSeed(ncch_header.program_id)};
-                    if (!opt.has_value()) {
-                        LOG_ERROR(Service_FS, "Seed for program {:016X} not found",
-                                  ncch_header.program_id);
-                        failed_to_decrypt = true;
-                    } else {
-                        auto seed{*opt};
-                        std::array<u8, 32> input;
-                        std::memcpy(input.data(), key_y_primary.data(), key_y_primary.size());
-                        std::memcpy(input.data() + key_y_primary.size(), seed.data(), seed.size());
-                        CryptoPP::SHA256 sha;
-                        std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;
-                        sha.CalculateDigest(hash.data(), input.data(), input.size());
-                        std::memcpy(key_y_secondary.data(), hash.data(), key_y_secondary.size());
-                    }
-                }
-
-                SetKeyY(KeySlotID::NCCHSecure1, key_y_primary);
-                if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure1)) {
-                    LOG_ERROR(Service_FS, "Secure1 KeyX missing");
-                    failed_to_decrypt = true;
-                }
-                primary_key = GetNormalKey(KeySlotID::NCCHSecure1);
-
-                switch (ncch_header.secondary_key_slot) {
-                case 0:
-                    LOG_DEBUG(Service_FS, "Secure1 crypto");
-                    SetKeyY(KeySlotID::NCCHSecure1, key_y_secondary);
-                    if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure1)) {
-                        LOG_ERROR(Service_FS, "Secure1 KeyX missing");
-                        failed_to_decrypt = true;
-                    }
-                    secondary_key = GetNormalKey(KeySlotID::NCCHSecure1);
-                    break;
-                case 1:
-                    LOG_DEBUG(Service_FS, "Secure2 crypto");
-                    SetKeyY(KeySlotID::NCCHSecure2, key_y_secondary);
-                    if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure2)) {
-                        LOG_ERROR(Service_FS, "Secure2 KeyX missing");
-                        failed_to_decrypt = true;
-                    }
-                    secondary_key = GetNormalKey(KeySlotID::NCCHSecure2);
-                    break;
-                case 10:
-                    LOG_DEBUG(Service_FS, "Secure3 crypto");
-                    SetKeyY(KeySlotID::NCCHSecure3, key_y_secondary);
-                    if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure3)) {
-                        LOG_ERROR(Service_FS, "Secure3 KeyX missing");
-                        failed_to_decrypt = true;
-                    }
-                    secondary_key = GetNormalKey(KeySlotID::NCCHSecure3);
-                    break;
-                case 11:
-                    LOG_DEBUG(Service_FS, "Secure4 crypto");
-                    SetKeyY(KeySlotID::NCCHSecure4, key_y_secondary);
-                    if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure4)) {
-                        LOG_ERROR(Service_FS, "Secure4 KeyX missing");
-                        failed_to_decrypt = true;
-                    }
-                    secondary_key = GetNormalKey(KeySlotID::NCCHSecure4);
-                    break;
-                }
-            }
-
-            // Find CTR for each section
-            // Written with reference to
-            // https://github.com/d0k3/GodMode9/blob/99af6a73be48fa7872649aaa7456136da0df7938/arm9/source/game/ncch.c#L34-L52
-            if (ncch_header.version == 0 || ncch_header.version == 2) {
-                LOG_DEBUG(Loader, "NCCH version 0/2");
-                // In this version, CTR for each section is a magic number prefixed by partition ID
-                // (reverse order)
-                std::reverse_copy(ncch_header.partition_id, ncch_header.partition_id + 8,
-                                  exheader_ctr.begin());
-                exefs_ctr = romfs_ctr = exheader_ctr;
-                exheader_ctr[8] = 1;
-                exefs_ctr[8] = 2;
-                romfs_ctr[8] = 3;
-            } else if (ncch_header.version == 1) {
-                LOG_DEBUG(Loader, "NCCH version 1");
-                // In this version, CTR for each section is the section offset prefixed by partition
-                // ID, as if the entire NCCH image is encrypted using a single CTR stream.
-                std::copy(ncch_header.partition_id, ncch_header.partition_id + 8,
-                          exheader_ctr.begin());
-                exefs_ctr = romfs_ctr = exheader_ctr;
-                auto u32ToBEArray = [](u32 value) -> std::array<u8, 4> {
-                    return std::array<u8, 4>{
-                        static_cast<u8>(value >> 24),
-                        static_cast<u8>((value >> 16) & 0xFF),
-                        static_cast<u8>((value >> 8) & 0xFF),
-                        static_cast<u8>(value & 0xFF),
-                    };
-                };
-                auto offset_exheader = u32ToBEArray(0x200); // exheader offset
-                auto offset_exefs = u32ToBEArray(ncch_header.exefs_offset * kBlockSize);
-                auto offset_romfs = u32ToBEArray(ncch_header.romfs_offset * kBlockSize);
-                std::copy(offset_exheader.begin(), offset_exheader.end(),
-                          exheader_ctr.begin() + 12);
-                std::copy(offset_exefs.begin(), offset_exefs.end(), exefs_ctr.begin() + 12);
-                std::copy(offset_romfs.begin(), offset_romfs.end(), romfs_ctr.begin() + 12);
-            } else {
-                LOG_ERROR(Service_FS, "Unknown NCCH version {}", ncch_header.version);
-                failed_to_decrypt = true;
-            }
-        } else {
-            LOG_DEBUG(Service_FS, "No crypto");
-            is_encrypted = false;
-        }
-
-        // System archives and DLC don't have an extended header but have RomFS
-        if (ncch_header.extended_header_size) {
-            auto read_exheader = [this](FileUtil::IOFile& file) {
-                const std::size_t size = sizeof(exheader_header);
-                return file && file.ReadBytes(&exheader_header, size) == size;
-            };
-
-            if (!read_exheader(file)) {
+        size_t file_size;
+        for (int i = 0; i < 2; i++) {
+            if (!file->IsOpen()) {
                 return Loader::ResultStatus::Error;
             }
 
-            if (is_encrypted) {
-                // This ID check is masked to low 32-bit as a toleration to ill-formed ROM created
-                // by merging games and its updates.
-                if ((exheader_header.system_info.jump_id & 0xFFFFFFFF) ==
-                    (ncch_header.program_id & 0xFFFFFFFF)) {
-                    LOG_WARNING(Service_FS, "NCCH is marked as encrypted but with decrypted "
-                                            "exheader. Force no crypto scheme.");
-                    is_encrypted = false;
-                } else {
-                    if (failed_to_decrypt) {
-                        LOG_ERROR(Service_FS, "Failed to decrypt");
-                        return Loader::ResultStatus::ErrorEncrypted;
+            file_size = file->GetSize();
+
+            // Reset read pointer in case this file has been read before.
+            file->Seek(ncch_offset, SEEK_SET);
+
+            if (file->ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
+                return Loader::ResultStatus::Error;
+
+            // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
+            if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+                is_ncsd = true;
+                NCSD_Header ncsd_header;
+                file->Seek(ncch_offset, SEEK_SET);
+                file->ReadBytes(&ncsd_header, sizeof(NCSD_Header));
+                ASSERT(Loader::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
+                ASSERT(partition < 8);
+                ncch_offset = ncsd_header.partitions[partition].offset * kBlockSize;
+                file->Seek(ncch_offset, SEEK_SET);
+                file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
+            }
+
+            // Verify we are loading the correct file type...
+            if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
+                // We may be loading a crypto file, try again
+                if (i == 0) {
+                    file = HW::UniqueData::OpenUniqueCryptoFile(
+                        filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+                    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) !=
+                        std::nullopt) {
+                        // The file is compressed
+                        file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
                     }
-                    CryptoPP::byte* data = reinterpret_cast<CryptoPP::byte*>(&exheader_header);
-                    CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption(
-                        primary_key.data(), primary_key.size(), exheader_ctr.data())
-                        .ProcessData(data, data, sizeof(exheader_header));
+                } else {
+                    return Loader::ResultStatus::ErrorInvalidFormat;
                 }
+            } else {
+                break;
+            }
+        }
+
+        if (file->IsCrypto()) {
+            LOG_DEBUG(Service_FS, "NCCH file has console unique crypto");
+        }
+        if (file->IsCompressed()) {
+            LOG_DEBUG(Service_FS, "NCCH file is compressed");
+        }
+
+        has_header = true;
+
+        if (ncch_header.content_size == file_size) {
+            // The NCCH is a proto version, which does not use media size units
+            is_proto = true;
+            block_size = 1;
+        }
+
+        if (!ncch_header.no_crypto) {
+            // Encrypted NCCH are not supported
+            return Loader::ResultStatus::ErrorEncrypted;
+        }
+
+        // System archives and DLC don't have an extended header but have RomFS
+        // Proto apps don't have an ext header size
+        if (ncch_header.extended_header_size || is_proto) {
+            auto read_exheader = [this](FileUtil::IOFile* file) {
+                const std::size_t size = sizeof(exheader_header);
+                return file && file->ReadBytes(&exheader_header, size) == size;
+            };
+
+            if (!read_exheader(file.get())) {
+                return Loader::ResultStatus::Error;
             }
 
             const auto mods_path =
@@ -366,7 +306,7 @@ Loader::ResultStatus NCCHContainer::Load() {
             bool has_exheader_override = false;
             for (const auto& path : exheader_override_paths) {
                 FileUtil::IOFile exheader_override_file{path, "rb"};
-                if (read_exheader(exheader_override_file)) {
+                if (read_exheader(&exheader_override_file)) {
                     has_exheader_override = true;
                     break;
                 }
@@ -378,6 +318,11 @@ Loader::ResultStatus NCCHContainer::Load() {
                                             "The override exheader might not be decrypted.");
                 }
                 is_tainted = true;
+            }
+
+            if (is_proto) {
+                exheader_header.arm11_system_local_caps.priority = 0x30;
+                exheader_header.arm11_system_local_caps.resource_limit_category = 0;
             }
 
             is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
@@ -409,24 +354,18 @@ Loader::ResultStatus NCCHContainer::Load() {
 
         // DLC can have an ExeFS and a RomFS but no extended header
         if (ncch_header.exefs_size) {
-            exefs_offset = ncch_header.exefs_offset * kBlockSize;
-            u32 exefs_size = ncch_header.exefs_size * kBlockSize;
+            exefs_offset = ncch_header.exefs_offset * block_size;
+            u32 exefs_size = ncch_header.exefs_size * block_size;
 
             LOG_DEBUG(Service_FS, "ExeFS offset:                0x{:08X}", exefs_offset);
             LOG_DEBUG(Service_FS, "ExeFS size:                  0x{:08X}", exefs_size);
 
-            file.Seek(exefs_offset + ncch_offset, SEEK_SET);
-            if (file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
+            file->Seek(exefs_offset + ncch_offset, SEEK_SET);
+            if (file->ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
                 return Loader::ResultStatus::Error;
 
-            if (is_encrypted) {
-                CryptoPP::byte* data = reinterpret_cast<CryptoPP::byte*>(&exefs_header);
-                CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption(primary_key.data(),
-                                                              primary_key.size(), exefs_ctr.data())
-                    .ProcessData(data, data, sizeof(exefs_header));
-            }
+            exefs_file = Reopen(file, filepath);
 
-            exefs_file = FileUtil::IOFile(filepath, "rb");
             has_exefs = true;
         }
 
@@ -455,15 +394,15 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
     std::string exefs_override = filepath + ".exefs";
     std::string exefsdir_override = filepath + ".exefsdir/";
     if (FileUtil::Exists(exefs_override)) {
-        exefs_file = FileUtil::IOFile(exefs_override, "rb");
+        exefs_file = std::make_unique<FileUtil::IOFile>(exefs_override, "rb");
 
-        if (exefs_file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) == sizeof(ExeFs_Header)) {
+        if (exefs_file->ReadBytes(&exefs_header, sizeof(ExeFs_Header)) == sizeof(ExeFs_Header)) {
             LOG_DEBUG(Service_FS, "Loading ExeFS section from {}", exefs_override);
             exefs_offset = 0;
             is_tainted = true;
             has_exefs = true;
         } else {
-            exefs_file = FileUtil::IOFile(filepath, "rb");
+            exefs_file = Reopen(file, filepath);
         }
     } else if (FileUtil::Exists(exefsdir_override) && FileUtil::IsDirectory(exefsdir_override)) {
         is_tainted = true;
@@ -482,6 +421,29 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     if (result != Loader::ResultStatus::Success)
         return result;
 
+    int block_size = is_proto ? 1 : kBlockSize;
+
+    // Proto has a different exefs format
+    if (std::strcmp(name, ".code") == 0 && is_proto) {
+        std::vector<u8> ro;
+        std::vector<u8> rw;
+        auto res = LoadSectionExeFS(".text", buffer);
+        if (res != Loader::ResultStatus::Success) {
+            return res;
+        }
+        res = LoadSectionExeFS(".ro", ro);
+        if (res != Loader::ResultStatus::Success) {
+            return res;
+        }
+        res = LoadSectionExeFS(".rw", rw);
+        if (res != Loader::ResultStatus::Success) {
+            return res;
+        }
+        buffer.insert(buffer.end(), ro.begin(), ro.end());
+        buffer.insert(buffer.end(), rw.begin(), rw.end());
+        return res;
+    }
+
     // Check if we have files that can drop-in and replace
     result = LoadOverrideExeFSSection(name, buffer);
     if (result == Loader::ResultStatus::Success || !has_exefs)
@@ -491,13 +453,13 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     // instead of the ExeFS.
     if (std::strcmp(name, "logo") == 0) {
         if (ncch_header.logo_region_offset && ncch_header.logo_region_size) {
-            std::size_t logo_offset = ncch_header.logo_region_offset * kBlockSize;
-            std::size_t logo_size = ncch_header.logo_region_size * kBlockSize;
+            std::size_t logo_offset = ncch_header.logo_region_offset * block_size;
+            std::size_t logo_size = ncch_header.logo_region_size * block_size;
 
             buffer.resize(logo_size);
-            file.Seek(ncch_offset + logo_offset, SEEK_SET);
+            file->Seek(ncch_offset + logo_offset, SEEK_SET);
 
-            if (file.ReadBytes(buffer.data(), logo_size) != logo_size) {
+            if (file->ReadBytes(buffer.data(), logo_size) != logo_size) {
                 LOG_ERROR(Service_FS, "Could not read NCCH logo");
                 return Loader::ResultStatus::Error;
             }
@@ -508,7 +470,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     }
 
     // If we don't have any separate files, we'll need a full ExeFS
-    if (!exefs_file.IsOpen())
+    if (!exefs_file->IsOpen())
         return Loader::ResultStatus::Error;
 
     LOG_DEBUG(Service_FS, "{} sections:", kMaxSections);
@@ -522,30 +484,18 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                       section.offset, section.size, section.name);
 
             s64 section_offset =
-                (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
-            exefs_file.Seek(section_offset, SEEK_SET);
+                is_proto ? section.offset
+                         : (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
+            exefs_file->Seek(section_offset, SEEK_SET);
 
-            std::array<u8, 16> key;
-            if (strcmp(section.name, "icon") == 0 || strcmp(section.name, "banner") == 0) {
-                key = primary_key;
-            } else {
-                key = secondary_key;
-            }
-
-            CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption dec(key.data(), key.size(),
-                                                              exefs_ctr.data());
-            dec.Seek(section.offset + sizeof(ExeFs_Header));
+            size_t section_size = is_proto ? Common::AlignUp(section.size, 0x10) : section.size;
 
             if (strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
-                std::vector<u8> temp_buffer(section.size);
-                if (exefs_file.ReadBytes(temp_buffer.data(), temp_buffer.size()) !=
+                std::vector<u8> temp_buffer(section_size);
+                if (exefs_file->ReadBytes(temp_buffer.data(), temp_buffer.size()) !=
                     temp_buffer.size())
                     return Loader::ResultStatus::Error;
-
-                if (is_encrypted) {
-                    dec.ProcessData(&temp_buffer[0], &temp_buffer[0], section.size);
-                }
 
                 // Decompress .code section...
                 buffer.resize(LZSS_GetDecompressedSize(temp_buffer));
@@ -554,12 +504,9 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                 }
             } else {
                 // Section is uncompressed...
-                buffer.resize(section.size);
-                if (exefs_file.ReadBytes(buffer.data(), section.size) != section.size)
+                buffer.resize(section_size);
+                if (exefs_file->ReadBytes(buffer.data(), section_size) != section_size)
                     return Loader::ResultStatus::Error;
-                if (is_encrypted) {
-                    dec.ProcessData(buffer.data(), buffer.data(), section.size);
-                }
             }
 
             return Loader::ResultStatus::Success;
@@ -571,17 +518,32 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
     struct PatchLocation {
         std::string path;
-        bool (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
+        Loader::ResultStatus (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
     };
 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     GetModId(ncch_header.program_id));
-    const std::array<PatchLocation, 6> patch_paths{{
+
+    constexpr u32 system_module_tid_high = 0x00040130;
+
+    std::string luma_ips_location;
+    if ((static_cast<u32>(ncch_header.program_id >> 32) & system_module_tid_high) ==
+        system_module_tid_high) {
+        luma_ips_location =
+            fmt::format("{}luma/sysmodules/{:016X}.ips",
+                        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir), ncch_header.program_id);
+    } else {
+        luma_ips_location =
+            fmt::format("{}luma/titles/{:016X}/code.ips",
+                        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir), ncch_header.program_id);
+    }
+    const std::array<PatchLocation, 7> patch_paths{{
         {mods_path + "exefs/code.ips", Patch::ApplyIpsPatch},
         {mods_path + "exefs/code.bps", Patch::ApplyBpsPatch},
         {mods_path + "code.ips", Patch::ApplyIpsPatch},
         {mods_path + "code.bps", Patch::ApplyBpsPatch},
+        {luma_ips_location, Patch::ApplyIpsPatch},
         {filepath + ".exefsdir/code.ips", Patch::ApplyIpsPatch},
         {filepath + ".exefsdir/code.bps", Patch::ApplyBpsPatch},
     }};
@@ -593,11 +555,12 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
 
         std::vector<u8> patch(patch_file.GetSize());
         if (patch_file.ReadBytes(patch.data(), patch.size()) != patch.size())
-            return Loader::ResultStatus::Error;
+            return Loader::ResultStatus::ErrorPatches;
 
         LOG_INFO(Service_FS, "File {} patching code.bin", info.path);
-        if (!info.patch_fn(patch, code))
-            return Loader::ResultStatus::Error;
+        auto patch_result = info.patch_fn(patch, code);
+        if (patch_result != Loader::ResultStatus::Success)
+            return patch_result;
 
         return Loader::ResultStatus::Success;
     }
@@ -652,6 +615,8 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
     if (result != Loader::ResultStatus::Success)
         return result;
 
+    int block_size = is_proto ? 1 : kBlockSize;
+
     if (ReadOverrideRomFS(romfs_file) == Loader::ResultStatus::Success)
         return Loader::ResultStatus::Success;
 
@@ -660,37 +625,32 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
         return Loader::ResultStatus::ErrorNotUsed;
     }
 
-    if (!file.IsOpen())
+    if (!file || !file->IsOpen())
         return Loader::ResultStatus::Error;
 
-    u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
-    u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
+    u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * block_size) + 0x1000;
+    u32 romfs_size = (ncch_header.romfs_size * block_size) - 0x1000;
 
     LOG_DEBUG(Service_FS, "RomFS offset:           0x{:08X}", romfs_offset);
     LOG_DEBUG(Service_FS, "RomFS size:             0x{:08X}", romfs_size);
 
-    if (file.GetSize() < romfs_offset + romfs_size)
+    if (file->GetSize() < romfs_offset + romfs_size)
         return Loader::ResultStatus::Error;
 
     // We reopen the file, to allow its position to be independent from file's
-    FileUtil::IOFile romfs_file_inner(filepath, "rb");
-    if (!romfs_file_inner.IsOpen())
+    std::unique_ptr<FileUtil::IOFile> romfs_file_inner;
+    romfs_file_inner = Reopen(file, filepath);
+
+    if (!romfs_file_inner->IsOpen())
         return Loader::ResultStatus::Error;
 
-    std::shared_ptr<RomFSReader> direct_romfs;
-    if (is_encrypted) {
-        direct_romfs =
-            std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner), romfs_offset,
-                                                romfs_size, secondary_key, romfs_ctr, 0x1000);
-    } else {
-        direct_romfs = std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner),
-                                                           romfs_offset, romfs_size);
-    }
+    std::shared_ptr<RomFSReader> direct_romfs =
+        std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner), romfs_offset, romfs_size);
 
     const auto path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     GetModId(ncch_header.program_id));
-    if (use_layered_fs &&
+    if (!is_proto && use_layered_fs &&
         (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/"))) {
 
         romfs_file = std::make_shared<LayeredFS>(std::move(direct_romfs), path + "romfs/",
@@ -703,6 +663,9 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
 }
 
 Loader::ResultStatus NCCHContainer::DumpRomFS(const std::string& target_path) {
+    if (file->IsCrypto())
+        return Loader::ResultStatus::ErrorEncrypted;
+
     std::shared_ptr<RomFSReader> direct_romfs;
     Loader::ResultStatus result = ReadRomFS(direct_romfs, false);
     if (result != Loader::ResultStatus::Success)
@@ -721,12 +684,13 @@ Loader::ResultStatus NCCHContainer::ReadOverrideRomFS(std::shared_ptr<RomFSReade
     // Check for RomFS overrides
     std::string split_filepath = filepath + ".romfs";
     if (FileUtil::Exists(split_filepath)) {
-        FileUtil::IOFile romfs_file_inner(split_filepath, "rb");
-        if (romfs_file_inner.IsOpen()) {
+        std::unique_ptr<FileUtil::IOFile> romfs_file_inner =
+            std::make_unique<FileUtil::IOFile>(split_filepath, "rb");
+        if (romfs_file_inner->IsOpen()) {
             LOG_WARNING(Service_FS, "File {} overriding built-in RomFS; LayeredFS not enabled",
                         split_filepath);
             romfs_file = std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner), 0,
-                                                             romfs_file_inner.GetSize());
+                                                             romfs_file_inner->GetSize());
             return Loader::ResultStatus::Success;
         }
     }
@@ -803,6 +767,29 @@ bool NCCHContainer::HasExHeader() {
         return false;
 
     return has_exheader;
+}
+
+std::unique_ptr<FileUtil::IOFile> NCCHContainer::Reopen(
+    const std::unique_ptr<FileUtil::IOFile>& orig_file, const std::string& new_filename) {
+    if (!orig_file)
+        return nullptr;
+
+    const bool is_compressed = orig_file->IsCompressed();
+    const bool is_crypto = orig_file->IsCrypto();
+    const std::string filename = new_filename.empty() ? orig_file->Filename() : new_filename;
+
+    std::unique_ptr<FileUtil::IOFile> out_file;
+    if (is_crypto) {
+        out_file = HW::UniqueData::OpenUniqueCryptoFile(filename, "rb",
+                                                        HW::UniqueData::UniqueCryptoFileID::NCCH);
+    } else {
+        out_file = std::make_unique<FileUtil::IOFile>(filename, "rb");
+    }
+    if (is_compressed) {
+        out_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(out_file));
+    }
+
+    return out_file;
 }
 
 } // namespace FileSys

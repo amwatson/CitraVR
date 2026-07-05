@@ -1,14 +1,11 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include "common/math_util.h"
-
-namespace Settings {
-enum class LayoutOption : u32;
-}
+#include "common/settings.h"
 
 namespace Layout {
 
@@ -18,31 +15,6 @@ enum class DisplayOrientation {
     Portrait,         // 3DS rotated 90 degrees counter-clockwise
     LandscapeFlipped, // 3DS rotated 180 degrees counter-clockwise
     PortraitFlipped,  // 3DS rotated 270 degrees counter-clockwise
-};
-
-/// Describes the vertical alignment of the top and bottom screens in LargeFrameLayout
-/// Top
-/// +-------------+-----+
-/// |             |     |
-/// |             +-----+
-/// |             |
-/// +-------------+
-/// Middle
-/// +-------------+
-/// |             +-----+
-/// |             |     |
-/// |             +-----+
-/// +-------------+
-/// Bottom
-/// +-------------+
-/// |             |
-/// |             +-----+
-/// |             |     |
-/// +-------------+-----+
-enum class VerticalAlignment {
-    Top,
-    Middle,
-    Bottom,
 };
 
 /// Describes the horizontal coordinates for the right eye screen when using Cardboard VR
@@ -61,8 +33,10 @@ struct FramebufferLayout {
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bottom_screen;
     bool is_rotated = true;
-
+    bool is_portrait = false;
     bool additional_screen_enabled;
+    float top_opacity = 1.0f;
+    float bottom_opacity = 1.0f;
     Common::Rectangle<u32> additional_screen;
 
     CardboardSettings cardboard;
@@ -72,10 +46,19 @@ struct FramebufferLayout {
      * screen.
      */
     u32 GetScalingRatio() const;
+
+    static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
+
+    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 };
 
 /**
- * Factory method for constructing a default FramebufferLayout
+ * Method to create a rotated copy of a framebuffer layout, used to rotate to upright mode
+ */
+FramebufferLayout reverseLayout(FramebufferLayout layout);
+
+/**
+ * Factory method for constructing a default FramebufferLayout with screens on top of one another
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
@@ -85,13 +68,26 @@ struct FramebufferLayout {
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
 
 /**
- * Factory method for constructing a mobile portrait FramebufferLayout
+ * Factory method for constructing the mobile Full Width (Default) layout
+ * Two screens at top, full width (so different heights)
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
  */
-FramebufferLayout MobilePortraitFrameLayout(u32 width, u32 height, bool is_swapped);
+FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swapped,
+                                             bool upright = false);
+
+/**
+ * Factory method for constructing the mobile Original layout
+ * Two screens at top, equal heights
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be displayed above the top screen
+ * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
+ */
+FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped,
+                                         bool upright = false);
 
 /**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen
@@ -104,9 +100,7 @@ FramebufferLayout MobilePortraitFrameLayout(u32 width, u32 height, bool is_swapp
 FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
 
 /**
- * Factory method for constructing a Frame with the a 4x size Top screen with a 1x size bottom
- * screen on the right
- * This is useful in particular because it matches well with a 1920x1080 resolution monitor
+ * Factory method for constructing a Frame with differently sized top and bottom windows
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be the large display
@@ -117,7 +111,8 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_swapped, bool
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, bool upright,
-                                   float scale_factor, VerticalAlignment vertical_alignment);
+                                   float scale_factor,
+                                   Settings::SmallScreenPosition small_screen_position);
 /**
  * Factory method for constructing a frame with 2.5 times bigger top screen on the right,
  * and 1x top and bottom screen on the left
@@ -125,6 +120,9 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, bool 
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be the large display
  * @param upright if true, the screens will be rotated 90 degrees anti-clockwise
+ * @param scale_factor determines the proportion of large to small. Must be >= 1
+ * @param small_screen_position determines where the small screen appears relative to the large
+ * screen
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool upright);
@@ -140,19 +138,30 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
 FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright);
 
 /**
+ * Method for constructing the secondary layout for Android, based on
+ * the appropriate setting.
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ */
+FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height);
+
+/**
  * Factory method for constructing a custom FramebufferLayout
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped);
+FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped,
+                                    bool is_portrait_mode = false);
 
 /**
  * Convenience method to get frame layout by resolution scale
  * Read from the current settings to determine which layout to use.
  * @param res_scale resolution scale factor
+ * @param is_portrait_mode defaults to false
  */
-FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary = false);
+FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary = false,
+                                                 bool is_portrait_mode = false);
 
 /**
  * Convenience method for transforming a frame layout when using Cardboard VR
@@ -163,5 +172,7 @@ FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout);
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
                                                        bool upright_screen);
+
+std::pair<unsigned, unsigned> GetMinimumSizeFromPortraitLayout();
 
 } // namespace Layout

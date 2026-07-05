@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,9 +26,9 @@ struct FriendKey {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& friend_id;
-        ar& unknown;
-        ar& friend_code;
+        ar & friend_id;
+        ar & unknown;
+        ar & friend_code;
     }
     friend class boost::serialization::access;
 };
@@ -39,7 +39,7 @@ struct MyPresence {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& unknown;
+        ar & unknown;
     }
     friend class boost::serialization::access;
 };
@@ -59,19 +59,19 @@ struct Game {
     u16 version;
     INSERT_PADDING_BYTES(0x6);
 };
-static_assert(sizeof(Game) == 0x10, "Game has inccorect size");
+static_assert(sizeof(Game) == 0x10, "Game has incorrect size");
 
 struct ScreenName {
     // 20 bytes according to 3dbrew
     std::array<char16_t, 10> name;
 };
-static_assert(sizeof(ScreenName) == 0x14, "ScreenName has inccorect size");
+static_assert(sizeof(ScreenName) == 0x14, "ScreenName has incorrect size");
 
 struct Comment {
     // 32 bytes according to 3dbrew
     std::array<char16_t, 16> name;
 };
-static_assert(sizeof(Comment) == 0x20, "Comment has inccorect size");
+static_assert(sizeof(Comment) == 0x20, "Comment has incorrect size");
 
 class Module final {
 public:
@@ -271,9 +271,10 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& my_friend_key;
-        ar& my_presence;
-        ar& logged_in;
+        DEBUG_SERIALIZATION_POINT;
+        ar & my_friend_key;
+        ar & my_presence;
+        ar & logged_in;
     }
     friend class boost::serialization::access;
 };

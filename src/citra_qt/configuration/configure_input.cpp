@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,7 @@
 #include "citra_qt/configuration/configure_input.h"
 #include "citra_qt/configuration/configure_motion_touch.h"
 #include "common/param_package.h"
+#include "core/core.h"
 #include "ui_configure_input.h"
 
 const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
@@ -24,6 +25,10 @@ const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
         "down",
         "left",
         "right",
+        "up_left",
+        "up_right",
+        "down_left",
+        "down_right",
         "modifier",
     }};
 
@@ -32,6 +37,10 @@ enum class AnalogSubButtons {
     down,
     left,
     right,
+    up_left,
+    up_right,
+    down_left,
+    down_right,
     modifier,
 };
 
@@ -145,8 +154,8 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
     return QObject::tr("[unknown]");
 }
 
-ConfigureInput::ConfigureInput(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
+ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
+    : QWidget(parent), system(_system), ui(std::make_unique<Ui::ConfigureInput>()),
       timeout_timer(std::make_unique<QTimer>()), poll_timer(std::make_unique<QTimer>()) {
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
@@ -171,6 +180,10 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             ui->buttonCircleDown,
             ui->buttonCircleLeft,
             ui->buttonCircleRight,
+            ui->buttonCircleUpLeft,
+            ui->buttonCircleUpRight,
+            ui->buttonCircleDownLeft,
+            ui->buttonCircleDownRight,
             nullptr,
         },
         {
@@ -178,6 +191,10 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             ui->buttonCStickDown,
             ui->buttonCStickLeft,
             ui->buttonCStickRight,
+            ui->buttonCStickUpLeft,
+            ui->buttonCStickUpRight,
+            ui->buttonCStickDownLeft,
+            ui->buttonCStickDownRight,
             nullptr,
         },
     }};
@@ -227,8 +244,9 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.addAction(tr("Restore Default"), this, [&] {
-                        buttons_param[button_id] = Common::ParamPackage{
-                            InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
+                        buttons_param[button_id] =
+                            Common::ParamPackage{InputCommon::GenerateKeyboardParam(
+                                QtConfig::default_buttons[button_id])};
                         button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
                         ApplyConfiguration();
                         Settings::SaveProfile(ui->profile->currentIndex());
@@ -267,7 +285,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         });
                         context_menu.addAction(tr("Restore Default"), this, [&] {
                             Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
-                                Config::default_analogs[analog_id][sub_button_id])};
+                                QtConfig::default_analogs[analog_id][sub_button_id])};
                             SetAnalogButton(params, analogs_param[analog_id],
                                             analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
@@ -346,8 +364,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
                          analog_id++) {
                         Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
-                            Config::default_analogs[analog_id]
-                                                   [static_cast<u32>(AnalogSubButtons::modifier)])};
+                            QtConfig::default_analogs[analog_id][static_cast<u32>(
+                                AnalogSubButtons::modifier)])};
                         SetAnalogButton(params, analogs_param[analog_id], "modifier");
                         ui->buttonCircleMod->setText(
                             AnalogToText(analogs_param[analog_id], "modifier"));
@@ -359,8 +377,10 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             });
 
     connect(ui->buttonMotionTouch, &QPushButton::clicked, this, [this] {
+        ui->buttonMotionTouch->setEnabled(false);
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
-        return motion_touch_dialog->exec();
+        motion_touch_dialog->exec();
+        ui->buttonMotionTouch->setEnabled(true);
     });
 
     ui->buttonDelete->setEnabled(ui->profile->count() > 1);
@@ -400,6 +420,9 @@ ConfigureInput::ConfigureInput(QWidget* parent)
 ConfigureInput::~ConfigureInput() = default;
 
 void ConfigureInput::ApplyConfiguration() {
+
+    Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
+
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
@@ -444,6 +467,10 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 }
 
 void ConfigureInput::LoadConfiguration() {
+
+    ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
+    ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
+
     std::transform(Settings::values.current_input_profile.buttons.begin(),
                    Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
@@ -456,16 +483,14 @@ void ConfigureInput::LoadConfiguration() {
 void ConfigureInput::RestoreDefaults() {
     for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
         buttons_param[button_id] = Common::ParamPackage{
-            InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
+            InputCommon::GenerateKeyboardParam(QtConfig::default_buttons[button_id])};
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
-        for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
-                Config::default_analogs[analog_id][sub_button_id])};
-            SetAnalogButton(params, analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
-        }
-        analogs_param[analog_id].Set("modifier_scale", 0.5f);
+        analogs_param[analog_id] = Common::ParamPackage{InputCommon::GenerateAnalogParamFromKeys(
+            QtConfig::default_analogs[analog_id][0], QtConfig::default_analogs[analog_id][1],
+            QtConfig::default_analogs[analog_id][2], QtConfig::default_analogs[analog_id][3],
+            QtConfig::default_analogs[analog_id][4], 0.5f)};
     }
     UpdateButtonLabels();
 
@@ -557,9 +582,11 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
 }
 
 void ConfigureInput::AutoMap() {
+    ui->buttonAutoMap->setEnabled(false);
     if (QMessageBox::information(this, tr("Information"),
                                  tr("After pressing OK, press any button on your joystick"),
                                  QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        ui->buttonAutoMap->setEnabled(true);
         return;
     }
     input_setter = [this](const Common::ParamPackage& params) {
@@ -574,6 +601,7 @@ void ConfigureInput::AutoMap() {
     }
     timeout_timer->start(5000); // Cancel after 5 seconds
     poll_timer->start(200);     // Check for new inputs every 200ms
+    ui->buttonAutoMap->setEnabled(true);
 }
 
 void ConfigureInput::HandleClick(QPushButton* button,
@@ -648,13 +676,16 @@ void ConfigureInput::RetranslateUI() {
 }
 
 void ConfigureInput::NewProfile() {
+    ui->buttonNew->setEnabled(false);
     const QString name =
         QInputDialog::getText(this, tr("New Profile"), tr("Enter the name for the new profile."));
     if (name.isEmpty()) {
+        ui->buttonNew->setEnabled(true);
         return;
     }
     if (IsProfileNameDuplicate(name)) {
         WarnProposedProfileNameIsDuplicate();
+        ui->buttonNew->setEnabled(true);
         return;
     }
 
@@ -665,12 +696,15 @@ void ConfigureInput::NewProfile() {
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
     LoadConfiguration();
     ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+    ui->buttonNew->setEnabled(true);
 }
 
 void ConfigureInput::DeleteProfile() {
+    ui->buttonDelete->setEnabled(false);
     const auto answer = QMessageBox::question(
         this, tr("Delete Profile"), tr("Delete profile %1?").arg(ui->profile->currentText()));
     if (answer != QMessageBox::Yes) {
+        ui->buttonDelete->setEnabled(true);
         return;
     }
     const int index = ui->profile->currentIndex();
@@ -682,18 +716,22 @@ void ConfigureInput::DeleteProfile() {
 }
 
 void ConfigureInput::RenameProfile() {
+    ui->buttonRename->setEnabled(false);
     const QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
     if (new_name.isEmpty()) {
+        ui->buttonRename->setEnabled(true);
         return;
     }
     if (IsProfileNameDuplicate(new_name)) {
         WarnProposedProfileNameIsDuplicate();
+        ui->buttonRename->setEnabled(true);
         return;
     }
 
     ui->profile->setItemText(ui->profile->currentIndex(), new_name);
     Settings::RenameCurrentProfile(new_name.toStdString());
     Settings::SaveProfile(ui->profile->currentIndex());
+    ui->buttonRename->setEnabled(true);
 }
 
 bool ConfigureInput::IsProfileNameDuplicate(const QString& name) const {

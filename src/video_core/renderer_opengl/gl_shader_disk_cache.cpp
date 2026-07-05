@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -12,8 +16,6 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "common/zstd_compression.h"
-#include "core/core.h"
-#include "core/loader/loader.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 
 namespace OpenGL {
@@ -103,8 +105,8 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
     return true;
 }
 
-ShaderDiskCache::ShaderDiskCache(bool separable)
-    : separable{separable}, transferable_file(AppendTransferableFile()),
+ShaderDiskCache::ShaderDiskCache(u64 program_id, bool separable)
+    : separable{separable}, program_id{program_id}, transferable_file(AppendTransferableFile()),
       // seperable shaders use the virtual precompile file, that already has a header.
       precompiled_file(AppendPrecompiledFile(!separable)) {}
 
@@ -455,6 +457,14 @@ FileUtil::IOFile ShaderDiskCache::AppendTransferableFile() {
     const auto transferable_path{GetTransferablePath()};
     const bool existed = FileUtil::Exists(transferable_path);
 
+#ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
+    if (!existed) {
+        FileUtil::CreateEmptyFile(transferable_path);
+    }
+#endif
+
     FileUtil::IOFile file(transferable_path, "ab+");
     if (!file.IsOpen()) {
         LOG_ERROR(Render_OpenGL, "Failed to open transferable cache in path={}", transferable_path);
@@ -477,6 +487,14 @@ FileUtil::IOFile ShaderDiskCache::AppendPrecompiledFile(bool write_header) {
 
     const auto precompiled_path{GetPrecompiledPath()};
     const bool existed = FileUtil::Exists(precompiled_path);
+
+#ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
+    if (!existed) {
+        FileUtil::CreateEmptyFile(precompiled_path);
+    }
+#endif
 
     FileUtil::IOFile file(precompiled_path, "ab+");
     if (!file.IsOpen()) {
@@ -511,6 +529,13 @@ void ShaderDiskCache::SaveVirtualPrecompiledFile() {
         Common::Compression::CompressDataZSTDDefault(decompressed_precompiled_cache);
 
     const auto precompiled_path{GetPrecompiledPath()};
+
+#ifdef HAVE_LIBRETRO_VFS
+    const bool existed = FileUtil::Exists(precompiled_path);
+    if (!existed) {
+        FileUtil::CreateEmptyFile(precompiled_path);
+    }
+#endif
 
     precompiled_file.Close();
     if (!FileUtil::Delete(GetPrecompiledPath())) {
@@ -568,15 +593,7 @@ std::string ShaderDiskCache::GetBaseDir() const {
     return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + DIR_SEP "opengl";
 }
 
-u64 ShaderDiskCache::GetProgramID() {
-    // Skip games without title id
-    if (program_id != 0) {
-        return program_id;
-    }
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
-        Loader::ResultStatus::Success) {
-        return 0;
-    }
+u64 ShaderDiskCache::GetProgramID() const {
     return program_id;
 }
 

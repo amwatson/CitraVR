@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -28,8 +28,8 @@ object DirectoryInitialization {
     @Volatile
     private var directoryState: DirectoryInitializationState? = null
     var userPath: String? = null
-    val internalUserPath
-        get() = CitraApplication.appContext.getExternalFilesDir(null)!!.canonicalPath
+    val internalUserPath: String
+        get() = CitraApplication.appContext.filesDir.canonicalPath
     private val isCitraDirectoryInitializationRunning = AtomicBoolean(false)
 
     val context: Context get() = CitraApplication.appContext
@@ -94,7 +94,7 @@ object DirectoryInitialization {
         val dataPath = PermissionsHandler.citraDirectory
         if (dataPath.toString().isNotEmpty()) {
             userPath = dataPath.toString()
-            android.util.Log.d("[Citra Frontend]", "[DirectoryInitialization] User Dir: $userPath")
+            android.util.Log.d("[Azahar Frontend]", "[DirectoryInitialization] User Dir: $userPath")
             return true
         }
         return false

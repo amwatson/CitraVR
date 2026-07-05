@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -60,11 +60,9 @@ public:
     /// Cleans up after video dumping is ended
     virtual void CleanupVideoDumping() {}
 
-    /// Synchronizes fixed function renderer state
-    virtual void Sync() {}
-
     /// This is called to notify the rendering backend of a surface change
-    virtual void NotifySurfaceChanged() {}
+    // if second == true then it is the second screen
+    virtual void NotifySurfaceChanged(bool second) {}
 
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
@@ -109,10 +107,12 @@ public:
 protected:
     Core::System& system;
     RendererSettings settings;
-    Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
-    Frontend::EmuWindow* secondary_window; ///< Reference to the secondary render window handle.
-    f32 current_fps = 0.0f;                ///< Current framerate, should be set by the renderer
-    s32 current_frame = 0;                 ///< Current frame, should be set by the renderer
+    Frontend::EmuWindow& render_window;    /// Reference to the render window handle.
+    Frontend::EmuWindow* secondary_window; /// Reference to the secondary render window handle.
+
+protected:
+    f32 current_fps = 0.0f; /// Current framerate, should be set by the renderer
+    s32 current_frame = 0;  /// Current frame, should be set by the renderer
 };
 
 } // namespace VideoCore

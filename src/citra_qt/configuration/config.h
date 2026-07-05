@@ -1,4 +1,4 @@
-﻿// Copyright 2014 Citra Emulator Project
+﻿// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,20 +13,20 @@
 
 class QSettings;
 
-class Config {
+class QtConfig {
 public:
     enum class ConfigType : u32 { GlobalConfig, PerGameConfig };
 
-    explicit Config(const std::string& config_name = "qt-config",
-                    ConfigType config_type = ConfigType::GlobalConfig);
-    ~Config();
+    explicit QtConfig(const std::string& config_name = "qt-config",
+                      ConfigType config_type = ConfigType::GlobalConfig);
+    ~QtConfig();
 
     void Reload();
     void Save();
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
-    static const std::array<UISettings::Shortcut, 35> default_hotkeys;
+    static const std::array<UISettings::Shortcut, 41> default_hotkeys;
 
 private:
     void Initialize(const std::string& config_name);
@@ -48,7 +48,6 @@ private:
     void ReadUIValues();
     void ReadUIGameListValues();
     void ReadUILayoutValues();
-    void ReadUpdaterValues();
     void ReadUtilityValues();
     void ReadWebServiceValues();
     void ReadVideoDumpingValues();
@@ -70,7 +69,6 @@ private:
     void SaveUIValues();
     void SaveUIGameListValues();
     void SaveUILayoutValues();
-    void SaveUpdaterValues();
     void SaveUtilityValues();
     void SaveWebServiceValues();
     void SaveVideoDumpingValues();
@@ -122,12 +120,19 @@ private:
     template <typename Type, bool ranged>
     void ReadBasicSetting(Settings::Setting<Type, ranged>& setting);
 
+    // Add overload for vectors
+    template <typename Type, bool ranged>
+    void ReadBasicSetting(Settings::Setting<std::vector<Type>, ranged>& setting);
+
     /** Sets a value from the setting in the qt_config using the setting's label and default value.
      *
      * @param The setting
      */
     template <typename Type, bool ranged>
     void WriteBasicSetting(const Settings::Setting<Type, ranged>& setting);
+
+    template <typename Type, bool ranged>
+    void WriteBasicSetting(const Settings::Setting<std::vector<Type>, ranged>& setting);
 
     ConfigType type;
     std::unique_ptr<QSettings> qt_config;

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,9 @@ public:
     /// Resets internal state.
     void Reset();
 
+    void Sleep();
+    void Wakeup();
+
     /// Sets the memory system to read data from
     void SetMemory(Memory::MemorySystem& memory);
 
@@ -66,8 +69,9 @@ public:
 
 private:
     const std::size_t source_id;
-    const Memory::MemorySystem* memory_system{};
+    Memory::MemorySystem* memory_system{};
     StereoFrame16 current_frame;
+    StereoFrame16 backup_frame; // TODO(PabloMK7): Check if we actually need this
 
     using Format = SourceConfiguration::Configuration::Format;
     using InterpolationMode = SourceConfiguration::Configuration::InterpolationMode;
@@ -93,18 +97,18 @@ private:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& physical_address;
-            ar& length;
-            ar& adpcm_ps;
-            ar& adpcm_yn;
-            ar& adpcm_dirty;
-            ar& is_looping;
-            ar& buffer_id;
-            ar& mono_or_stereo;
-            ar& format;
-            ar& from_queue;
-            ar& play_position;
-            ar& has_played;
+            ar & physical_address;
+            ar & length;
+            ar & adpcm_ps;
+            ar & adpcm_yn;
+            ar & adpcm_dirty;
+            ar & is_looping;
+            ar & buffer_id;
+            ar & mono_or_stereo;
+            ar & format;
+            ar & from_queue;
+            ar & play_position;
+            ar & has_played;
         }
         friend class boost::serialization::access;
     };
@@ -116,7 +120,7 @@ private:
         }
     };
 
-    struct {
+    struct SourceState {
 
         // State variables
 
@@ -163,24 +167,26 @@ private:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& enabled;
-            ar& sync_count;
-            ar& gain;
-            ar& input_queue;
-            ar& mono_or_stereo;
-            ar& format;
-            ar& current_sample_number;
-            ar& current_buffer_physical_address;
-            ar& current_buffer;
-            ar& buffer_update;
-            ar& current_buffer_id;
-            ar& adpcm_coeffs;
-            ar& rate_multiplier;
-            ar& interpolation_mode;
+            ar & enabled;
+            ar & sync_count;
+            ar & gain;
+            ar & input_queue;
+            ar & mono_or_stereo;
+            ar & format;
+            ar & current_sample_number;
+            ar & current_buffer_physical_address;
+            ar & current_buffer;
+            ar & buffer_update;
+            ar & current_buffer_id;
+            ar & adpcm_coeffs;
+            ar & rate_multiplier;
+            ar & interpolation_mode;
         }
         friend class boost::serialization::access;
+    };
 
-    } state;
+    SourceState state;
+    SourceState backup_state;
 
     // Internal functions
 
@@ -196,7 +202,10 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& state;
+        ar & state;
+        ar & backup_state;
+        ar & current_frame;
+        ar & backup_frame;
     }
     friend class boost::serialization::access;
 };

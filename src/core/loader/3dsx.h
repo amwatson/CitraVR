@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2014 Dolphin Emulator Project / Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -15,18 +19,17 @@ namespace Loader {
 class AppLoader_THREEDSX final : public AppLoader {
 public:
     AppLoader_THREEDSX(Core::System& system_, FileUtil::IOFile&& file, const std::string& filename,
-                       const std::string& filepath)
-        : AppLoader(system_, std::move(file)), filename(filename), filepath(filepath) {}
+                       const std::string& filepath);
 
     /**
      * Returns the type of the file
      * @param file FileUtil::IOFile open file
      * @return FileType found, or FileType::Error if this loader doesn't know it
      */
-    static FileType IdentifyType(FileUtil::IOFile& file);
+    static FileType IdentifyType(FileUtil::IOFile* file);
 
     FileType GetFileType() override {
-        return IdentifyType(file);
+        return filetype;
     }
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
@@ -35,9 +38,14 @@ public:
 
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
+    CompressFileInfo GetCompressFileInfo() override;
+
+    bool IsFileCompressed() override;
+
 private:
     std::string filename;
     std::string filepath;
+    FileType filetype;
 };
 
 } // namespace Loader

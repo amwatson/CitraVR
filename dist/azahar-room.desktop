@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Azahar Room
+Comment=Multiplayer room host for Azahar
+Icon=org.azahar_emu.Azahar
+TryExec=azahar-room
+Exec=azahar-room %f
+Categories=Game;Emulator;
+Keywords=3DS;Nintendo

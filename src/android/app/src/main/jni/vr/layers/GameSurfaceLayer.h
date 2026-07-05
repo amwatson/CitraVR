@@ -84,7 +84,6 @@ public:
         : Panel(pose, width, height, scaleFactor, {0, 0}, {width, height}) {}
 
     void  Transform(const XrVector2f& point2d, XrVector2f& result) const;
-    float AspectRatio() const { return (2.0f * mWidth) / mHeight; }
 
     struct {
         XrVector2f mMin;

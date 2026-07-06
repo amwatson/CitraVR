@@ -43,6 +43,9 @@ struct Values {
     uint32_t               resolution_factor = 0;
     int32_t                vr_environment    = 0;
     int32_t                vr_immersive_mode = 0;
+    // Requested display refresh rate in Hz (0 = leave the system default).
+    // Only applied if the runtime reports the rate as supported.
+    float vr_refresh_rate = 0.0f;
     bool                   extra_performance_mode_enabled      = false;
     int32_t                vr_si_mode_register_offset          = -1;
     int32_t                vr_factor_3d                        = 100;

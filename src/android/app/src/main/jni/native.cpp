@@ -437,6 +437,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* en
     if (stop_run || pause_emulation) {
         return;
     }
+    // This thread swaps the game surface into the XR swapchain; let the VR
+    // thread boost its scheduling priority so presentation isn't preempted.
+    vr::SetPresentThreadTid(gettid());
     if (window) {
         window->TryPresenting();
     }

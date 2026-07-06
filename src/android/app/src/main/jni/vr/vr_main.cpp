@@ -30,8 +30,10 @@ License     :   Licensed under GPLv3 or any later version.
 #include <android/native_window_jni.h>
 #include <jni.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <thread>
 #include <vector>
 
@@ -54,7 +56,13 @@ namespace vr {
 XrSession  gSession     = XR_NULL_HANDLE;
 int        gPriorityTid = -1;
 bool       gCitraReady  = false;
-XrSession& GetSession() { return gSession; }
+// Tid of the frontend thread that presents the game surface (the
+// Choreographer/UI thread driving TryPresenting()). Stored here and
+// registered with the XR scheduler from the VR thread while the session is
+// active, since xrSetAndroidApplicationThreadKHR must not be called on a
+// non-running session.
+std::atomic<int> gPresentThreadTid{-1};
+XrSession&       GetSession() { return gSession; }
 void       PrioritizeTid(const int tid) {
           assert(gSession != XR_NULL_HANDLE);
           if (gSession == XR_NULL_HANDLE) {
@@ -71,6 +79,8 @@ void       PrioritizeTid(const int tid) {
 }
 
 void SetCitraReady() { gCitraReady = true; }
+
+void SetPresentThreadTid(const int tid) { gPresentThreadTid = tid; }
 } // namespace vr
 
 namespace {
@@ -145,6 +155,44 @@ void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
     }
 }
 
+const char* XrPerfSettingsDomainToString(const XrPerfSettingsDomainEXT domain) {
+    switch (domain) {
+        case XR_PERF_SETTINGS_DOMAIN_CPU_EXT:
+            return "CPU";
+        case XR_PERF_SETTINGS_DOMAIN_GPU_EXT:
+            return "GPU";
+        default:
+            return "Unknown";
+    }
+}
+
+const char* XrPerfSettingsSubDomainToString(const XrPerfSettingsSubDomainEXT subDomain) {
+    switch (subDomain) {
+        case XR_PERF_SETTINGS_SUB_DOMAIN_COMPOSITING_EXT:
+            return "compositing";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_RENDERING_EXT:
+            return "rendering";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_THERMAL_EXT:
+            return "thermal";
+        default:
+            return "unknown";
+    }
+}
+
+const char*
+XrPerfSettingsNotificationLevelToString(const XrPerfSettingsNotificationLevelEXT level) {
+    switch (level) {
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_NORMAL_EXT:
+            return "NORMAL";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_WARNING_EXT:
+            return "WARNING";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_IMPAIRED_EXT:
+            return "IMPAIRED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
     static constexpr uint32_t kDefaultResolutionFactor = 2;
     switch (hmdType) {
@@ -161,6 +209,61 @@ uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType
         case VRSettings::HMDType::QUESTPRO:
         case VRSettings::HMDType::QUEST3S:
             return kDefaultResolutionFactor;
+    }
+}
+
+// Applies the (experimental) vr_refresh_rate preference, if set. Called when
+// the session becomes running. A value of 0 leaves the system default.
+// Requests are only made for rates the runtime reports as supported.
+void ApplyDisplayRefreshRate() {
+    const float requestedRate = VRSettings::values.vr_refresh_rate;
+    if (requestedRate <= 0.0f) { return; }
+
+    PFN_xrEnumerateDisplayRefreshRatesFB pfnEnumerateDisplayRefreshRatesFB = nullptr;
+    OXR(xrGetInstanceProcAddr(gOpenXr->mInstance, "xrEnumerateDisplayRefreshRatesFB",
+                              (PFN_xrVoidFunction*)(&pfnEnumerateDisplayRefreshRatesFB)));
+    PFN_xrRequestDisplayRefreshRateFB pfnRequestDisplayRefreshRateFB = nullptr;
+    OXR(xrGetInstanceProcAddr(gOpenXr->mInstance, "xrRequestDisplayRefreshRateFB",
+                              (PFN_xrVoidFunction*)(&pfnRequestDisplayRefreshRateFB)));
+
+    // Best-effort feature: check results manually rather than with OXR(),
+    // which aborts on failure.
+    uint32_t numRates = 0;
+    if (XR_FAILED(pfnEnumerateDisplayRefreshRatesFB(gOpenXr->mSession, 0, &numRates, nullptr)) ||
+        numRates == 0) {
+        ALOGW("vr_refresh_rate: could not enumerate display refresh rates; "
+              "using system default");
+        return;
+    }
+    std::vector<float> supportedRates(numRates);
+    if (XR_FAILED(pfnEnumerateDisplayRefreshRatesFB(gOpenXr->mSession, numRates, &numRates,
+                                                    supportedRates.data()))) {
+        ALOGW("vr_refresh_rate: could not enumerate display refresh rates; "
+              "using system default");
+        return;
+    }
+
+    const auto matchIt =
+        std::find_if(supportedRates.begin(), supportedRates.end(), [requestedRate](const float r) {
+            return std::abs(r - requestedRate) < 0.5f;
+        });
+    if (matchIt == supportedRates.end()) {
+        std::string ratesStr;
+        for (const float r : supportedRates) {
+            ratesStr += fmt::format("{}{}", ratesStr.empty() ? "" : ", ", r);
+        }
+        ALOGW("vr_refresh_rate: {} Hz not supported by this HMD (supported: {}); "
+              "using system default",
+              requestedRate, ratesStr);
+        return;
+    }
+
+    const XrResult result = pfnRequestDisplayRefreshRateFB(gOpenXr->mSession, *matchIt);
+    if (XR_FAILED(result)) {
+        ALOGW("vr_refresh_rate: failed to request {} Hz (error {})", *matchIt,
+              static_cast<int>(result));
+    } else {
+        ALOGI("vr_refresh_rate: requested {} Hz display refresh rate", *matchIt);
     }
 }
 
@@ -232,6 +335,9 @@ public:
             if (appState.mIsStopRequested) { break; }
             HandleStateChanges(jni, appState);
             if (appState.mIsXrSessionActive) {
+                // Register the frontend presentation thread with the XR
+                // scheduler (must happen while the session is running).
+                ApplyPresentThreadPriorityIfNeeded(!mLastAppState.mIsXrSessionActive);
                 // Increment the frame index.
                 // Frame index starts at 1. I don't know why, we've always done this.
                 // Doesn't actually matter, except to make the indices
@@ -888,12 +994,25 @@ private:
                           __func__);
                     break;
                 case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                    const XrEventDataPerfSettingsEXT* pfs =
                         (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
-                          "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
+                    // These events are the runtime reporting clock-level
+                    // changes (e.g. thermal throttling), a common cause of
+                    // otherwise-unexplained stutter -- log degradations at
+                    // warning level so they are visible in release builds.
+                    if (pfs->toLevel > pfs->fromLevel) {
+                        ALOGW("XR perf settings: {} {} degraded {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    } else {
+                        ALOGI("XR perf settings: {} {} recovered {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    }
                 } break;
                 case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
                     ALOGV("{}(): Received "
@@ -901,6 +1020,12 @@ private:
                           "event",
                           __func__);
                     break;
+                case XR_TYPE_EVENT_DATA_DISPLAY_REFRESH_RATE_CHANGED_FB: {
+                    const XrEventDataDisplayRefreshRateChangedFB* drrc =
+                        (XrEventDataDisplayRefreshRateChangedFB*)(baseEventHeader);
+                    ALOGI("Display refresh rate changed: {} Hz -> {} Hz",
+                          drrc->fromDisplayRefreshRate, drrc->toDisplayRefreshRate);
+                } break;
                 default:
                     ALOGV("{}(): Unknown event", __func__);
                     break;
@@ -987,6 +1112,9 @@ private:
                 }
                 OXR(pfnSetAndroidApplicationThreadKHR(
                     gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
+
+                ApplyDisplayRefreshRate();
+
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
                     mGameSurfaceLayer->SetSurface(mActivityObject);
@@ -1073,6 +1201,48 @@ private:
         }
     }
 
+    // Registers the frontend presentation thread (the Choreographer/UI thread
+    // that swaps the game surface into the XR swapchain) with the XR
+    // scheduler. Without this, a ready frame can be presented late when the
+    // unboosted UI thread is preempted, even though emulation was on time.
+    //
+    // Best-effort: the runtime can refuse to re-schedule some threads (the
+    // Java main thread in particular fails with
+    // XR_ERROR_ANDROID_THREAD_SETTINGS_FAILURE_KHR on some OS versions), so
+    // failure here must not be fatal and must not be retried every frame.
+    void ApplyPresentThreadPriorityIfNeeded(const bool isSessionNewlyActive) {
+        const int presentThreadTid = vr::gPresentThreadTid;
+        if (presentThreadTid <= 0) { return; }
+        // Attempt once per tid, re-attempting on session (re)start since
+        // scheduling hints don't outlive the session state.
+        if (!isSessionNewlyActive && presentThreadTid == mLastAttemptedPresentThreadTid) {
+            return;
+        }
+        mLastAttemptedPresentThreadTid = presentThreadTid;
+
+        PFN_xrSetAndroidApplicationThreadKHR pfnSetAndroidApplicationThreadKHR = NULL;
+        OXR(xrGetInstanceProcAddr(OpenXr::GetInstance(), "xrSetAndroidApplicationThreadKHR",
+                                  (PFN_xrVoidFunction*)(&pfnSetAndroidApplicationThreadKHR)));
+
+        // Try the render-thread hint first; fall back to the milder
+        // application-worker hint if the runtime refuses it.
+        XrResult result = pfnSetAndroidApplicationThreadKHR(
+            gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_RENDERER_WORKER_KHR, presentThreadTid);
+        if (XR_FAILED(result)) {
+            result = pfnSetAndroidApplicationThreadKHR(
+                gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_WORKER_KHR,
+                presentThreadTid);
+        }
+        if (XR_FAILED(result)) {
+            ALOGW("Could not register presentation thread (tid {}) with the XR scheduler "
+                  "(error {}); presentation stays at default priority",
+                  presentThreadTid, static_cast<int>(result));
+        } else {
+            ALOGI("Registered presentation thread (tid {}) with the XR scheduler",
+                  presentThreadTid);
+        }
+    }
+
     void PauseEmulation(JNIEnv* jni) const {
         if (!vr::gCitraReady) return;
         assert(jni != nullptr);
@@ -1155,6 +1325,8 @@ private:
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
     jobject     mActivityObject;
+    // Last present-thread tid we attempted to register with the XR scheduler.
+    int mLastAttemptedPresentThreadTid = -1;
 
     class AppState {
     public:

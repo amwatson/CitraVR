@@ -17,4 +17,8 @@ namespace vr {
 XrSession& GetSession();
 void       PrioritizeTid(const int tid);
 void       SetCitraReady();
+// Records the tid of the frontend thread that presents the game surface
+// (Choreographer/doFrame). The VR thread registers it with the XR scheduler
+// once the session is running. Safe to call every frame; cheap store.
+void SetPresentThreadTid(const int tid);
 } // namespace vr

@@ -73,6 +73,12 @@ public:
         double artic_transmitted = 0;
         /// Artic base events
         PerfArticEvents artic_events{};
+        /// Peak frame walltime in seconds over the interval
+        double frametime_peak = 0;
+        /// Frames in the interval that exceeded 125% of the vblank budget
+        u32 slow_frames = 0;
+        /// Frames in the interval that exceeded the stall threshold (~3x budget)
+        u32 stall_frames = 0;
     };
 
     void BeginSVCProcessing();
@@ -170,6 +176,25 @@ private:
 
     Clock::time_point start_swap_time = reset_point;
     Clock::duration accumulated_swap_time = Clock::duration::zero();
+
+    /// Stall tracking: snapshots of the accumulated timers taken at
+    /// BeginSystemFrame, used to compute a per-frame breakdown when a frame
+    /// blows its budget.
+    Clock::duration frame_begin_svc_time = Clock::duration::zero();
+    Clock::duration frame_begin_ipc_time = Clock::duration::zero();
+    Clock::duration frame_begin_gpu_time = Clock::duration::zero();
+    Clock::duration frame_begin_swap_time = Clock::duration::zero();
+    u32 frame_begin_shader_compiles = 0;
+    /// Peak frame walltime since the last stats reset
+    Clock::duration interval_peak_frametime = Clock::duration::zero();
+    u32 interval_slow_frames = 0;
+    u32 interval_stall_frames = 0;
+    /// Timestamp of the last stall warning, used to throttle log spam
+    Clock::time_point last_stall_log = reset_point;
+
+    /// Detects budget overruns for the frame that just ended and logs a
+    /// breakdown of where the time went. Must be called with object_mutex held.
+    void UpdateStallTracking(Clock::time_point frame_end, Clock::duration frame_time);
 
     /// Last recorded performance statistics.
     Results last_stats;

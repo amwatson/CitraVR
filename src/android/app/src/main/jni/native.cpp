@@ -943,19 +943,26 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
 jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_getPerfStats(JNIEnv* env,
                                                                   [[maybe_unused]] jobject obj) {
     auto& core = Core::System::GetInstance();
-    jdoubleArray j_stats = env->NewDoubleArray(9);
+    jdoubleArray j_stats = env->NewDoubleArray(12);
 
     if (core.IsPoweredOn()) {
         auto results = core.GetAndResetPerfStats();
 
         // Converting the structure into an array makes it easier to pass it to the frontend
-        double stats[9] = {results.system_fps,      results.game_fps,
-                           results.emulation_speed, results.time_vblank_interval,
-                           results.time_hle_svc,    results.time_hle_ipc,
-                           results.time_gpu,        results.time_swap,
-                           results.time_remaining};
+        double stats[12] = {results.system_fps,
+                            results.game_fps,
+                            results.emulation_speed,
+                            results.time_vblank_interval,
+                            results.time_hle_svc,
+                            results.time_hle_ipc,
+                            results.time_gpu,
+                            results.time_swap,
+                            results.time_remaining,
+                            results.frametime_peak,
+                            static_cast<double>(results.slow_frames),
+                            static_cast<double>(results.stall_frames)};
 
-        env->SetDoubleArrayRegion(j_stats, 0, 9, stats);
+        env->SetDoubleArrayRegion(j_stats, 0, 12, stats);
     }
 
     return j_stats;

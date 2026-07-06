@@ -40,6 +40,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#include "common/stall_telemetry.h"
 #include "core/core.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -182,6 +183,55 @@ XrPerfSettingsNotificationLevelToString(const XrPerfSettingsNotificationLevelEXT
         default:
             return "UNKNOWN";
     }
+}
+
+// Logs a prominent, greppable marker plus a snapshot of the stall telemetry.
+// Triggered by the user clicking a thumbstick when they see a visible
+// stall/artifact, so log readers know where in the log to look.
+void LogUserStallMarker(const uint64_t frameIndex) {
+    auto&          telemetry = Common::StallTelemetry::Get();
+    const uint32_t markerIndex =
+        telemetry.user_marker_count.fetch_add(1, std::memory_order_relaxed) + 1;
+
+    ALOGW("==================== [USER-MARKER #{}] ====================", markerIndex);
+    ALOGW("[USER-MARKER #{}] VR frame {}: user flagged a visible stall/artifact here",
+          markerIndex, frameIndex);
+
+    const uint32_t compiles = telemetry.shader_compile_count.load(std::memory_order_relaxed);
+    const double   compileTimeMs =
+        telemetry.shader_compile_time_us.load(std::memory_order_relaxed) / 1000.0;
+    const int64_t lastCompileUs =
+        telemetry.last_shader_compile_steady_us.load(std::memory_order_relaxed);
+    if (lastCompileUs > 0) {
+        ALOGW("[USER-MARKER #{}] shaders: {} draw-time compiles ({:.1f} ms total), last one "
+              "{:.1f} s ago",
+              markerIndex, compiles, compileTimeMs,
+              (Common::SteadyNowUs() - lastCompileUs) / 1e6);
+    } else {
+        ALOGW("[USER-MARKER #{}] shaders: no draw-time compiles yet", markerIndex);
+    }
+
+    ALOGW("[USER-MARKER #{}] emu: slowFrames={} stallFrames={} worstFrame={:.1f} ms",
+          markerIndex, telemetry.emu_slow_frame_count.load(std::memory_order_relaxed),
+          telemetry.emu_stall_frame_count.load(std::memory_order_relaxed),
+          telemetry.emu_worst_frame_time_us.load(std::memory_order_relaxed) / 1000.0);
+
+    ALOGW("[USER-MARKER #{}] vr: missedFrames={} worstFrameGap={:.1f} ms worstWaitFrame={:.1f} ms",
+          markerIndex, telemetry.vr_missed_frame_count.load(std::memory_order_relaxed),
+          telemetry.vr_worst_frame_gap_us.load(std::memory_order_relaxed) / 1000.0,
+          telemetry.vr_worst_wait_frame_us.load(std::memory_order_relaxed) / 1000.0);
+
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn() && system.perf_stats != nullptr) {
+        const auto stats = system.perf_stats->GetLastStats();
+        ALOGW("[USER-MARKER #{}] game (last interval): fps={:.1f} speed={:.0f}% frame={:.1f} ms "
+              "(svc={:.1f} ipc={:.1f} gpu={:.1f} swap={:.1f} other={:.1f} ms) peak={:.1f} ms",
+              markerIndex, stats.game_fps, stats.emulation_speed * 100.0,
+              stats.time_vblank_interval * 1000.0, stats.time_hle_svc * 1000.0,
+              stats.time_hle_ipc * 1000.0, stats.time_gpu * 1000.0, stats.time_swap * 1000.0,
+              stats.time_remaining * 1000.0, stats.frametime_peak * 1000.0);
+    }
+    ALOGW("============================================================");
 }
 
 uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
@@ -407,6 +457,8 @@ private:
 
     void Frame(JNIEnv* jni, const AppState& appState) {
 
+        const auto frameLoopStart = std::chrono::steady_clock::now();
+
         ////////////////////////////////
         // XrWaitFrame()
         ////////////////////////////////
@@ -418,6 +470,8 @@ private:
             XrFrameWaitInfo wfi = {XR_TYPE_FRAME_WAIT_INFO, nullptr};
             OXR(xrWaitFrame(gOpenXr->mSession, &wfi, &frameState));
         }
+
+        const auto waitFrameEnd = std::chrono::steady_clock::now();
 
         ////////////////////////////////
         // XrBeginFrame()
@@ -529,10 +583,69 @@ private:
                                              static_cast<uint32_t>(layerHeaders.size()),
                                              layerHeaders.data()};
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
+
+        TrackVrFramePacing(frameState, frameLoopStart, waitFrameEnd,
+                           std::chrono::steady_clock::now());
+    }
+
+    // Detects VR frames that missed the compositor deadline. The gap between
+    // successive xrEndFrame completions also covers the event/input/JNI work
+    // done in MainLoop before Frame(), so stalls anywhere on this thread are
+    // caught. xrWaitFrame blocking is normal pacing; a long *gap* with a short
+    // wait means this thread (or the JNI calls it makes) was slow, while a
+    // long wait means the runtime throttled us (e.g. GPU running behind).
+    void TrackVrFramePacing(const XrFrameState&                         frameState,
+                            const std::chrono::steady_clock::time_point frameLoopStart,
+                            const std::chrono::steady_clock::time_point waitFrameEnd,
+                            const std::chrono::steady_clock::time_point frameEnd) {
+        using FloatMs = std::chrono::duration<double, std::milli>;
+        auto&      telemetry = Common::StallTelemetry::Get();
+        const auto ToUs      = [](const auto duration) -> uint64_t {
+            return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+        };
+
+        const auto waitDuration = waitFrameEnd - frameLoopStart;
+        Common::UpdateMax(telemetry.vr_worst_wait_frame_us, ToUs(waitDuration));
+
+        const bool hasPreviousFrame =
+            mLastFrameEnd.time_since_epoch().count() != 0 && mFrameIndex > 1;
+        if (hasPreviousFrame && frameState.predictedDisplayPeriod > 0) {
+            const auto   gap      = frameEnd - mLastFrameEnd;
+            const double gapMs    = FloatMs(gap).count();
+            const double periodMs = static_cast<double>(frameState.predictedDisplayPeriod) / 1e6;
+            // Gaps over a second are session-lifecycle discontinuities
+            // (pause/resume), not stalls; don't let them poison the stats.
+            if (gapMs < 1000.0) {
+                Common::UpdateMax(telemetry.vr_worst_frame_gap_us, ToUs(gap));
+                if (gapMs > periodMs * 1.5) {
+                    telemetry.vr_missed_frame_count.fetch_add(1, std::memory_order_relaxed);
+                    if (frameEnd - mLastVrStallLog > std::chrono::seconds(1)) {
+                        mLastVrStallLog = frameEnd;
+                        ALOGW("[STALL][VR] frame {}: {:.1f} ms between frames (display period "
+                              "{:.1f} ms): wait={:.1f} ms render+submit={:.1f} ms",
+                              mFrameIndex, gapMs, periodMs, FloatMs(waitDuration).count(),
+                              FloatMs(frameEnd - waitFrameEnd).count());
+                    }
+                }
+            }
+        }
+        mLastFrameEnd = frameEnd;
     }
 
     void HandleInput(JNIEnv* jni, const InputStateFrame& inputState, AppState& newState) const {
         assert(gOpenXr != nullptr);
+
+        // User stall marker: thumbstick clicks are not mapped to any game
+        // input, so clicking either stick stamps a marker in the log for the
+        // user to flag "I just saw a stall/artifact here".
+        for (const auto hand :
+             {InputStateFrame::LEFT_CONTROLLER, InputStateFrame::RIGHT_CONTROLLER}) {
+            const auto& clickState = inputState.mThumbStickClickState[hand];
+            if (clickState.changedSinceLastSync && clickState.currentState == XR_TRUE) {
+                LogUserStallMarker(mFrameIndex);
+                break;
+            }
+        }
 
         // Forward VR input to Android gamepad emulation
 
@@ -1208,6 +1321,9 @@ private:
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
     jobject     mActivityObject;
+    // Stall diagnostics (see TrackVrFramePacing).
+    std::chrono::steady_clock::time_point mLastFrameEnd{};
+    std::chrono::steady_clock::time_point mLastVrStallLog{};
 
     class AppState {
     public:
@@ -1437,19 +1553,45 @@ Java_org_citra_citra_1emu_vr_ui_VrRibbonLayer_nativeGetStatsOXR(JNIEnv* env, job
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, compCpuFrameTimePath, &compCpuFrameTime);
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, compGpuFrameTimePath, &compGpuFrameTime);
 
-    const jfloat metricsArray[8] = {
-        cpuUtilization.floatValue,                // Device CPU Utilization %
-        gpuUtilization.floatValue,                // Device GPU Utilization %
-        appCpuFrameTime.floatValue,               // App CPU Frametime (ms)
-        appGpuFrameTime.floatValue,               // App GPU Frametime (ms)
-        appVrLatency.floatValue,                  // App VR Latency (ms)
-        compCpuFrameTime.floatValue,              // Compositor CPU Frametime (ms)
-        compGpuFrameTime.floatValue,              // Compositor GPU Frametime (ms)
-        static_cast<jfloat>(compTears.uintValue)  // Compositor tear count
+    // Stall telemetry (cumulative since process start; see
+    // common/stall_telemetry.h). Appended after the runtime perf metrics.
+    auto&         telemetry = Common::StallTelemetry::Get();
+    const int64_t lastCompileUs =
+        telemetry.last_shader_compile_steady_us.load(std::memory_order_relaxed);
+    const jfloat secondsSinceLastCompile =
+        lastCompileUs > 0 ? static_cast<jfloat>((Common::SteadyNowUs() - lastCompileUs) / 1e6)
+                          : -1.0f;
+
+    const jfloat metricsArray[17] = {
+        cpuUtilization.floatValue,                 // Device CPU Utilization %
+        gpuUtilization.floatValue,                 // Device GPU Utilization %
+        appCpuFrameTime.floatValue,                // App CPU Frametime (ms)
+        appGpuFrameTime.floatValue,                // App GPU Frametime (ms)
+        appVrLatency.floatValue,                   // App VR Latency (ms)
+        compCpuFrameTime.floatValue,               // Compositor CPU Frametime (ms)
+        compGpuFrameTime.floatValue,               // Compositor GPU Frametime (ms)
+        static_cast<jfloat>(compTears.uintValue),  // Compositor tear count
+        static_cast<jfloat>(
+            telemetry.emu_slow_frame_count.load(std::memory_order_relaxed)),  // Emu slow frames
+        static_cast<jfloat>(
+            telemetry.emu_stall_frame_count.load(std::memory_order_relaxed)), // Emu stall frames
+        static_cast<jfloat>(telemetry.emu_worst_frame_time_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // Emu worst frame (ms)
+        static_cast<jfloat>(
+            telemetry.shader_compile_count.load(std::memory_order_relaxed)),  // Shader compiles
+        static_cast<jfloat>(telemetry.shader_compile_time_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // Shader compile total (ms)
+        secondsSinceLastCompile,                   // Secs since last compile (-1 = never)
+        static_cast<jfloat>(
+            telemetry.vr_missed_frame_count.load(std::memory_order_relaxed)), // VR missed frames
+        static_cast<jfloat>(telemetry.vr_worst_frame_gap_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // VR worst frame gap (ms)
+        static_cast<jfloat>(telemetry.vr_worst_wait_frame_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // VR worst wait (ms)
     };
 
-    const jfloatArray result = env->NewFloatArray(8);
-    env->SetFloatArrayRegion(result, 0, 8, metricsArray);
+    const jfloatArray result = env->NewFloatArray(17);
+    env->SetFloatArrayRegion(result, 0, 17, metricsArray);
 
     return result;
 }

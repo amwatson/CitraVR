@@ -32,6 +32,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <thread>
 #include <vector>
 
@@ -142,6 +143,44 @@ void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
             return "XR_SESSION_STATE_MAX_ENUM";
         default:
             return "Unknown";
+    }
+}
+
+const char* XrPerfSettingsDomainToString(const XrPerfSettingsDomainEXT domain) {
+    switch (domain) {
+        case XR_PERF_SETTINGS_DOMAIN_CPU_EXT:
+            return "CPU";
+        case XR_PERF_SETTINGS_DOMAIN_GPU_EXT:
+            return "GPU";
+        default:
+            return "Unknown";
+    }
+}
+
+const char* XrPerfSettingsSubDomainToString(const XrPerfSettingsSubDomainEXT subDomain) {
+    switch (subDomain) {
+        case XR_PERF_SETTINGS_SUB_DOMAIN_COMPOSITING_EXT:
+            return "compositing";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_RENDERING_EXT:
+            return "rendering";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_THERMAL_EXT:
+            return "thermal";
+        default:
+            return "unknown";
+    }
+}
+
+const char*
+XrPerfSettingsNotificationLevelToString(const XrPerfSettingsNotificationLevelEXT level) {
+    switch (level) {
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_NORMAL_EXT:
+            return "NORMAL";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_WARNING_EXT:
+            return "WARNING";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_IMPAIRED_EXT:
+            return "IMPAIRED";
+        default:
+            return "UNKNOWN";
     }
 }
 
@@ -888,12 +927,25 @@ private:
                           __func__);
                     break;
                 case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                    const XrEventDataPerfSettingsEXT* pfs =
                         (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
-                          "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
+                    // These events are the runtime reporting clock-level
+                    // changes (e.g. thermal throttling), a common cause of
+                    // otherwise-unexplained stutter -- log degradations at
+                    // warning level so they are visible in release builds.
+                    if (pfs->toLevel > pfs->fromLevel) {
+                        ALOGW("XR perf settings: {} {} degraded {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    } else {
+                        ALOGI("XR perf settings: {} {} recovered {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    }
                 } break;
                 case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
                     ALOGV("{}(): Received "
@@ -987,6 +1039,7 @@ private:
                 }
                 OXR(pfnSetAndroidApplicationThreadKHR(
                     gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
+
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
                     mGameSurfaceLayer->SetSurface(mActivityObject);

@@ -414,7 +414,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(enable_audio_stretching) BOOST_HANA_STRING(R"(
 
 # Scales audio playback speed to account for drops in emulation framerate
-# 0 (default): No, 1: Yes
+# This prevents audio underruns (stutter) when emulation runs slightly below full speed.
+# 0: No, 1 (CitraVR default): Yes
 )") DECLARE_KEY(enable_realtime_audio) BOOST_HANA_STRING(R"(
 
 # Simulates whether headphones are plugged in to the emulated 3DS system
@@ -536,7 +537,8 @@ vr_environment =
 # false (default): Off, true: On
 vr_extra_performance_mode =
 
-# OpenXR CPU performance level. Defaults to 3 in CitraVR.
+# OpenXR CPU performance level. Defaults to 4 (highest) in CitraVR.
+# 1: Power savings, 2: Sustained low, 3: Sustained high, 4: Boost
 vr_cpu_level =
 
 # 0: Off, higher values enable CitraVR immersive rendering modes.

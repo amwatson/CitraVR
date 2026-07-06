@@ -43,7 +43,9 @@ enum class BooleanSetting(
     ASYNC_CUSTOM_LOADING(SettingKeys.async_custom_loading(), Settings.SECTION_UTILITY, true),
     PRELOAD_TEXTURES(SettingKeys.preload_textures(), Settings.SECTION_UTILITY, false),
     ENABLE_AUDIO_STRETCHING(SettingKeys.enable_audio_stretching(), Settings.SECTION_AUDIO, true),
-    ENABLE_REALTIME_AUDIO(SettingKeys.enable_realtime_audio(), Settings.SECTION_AUDIO, false),
+    // CitraVR default: on. Prevents audio underruns when emulation dips below
+    // full speed. Keep in sync with the native default in jni/config.cpp.
+    ENABLE_REALTIME_AUDIO(SettingKeys.enable_realtime_audio(), Settings.SECTION_AUDIO, true),
     SIMULATE_HEADPHONES_PLUGGED(SettingKeys.simulate_headphones_plugged(), Settings.SECTION_AUDIO, false),
     CPU_JIT(SettingKeys.use_cpu_jit(), Settings.SECTION_CORE, true),
     HW_SHADER(SettingKeys.use_hw_shader(), Settings.SECTION_RENDERER, true),

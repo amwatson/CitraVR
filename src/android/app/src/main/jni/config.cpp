@@ -270,7 +270,11 @@ void Config::ReadValues() {
 
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);
-    ReadSetting("Audio", Settings::values.enable_realtime_audio);
+    // CitraVR: default realtime audio to on (upstream default is off). It
+    // rescales the DSP tick to the measured emulation speed, which prevents
+    // audio underruns when emulation briefly dips below full speed.
+    Settings::values.enable_realtime_audio = android_config->GetBoolean(
+        "Audio", Settings::values.enable_realtime_audio.GetLabel(), true);
     ReadSetting("Audio", Settings::values.simulate_headphones_plugged);
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);
@@ -347,10 +351,12 @@ void Config::ReadValues() {
           "VR", "vr_environment",
           static_cast<long>(VRSettings::values.hmd_type == VRSettings::HMDType::QUEST3 ?
             VRSettings::VREnvironmentType::PASSTHROUGH : VRSettings::VREnvironmentType::VOID));
+    // CitraVR: default to the highest CPU clock level. Emulation is nearly
+    // always CPU-bound, and the GPU level is already pinned to boost.
     VRSettings::values.cpu_level =
       VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(android_config->GetInteger(
-            "VR", "vr_cpu_level", 3));
+            "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
     VRSettings::values.vr_immersive_mode = android_config->GetInteger(
             "VR", "vr_immersive_mode", 0);
     Settings::values.vr_immersive_mode = VRSettings::values.vr_immersive_mode;

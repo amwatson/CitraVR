@@ -64,7 +64,9 @@ enum class IntSetting(
         Settings.SECTION_VR,
         if (hMDType == VRUtils.HMDType.QUEST3.value) 1 else 2
     ),
-    VR_CPU_LEVEL("vr_cpu_level", Settings.SECTION_VR, 3),
+    // CitraVR: Default to the highest CPU clock level
+    // Keep in sync with the native default in jni/config.cpp.
+    VR_CPU_LEVEL("vr_cpu_level", Settings.SECTION_VR, 4),
     VR_IMMERSIVE_MODE("vr_immersive_mode", Settings.SECTION_VR, 0),
     VR_IMMERSIVE_POSITIONAL_GAME_SCALER(
         "vr_immersive_positional_game_scaler",

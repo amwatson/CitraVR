@@ -75,6 +75,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     settings.cpp
     settings.h
     slot_vector.h
+    stall_telemetry.h
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h

@@ -948,4 +948,10 @@
     <string name="vr_stats_comp_tear_count">Tear Count (total)</string>
     <string name="vr_stats_build_version_label">App Version</string>
     <string name="vr_stats_input_latency_label">Input Latency</string>
+    <string name="vr_stats_frame_breakdown_label">Frame Breakdown</string>
+    <string name="vr_stats_stall_section_label">Stall Diagnostics</string>
+    <string name="vr_stats_stall_emu_label">Emu Frames Over Budget</string>
+    <string name="vr_stats_stall_shaders_label">Shader Compiles</string>
+    <string name="vr_stats_stall_vr_label">VR Missed Frames</string>
+    <string name="vr_stats_stall_marker_hint">Click either thumbstick when you see a stall to stamp a [USER-MARKER] in the log</string>
 </resources>

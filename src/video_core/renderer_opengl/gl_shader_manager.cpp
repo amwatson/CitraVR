@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <chrono>
 #include <mutex>
 #include <set>
 #include <span>
@@ -11,6 +12,7 @@
 #include <variant>
 #include "common/hash.h"
 #include "common/settings.h"
+#include "common/stall_telemetry.h"
 #include "core/frontend/emu_window.h"
 #include "video_core/pica/shader_setup.h"
 #include "video_core/renderer_opengl/gl_driver.h"
@@ -26,6 +28,33 @@ using namespace Pica::Shader::Generator;
 using Pica::Shader::FSConfig;
 
 namespace OpenGL {
+
+// Records a draw-time shader compile (a shader-cache miss on the emu/GPU
+// thread, including the disk-cache write that follows it). These are the
+// primary cause of one-off frame stalls, so they are logged individually and
+// tallied in the process-wide stall telemetry.
+static void RecordDrawTimeCompile(const char* stage,
+                                  std::chrono::steady_clock::time_point start) {
+    const auto elapsed = std::chrono::steady_clock::now() - start;
+    const double elapsed_ms = std::chrono::duration<double, std::milli>(elapsed).count();
+
+    auto& telemetry = Common::StallTelemetry::Get();
+    telemetry.shader_compile_count.fetch_add(1, std::memory_order_relaxed);
+    telemetry.shader_compile_time_us.fetch_add(
+        std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count(),
+        std::memory_order_relaxed);
+    telemetry.last_shader_compile_steady_us.store(Common::SteadyNowUs(),
+                                                  std::memory_order_relaxed);
+
+    // Anything longer than a couple of milliseconds eats a meaningful chunk of
+    // the 16.7 ms frame budget and is a likely visible hitch.
+    if (elapsed_ms > 4.0) {
+        LOG_WARNING(Render_OpenGL, "[STALL] Draw-time {} shader compile took {:.2f} ms", stage,
+                    elapsed_ms);
+    } else {
+        LOG_DEBUG(Render_OpenGL, "Draw-time {} shader compile took {:.2f} ms", stage, elapsed_ms);
+    }
+}
 
 static u64 GetUniqueIdentifier(const Pica::RegsInternal& regs, const ProgramCode& code) {
     std::size_t hash = 0;
@@ -362,6 +391,7 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal&
     PicaVSConfig config{regs, setup};
     ExtraVSConfig extra = impl->CalcExtraConfig(config, accurate_mul);
 
+    const auto compile_start = std::chrono::steady_clock::now();
     auto [hash, handle, result] = impl->programmable_vertex_shaders.Get(config, extra, setup);
     if (handle == 0)
         return false;
@@ -380,6 +410,7 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal&
                                      std::move(new_program_code)};
         disk_cache.SaveRaw(raw);
         disk_cache.SaveDecompiled(unique_identifier, *result, accurate_mul);
+        RecordDrawTimeCompile("vertex", compile_start);
     }
     return true;
 }
@@ -396,9 +427,13 @@ void ShaderProgramManager::UseFixedGeometryShader(const Pica::RegsInternal& regs
         .separable_shader = impl->separable,
     };
 
-    auto [hash, handle, _] = impl->fixed_geometry_shaders.Get(gs_config, extra);
+    const auto compile_start = std::chrono::steady_clock::now();
+    auto [hash, handle, result] = impl->fixed_geometry_shaders.Get(gs_config, extra);
     impl->current.gs = handle;
     impl->current.gs_hash = hash;
+    if (result) {
+        RecordDrawTimeCompile("geometry", compile_start);
+    }
 }
 
 void ShaderProgramManager::UseTrivialGeometryShader() {
@@ -409,6 +444,7 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
 void ShaderProgramManager::UseFragmentShader(const Pica::RegsInternal& regs,
                                              const Pica::Shader::UserConfig& user) {
     const FSConfig fs_config{regs};
+    const auto compile_start = std::chrono::steady_clock::now();
     auto [hash, handle, result] = impl->fragment_shaders.Get(fs_config, user, impl->profile);
     impl->current.fs = handle;
     impl->current.fs_hash = hash;
@@ -419,6 +455,7 @@ void ShaderProgramManager::UseFragmentShader(const Pica::RegsInternal& regs,
         ShaderDiskCacheRaw raw{unique_identifier, ProgramType::FS, regs, {}};
         disk_cache.SaveRaw(raw);
         disk_cache.SaveDecompiled(unique_identifier, *result, false);
+        RecordDrawTimeCompile("fragment", compile_start);
     }
 }
 
@@ -439,10 +476,12 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state, bool accurate_mul) {
         const u64 unique_identifier = impl->current.GetConfigHash();
         OGLProgram& cached_program = impl->program_cache[unique_identifier];
         if (cached_program.handle == 0) {
+            const auto link_start = std::chrono::steady_clock::now();
             cached_program.Create(false,
                                   std::array{impl->current.vs, impl->current.gs, impl->current.fs});
             auto& disk_cache = impl->disk_cache;
             disk_cache.SaveDumpToFile(unique_identifier, cached_program.handle, accurate_mul);
+            RecordDrawTimeCompile("program-link", link_start);
         }
         state.draw.shader_program = cached_program.handle;
     }

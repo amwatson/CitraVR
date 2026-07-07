@@ -124,6 +124,17 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         return std::nullopt;
     }
 
+    // The persistent handle is opened in append mode, so its position is not
+    // guaranteed to be at the start (a freshly-written version header leaves
+    // it at EOF, and SAF/FUSE-backed fds on Android start at EOF for append
+    // modes). Reading the cache without rewinding fails and nukes the cache
+    // on every boot.
+    if (!transferable_file.Seek(0, SEEK_SET)) {
+        LOG_ERROR(Render_OpenGL, "Failed to rewind transferable cache for title id={}",
+                  GetTitleID());
+        return std::nullopt;
+    }
+
     u32 version{};
     if (transferable_file.ReadBytes(&version, sizeof(version)) != sizeof(version)) {
         LOG_ERROR(Render_OpenGL,
@@ -174,6 +185,11 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         }
     }
 
+    // Reposition at EOF for the SaveRaw appends that follow; stdio also
+    // requires a positioning call when switching from reading to writing on
+    // an update stream.
+    transferable_file.Seek(0, SEEK_END);
+
     LOG_INFO(Render_OpenGL, "Found a transferable disk cache with {} entries", raws.size());
     return {std::move(raws)};
 }
@@ -190,6 +206,9 @@ ShaderDiskCache::LoadPrecompiled(bool compressed) {
     }
 
     const auto result = LoadPrecompiledFile(precompiled_file, compressed);
+    // Reposition at EOF for the SaveDump/SaveDecompiledToFile appends that
+    // follow (see LoadTransferable).
+    precompiled_file.Seek(0, SEEK_END);
     if (!result) {
         LOG_INFO(Render_OpenGL,
                  "Failed to load precompiled cache for game with title id={} - removing",
@@ -202,6 +221,12 @@ ShaderDiskCache::LoadPrecompiled(bool compressed) {
 
 std::optional<std::pair<std::unordered_map<u64, ShaderDiskCacheDecompiled>, ShaderDumpsMap>>
 ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file, bool compressed) {
+    // The handle is opened in append mode and may be positioned at EOF; the
+    // whole file must be read from the start (see LoadTransferable).
+    if (!file.Seek(0, SEEK_SET)) {
+        LOG_ERROR(Render_OpenGL, "Failed to rewind precompiled cache");
+        return std::nullopt;
+    }
     // Read compressed file from disk and decompress to virtual precompiled cache file
     std::vector<u8> precompiled_file(file.GetSize());
     file.ReadBytes(precompiled_file.data(), precompiled_file.size());
@@ -477,6 +502,11 @@ FileUtil::IOFile ShaderDiskCache::AppendTransferableFile() {
                       transferable_path);
             return {};
         }
+        // Flush immediately: on Android the process is routinely killed
+        // without a clean shutdown, and a header left in the stdio buffer
+        // makes the next boot see a truncated file and invalidate the entire
+        // cache.
+        file.Flush();
     }
     return file;
 }
@@ -510,6 +540,9 @@ FileUtil::IOFile ShaderDiskCache::AppendPrecompiledFile(bool write_header) {
                       precompiled_path);
             return {};
         }
+        // Flush immediately so a process kill cannot leave a truncated header
+        // (see AppendTransferableFile).
+        file.Flush();
     }
     return file;
 }

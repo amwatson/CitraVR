@@ -200,6 +200,13 @@ object NativeLibrary {
     external fun stopEmulation()
 
     /**
+     * Persists in-memory disk-cache state (e.g. the Vulkan driver pipeline cache).
+     * Called on pause/quit because on Android the process is typically killed
+     * without running the renderer destructor, which is the normal save point.
+     */
+    external fun saveDiskShaderCaches()
+
+    /**
      * Returns true if emulation is running (or is paused).
      */
     external fun isRunning(): Boolean

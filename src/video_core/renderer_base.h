@@ -64,6 +64,13 @@ public:
     // if second == true then it is the second screen
     virtual void NotifySurfaceChanged(bool second) {}
 
+    /// Persists any in-memory disk-cache state (e.g. the Vulkan driver
+    /// pipeline cache) to storage. Called by frontends at points where the
+    /// process may be killed without a clean shutdown (Android onPause/quit),
+    /// since destructors are not guaranteed to run there. Must be safe to call
+    /// from a non-render thread while emulation is running.
+    virtual void SaveDiskCaches() {}
+
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
 

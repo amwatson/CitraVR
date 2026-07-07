@@ -778,6 +778,19 @@ void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNI
     }
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_saveDiskShaderCaches([[maybe_unused]] JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj) {
+    // Persist in-memory disk-cache state (the Vulkan driver pipeline cache).
+    // Called from the frontend on pause/quit because on Android the process is
+    // usually killed without running the renderer destructor, which is
+    // otherwise the only save point.
+    auto& system = Core::System::GetInstance();
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+    system.GPU().Renderer().SaveDiskCaches();
+}
+
 void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
                                                            [[maybe_unused]] jobject obj) {
     stop_run = true;

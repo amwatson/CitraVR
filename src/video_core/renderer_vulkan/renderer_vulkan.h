@@ -83,6 +83,10 @@ public:
     void SwapBuffers() override;
     void TryPresent(int timeout_ms, bool is_secondary) override {}
 
+    void SaveDiskCaches() override {
+        rasterizer.SaveDiskCaches();
+    }
+
 private:
     void ReloadPipeline(Settings::StereoRenderOption render_3d);
     void CompileShaders();

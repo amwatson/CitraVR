@@ -1497,6 +1497,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 NativeLibrary.surfaceDestroyed()
                 NativeLibrary.pauseEmulation()
                 NativeLibrary.playTimeManagerStop()
+                // Persist the pipeline cache while the process is guaranteed
+                // alive; the renderer destructor rarely runs on Android.
+                NativeLibrary.saveDiskShaderCaches()
             } else {
                 Log.warning("[EmulationFragment] Pause called while already paused.")
             }

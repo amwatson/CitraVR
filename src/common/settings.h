@@ -534,7 +534,8 @@ struct Values {
     SwitchableSetting<bool> use_display_refresh_rate_detection{
         true, Keys::use_display_refresh_rate_detection};
     Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, Keys::resolution_factor};
+    // CitraVR: default 0 (auto) so the VR layer picks the per-HMD scale factor
+    SwitchableSetting<u32, true> resolution_factor{0, 0, 10, Keys::resolution_factor};
     SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
@@ -596,7 +597,8 @@ struct Values {
     SwitchableSetting<float> bg_blue{0.f, Keys::bg_blue};
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, Keys::render_3d};
-    SwitchableSetting<u32> factor_3d{0, Keys::factor_3d};
+    // CitraVR: default 50 (upstream 0) so stereo depth is on out of the box
+    SwitchableSetting<u32> factor_3d{50, Keys::factor_3d};
     SwitchableSetting<bool> swap_eyes_3d{false, Keys::swap_eyes_3d};
 
     SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None,

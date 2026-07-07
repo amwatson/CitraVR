@@ -20,9 +20,11 @@ enum class IntSetting(
     CAMERA_OUTER_LEFT_FLIP(SettingKeys.camera_outer_left_flip(), Settings.SECTION_CAMERA, 0),
     CAMERA_OUTER_RIGHT_FLIP(SettingKeys.camera_outer_right_flip(), Settings.SECTION_CAMERA, 0),
     GRAPHICS_API(SettingKeys.graphics_api(), Settings.SECTION_RENDERER, 2),
-    RESOLUTION_FACTOR(SettingKeys.resolution_factor(), Settings.SECTION_RENDERER, 1),
+    // Keep the CitraVR defaults for resolution (0 = auto/per-HMD) and stereo
+    // depth in sync with the native defaults in common/settings.h.
+    RESOLUTION_FACTOR(SettingKeys.resolution_factor(), Settings.SECTION_RENDERER, 0),
     STEREOSCOPIC_3D_MODE(SettingKeys.render_3d(), Settings.SECTION_RENDERER, 2),
-    STEREOSCOPIC_3D_DEPTH(SettingKeys.factor_3d(), Settings.SECTION_RENDERER, 0),
+    STEREOSCOPIC_3D_DEPTH(SettingKeys.factor_3d(), Settings.SECTION_RENDERER, 50),
     STEPS_PER_HOUR(SettingKeys.steps_per_hour(), Settings.SECTION_SYSTEM, 0),
     CARDBOARD_SCREEN_SIZE(SettingKeys.cardboard_screen_size(), Settings.SECTION_LAYOUT, 85),
     CARDBOARD_X_SHIFT(SettingKeys.cardboard_x_shift(), Settings.SECTION_LAYOUT, 0),

@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <chrono>
+
 #include <boost/container/static_vector.hpp>
 
 #include "common/common_paths.h"
@@ -272,6 +274,9 @@ void PipelineCache::SaveDriverPipelineDiskCache() {
         return;
     }
 
+    std::scoped_lock lock{save_mutex};
+    const auto save_start = std::chrono::steady_clock::now();
+
     const auto cache_dir = GetPipelineCacheDir();
     const u32 vendor_id = instance.GetVendorID();
     const u32 device_id = instance.GetDeviceID();
@@ -293,6 +298,12 @@ void PipelineCache::SaveDriverPipelineDiskCache() {
         LOG_ERROR(Render_Vulkan, "Error during pipeline cache write");
         return;
     }
+
+    const auto save_ms = std::chrono::duration<double, std::milli>(
+                             std::chrono::steady_clock::now() - save_start)
+                             .count();
+    LOG_INFO(Render_Vulkan, "Saved pipeline cache for title_id={:016X} ({} KB in {:.1f} ms)",
+             program_id, cache_data.size() / 1024, save_ms);
 }
 
 void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,

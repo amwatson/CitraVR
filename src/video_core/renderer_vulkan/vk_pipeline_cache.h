@@ -5,6 +5,7 @@
 #pragma once
 
 #include <bitset>
+#include <mutex>
 
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
@@ -101,15 +102,20 @@ public:
         profile.enable_accurate_mul = _accurate_mul;
     }
 
+    /// Stores the generated pipeline cache. Normally called on destruction and
+    /// title switch, but also invoked by the Android frontend on pause/quit,
+    /// where the process can be killed before destructors run. Thread-safe:
+    /// vkGetPipelineCacheData is internally synchronized (the cache is created
+    /// without VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT) and the
+    /// file write is guarded by save_mutex.
+    void SaveDriverPipelineDiskCache();
+
 private:
     friend ShaderDiskCache;
 
     /// Loads the driver pipeline cache
     void LoadDriverPipelineDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
                                      const VideoCore::DiskResourceLoadCallback& callback = {});
-
-    /// Stores the generated pipeline cache
-    void SaveDriverPipelineDiskCache();
 
     /// Loads the shader disk cache
     void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
@@ -146,6 +152,9 @@ private:
     Pica::Shader::Profile profile{};
     vk::UniquePipelineCache driver_pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
+    /// Serializes concurrent SaveDriverPipelineDiskCache calls (frontend
+    /// pause/quit paths can race with each other and with title switch).
+    std::mutex save_mutex;
     std::size_t num_worker_threads;
     Common::ThreadWorker pipeline_workers;
     Common::ThreadWorker shader_workers;

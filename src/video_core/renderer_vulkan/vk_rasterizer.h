@@ -64,6 +64,11 @@ public:
     /// Switches the disk resources to the specified title
     void SwitchDiskResources(u64 title_id) override;
 
+    /// Persists the driver pipeline cache to disk (see RendererBase::SaveDiskCaches)
+    void SaveDiskCaches() {
+        pipeline_cache.SaveDriverPipelineDiskCache();
+    }
+
 private:
     /// Syncs pipeline state from PICA registers
     void SyncDrawState();

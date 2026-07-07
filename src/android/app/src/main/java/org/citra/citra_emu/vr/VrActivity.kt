@@ -72,6 +72,10 @@ class VrActivity : EmulationActivity() {
 
     public override fun onPause() {
        Log.info("VR [Java] onPause");
+        // Synchronous save while onPause runs: the OS will not kill the
+        // process during this callback, making it the last reliable point to
+        // persist the pipeline cache before a potential process death.
+        NativeLibrary.saveDiskShaderCaches()
         super.onPause()
     }
 
@@ -120,6 +124,10 @@ class VrActivity : EmulationActivity() {
     }
 
     fun quitToMenu() {
+        // Save the pipeline cache before starting teardown: onDestroy calls
+        // exitProcess(0) without ever stopping the core, so the renderer
+        // destructor (the normal save point) never runs on this path.
+        NativeLibrary.saveDiskShaderCaches()
         finish()
         val relaunchMainIntent = Intent(this, MainActivity::class.java)
         startActivity(relaunchMainIntent)
@@ -128,6 +136,10 @@ class VrActivity : EmulationActivity() {
     fun pauseGame() {
        Log.info("VR [Java] pauseGame");
         NativeLibrary.pauseEmulation();
+        // Emulation pauses whenever the user opens a menu or loses focus;
+        // piggyback on that to keep the on-disk pipeline cache fresh in case
+        // the process is later killed without warning.
+        NativeLibrary.saveDiskShaderCaches()
     }
 
     fun resumeGame() {

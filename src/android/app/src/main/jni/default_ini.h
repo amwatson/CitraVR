@@ -94,8 +94,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(cpu_clock_percentage) BOOST_HANA_STRING(R"(
 
 [Renderer]
-# Whether to render using OpenGL
-# 1: OpenGL ES (CitraVR default), 2: Vulkan
+# Which graphics API to render with
+# 1: OpenGL ES, 2: Vulkan (default)
 )") DECLARE_KEY(graphics_api) BOOST_HANA_STRING(R"(
 
 # Whether to compile shaders on multiple worker threads (Vulkan only)
@@ -137,8 +137,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(use_disk_shader_cache) BOOST_HANA_STRING(R"(
 
 # Resolution scale factor
-# 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
-# factor for the 3DS resolution
+# 0 (default): Auto (picks the scale factor for the HMD), 1: Native 3DS screen resolution,
+# Otherwise a scale factor for the 3DS resolution
 )") DECLARE_KEY(resolution_factor) BOOST_HANA_STRING(R"(
 
 # Use Integer Scaling when the layout allows
@@ -172,7 +172,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(render_3d) BOOST_HANA_STRING(R"(
 
 # Change 3D Intensity
-# 0 - 255: Intensity. 0 (default)
+# 0 - 255: Intensity. 50 (default)
 )") DECLARE_KEY(factor_3d) BOOST_HANA_STRING(R"(
 
 # Swap Eyes in 3d

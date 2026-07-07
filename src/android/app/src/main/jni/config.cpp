@@ -148,12 +148,10 @@ void Config::ReadValues() {
     Settings::values.use_gles = android_config->GetBoolean("Renderer", "use_gles", true);
     Settings::values.shaders_accurate_mul =
         android_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
-    // CitraVR: default to OpenGL ES (the known-good renderer for the OpenXR
-    // pipeline) instead of Azahar's Android default of Vulkan. Users can still
-    // opt into Vulkan via config.ini.vr.
-    Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(
-        android_config->GetInteger("Renderer", Settings::values.graphics_api.GetLabel(),
-                                   static_cast<long>(Settings::GraphicsAPI::OpenGL)));
+    // CitraVR: Vulkan (Azahar's Android default) is the VR default as well —
+    // async shader compilation eliminates the draw-time compile stalls GLES
+    // hits, since separable shaders are unavailable there.
+    ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
     ReadSetting("Renderer", Settings::values.spirv_shader_gen);

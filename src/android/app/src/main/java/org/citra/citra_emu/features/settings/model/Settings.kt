@@ -41,6 +41,18 @@ class Settings {
         get() = sections.isEmpty()
 
     fun loadSettings(view: SettingsActivityView? = null) {
+        // Reset the static setting values to their defaults before reading.
+        // Reading only overwrites values for keys present in the file with
+        // non-blank values, so without this a config wiped or replaced behind
+        // the app's back (e.g. deleted userdata folder) would keep showing the
+        // previous session's values while the emulator itself runs defaults.
+        BooleanSetting.clear()
+        FloatSetting.clear()
+        ScaledFloatSetting.clear()
+        IntSetting.clear()
+        IntListSetting.clear()
+        StringSetting.clear()
+
         sections = SettingsSectionMap()
         loadCitraSettings(view)
         if (!TextUtils.isEmpty(gameId)) {

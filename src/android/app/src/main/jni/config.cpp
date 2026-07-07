@@ -153,7 +153,10 @@ void Config::ReadValues() {
     // hits, since separable shaders are unavailable there.
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
-    ReadSetting("Renderer", Settings::values.async_shader_compilation);
+    // CitraVR: default to async shader compilation on Android, since it eliminates
+    // the draw-time shader compile stalls that GLES hits.
+    Settings::values.async_shader_compilation = android_config->GetBoolean(
+        "Renderer", Settings::values.async_shader_compilation.GetLabel(), true);
     ReadSetting("Renderer", Settings::values.spirv_shader_gen);
     ReadSetting("Renderer", Settings::values.disable_spirv_optimizer);
     ReadSetting("Renderer", Settings::values.use_hw_shader);

@@ -262,6 +262,7 @@ class Settings {
                     SECTION_UTILITY,
                     SECTION_AUDIO,
                     SECTION_DEBUG,
+                    SECTION_MISC,
                     SECTION_VR
                 )
         }

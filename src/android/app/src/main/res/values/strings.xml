@@ -964,4 +964,14 @@
     <string name="vr_stats_stall_shaders_label">Shader Compiles</string>
     <string name="vr_stats_stall_vr_label">VR Missed Frames</string>
     <string name="vr_stats_stall_marker_hint">Click either thumbstick when you see a stall to stamp a [USER-MARKER] in the log</string>
+    <string name="stable_channel_update_link" translatable="false">https://azahar-emu.org/pages/download/</string>
+    <string name="prerelease_channel_update_link" translatable="false">https://github.com/azahar-emu/azahar/releases</string>
+    <string name="update_available">Update Available</string>
+    <string name="update_available_description">A newer version of Azahar is available (version %1$s).\nWould you like to download it?</string>
+    <string name="check_for_updates">Check For Updates</string>
+    <string name="check_for_updates_description">Display an in-app notification when an update is available for Azahar.</string>
+    <string name="update_check_channel">Update Channel</string>
+    <string name="update_check_channel_description">Which update channel to use when checking for updates.</string>
+    <string name="update_check_channel_stable">Stable</string>
+    <string name="update_check_channel_prerelease">Prerelease</string>
 </resources>

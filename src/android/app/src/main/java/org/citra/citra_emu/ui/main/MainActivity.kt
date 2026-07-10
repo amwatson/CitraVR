@@ -54,6 +54,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
+import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
@@ -115,6 +116,7 @@ class MainActivity :
         ThemeUtil.themeChangeListener(this)
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
+        NativeLibrary.initMultiplayer()
 
         VrMainActivityUtils.doVersionUpdates(applicationContext)
 
@@ -239,6 +241,11 @@ class MainActivity :
 
     override fun onDestroy() {
         super.onDestroy()
+    }
+
+    fun displayMultiplayerDialog() {
+        val dialog = NetPlayDialog(this)
+        dialog.show()
     }
 
     override fun setTheme(resId: Int) {

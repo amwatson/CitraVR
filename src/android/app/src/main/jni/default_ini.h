@@ -619,9 +619,10 @@ vr_immersive_eye_indicator =
 [WebService]
 # URL for Web API
 )") DECLARE_KEY(web_api_url) BOOST_HANA_STRING(R"(
-# Username and token for Citra Web Service
-)") DECLARE_KEY(citra_username) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(citra_token) BOOST_HANA_STRING("\n")).c_str();
+# Token for Web Service
+)") DECLARE_KEY(network_token) BOOST_HANA_STRING("\n")
+
+).c_str();
 
 // clang-format on
 

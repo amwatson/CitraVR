@@ -40,6 +40,7 @@
     <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     <uses-feature android:name="com.oculus.feature.BOUNDARYLESS_APP" android:required="false" />
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />

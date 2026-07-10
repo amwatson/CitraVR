@@ -33,6 +33,7 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.RemovableStorageHelper
 import org.citra.citra_emu.vr.VrActivity
 import org.citra.citra_emu.vr.ui.VrErrorMessageLayer
@@ -140,6 +141,7 @@ object NativeLibrary {
     external fun setUserDirectory(directory: String)
 
     data class InstalledGame(val path: String, val mediaType: Game.MediaType)
+
     fun getInstalledGamePaths(): Array<InstalledGame> {
         val games = getInstalledGamePathsImpl()
 
@@ -155,6 +157,7 @@ object NativeLibrary {
             }
         }.toTypedArray()
     }
+
     private external fun getInstalledGamePathsImpl(): Array<String?>
 
     // Create the config.ini file.
@@ -715,6 +718,25 @@ object NativeLibrary {
         )
 
     external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    @Keep
+    @JvmStatic
+    fun addNetPlayMessage(type: Int, message: String) {
+        val emulationActivity = sEmulationActivity.get()
+        if (emulationActivity != null) {
+            emulationActivity.addNetPlayMessages(type, message)
+        } else {
+            NetPlayManager.addNetPlayMessage(type, message)
+        }
+    }
+
+    @Keep
+    @JvmStatic
+    fun clearChat() {
+        NetPlayManager.clearChat()
+    }
+
+    external fun initMultiplayer()
 
     @Keep
     @JvmStatic

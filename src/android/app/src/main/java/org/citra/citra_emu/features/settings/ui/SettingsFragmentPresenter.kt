@@ -110,6 +110,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             Settings.SECTION_LAYOUT -> addLayoutSettings(sl)
 
+            Settings.SECTION_NETWORK -> addNetworkSettings(sl)
+
             Settings.SECTION_AUDIO -> addAudioSettings(sl)
 
             Settings.SECTION_DEBUG -> addDebugSettings(sl)
@@ -205,6 +207,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     R.drawable.ic_fit_screen,
                     Settings.SECTION_LAYOUT
+                )
+            )
+            add(
+                SubmenuSetting(
+                    R.string.preferences_network,
+                    0,
+                    R.drawable.ic_network,
+                    Settings.SECTION_NETWORK
                 )
             )
             add(
@@ -473,6 +483,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     usernameSetting,
                     R.string.username,
                     0,
+                    null,
                     "AZAHAR",
                     10
                 )
@@ -1785,6 +1796,30 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "px",
                     IntSetting.PORTRAIT_BOTTOM_HEIGHT.key,
                     IntSetting.PORTRAIT_BOTTOM_HEIGHT.defaultValue.toFloat()
+                )
+            )
+        }
+    }
+
+    private fun addNetworkSettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
+        sl.apply {
+            add(
+                StringInputSetting(
+                    StringSetting.WEB_API_URL,
+                    R.string.web_api_url,
+                    R.string.web_api_url_description,
+                    StringSetting.WEB_API_URL.key,
+                    StringSetting.WEB_API_URL.defaultValue
+                )
+            )
+            add(
+                StringInputSetting(
+                    StringSetting.NETWORK_TOKEN,
+                    R.string.network_token,
+                    R.string.network_token_description,
+                    StringSetting.NETWORK_TOKEN.key,
+                    StringSetting.NETWORK_TOKEN.defaultValue
                 )
             )
         }

@@ -79,6 +79,7 @@ enum class IntSetting(
         Settings.SECTION_VR,
         0
     ),
+    UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), Settings.SECTION_MISC, 0),
     VR_SI_MODE_REGISTER_OFFSET("vr_si_mode_register_offset", Settings.SECTION_VR, -1);
 
     override var int: Int = defaultValue

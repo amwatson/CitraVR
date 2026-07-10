@@ -252,7 +252,6 @@ val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLay
 // Ensure that the preBuild task depends on the extraction task
 tasks.named("preBuild") {
     dependsOn(unzipVulkanValidationLayers)
-    dependsOn("ktlintCheck")
 }
 
 ktlint {

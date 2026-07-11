@@ -366,6 +366,8 @@
     <string name="setting_disabled">Paramètre désactivé</string>
     <string name="setting_disabled_description">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
     <string name="setting_not_editable_description">Cette option ne peut pas être modifiée pendant l\'exécution d\'un jeu.</string>
+    <string name="setting_disabled_description_incompatible_setting">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
+    <string name="setting_disabled_description_angle">Le moteur de rendu ne peut pas être changé car l\'appareil utilise ANGLE pour OpenGL, qui est actuellement incompatible avec Azahar. Vulkan sera utilisé.</string>
     <string name="auto_select">Sélection Automatique</string>
     <string name="start">Commencer</string>
     <string name="cancelling">Annulation...</string>
@@ -447,6 +449,11 @@
     <string name="emulation_aspect_ratio">Rapport d\'aspect</string>
     <string name="emulation_switch_screen_layout">Disposition en mode paysage</string>
     <string name="emulation_switch_portrait_layout">Disposition en mode portait</string>
+    <string name="emulation_secondary_display_enable">Activer l\'écran secondaire</string>
+    <string name="emulation_secondary_display_enable_description">Si désactivé, Azahar laisse Android gérer les écrans connectés. Si cette option est activée et que plusieurs écrans sont connectés, vous pouvez sélectionner lequel Azahar utilisera dans le menu rapide d\'émulation.</string>
+    <string name="emulation_switch_secondary_layout">Disposition de l\'écran secondaire</string>
+    <string name="emulation_secondary_display_management">Écran secondaire</string>
+    <string name="emulation_select_secondary_display">Choisir l\'écran</string>
     <string name="emulation_switch_secondary_layout_description">La disposition utilisée par un écran secondaire connecté par câble ou sans fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Écran large</string>
     <string name="emulation_screen_layout_portrait">Mode portrait</string>
@@ -455,6 +462,7 @@
     <string name="emulation_screen_layout_hybrid">Écrans hybrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Défaut</string>
+    <string name="emulation_secondary_display_opposite">Écran opposé</string>
     <string name="emulation_screen_layout_custom">Disposition personnalisée</string>
     <string name="bg_color">Couleur de fond</string>
     <string name="bg_color_description">La couleur qui apparaît derrière les écrans pendant l\'émulation, représentée par une valeur RGB.</string>

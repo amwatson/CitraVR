@@ -82,7 +82,6 @@
     <string name="select">Auswählen</string>
     <string name="cannot_skip">Der Nutzer Ordner muss gesetzt sein</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
-    <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="invalid_selection">Ungültige Auswahl</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
     <string name="setup_theme_settings_description">Konfigurieren sie ihre Designeinstellungen für Azahar.</string>

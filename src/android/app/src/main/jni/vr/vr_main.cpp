@@ -113,6 +113,12 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
     }
 }
 
+// Whether the cursor is hovering over the settings menu panel. Set during the
+// cursor pass and consumed by input handling on the following frame: while
+// hovering, the pointing hand's thumbstick scrolls the settings list, so its
+// state must not also be forwarded to the game.
+bool sIsCursorHoveringSettingsMenu = false;
+
 void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
                               jmethodID                   sendClickToWindowMethodID,
                               const XrActionStateBoolean& triggerState,
@@ -802,24 +808,33 @@ private:
                 }
             }
 
+            // While the cursor hovers the settings menu, the pointing hand's
+            // thumbstick scrolls the menu (see HandleCursorLayer); forward
+            // zeroes to the game for that stick so scrolling doesn't also
+            // move the game's camera/character.
             if (dpadHand != cStickHand) {
                 const auto cStickThumbstickState = inputState.mThumbStickState[cStickHand];
+                const bool suppress = sIsCursorHoveringSettingsMenu &&
+                                      cStickHand == inputState.mPreferredHand;
                 if (cStickThumbstickState.currentState.y != 0 ||
                     cStickThumbstickState.currentState.x != 0 ||
                     cStickThumbstickState.changedSinceLastSync) {
                     jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        cStickThumbstickState.currentState.x,
-                                        cStickThumbstickState.currentState.y, 0);
+                                        suppress ? 0.0f : cStickThumbstickState.currentState.x,
+                                        suppress ? 0.0f : cStickThumbstickState.currentState.y, 0);
                 }
             }
             if (dpadHand != leftStickHand) {
                 const auto leftStickThumbstickState = inputState.mThumbStickState[leftStickHand];
+                const bool suppress = sIsCursorHoveringSettingsMenu &&
+                                      leftStickHand == inputState.mPreferredHand;
                 if (leftStickThumbstickState.currentState.y != 0 ||
                     leftStickThumbstickState.currentState.x != 0 ||
                     leftStickThumbstickState.changedSinceLastSync) {
                     jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        leftStickThumbstickState.currentState.x,
-                                        leftStickThumbstickState.currentState.y, 1);
+                                        suppress ? 0.0f : leftStickThumbstickState.currentState.x,
+                                        suppress ? 0.0f : leftStickThumbstickState.currentState.y,
+                                        1);
                 }
             }
         }
@@ -843,6 +858,9 @@ private:
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
         XrVector2f              cursorPos2d        = {0, 0};
         float                   scaleFactor        = 0.01f;
+        // Re-derived below when the ribbon is hit-tested; cleared here so it
+        // can't go stale on frames where the ribbon isn't tested at all.
+        sIsCursorHoveringSettingsMenu              = false;
         CursorLayer::CursorType cursorType =
             appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU
                 ? CursorLayer::CursorType::CURSOR_TYPE_POSITIONAL_MENU
@@ -916,8 +934,26 @@ private:
                 if (!shouldRenderCursor && showUIRibbon) {
                     shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
-                    if (shouldRenderCursor && triggerState.changedSinceLastSync) {
-                        mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                    // Tracks whether a press started on the panel, so drags
+                    // stream move events and a press that slides off the
+                    // panel is cancelled rather than left stuck.
+                    static bool sIsRibbonPressed = false;
+                    if (shouldRenderCursor) {
+                        if (triggerState.changedSinceLastSync) {
+                            mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                            sIsRibbonPressed = triggerState.currentState == 1;
+                        } else if (triggerState.currentState == 1 && sIsRibbonPressed) {
+                            // Move event while the trigger is held, so drag
+                            // gestures (e.g. scrolling the settings list) work.
+                            mRibbonLayer->SendClickToUI(cursorPos2d, 2);
+                        } else if (triggerState.currentState == 0) {
+                            // Release happened while off-panel; nothing to
+                            // cancel anymore.
+                            sIsRibbonPressed = false;
+                        }
+                    } else if (sIsRibbonPressed) {
+                        mRibbonLayer->SendClickToUI(cursorPos2d, 3 /* cancel */);
+                        sIsRibbonPressed = false;
                     }
                     // If trigger is pressed, thumbstick controls
                     // the depth
@@ -926,6 +962,24 @@ private:
                     static constexpr float kThumbStickDirectionThreshold = 0.5f;
                     const bool             hasThumbstickMotion =
                         std::abs(thumbstickState.currentState.y) > kThumbStickDirectionThreshold;
+
+                    // In the settings menu, the thumbstick scrolls the
+                    // content under the cursor (settings list or an open
+                    // dialog).
+                    sIsCursorHoveringSettingsMenu =
+                        shouldRenderCursor &&
+                        appState.mLowerMenuType == LowerMenuType::SETTINGS_MENU;
+                    if (sIsCursorHoveringSettingsMenu) {
+                        static constexpr float kScrollDeadZone = 0.3f;
+                        // Wheel notches per frame; scales thumbstick
+                        // deflection to a comfortable scroll speed.
+                        static constexpr float kScrollSpeedFactor = 0.5f;
+                        if (std::abs(thumbstickState.currentState.y) > kScrollDeadZone) {
+                            mRibbonLayer->SendScrollToUI(
+                                cursorPos2d,
+                                {0.0f, thumbstickState.currentState.y * kScrollSpeedFactor});
+                        }
+                    }
 
                     if (appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         (sIsLowerPanelBeingPositioned ||
@@ -1041,6 +1095,7 @@ private:
                       newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? "P"
                       : newState.mLowerMenuType == LowerMenuType::MAIN_MENU     ? "M"
                       : newState.mLowerMenuType == LowerMenuType::STATS_MENU    ? "S"
+                      : newState.mLowerMenuType == LowerMenuType::SETTINGS_MENU ? "Set"
                                                                                 : "U");
                 if (shouldPauseEmulation) {
                     PauseEmulation(jni);

@@ -85,8 +85,8 @@ class SettingsFragment :
         )
     }
 
-    override fun showToastMessage(message: String?, is_long: Boolean) {
-        activityView!!.showToastMessage(message!!, is_long)
+    override fun showToastMessage(message: String, isLong: Boolean) {
+        activityView!!.showToastMessage(message, isLong)
     }
 
     override fun putSetting(setting: AbstractSetting) {

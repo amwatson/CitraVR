@@ -250,7 +250,7 @@ class SettingsActivity :
         finish()
     }
 
-    fun setToolbarTitle(title: String) {
+    override fun setToolbarTitle(title: String) {
         binding.toolbarSettingsLayout.title = title
     }
 

@@ -214,7 +214,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          scale, start, end, result2d, result3d);
 }
 
-// Next error code: -8
+// Next error code: -9
 int32_t UILayer::Init(const jclass classObject, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
     mVrUILayerClass = classObject;
@@ -236,6 +236,10 @@ int32_t UILayer::Init(const jclass classObject, const jobject activityObject,
     mSendClickToUIMethodID = mEnv->GetMethodID(mVrUILayerClass, "sendClickToUI", "(FFI)I");
 
     BAIL_ON_COND(mSendClickToUIMethodID == nullptr, "could not find sendClickToUI()", -6);
+
+    mSendScrollToUIMethodID = mEnv->GetMethodID(mVrUILayerClass, "sendScrollToUI", "(FFFF)I");
+
+    BAIL_ON_COND(mSendScrollToUIMethodID == nullptr, "could not find sendScrollToUI()", -8);
 
     BAIL_ON_ERR(CreateSwapchain(), -7);
 
@@ -322,4 +326,9 @@ int UILayer::CreateSwapchain() {
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
     mEnv->CallIntMethod(mVrUILayerObject, mSendClickToUIMethodID, pos2d.x, pos2d.y, type);
+}
+
+void UILayer::SendScrollToUI(const XrVector2f& pos2d, const XrVector2f& scroll2d) {
+    mEnv->CallIntMethod(mVrUILayerObject, mSendScrollToUIMethodID, pos2d.x, pos2d.y, scroll2d.x,
+                        scroll2d.y);
 }

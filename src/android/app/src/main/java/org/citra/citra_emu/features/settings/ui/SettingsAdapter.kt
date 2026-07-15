@@ -14,11 +14,14 @@ import android.text.InputFilter
 import android.text.InputType
 import android.text.TextWatcher
 import android.text.format.DateFormat
+import android.view.Display
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DiffUtil
@@ -84,6 +87,11 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     private var clickedItem: SettingsItem? = null
     private var clickedPosition: Int
     private var dialog: AlertDialog? = null
+
+    // VR-SPECIFIC: the VR settings panel routes injected touch events to the
+    // open dialog's window (see VrUILayer.getTouchTargetWindow), since events
+    // dispatched to the panel's own window never reach a dialog on top of it.
+    val activeDialog: AlertDialog? get() = dialog
     private var sliderProgress = 0f
     private var textSliderValue: TextInputEditText? = null
     private var textInputLayout: TextInputLayout? = null
@@ -91,6 +99,24 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
 
     private var defaultCancelListener =
         DialogInterface.OnClickListener { _: DialogInterface?, _: Int -> closeDialog() }
+
+    /**
+     * Creates and shows the dialog built by [builder].
+     *
+     * VR-SPECIFIC: when the settings UI is hosted on the VR panel's virtual
+     * display, the dialog has no activity token, which WindowManager requires
+     * for TYPE_APPLICATION windows. TYPE_PRIVATE_PRESENTATION is accepted
+     * without a token on an app-owned private display and keeps the dialog on
+     * the same display as the panel.
+     */
+    private fun showDialog(builder: MaterialAlertDialogBuilder): AlertDialog {
+        val newDialog = builder.create()
+        if (ContextCompat.getDisplayOrDefault(context).displayId != Display.DEFAULT_DISPLAY) {
+            newDialog.window?.setType(WindowManager.LayoutParams.TYPE_PRIVATE_PRESENTATION)
+        }
+        newDialog.show()
+        return newDialog
+    }
 
     init {
         clickedPosition = -1
@@ -242,10 +268,11 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     private fun onSingleChoiceClick(item: SingleChoiceSetting) {
         clickedItem = item
         val value = getSelectionForSingleChoiceValue(item)
-        dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(item.nameId)
-            .setSingleChoiceItems(item.choicesId, value, this)
-            .show()
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setTitle(item.nameId)
+                .setSingleChoiceItems(item.choicesId, value, this)
+        )
     }
 
     fun onSingleChoiceClick(item: SingleChoiceSetting, position: Int) {
@@ -256,17 +283,18 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     private fun onMultiChoiceClick(item: MultiChoiceSetting) {
         clickedItem = item
 
-        val value: BooleanArray = getSelectionForMultiChoiceValue(item)
-        dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(item.nameId)
-            .setMultiChoiceItems(item.choicesId, value, this)
-            .setOnDismissListener {
-                if (clickedPosition != -1) {
-                    notifyItemChanged(clickedPosition)
-                    clickedPosition = -1
+        val value: BooleanArray = getSelectionForMultiChoiceValue(item);
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setTitle(item.nameId)
+                .setMultiChoiceItems(item.choicesId, value, this)
+                .setOnDismissListener {
+                    if (clickedPosition != -1) {
+                        notifyItemChanged(clickedPosition)
+                        clickedPosition = -1
+                    }
                 }
-            }
-            .show()
+        )
     }
 
     fun onMultiChoiceClick(item: MultiChoiceSetting, position: Int) {
@@ -276,12 +304,11 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
 
     private fun onStringSingleChoiceClick(item: StringSingleChoiceSetting) {
         clickedItem = item
-        dialog = context?.let {
-            MaterialAlertDialogBuilder(it)
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
                 .setTitle(item.nameId)
                 .setSingleChoiceItems(item.choices, item.selectValueIndex, this)
-                .show()
-        }
+        )
     }
 
     fun onStringSingleChoiceClick(item: StringSingleChoiceSetting, position: Int) {
@@ -291,6 +318,9 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
 
     @SuppressLint("SimpleDateFormat")
     fun onDateTimeClick(item: DateTimeSetting, position: Int) {
+        // The Material date/time pickers are DialogFragments and need a
+        // hosting activity; the in-VR settings panel has none.
+        val hostActivity = fragmentView.activityView as? AppCompatActivity ?: return
         clickedItem = item
         clickedPosition = position
 
@@ -311,7 +341,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         calendar.timeZone = TimeZone.getTimeZone("UTC")
 
         var timeFormat: Int = TimeFormat.CLOCK_12H
-        if (DateFormat.is24HourFormat(fragmentView.activityView as AppCompatActivity)) {
+        if (DateFormat.is24HourFormat(hostActivity)) {
             timeFormat = TimeFormat.CLOCK_24H
         }
 
@@ -327,10 +357,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             .build()
 
         datePicker.addOnPositiveButtonClickListener {
-            val activity = fragmentView.activityView as? AppCompatActivity
-            activity?.supportFragmentManager?.let { fragmentManager ->
-                timePicker.show(fragmentManager, "TimePicker")
-            }
+            timePicker.show(hostActivity.supportFragmentManager, "TimePicker")
         }
         timePicker.addOnPositiveButtonClickListener {
             var epochTime: Long = datePicker.selection!! / 1000
@@ -346,10 +373,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             fragmentView.loadSettingsList()
             clickedItem = null
         }
-        datePicker.show(
-            (fragmentView.activityView as AppCompatActivity).supportFragmentManager,
-            "DatePicker"
-        )
+        datePicker.show(hostActivity.supportFragmentManager, "DatePicker")
     }
 
     fun onSliderClick(item: SliderSetting, position: Int) {
@@ -426,25 +450,25 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             }
         }
 
-        dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(item.nameId)
-            .setView(sliderBinding.root)
-            .setPositiveButton(android.R.string.ok, this)
-            .setNegativeButton(android.R.string.cancel, defaultCancelListener)
-            .setNeutralButton(R.string.slider_default) { dialog: DialogInterface, which: Int ->
-                sliderBinding.slider?.value = when (item.setting) {
-                    is ScaledFloatSetting -> {
-                        val scaledSetting = item.setting as ScaledFloatSetting
-                        scaledSetting.defaultValue * scaledSetting.scale
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setTitle(item.nameId)
+                .setView(sliderBinding.root)
+                .setPositiveButton(android.R.string.ok, this)
+                .setNegativeButton(android.R.string.cancel, defaultCancelListener)
+                .setNeutralButton(R.string.slider_default) { dialog: DialogInterface, which: Int ->
+                    sliderBinding.slider?.value = when (item.setting) {
+                        is ScaledFloatSetting -> {
+                            val scaledSetting = item.setting as ScaledFloatSetting
+                            scaledSetting.defaultValue * scaledSetting.scale
+                        }
+
+                        is FloatSetting -> (item.setting as FloatSetting).defaultValue
+                        else -> item.defaultValue ?: 0f
                     }
-
-                    is FloatSetting -> (item.setting as FloatSetting).defaultValue
-
-                    else -> item.defaultValue ?: 0f
+                    onClick(dialog, which)
                 }
-                onClick(dialog, which)
-            }
-            .show()
+        )
     }
 
     fun onSubmenuClick(item: SubmenuSetting) {
@@ -452,7 +476,9 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     }
 
     fun onInputBindingClick(item: InputBindingSetting, position: Int) {
-        val activity = fragmentView.activityView as FragmentActivity
+        // Input binding needs a hosting activity for its bottom sheet (and
+        // physical key/motion events); unavailable from the in-VR panel.
+        val activity = fragmentView.activityView as? FragmentActivity ?: return
         MotionBottomSheetDialogFragment.newInstance(
             item,
             { closeDialog() },
@@ -480,12 +506,13 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                 arrayOf(InputFilter.LengthFilter(item.characterLimit))
         }
 
-        dialog = MaterialAlertDialogBuilder(context)
-            .setView(inputBinding.root)
-            .setTitle(item.nameId)
-            .setPositiveButton(android.R.string.ok, this)
-            .setNegativeButton(android.R.string.cancel, defaultCancelListener)
-            .show()
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setView(inputBinding.root)
+                .setTitle(item.nameId)
+                .setPositiveButton(android.R.string.ok, this)
+                .setNegativeButton(android.R.string.cancel, defaultCancelListener)
+        )
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {
@@ -612,7 +639,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     }
 
     fun onLongClick(setting: AbstractSetting, position: Int): Boolean {
-        MaterialAlertDialogBuilder(context)
+        dialog = showDialog(MaterialAlertDialogBuilder(context)
             .setMessage(R.string.reset_setting_confirmation)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 when (setting) {
@@ -637,13 +664,13 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                 fragmentView.loadSettingsList()
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        )
 
         return true
     }
 
     fun onInputBindingLongClick(setting: InputBindingSetting, position: Int): Boolean {
-        MaterialAlertDialogBuilder(context)
+        dialog = showDialog(MaterialAlertDialogBuilder(context)
             .setMessage(R.string.reset_setting_confirmation)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 setting.removeOldMapping()
@@ -652,7 +679,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                 fragmentView.loadSettingsList()
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        )
 
         return true
     }
@@ -669,14 +696,25 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             disabledMessage
         }
 
-        MessageDialogFragment.newInstance(
-            titleId,
-            messageId
-        ).show((fragmentView as SettingsFragment).childFragmentManager, MessageDialogFragment.TAG)
+        val fragment = fragmentView as? SettingsFragment
+        if (fragment != null) {
+            MessageDialogFragment.newInstance(
+                titleId,
+                messageId
+            ).show(fragment.childFragmentManager, MessageDialogFragment.TAG)
+        } else {
+            // In-VR settings panel: no fragment manager, use a plain dialog.
+            dialog = showDialog(
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(titleId)
+                    .setMessage(messageId)
+                    .setPositiveButton(android.R.string.ok, null)
+            )
+        }
     }
 
     fun onClickAutoMap() {
-        val activity = fragmentView.activityView as FragmentActivity
+        val activity = fragmentView.activityView as? FragmentActivity ?: return
         AutoMapDialogFragment.newInstance {
             fragmentView.loadSettingsList()
             fragmentView.onSettingChanged()
@@ -716,12 +754,13 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     }
 
     private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
-        MaterialAlertDialogBuilder(context)
-            .setTitle(titleId)
-            .setMessage(messageId)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int -> onConfirm() }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setTitle(titleId)
+                .setMessage(messageId)
+                .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int -> onConfirm() }
+                .setNegativeButton(android.R.string.cancel, null)
+        )
     }
 
     fun closeDialog() {

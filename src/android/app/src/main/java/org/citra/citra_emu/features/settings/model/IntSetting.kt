@@ -102,7 +102,8 @@ enum class IntSetting(
             EMULATED_REGION,
             INIT_CLOCK,
             GRAPHICS_API,
-            AUDIO_INPUT_TYPE
+            AUDIO_INPUT_TYPE,
+            RESOLUTION_FACTOR,
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

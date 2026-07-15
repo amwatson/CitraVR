@@ -59,7 +59,12 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private lateinit var gameId: String
     private var settingsList: ArrayList<SettingsItem>? = null
 
-    private val settingsActivity get() = fragmentView.activityView as SettingsActivity
+    // The settings UI may be hosted by SettingsActivity (2D) or by the in-VR
+    // settings panel (VrSettingsMenu); only use the concrete activity where an
+    // Activity is genuinely required, and expect it to be absent in VR.
+    private val settingsActivity get() = fragmentView.activityView as? SettingsActivity
+    private val activityView get() = fragmentView.activityView!!
+    private val context: Context get() = settingsActivity ?: CitraApplication.appContext
     private val settings get() = fragmentView.activityView!!.settings
     private lateinit var settingsAdapter: SettingsAdapter
 
@@ -89,7 +94,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     fun loadSettingsList() {
         if (!TextUtils.isEmpty(gameId)) {
-            settingsActivity.setToolbarTitle("Application Settings: $gameId")
+            activityView.setToolbarTitle("Application Settings: $gameId")
         }
         val sl = ArrayList<SettingsItem>()
         if (menuTag == null) {
@@ -136,8 +141,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     /** Returns the portrait mode width */
     private fun getDimensions(): IntArray {
         val dm = Resources.getSystem().displayMetrics
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val wm = settingsActivity.windowManager.maximumWindowMetrics
+        val activity = settingsActivity
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && activity != null) {
+            val wm = activity.windowManager.maximumWindowMetrics
             val height = wm.bounds.height().coerceAtLeast(dm.heightPixels)
             val width = wm.bounds.width().coerceAtLeast(dm.widthPixels)
             intArrayOf(width, height)
@@ -151,16 +157,22 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun getLargerDimension(): Int = getDimensions().max()
 
     private fun addConfigSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_settings))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_settings))
         sl.apply {
-            add(
-                SubmenuSetting(
-                    R.string.preferences_vr,
-                    0,
-                    R.drawable.ic_vr_adjust_depth,
-                    Settings.SECTION_VR
+            // VR and gamepad settings are only offered in the 2D settings
+            // before launching VR: VR settings are read once at VR init, and
+            // button mapping can't capture controller input from the headset.
+            val isInVr = settingsActivity == null
+            if (!isInVr) {
+                add(
+                    SubmenuSetting(
+                        R.string.preferences_vr,
+                        0,
+                        R.drawable.ic_vr_adjust_depth,
+                        Settings.SECTION_VR
+                    )
                 )
-            )
+            }
             add(
                 SubmenuSetting(
                     R.string.preferences_general,
@@ -185,14 +197,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     Settings.SECTION_CAMERA
                 )
             )
-            add(
-                SubmenuSetting(
-                    R.string.preferences_controls,
-                    0,
-                    R.drawable.ic_controls_settings,
-                    Settings.SECTION_CONTROLS
+            if (!isInVr) {
+                add(
+                    SubmenuSetting(
+                        R.string.preferences_controls,
+                        0,
+                        R.drawable.ic_controls_settings,
+                        Settings.SECTION_CONTROLS
+                    )
                 )
-            )
+            }
             add(
                 SubmenuSetting(
                     R.string.preferences_graphics,
@@ -201,6 +215,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     Settings.SECTION_RENDERER
                 )
             )
+            // CitraVR-specific: screen layout is controlled in-VR, don't show
+            // the Layout section.
+            /*
             add(
                 SubmenuSetting(
                     R.string.preferences_layout,
@@ -209,6 +226,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     Settings.SECTION_LAYOUT
                 )
             )
+            */
             add(
                 SubmenuSetting(
                     R.string.preferences_network,
@@ -241,10 +259,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     false,
                     R.drawable.ic_restore,
                     {
-                        ResetSettingsDialogFragment().show(
-                            settingsActivity.supportFragmentManager,
-                            ResetSettingsDialogFragment.TAG
-                        )
+                        // Requires an activity to host the dialog; unavailable
+                        // from the in-VR settings panel.
+                        settingsActivity?.let {
+                            ResetSettingsDialogFragment().show(
+                                it.supportFragmentManager,
+                                ResetSettingsDialogFragment.TAG
+                            )
+                        }
                     }
                 )
             )
@@ -252,7 +274,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addGeneralSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_general))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_general))
         sl.apply {
             add(
                 SwitchSetting(
@@ -349,7 +371,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun addSystemSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_system))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_system))
         sl.apply {
             val usernameSetting = object : AbstractStringSetting {
                 override var string: String
@@ -445,7 +467,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val defaultValue: Short = 49
             }
             var index = -1
-            val countries = settingsActivity.resources.getStringArray(R.array.countries)
+            val countries = context.resources.getStringArray(R.array.countries)
                 .mapNotNull {
                     index++
                     if (it.isNotEmpty()) it to index.toString() else null
@@ -667,11 +689,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addCameraSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.camera))
+        activityView.setToolbarTitle(context.getString(R.string.camera))
 
         // Get the camera IDs
         val cameraManager =
-            settingsActivity.getSystemService(Context.CAMERA_SERVICE) as CameraManager?
+            context.getSystemService(Context.CAMERA_SERVICE) as CameraManager?
         val supportedCameraNameList = ArrayList<String>()
         val supportedCameraIdList = ArrayList<String>()
         if (cameraManager != null) {
@@ -700,7 +722,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                                 R.string.camera_facing_external
                     }
                     supportedCameraNameList.add(
-                        String.format("%1\$s (%2\$s)", id, settingsActivity.getString(stringId))
+                        String.format("%1\$s (%2\$s)", id, context.getString(stringId))
                     )
                 }
             } catch (e: CameraAccessException) {
@@ -711,18 +733,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
         // Create the names and values for display
         val cameraDeviceNameList =
-            settingsActivity.resources.getStringArray(R.array.cameraDeviceNames).toMutableList()
+            context.resources.getStringArray(R.array.cameraDeviceNames).toMutableList()
         cameraDeviceNameList.addAll(supportedCameraNameList)
         val cameraDeviceValueList =
-            settingsActivity.resources.getStringArray(R.array.cameraDeviceValues).toMutableList()
+            context.resources.getStringArray(R.array.cameraDeviceValues).toMutableList()
         cameraDeviceValueList.addAll(supportedCameraIdList)
 
         val haveCameraDevices = supportedCameraIdList.isNotEmpty()
 
         val imageSourceNames =
-            settingsActivity.resources.getStringArray(R.array.cameraImageSourceNames)
+            context.resources.getStringArray(R.array.cameraImageSourceNames)
         val imageSourceValues =
-            settingsActivity.resources.getStringArray(R.array.cameraImageSourceValues)
+            context.resources.getStringArray(R.array.cameraImageSourceValues)
         if (!haveCameraDevices) {
             // Remove the last entry (ndk / Device Camera)
             imageSourceNames.copyOfRange(0, imageSourceNames.size - 1)
@@ -844,8 +866,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
-
+        activityView.setToolbarTitle(context.getString(R.string.preferences_controls))
         sl.apply {
             add(
                 RunnableSetting(
@@ -952,7 +973,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
 
     private fun addGraphicsSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_graphics))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_graphics))
         sl.apply {
             add(HeaderSetting(R.string.renderer))
             add(
@@ -1104,6 +1125,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()
                 )
             )
+            // CitraVR-specific: don't show flat-screen stereoscopy toggles.
+            /*
             add(
                 SwitchSetting(
                     BooleanSetting.DISABLE_RIGHT_EYE_RENDER,
@@ -1125,6 +1148,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         IntSetting.RENDER_3D_WHICH_DISPLAY.int != StereoWhichDisplay.NONE.int
                 )
             )
+            */
 
             // CitraVR-specific: don't show cardboard settings, we won't use them.
             /*
@@ -1237,7 +1261,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addLayoutSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_layout))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_layout))
         sl.apply {
             add(
                 SingleChoiceSetting(
@@ -1489,9 +1513,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addPerformanceOverlaySettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.performance_overlay_options)
-        )
+        activityView.setToolbarTitle(context.getString(R.string.performance_overlay_options))
         sl.apply {
             add(HeaderSetting(R.string.visibility))
 
@@ -1590,9 +1612,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addCustomLandscapeSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.emulation_landscape_custom_layout)
-        )
+        activityView.setToolbarTitle(context.getString(R.string.emulation_landscape_custom_layout))
         sl.apply {
             add(HeaderSetting(R.string.emulation_top_screen))
             add(
@@ -1696,9 +1716,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addCustomPortraitSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.emulation_portrait_custom_layout)
-        )
+        activityView.setToolbarTitle(context.getString(R.string.emulation_portrait_custom_layout))
         sl.apply {
             add(HeaderSetting(R.string.emulation_top_screen))
             add(
@@ -1802,7 +1820,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addNetworkSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_network))
         sl.apply {
             add(
                 StringInputSetting(
@@ -1826,7 +1844,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addAudioSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_audio))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_audio))
         sl.apply {
             add(
                 SliderSetting(
@@ -1902,7 +1920,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addDebugSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_debug))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_debug))
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
             add(
@@ -2020,7 +2038,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addThemeSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_theme))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_theme))
         sl.apply {
             val theme: AbstractBooleanSetting = object : AbstractBooleanSetting {
                 override var boolean: Boolean
@@ -2029,7 +2047,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         preferences.edit()
                             .putBoolean(Settings.PREF_MATERIAL_YOU, value)
                             .apply()
-                        settingsActivity.recreate()
+                        settingsActivity?.recreate()
                     }
                 override val key: String? = null
                 override val section: String? = null
@@ -2056,7 +2074,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         preferences.edit()
                             .putInt(Settings.PREF_STATIC_THEME_COLOR, value)
                             .apply()
-                        settingsActivity.recreate()
+                        settingsActivity?.recreate()
                     }
                 override val key: String? = null
                 override val section: String? = null
@@ -2083,8 +2101,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         preferences.edit()
                             .putInt(Settings.PREF_THEME_MODE, value)
                             .apply()
-                        ThemeUtil.setThemeMode(settingsActivity)
-                        settingsActivity.recreate()
+                        settingsActivity?.let { ThemeUtil.setThemeMode(it) }
+                        settingsActivity?.recreate()
                     }
                 override val key: String? = null
                 override val section: String? = null
@@ -2111,7 +2129,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                         preferences.edit()
                             .putBoolean(Settings.PREF_BLACK_BACKGROUNDS, value)
                             .apply()
-                        settingsActivity.recreate()
+                        settingsActivity?.recreate()
                     }
                 override val key: String? = null
                 override val section: String? = null
@@ -2133,7 +2151,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addVRSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_vr))
+        activityView.setToolbarTitle(context.getString(R.string.preferences_vr))
         sl.apply {
             add(
                 SingleChoiceSetting(

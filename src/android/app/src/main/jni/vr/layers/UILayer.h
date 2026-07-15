@@ -121,9 +121,19 @@ public:
      *  @param pos2d the 2D position of the click in the Android display coordinate
      *  system.
      *  @param type the type of the click event. 0 for down, 1 for up, 2 for movement (while cursor
-     *  is already pressed).
+     *  is already pressed), 3 for cancel (cursor left the panel mid-press).
      */
     void SendClickToUI(const XrVector2f& pos2d, const int type);
+
+    /** Forwards a scroll (mouse-wheel-like) event to the corresponding position on the
+     *  Android UI window, so scrollable views under the cursor (lists) can be scrolled
+     *  with the thumbstick.
+     *  @param pos2d the 2D position of the cursor in the Android display coordinate
+     *  system.
+     *  @param scroll2d scroll amounts in wheel notches (x = horizontal, y = vertical;
+     *  positive y scrolls up).
+     */
+    void SendScrollToUI(const XrVector2f& pos2d, const XrVector2f& scroll2d);
 
 protected:
     jobject GetVrUILayerObject() const { return mVrUILayerObject; }
@@ -158,7 +168,8 @@ private:
     // the decorView representing an entire window, it's important to accont for
     // the x, y offset of the view within the window, in case there are things
     // like window decorations or status bars.
-    jmethodID mGetBoundsMethodID     = nullptr;
-    jmethodID mSendClickToUIMethodID = nullptr;
-    jmethodID mSetSurfaceMethodId    = nullptr;
+    jmethodID mGetBoundsMethodID      = nullptr;
+    jmethodID mSendClickToUIMethodID  = nullptr;
+    jmethodID mSendScrollToUIMethodID = nullptr;
+    jmethodID mSetSurfaceMethodId     = nullptr;
 };

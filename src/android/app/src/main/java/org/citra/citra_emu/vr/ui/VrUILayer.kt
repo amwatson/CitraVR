@@ -74,9 +74,15 @@ abstract class VrUILayer(
             0 -> MotionEvent.ACTION_UP
             1 -> MotionEvent.ACTION_DOWN
             2 -> MotionEvent.ACTION_MOVE
+            3 -> MotionEvent.ACTION_CANCEL
             else -> MotionEvent.ACTION_HOVER_ENTER
         }
         activity.runOnUiThread { dispatchTouchEvent(x, y, action) }
+        return 0
+    }
+
+    fun sendScrollToUI(x: Float, y: Float, scrollX: Float, scrollY: Float): Int {
+        activity.runOnUiThread { dispatchScrollEvent(x, y, scrollX, scrollY) }
         return 0
     }
 
@@ -90,7 +96,27 @@ abstract class VrUILayer(
 
     protected open fun onSurfaceCreated() {}
 
+    /**
+     * The window that should receive injected touch events. Defaults to the
+     * presentation's window, but subclasses can redirect input to another
+     * window on the same virtual display (e.g. a dialog opened on top of the
+     * panel), which would otherwise never see events dispatched to the
+     * presentation's decor view.
+     */
+    protected open fun getTouchTargetWindow(): Window? = presentation?.window
+
     private fun dispatchTouchEvent(x: Float, y: Float, action: Int) {
+        val targetWindow = getTouchTargetWindow() ?: return
+        val decorView = targetWindow.decorView
+
+        // Incoming coordinates are in virtual-display space. The presentation
+        // window fills the display, but other windows (dialogs) are smaller
+        // and centered, so translate into the target window's frame.
+        val windowOffset = IntArray(2)
+        decorView.getLocationOnScreen(windowOffset)
+        val localX = x - windowOffset[0]
+        val localY = y - windowOffset[1]
+
         val eventTime = SystemClock.uptimeMillis()
 
         val event = MotionEvent.obtain(
@@ -103,8 +129,8 @@ abstract class VrUILayer(
                 toolType = MotionEvent.TOOL_TYPE_FINGER
             }),
             arrayOf(PointerCoords().apply {
-                this.x = x
-                this.y = y
+                this.x = localX
+                this.y = localY
                 pressure = 1f
                 size = 1f
             }),
@@ -116,9 +142,51 @@ abstract class VrUILayer(
         )
         try {
             // Dispatch the MotionEvent to the view
-            presentation?.window?.decorView?.dispatchTouchEvent(event)
+            decorView.dispatchTouchEvent(event)
         } finally {
             // Ensure the MotionEvent is recycled after use
+            event.recycle()
+        }
+    }
+
+    /**
+     * Synthesizes a mouse-wheel event at the given display coordinates so
+     * scrollable views under the cursor (e.g. the settings list, or the list
+     * in an open dialog) can be scrolled with the thumbstick. Scroll amounts
+     * are in wheel notches.
+     */
+    private fun dispatchScrollEvent(x: Float, y: Float, scrollX: Float, scrollY: Float) {
+        val targetWindow = getTouchTargetWindow() ?: return
+        val decorView = targetWindow.decorView
+
+        val windowOffset = IntArray(2)
+        decorView.getLocationOnScreen(windowOffset)
+
+        val eventTime = SystemClock.uptimeMillis()
+        val event = MotionEvent.obtain(
+            eventTime,
+            eventTime,
+            MotionEvent.ACTION_SCROLL,
+            1,
+            arrayOf(PointerProperties().apply {
+                id = 0
+                toolType = MotionEvent.TOOL_TYPE_MOUSE
+            }),
+            arrayOf(PointerCoords().apply {
+                this.x = x - windowOffset[0]
+                this.y = y - windowOffset[1]
+                setAxisValue(MotionEvent.AXIS_HSCROLL, scrollX)
+                setAxisValue(MotionEvent.AXIS_VSCROLL, scrollY)
+            }),
+            0, 0, // MetaState and buttonState
+            1f, 1f, // Precision X and Y
+            0, 0, // Device ID and Edge Flags
+            InputDevice.SOURCE_MOUSE,
+            0 // Flags
+        )
+        try {
+            decorView.dispatchGenericMotionEvent(event)
+        } finally {
             event.recycle()
         }
     }

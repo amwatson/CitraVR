@@ -47,7 +47,6 @@ import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
-import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
@@ -76,9 +75,6 @@ import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.vr.utils.VRUtils
 import java.lang.IllegalStateException
-import java.lang.NumberFormatException
-import java.text.SimpleDateFormat
-import kotlin.math.roundToInt
 
 class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val context: Context) :
     RecyclerView.Adapter<SettingViewHolder?>(),

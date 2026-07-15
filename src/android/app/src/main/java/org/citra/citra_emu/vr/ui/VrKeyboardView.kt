@@ -97,21 +97,21 @@ class VrKeyboardView : LinearLayout {
             false
         }
         when (config!!.buttonConfig) {
-            SoftwareKeyboard.ButtonConfig.Triple -> {
+            SoftwareKeyboard.ButtonConfig.TRIPLE -> {
                 findViewById<View>(R.id.keyNeutral).visibility = View.VISIBLE
                 findViewById<View>(R.id.keyNegative).visibility = View.VISIBLE
                 findViewById<View>(R.id.keyPositive).visibility = View.VISIBLE
             }
 
-            SoftwareKeyboard.ButtonConfig.Dual -> {
+            SoftwareKeyboard.ButtonConfig.DUAL -> {
                 findViewById<View>(R.id.keyNegative).visibility = View.VISIBLE
                 findViewById<View>(R.id.keyPositive).visibility = View.VISIBLE
             }
 
-            SoftwareKeyboard.ButtonConfig.Single -> findViewById<View>(R.id.keyPositive).visibility =
+            SoftwareKeyboard.ButtonConfig.SINGLE -> findViewById<View>(R.id.keyPositive).visibility =
                 View.VISIBLE
 
-            SoftwareKeyboard.ButtonConfig.None -> {}
+            SoftwareKeyboard.ButtonConfig.NONE -> {}
             else -> {
                 Log.error("Unknown button config: " + config.buttonConfig)
                 assert(false)

@@ -126,7 +126,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           else -> return@setOnTouchListener false
       }
       NativeLibrary.onGamePadEvent(
-          NativeLibrary.TouchScreenDevice,
+          NativeLibrary.TOUCHSCREEN_DEVICE,
           NativeLibrary.ButtonType.BUTTON_SELECT,
           action
           )
@@ -143,7 +143,7 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
           else -> return@setOnTouchListener false
       }
       NativeLibrary.onGamePadEvent(
-          NativeLibrary.TouchScreenDevice,
+          NativeLibrary.TOUCHSCREEN_DEVICE,
           NativeLibrary.ButtonType.BUTTON_START,
           action
           )

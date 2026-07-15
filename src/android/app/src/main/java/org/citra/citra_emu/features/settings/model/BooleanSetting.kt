@@ -125,7 +125,8 @@ enum class BooleanSetting(
     USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false),
     ENABLE_SECONDARY_DISPLAY(SettingKeys.enable_secondary_display(), Settings.SECTION_LAYOUT, true),
     SIMULATE_3DS_GPU_TIMINGS(SettingKeys.simulate_3ds_gpu_timings(), Settings.SECTION_RENDERER, false),
-    CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), Settings.SECTION_MISC, true),
+    // CitraVR default: off. Keep in sync with the doc comment in jni/default_ini.h.
+    CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), Settings.SECTION_MISC, false),
     VR_EXTRA_PERFORMANCE_MODE("vr_extra_performance_mode", Settings.SECTION_VR, false);
 
     override var boolean: Boolean = defaultValue
@@ -164,7 +165,8 @@ enum class BooleanSetting(
             ASYNC_FS_OPERATIONS,
             ANDROID_HIDE_IMAGES,
             PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
-            APPLY_REGION_FREE_PATCH
+            APPLY_REGION_FREE_PATCH,
+            USE_INTEGER_SCALING
         )
 
         fun from(key: String): BooleanSetting? =

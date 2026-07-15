@@ -81,6 +81,7 @@
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:configChanges="density|orientation|screenSize|keyboard|keyboardHidden|uiMode"
             android:exported="true"
+            android:launchMode="singleTask"
             android:resizeableActivity="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Citra.Splash.Main">

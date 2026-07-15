@@ -2217,7 +2217,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     StringSetting.VR_IMMMERSIVE_EYE_INDICATOR,
                     R.string.vr_immersive_eye_indicator_title,
                     R.string.vr_immersive_eye_indicator_description,
-                    ""
+                    defaultValue = ""
                 )
             )
         }

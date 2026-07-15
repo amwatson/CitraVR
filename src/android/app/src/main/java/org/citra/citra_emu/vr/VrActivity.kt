@@ -27,6 +27,7 @@ import kotlin.system.exitProcess
 class VrActivity : EmulationActivity() {
     private var mHandle: Long = 0
     private var clickRunnable = ClickRunnable()
+    private var isQuitting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.info("VR [Java] onCreate()");
@@ -124,6 +125,10 @@ class VrActivity : EmulationActivity() {
     }
 
     fun quitToMenu() {
+        // The exit button can deliver multiple events per click; only the
+        // first call may relaunch MainActivity or duplicate panels appear.
+        if (isQuitting) return
+        isQuitting = true
         // Save the pipeline cache before starting teardown: onDestroy calls
         // exitProcess(0) without ever stopping the core, so the renderer
         // destructor (the normal save point) never runs on this path.

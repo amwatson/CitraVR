@@ -186,7 +186,9 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         false
     }
     window?.findViewById<Button>(R.id.buttonExit)?.setOnTouchListener { _, motionEvent ->
-      activity.quitToMenu()
+      if (motionEvent.action == KeyEvent.ACTION_UP) {
+        activity.quitToMenu()
+      }
         false
     }
   }

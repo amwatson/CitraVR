@@ -60,4 +60,6 @@
     <string name="vr_stats_comp_tear_count">스크린 티어 수 (합계)</string>
     <string name="vr_stats_build_version_label">앱 버전</string>
     <string name="vr_stats_input_latency_label">입력 지연</string>
+    <string name="swap_buttons_b_y">B와 Y 버튼 바꾸기</string>
+    <string name="swap_buttons_b_y_description">B를 누르면 Y가 입력되고 그 반대도 마찬가지입니다. 위의 버튼 매핑을 변경하지 않고 게임패드와 VR 터치 컨트롤러에 적용됩니다.</string>
 </resources>

@@ -605,4 +605,6 @@
     <string name="vr_stats_comp_tear_count">Счетчик разрывов (общий)</string>
     <string name="vr_stats_build_version_label">Версия приложения</string>
     <string name="vr_stats_input_latency_label">Время задержки ввода</string>
+    <string name="swap_buttons_b_y">Поменять местами кнопки B и Y</string>
+    <string name="swap_buttons_b_y_description">Нажатие B активирует Y и наоборот. Применяется к геймпадам и сенсорным VR-контроллерам, не изменяя назначения кнопок выше.</string>
 </resources>

@@ -515,6 +515,8 @@
     <string name="emulation_close_game">Fermer le jeu</string>
     <string name="emulation_toggle_pause">Pause</string>
     <string name="miscellaneous">Divers</string>
+    <string name="swap_buttons_b_y">Inverser les boutons B et Y</string>
+    <string name="swap_buttons_b_y_description">Appuyer sur B active Y et inversement. S\'applique aux manettes et aux contrôleurs tactiles VR sans modifier les attributions de boutons ci-dessus.</string>
     <string name="use_artic_base_controller">Utilise l\'Artic Controller quand connecté à un serveur Artic Base</string>
     <string name="use_artic_base_controller_description">Utilisez les commandes fournies par le serveur Artic Base lorsque vous y êtes connecté, au lieu du périphérique d\'entrée configuré.</string>
     <string name="emulation_close_game_message">Êtes-vous sûr de vouloir fermer le jeu en cours ?</string>

@@ -498,6 +498,8 @@
     <string name="emulation_close_game">Stäng spelet</string>
     <string name="emulation_toggle_pause">Växla paus</string>
     <string name="miscellaneous">Diverse</string>
+    <string name="swap_buttons_b_y">Byt plats på B- och Y-knapparna</string>
+    <string name="swap_buttons_b_y_description">Att trycka på B aktiverar Y och vice versa. Gäller för handkontroller och VR-touchkontroller utan att ändra knappmappningarna ovan.</string>
     <string name="use_artic_base_controller">Använd Artic Controller när du är ansluten till Artic Base-servern</string>
     <string name="use_artic_base_controller_description">Använd de kontroller som tillhandahålls av Artic Base Server när du är ansluten till den istället för den konfigurerade inmatningsenheten.</string>
     <string name="emulation_close_game_message">Är du säker på att du vill stänga det aktuella spelet?</string>

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    </resources>
+        <string name="swap_buttons_b_y">Schimbă butoanele B și Y între ele</string>
+    <string name="swap_buttons_b_y_description">Apăsarea butonului B activează Y și invers. Se aplică gamepadurilor și controlerelor tactile VR fără a modifica maparea butoanelor de mai sus.</string>
+</resources>

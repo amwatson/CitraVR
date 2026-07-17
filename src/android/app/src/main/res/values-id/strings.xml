@@ -40,4 +40,6 @@
     <string name="done">Selesai</string>
     <string name="text_continue">Lanjutkan</string>
     <string name="notifications">Notifikasi</string>
-    </resources>
+        <string name="swap_buttons_b_y">Tukar tombol B dan Y</string>
+    <string name="swap_buttons_b_y_description">Menekan B akan mengaktifkan Y dan sebaliknya. Berlaku untuk gamepad dan kontroler sentuh VR tanpa mengubah pemetaan tombol di atas.</string>
+</resources>

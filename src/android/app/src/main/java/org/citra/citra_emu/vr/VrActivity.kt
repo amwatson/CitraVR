@@ -19,6 +19,7 @@ import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.EmulationFragment.Companion
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.ButtonSwapUtils
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.Log
 import kotlin.system.exitProcess
@@ -98,7 +99,7 @@ class VrActivity : EmulationActivity() {
             ?: return
         NativeLibrary.onGamePadEvent(
             "Quest controller",
-            button,
+            ButtonSwapUtils.applyBYSwap(button),
             if (isPressed) NativeLibrary.ButtonState.PRESSED else NativeLibrary.ButtonState.RELEASED
         )
     }

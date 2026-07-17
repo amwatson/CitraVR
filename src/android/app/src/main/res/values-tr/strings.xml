@@ -415,6 +415,8 @@
     <string name="emulation_close_game">Oyunu Kapat</string>
     <string name="emulation_toggle_pause">Duraklatmayı Aç / Kapat</string>
     <string name="miscellaneous">Çeşitli</string>
+    <string name="swap_buttons_b_y">B ve Y düğmelerini değiştir</string>
+    <string name="swap_buttons_b_y_description">B düğmesine basmak Y düğmesini etkinleştirir ve tam tersi. Yukarıdaki düğme atamalarını değiştirmeden oyun kollarına ve VR dokunmatik kumandalara uygulanır.</string>
     <string name="use_artic_base_controller">Artic Base Sunucusundayken Artic Oyun Kolunu kullan</string>
     <string name="use_artic_base_controller_description">Artic Base Sunucusuna bağlanıldığında yapılandırılmış giriş cihazı yerine Artic Base Sunucusu tarafından sağlanan kontrolleri kullanın.</string>
     <string name="emulation_close_game_message">Mevcut oyunu kapatmak istediğinizden emin misiniz?</string>

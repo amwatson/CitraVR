@@ -221,4 +221,6 @@
     <string name="vr_stats_build_version_label">アプリのバージョン</string>
     <string name="vr_stats_input_latency_label">入力遅延</string>
     <string name="update_available"> アップデートがあります</string>
+    <string name="swap_buttons_b_y">BボタンとYボタンを入れ替える</string>
+    <string name="swap_buttons_b_y_description">Bを押すとYが、Yを押すとBが入力されます。上のボタン割り当てを変更せずに、ゲームパッドとVRタッチコントローラーの両方に適用されます。</string>
 </resources>

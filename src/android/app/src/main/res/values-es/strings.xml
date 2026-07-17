@@ -484,6 +484,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_close_game">Cerrar Juego</string>
     <string name="emulation_toggle_pause">Activar pausa</string>
     <string name="miscellaneous">Misceláneos</string>
+    <string name="swap_buttons_b_y">Intercambiar los botones B e Y</string>
+    <string name="swap_buttons_b_y_description">Al pulsar B se activa Y y viceversa. Se aplica a los mandos y a los controladores táctiles de VR sin cambiar las asignaciones de botones anteriores.</string>
     <string name="use_artic_base_controller">Usar Artic Controller al estar conectado al servidor de Artic Base</string>
     <string name="use_artic_base_controller_description">Usa los controles dados por el Servidor de Artic Base al estar conectado a éste en vez de los controles del dispositivo configurado.</string>
     <string name="emulation_close_game_message">¿Estás seguro de querer cerrar el juego?</string>

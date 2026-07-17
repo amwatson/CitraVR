@@ -909,6 +909,33 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             }
 
             add(HeaderSetting(R.string.miscellaneous))
+            // Stored as a preference (never written to the ini) and applied at
+            // dispatch time, so it also swaps the VR touch controller buttons,
+            // which bypass the configurable bindings above.
+            val swapButtonsBY: AbstractBooleanSetting = object : AbstractBooleanSetting {
+                override var boolean: Boolean
+                    get() = preferences.getBoolean(Settings.PREF_SWAP_BUTTONS_B_Y, false)
+                    set(value) {
+                        preferences.edit()
+                            .putBoolean(Settings.PREF_SWAP_BUTTONS_B_Y, value)
+                            .apply()
+                    }
+                override val key: String? = null
+                override val section: String? = null
+                override val isRuntimeEditable = true
+                override val valueAsString: String
+                    get() = preferences.getBoolean(Settings.PREF_SWAP_BUTTONS_B_Y, false)
+                        .toString()
+                override val defaultValue = false
+            }
+            add(
+                SwitchSetting(
+                    swapButtonsBY,
+                    R.string.swap_buttons_b_y,
+                    R.string.swap_buttons_b_y_description
+                )
+            )
+
             add(
                 SwitchSetting(
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER,

@@ -125,4 +125,6 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_comp_tear_count">Revämälaskuri (kokonaisluku)</string>
     <string name="vr_stats_build_version_label">Sovelluksen Versio</string>
     <string name="vr_stats_input_latency_label">Sisääntulo Viive</string>
+    <string name="swap_buttons_b_y">Vaihda B- ja Y-painikkeet keskenään</string>
+    <string name="swap_buttons_b_y_description">B:n painaminen aktivoi Y:n ja päinvastoin. Koskee peliohjaimia ja VR-kosketusohjaimia muuttamatta yllä olevia painikemäärityksiä.</string>
 </resources>

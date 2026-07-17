@@ -179,4 +179,6 @@
     <string name="vr_stats_comp_tear_count">Rivesplittelsestall (total)</string>
     <string name="vr_stats_build_version_label">Appversjon</string>
     <string name="vr_stats_input_latency_label">Inndataforsinkelse</string>
+    <string name="swap_buttons_b_y">Bytt om B- og Y-knappene</string>
+    <string name="swap_buttons_b_y_description">Å trykke på B aktiverer Y og omvendt. Gjelder for gamepader og VR-berøringskontrollere uten å endre knappetilordningene ovenfor.</string>
 </resources>

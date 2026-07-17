@@ -518,6 +518,8 @@
     <string name="emulation_close_game">Zamknij Grę</string>
     <string name="emulation_toggle_pause">Włącz Pauzę</string>
     <string name="miscellaneous">Różne</string>
+    <string name="swap_buttons_b_y">Zamień przyciski B i Y</string>
+    <string name="swap_buttons_b_y_description">Naciśnięcie B aktywuje Y i odwrotnie. Dotyczy padów i kontrolerów dotykowych VR bez zmiany powyższych przypisań przycisków.</string>
     <string name="use_artic_base_controller">Użyj kontrolera Artic po podłączeniu do serwera Artic Base</string>
     <string name="use_artic_base_controller_description">W przypadku połączenia z serwerem Artic Base zamiast skonfigurowanego urządzenia wejściowego należy używać elementów sterujących udostępnianych przez ten serwer.</string>
     <string name="emulation_close_game_message">Czy na pewno chcesz zamknąć obecną grę?</string>

@@ -211,4 +211,6 @@
     <string name="march">Kovas</string>
     <string name="april">Balandis</string>
     <string name="may">Gegužė</string>
-    </resources>
+        <string name="swap_buttons_b_y">Sukeisti B ir Y mygtukus</string>
+    <string name="swap_buttons_b_y_description">Paspaudus B suaktyvinamas Y ir atvirkščiai. Taikoma žaidimų pultams ir VR jutikliniams valdikliams, nekeičiant aukščiau esančių mygtukų priskyrimų.</string>
+</resources>

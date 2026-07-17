@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    </resources>
+        <string name="swap_buttons_b_y">B és Y gombok felcserélése</string>
+    <string name="swap_buttons_b_y_description">A B megnyomása az Y-t aktiválja, és fordítva. A gamepadekre és a VR-vezérlőkre is érvényes, a fenti gombhozzárendelések módosítása nélkül.</string>
+</resources>

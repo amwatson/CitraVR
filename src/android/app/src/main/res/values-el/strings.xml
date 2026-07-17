@@ -395,4 +395,6 @@
     <string name="decompressing">Αποσυμπίεση…</string>
     <string name="compress_failed">Η συμπίεση απέτυχε.</string>
     <string name="decompress_failed">Η αποσυμπίεση απέτυχε.</string>
-    </resources>
+        <string name="swap_buttons_b_y">Εναλλαγή κουμπιών B και Y</string>
+    <string name="swap_buttons_b_y_description">Το πάτημα του B ενεργοποιεί το Y και αντίστροφα. Ισχύει για χειριστήρια και VR touch controllers χωρίς να αλλάζουν οι παραπάνω αντιστοιχίσεις κουμπιών.</string>
+</resources>

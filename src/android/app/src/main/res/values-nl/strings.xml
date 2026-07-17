@@ -128,4 +128,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="cpu_clock_speed">CPU Klok Snelheid</string>
     <string name="start">Start</string>
     <string name="cancelling">Annuleren…</string>
-    </resources>
+        <string name="swap_buttons_b_y">B- en Y-knoppen omwisselen</string>
+    <string name="swap_buttons_b_y_description">Het indrukken van B activeert Y en omgekeerd. Geldt voor gamepads en VR-touchcontrollers zonder de bovenstaande knoptoewijzingen te wijzigen.</string>
+</resources>

@@ -14,6 +14,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.utils.ButtonSwapUtils
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
@@ -59,7 +60,7 @@ class HotkeyUtility(
                 if (!thisKeyIsHotkey || !hotkeyIsEnabled) {
                     handled = NativeLibrary.onGamePadEvent(
                         keyEvent.device.descriptor,
-                        button,
+                        ButtonSwapUtils.applyBYSwap(button),
                         NativeLibrary.ButtonState.PRESSED
                     ) || handled
                 }
@@ -103,7 +104,7 @@ class HotkeyUtility(
                 ) {
                     handled = NativeLibrary.onGamePadEvent(
                         keyEvent.device.descriptor,
-                        button,
+                        ButtonSwapUtils.applyBYSwap(button),
                         NativeLibrary.ButtonState.RELEASED
                     ) || handled
                     currentlyPressedButtons.remove(button)

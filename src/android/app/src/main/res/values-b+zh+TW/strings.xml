@@ -59,4 +59,6 @@
     <string name="vr_stats_comp_tear_count">撕裂计数（总计）</string>
     <string name="vr_stats_build_version_label">应用程序版本</string>
     <string name="vr_stats_input_latency_label">输入延迟</string>
+    <string name="swap_buttons_b_y">交換 B 與 Y 按鈕</string>
+    <string name="swap_buttons_b_y_description">按下 B 將觸發 Y，反之亦然。適用於遊戲手把與 VR 觸控控制器，不會變更上方的按鍵對應。</string>
 </resources>

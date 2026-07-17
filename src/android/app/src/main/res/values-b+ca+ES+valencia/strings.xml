@@ -484,6 +484,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_close_game">Tancar Joc</string>
     <string name="emulation_toggle_pause">Activar pausa</string>
     <string name="miscellaneous">Miscel·lanis</string>
+    <string name="swap_buttons_b_y">Intercanvia els botons B i Y</string>
+    <string name="swap_buttons_b_y_description">En prémer B s\'activa Y i viceversa. S\'aplica als comandaments i als controladors tàctils de VR sense canviar les assignacions de botons anteriors.</string>
     <string name="use_artic_base_controller">Usar Artic Controller en estar connectat al servidor de Artic Base</string>
     <string name="use_artic_base_controller_description">Utilitza els controls proporcionats per Artic Base Server quan estiga connectat a ell en lloc del dispositiu d\'entrada configurat.</string>
     <string name="emulation_close_game_message">Estàs segur que vols tancar el joc?</string>

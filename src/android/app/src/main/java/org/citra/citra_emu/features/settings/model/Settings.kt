@@ -248,6 +248,11 @@ class Settings {
         const val PREF_SHOW_HOME_APPS = "ShowHomeApps"
         const val PREF_STATIC_THEME_COLOR = "StaticThemeColor"
 
+        // Stored in SharedPreferences (like input bindings), not the ini, so it
+        // applies uniformly to gamepads and VR touch controllers without
+        // altering the saved per-button mappings.
+        const val PREF_SWAP_BUTTONS_B_Y = "SwapButtonsBY"
+
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
         init {

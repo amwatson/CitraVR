@@ -409,6 +409,8 @@
     <string name="emulation_close_game">Spiel schließen</string>
     <string name="emulation_toggle_pause">Pause umschalten</string>
     <string name="miscellaneous">Weiteres</string>
+    <string name="swap_buttons_b_y">B- und Y-Tasten tauschen</string>
+    <string name="swap_buttons_b_y_description">Das Drücken von B aktiviert Y und umgekehrt. Gilt für Gamepads und VR-Touch-Controller, ohne die obigen Tastenzuordnungen zu ändern.</string>
     <string name="use_artic_base_controller">Verwende den Artic Controller, wenn eine Verbindung zum Artic Base Server besteht</string>
     <string name="use_artic_base_controller_description">Verwende die Artic Base Server bereitgestellten Steuerelemente, wenn du damit verbunden bist, anstelle des konfigurierten Eingabegeräts.</string>
     <string name="emulation_close_game_message">Sind sie sicher, dass sie das Spiel schließen wollen?</string>

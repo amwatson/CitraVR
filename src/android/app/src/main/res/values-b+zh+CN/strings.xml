@@ -447,6 +447,8 @@
     <string name="emulation_close_game">关闭游戏</string>
     <string name="emulation_toggle_pause">暂停/继续</string>
     <string name="miscellaneous">杂项</string>
+    <string name="swap_buttons_b_y">交换 B 和 Y 按钮</string>
+    <string name="swap_buttons_b_y_description">按下 B 将触发 Y，反之亦然。适用于游戏手柄和 VR 触控手柄，不会更改上方的按键映射。</string>
     <string name="use_artic_base_controller">连接到 Artic Base 服务器时使用 Artic 控制器</string>
     <string name="use_artic_base_controller_description">连接到 Artic Base 服务器时使用其提供的控制器，而不是配置的输入设备。</string>
     <string name="emulation_close_game_message">您确定要关闭当前的游戏吗？</string>

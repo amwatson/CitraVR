@@ -520,6 +520,8 @@
     <string name="emulation_close_game">Luk spil</string>
     <string name="emulation_toggle_pause">Slå Pause til/fra</string>
     <string name="miscellaneous">Diverse</string>
+    <string name="swap_buttons_b_y">Byt om på B- og Y-knapperne</string>
+    <string name="swap_buttons_b_y_description">Tryk på B aktiverer Y og omvendt. Gælder for gamepads og VR-touch-controllere uden at ændre knaptilknytningerne ovenfor.</string>
     <string name="use_artic_base_controller">Brug Artic kontroller, når du er tilsluttet Artic base server</string>
     <string name="use_artic_base_controller_description">Brug kontrollerne fra Artic base server, når forbundet til den i stedet for den konfigurerede inputenhed.</string>
     <string name="emulation_close_game_message">Er du sikker på, at du vil lukke det aktuelle spil?</string>

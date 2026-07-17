@@ -325,4 +325,6 @@
     <string name="toggle_unique_data_console_type">Alternar tipo de consola.</string>
     <string name="emulation_toggle_controls">Alternar Controles</string>
     <string name="emulation_switch_secondary_layout_description">El diseño usado por una pantalla secundaria conectada, alámbrica o inalámbrica (Chromecast, Miracast)</string>
-    </resources>
+        <string name="swap_buttons_b_y">Intercambiar los botones B e Y</string>
+    <string name="swap_buttons_b_y_description">Al presionar B se activa Y y viceversa. Se aplica a los gamepads y a los controles táctiles de VR sin cambiar las asignaciones de botones anteriores.</string>
+</resources>

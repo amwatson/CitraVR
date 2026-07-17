@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    </resources>
+        <string name="swap_buttons_b_y">Hoán đổi nút B và Y</string>
+    <string name="swap_buttons_b_y_description">Nhấn B sẽ kích hoạt Y và ngược lại. Áp dụng cho tay cầm và bộ điều khiển cảm ứng VR mà không thay đổi các gán nút ở trên.</string>
+</resources>

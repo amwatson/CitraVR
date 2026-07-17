@@ -319,7 +319,8 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
                                  : GameSurfaceLayer::DEFAULT_CYLINDER_CENTRAL_ANGLE_DEGREES *
                                        immersiveModeFactor) *
                 MATH_FLOAT_PI / 180.0f;
-            layer.aspectRatio = -static_cast<double>(
+            layer.next        = &kVerticalFlipLayout;
+            layer.aspectRatio = static_cast<double>(
                 static_cast<float>(Core::kScreenTopWidth) / Core::kScreenTopHeight);
             layers[layerCount++].mCylinder = layer;
         }
@@ -329,6 +330,7 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
             XrCompositionLayerQuad layer     = {};
 
             layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
+            layer.next       = &kVerticalFlipLayout;
             layer.layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 
             layer.space = space;
@@ -343,7 +345,7 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
             layer.subImage.imageArrayIndex         = 0;
             layer.pose                             = mTopPanel.mWorldFromPanel;
             const auto scale = GetDensityScaleFor3dsScreen(Core::kScreenTopWidth,
-                                                           -Core::kScreenTopHeight, 1.0f,
+                                                           Core::kScreenTopHeight, 1.0f,
                                                            mResolutionFactor);
             layer.size.width  = scale.x;
             layer.size.height = scale.y;
@@ -370,6 +372,7 @@ void GameSurfaceLayer::FrameLowerPanel(const XrSpace&                   space,
     XrCompositionLayerQuad layer     = {};
 
     layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
+    layer.next       = &kVerticalFlipLayout;
     // layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
     // layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
@@ -388,7 +391,7 @@ void GameSurfaceLayer::FrameLowerPanel(const XrSpace&                   space,
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mLowerPanel.mWorldFromPanel;
     const auto scale = GetDensityScaleFor3dsScreen(Core::kScreenBottomWidth,
-                                                   -Core::kScreenBottomHeight,
+                                                   Core::kScreenBottomHeight,
                                                    mLowerPanel.mScaleFactor, mResolutionFactor);
     layer.size.width  = scale.x;
     layer.size.height = scale.y;

@@ -183,6 +183,7 @@ void UILayer::Frame(const XrSpace&                   space,
     XrCompositionLayerQuad layer = {};
 
     layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
+    layer.next       = &kVerticalFlipLayout;
     layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
@@ -199,7 +200,7 @@ void UILayer::Frame(const XrSpace&                   space,
     layer.subImage.imageRect.extent.height = mSwapchain.mHeight;
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mWorldFromPanel;
-    const auto scale  = GetDensityScaleForSize(mSwapchain.mWidth, -mSwapchain.mHeight, 1.0f);
+    const auto scale  = GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
     layer.size.width  = scale.x;
     layer.size.height = scale.y;
     layers[layerCount++].mQuad = layer;

@@ -534,7 +534,6 @@
     <string name="frame_limit_enable_description">При включении устанавливает скорость эмуляции на указанный процент от нормальной скорости.</string>
     <string name="internal_resolution_description">Устанавливает разрешение рендеринга. Повышение разрешения значительно улучшает качество графики, но также сильно сказывается на производительности и может вызывать сбои в некоторых играх.</string>
     <string name="factor3d_description">Установка значения уровня 3D. При включении стереоскопического 3D должно быть больше 0%.</string>
-    <string name="redump_games">Пожалуйста, следуйте инструкциям для создания нового дампа &lt;a href=\"https://citra-emu.org/wiki/dumping-game-cartridges/\"&gt;игровых картриджей&lt;/a&gt; или &lt;a href=\"https://citra-emu.org/wiki/dumping-installed-titles/\"&gt;установленных игр&lt;/a&gt;.</string>
     <string name="emulation_screen_layout_landscape">По умолчанию</string>
     <string name="emulation_cycle_landscape_layouts">Сменить ландшафтный макет</string>
     <string name="emulation_show_overlay">Показывать оверлей</string>
@@ -572,8 +571,6 @@
     <string name="immersive_mode">Режим полного погружения</string>
     <string name="vr_si_mode_register_offset_title">Сдвиг регистра.</string>
     <string name="vr_si_mode_register_offset_description">Устанавливает смещение регистра, используемого для вида при использовании профиля 2 режима Super Immersive Mode - варьируется в зависимости от игры.</string>
-    <string name="vr_immersive_pos_factor_title">Фактор Позиционного Движения</string>
-    <string name="vr_immersive_pos_factor_description">Регулирует, насколько движение влево/вправо/вверх/вниз влияет на игровую камеру (0 = отключено).</string>
     <string name="vr_immersive_pos_game_scaler_title">Множитель фактора позиционного перемещения</string>
     <string name="vr_immersive_pos_game_scaler_description">Настройка определяет, насколько движение влево/вправо/вверх/вниз влияет на камеру игры; в некоторых играх требуются большие значения, поэтому это умножает фактор перемещения положения.</string>
     <string name="vr_ribbon_menus_text_label">Меню:</string>

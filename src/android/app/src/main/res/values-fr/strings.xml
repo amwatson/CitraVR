@@ -376,7 +376,6 @@
     <string name="reset_setting_confirmation">Voulez-vous réinitialiser ce paramètre à sa valeur par défaut ?</string>
     <string name="setting_not_editable">Vous ne pouvez pas modifier cela maintenant</string>
     <string name="setting_disabled">Paramètre désactivé</string>
-    <string name="setting_disabled_description">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
     <string name="setting_not_editable_description">Cette option ne peut pas être modifiée pendant l\'exécution d\'un jeu.</string>
     <string name="setting_disabled_description_incompatible_setting">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
     <string name="setting_disabled_description_angle">Le moteur de rendu ne peut pas être changé car l\'appareil utilise ANGLE pour OpenGL, qui est actuellement incompatible avec Azahar. Vulkan sera utilisé.</string>
@@ -920,8 +919,6 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="immersive_mode">Mode Immersif</string>
     <string name="vr_si_mode_register_offset_title">Décalage d\'Enregistrement</string>
     <string name="vr_si_mode_register_offset_description">Définit le décalage d\'enregistrement utilisé pour la vue lors de l\'utilisation du Mode Super Immersif Profil 2 - varie selon le jeu</string>
-    <string name="vr_immersive_pos_factor_title">Facteur de Mouvement Positionnel</string>
-    <string name="vr_immersive_pos_factor_description">Ajuste la mesure dans laquelle le mouvement gauche/droite/haut/bas affecte la caméra du jeu (0 = désactivé).</string>
     <string name="vr_immersive_pos_game_scaler_title">Multiplicateur du Facteur de Mouvement Positionnel</string>
     <string name="vr_immersive_pos_game_scaler_description">Ajuste la façon dont le mouvement gauche/droite/haut/bas affecte la caméra du jeu, certains jeux nécessitent des valeurs plus grandes, donc cela multiplie le facteur de mouvement positionnel.</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>

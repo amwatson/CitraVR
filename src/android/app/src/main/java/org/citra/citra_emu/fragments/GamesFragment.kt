@@ -240,12 +240,14 @@ class GamesFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        // Perform update check. The baseline is the release this build descends from,
-        // so playtest builds are prompted toward newer releases too
-        // (see docs/RELEASING.md).
+        // Perform update check. The baseline is the release this build descends from
+        // (see docs/RELEASING.md). Playtest builds don't check. Note that I
+        // would enable updates for playtests if I could reliably tell if the release
+        // build on-device matches latest to avoid annoying users
         val baseVersion = UpdateChecker.Version.parse(BuildConfig.BASE_RELEASE_VERSION)
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
+            !BuildUtil.isPlaytestBuild &&
             !BuildUtil.isGooglePlayBuild &&
             BooleanSetting.CHECK_FOR_UPDATES.boolean &&
             baseVersion != null &&

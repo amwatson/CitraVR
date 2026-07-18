@@ -22,4 +22,6 @@ object BuildUtil {
     @Suppress("SimplifyBooleanWithConstants", "KotlinConstantConditions")
     val isGooglePlayBuild =
         BuildConfig.FLAVOR == BuildFlavors.GOOGLEPLAY
+
+    val isPlaytestBuild = BuildConfig.BUILD_TYPE == "playtest"
 }

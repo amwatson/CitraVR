@@ -10,12 +10,12 @@ fi
 cd src/android
 chmod +x ./gradlew
 
-if [[ "$TARGET" == "googleplay" ]]; then
-    ./gradlew assembleGooglePlayRelease
-    ./gradlew bundleGooglePlayRelease
+if [[ "$TARGET" == "playtest" ]]; then
+    ./gradlew assemblePlaytest
+    ./gradlew bundlePlaytest
 else
-    ./gradlew assembleVanillaRelease
-    ./gradlew bundleVanillaRelease
+    ./gradlew assembleRelease
+    ./gradlew bundleRelease
 fi
 
 ccache -s -v

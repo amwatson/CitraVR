@@ -93,6 +93,9 @@ android {
         // ^ Has no suffix, unlike VERSION_NAME
         buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
         buildConfigField("String", "BRANCH", "\"${getBranch()}\"")
+        // There are no product flavors; CitraVR is always the sideloaded ("vanilla") variant.
+        // Kotlin and native code still check the flavor to gate googlePlay-only behavior.
+        buildConfigField("String", "FLAVOR", "\"vanilla\"")
     }
 
     val keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -107,7 +110,6 @@ android {
         }
     }
 
-    // Define build types, which are orthogonal to product flavors.
     buildTypes {
         // Signed by release key, allowing for upload to Play Store.
         release {
@@ -124,40 +126,19 @@ android {
             )
         }
 
-        // builds a release build that doesn't need signing
-        // Attaches 'debug' suffix to version and package name, allowing installation alongside the release build.
-        register("relWithDebInfo") {
+        // Release-optimized build with profiling enabled. Uses the normal package name.
+        register("profile") {
             initWith(getByName("release"))
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
-            signingConfig = signingConfigs.getByName("debug")
-            isShrinkResources = true
-            // TODO: ^- Does this actually do anything when isDebuggable is enabled? -OS
-            isDebuggable = true
-            isJniDebuggable = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
-                "proguard-rules.pro"
-            )
-            isDefault = true
+            versionNameSuffix = "-profile"
+            isProfileable = true
         }
 
-        // Same as above, but with isDebuggable disabled.
-        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS)
-        // without constantly tripping over years-old and seemingly harmless memory bugs.
-        // We should fix those bugs eventually, but for now this exists as a workaround to
-        // allow other work to be done on these devices.
-        register("relWithDebInfoLite") {
-            initWith(getByName("relWithDebInfo"))
-            signingConfig = signingConfigs.getByName("debug")
-            isDebuggable = false
-            installation {
-                enableBaselineProfile = false // Disabled by default when isDebuggable is true
-            }
-            lint {
-                checkReleaseBuilds = false // Ditto
-                // ^- The name of this property is misleading, this doesn't actually disable linting for the `release` build.
-            }
+        // Release build with a 'playtest' package name suffix, allowing installation
+        // alongside the release build.
+        register("playtest") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".playtest"
+            versionNameSuffix = "-playtest"
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -168,14 +149,6 @@ android {
             versionNameSuffix = "-debug"
             isDebuggable = true
             isJniDebuggable = true
-        }
-    }
-
-    flavorDimensions.add("version")
-    productFlavors {
-        create("canary") {
-            dimension = "version"
-            applicationIdSuffix = ".playtest"
         }
     }
 

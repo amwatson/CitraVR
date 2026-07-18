@@ -237,50 +237,33 @@ class GamesFragment : Fragment() {
         setInsets()
     }
 
-    private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
-
-    private fun isPrereleaseBuild(): Boolean {
-        val version = BuildConfig.GIT_VERSION
-        return (
-            version.contains("alpha") ||
-                version.contains("beta") ||
-                version.contains("rc")
-            )
-    }
-
     override fun onResume() {
         super.onResume()
 
-        // Perform update check
+        // Perform update check. The baseline is the release this build descends from,
+        // so playtest builds are prompted toward newer releases too
+        // (see docs/RELEASING.md).
+        val baseVersion = UpdateChecker.Version.parse(BuildConfig.BASE_RELEASE_VERSION)
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
             BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            baseVersion != null &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
-                val checkForPrereleaseUpdates =
-                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
-                val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+                // Builds descending from a prerelease follow the prerelease channel
+                // even if the user hasn't opted in.
+                val includePrereleases =
+                    baseVersion.isPreRelease || IntSetting.UPDATE_CHECK_CHANNEL.int == 1
+                val latestRelease = UpdateChecker.getLatestRelease(includePrereleases)
 
-                if (!latestReleaseTag.isNullOrEmpty() &&
-                    latestReleaseTag != BuildConfig.GIT_VERSION
-                ) {
-                    val latestMajorVersion = getMajorVersion(latestReleaseTag)
-                    val currentMajorVersion = getMajorVersion(BuildConfig.GIT_VERSION)
-                    if (latestMajorVersion != null &&
-                        currentMajorVersion != null &&
-                        currentMajorVersion <= latestMajorVersion
-                    ) {
-                        UpdateAvailableNotificationFragment.newInstance(
-                            latestReleaseTag,
-                            checkForPrereleaseUpdates
+                if (latestRelease != null && latestRelease.second > baseVersion) {
+                    UpdateAvailableNotificationFragment.newInstance(latestRelease.first)
+                        .show(
+                            requireActivity().supportFragmentManager,
+                            UpdateAvailableNotificationFragment.TAG
                         )
-                            .show(
-                                requireActivity().supportFragmentManager,
-                                UpdateAvailableNotificationFragment.TAG
-                            )
-                    }
                 }
             }).start()
             homeViewModel.updatePromptShown = true

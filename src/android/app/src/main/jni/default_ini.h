@@ -565,8 +565,8 @@ vr_immersive_eye_indicator =
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(android_hide_images) BOOST_HANA_STRING(R"(
 
-# Whether or not an in-app notification should be displayed when an update is available for Azahar
-# 0 (default): No, 1: Yes
+# Whether or not an in-app notification should be displayed when an update is available for CitraVR
+# 0: No, 1 (default): Yes
 )") DECLARE_KEY(check_for_update_on_start) BOOST_HANA_STRING(R"(
 
 # Which update channel should be used by the update checker

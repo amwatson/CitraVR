@@ -91,6 +91,10 @@ android {
 
         buildConfigField("String", "GIT_VERSION", "\"${getGitVersion()}\"")
         // ^ Has no suffix, unlike VERSION_NAME
+        buildConfigField("String", "BASE_RELEASE_VERSION", "\"${getBaseReleaseVersion()}\"")
+        // ^ Nearest ancestor v* tag (stable or prerelease): the update-check baseline
+        // (see docs/RELEASING.md). Empty when no v* tag is reachable, which disables
+        // the update check.
         buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
         buildConfigField("String", "BRANCH", "\"${getBranch()}\"")
         // There are no product flavors; CitraVR is always the sideloaded ("vanilla") variant.
@@ -187,6 +191,8 @@ dependencies {
     implementation("org.ini4j:ini4j:0.5.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
 
+    testImplementation("junit:junit:4.13.2")
+
     androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
     androidTestImplementation("junit:junit:4.12")
 
@@ -261,6 +267,11 @@ fun getGitVersion(): String {
     return versionName
 }
 
+
+fun getBaseReleaseVersion(): String =
+    runGitCommand(
+        ProcessBuilder("git", "describe", "--tags", "--match", "v*", "--abbrev=0")
+    ) ?: ""
 
 fun getGitHash(): String =
     runGitCommand(ProcessBuilder("git", "rev-parse", "--short", "HEAD")) ?: "dummy-hash"

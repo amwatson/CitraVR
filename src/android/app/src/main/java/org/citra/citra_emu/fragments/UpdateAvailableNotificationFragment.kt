@@ -15,14 +15,10 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 
-class UpdateAvailableNotificationFragment(
-    newVersionOverride: String,
-    checkForPrereleaseUpdatesOverride: Boolean
-) : DialogFragment() {
+class UpdateAvailableNotificationFragment(newVersionOverride: String) : DialogFragment() {
     private lateinit var mainActivity: MainActivity
 
     private val newVersion = newVersionOverride
-    private val checkForPrereleaseUpdates = checkForPrereleaseUpdatesOverride
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         BuildUtil.assertNotGooglePlay()
@@ -37,14 +33,9 @@ class UpdateAvailableNotificationFragment(
             .setTitle(R.string.update_available)
             .setMessage(updateNotificationDescription)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                val updateLink: String = if (checkForPrereleaseUpdates) {
-                    getString(R.string.prerelease_channel_update_link)
-                } else {
-                    getString(R.string.prerelease_channel_update_link)
-                }
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse(updateLink)
+                    Uri.parse(getString(R.string.update_link, newVersion))
                 )
                 startActivity(intent)
             }
@@ -55,12 +46,9 @@ class UpdateAvailableNotificationFragment(
     companion object {
         const val TAG = "UpdateAvailableNotificationFragment"
 
-        fun newInstance(
-            newVersion: String,
-            checkForPrereleaseUpdates: Boolean
-        ): UpdateAvailableNotificationFragment {
+        fun newInstance(newVersion: String): UpdateAvailableNotificationFragment {
             BuildUtil.assertNotGooglePlay()
-            return UpdateAvailableNotificationFragment(newVersion, checkForPrereleaseUpdates)
+            return UpdateAvailableNotificationFragment(newVersion)
         }
     }
 }

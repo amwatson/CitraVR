@@ -988,9 +988,9 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="multiplayer_hide_full_rooms">Cacher les salons pleins</string>
     <string name="multiplayer_hide_empty_rooms">Cacher les salons vides</string>
     <string name="update_available">Mise à jour disponible</string>
-    <string name="update_available_description">Une nouvelle version d\'Azahar est disponible (version %1$s).\nSouhaitez-vous la télécharger ?</string>
+    <string name="update_available_description">Une nouvelle version de CitraVR est disponible (version %1$s).\nSouhaitez-vous la télécharger ?</string>
     <string name="check_for_updates">Rechercher les mises à jour</string>
-    <string name="check_for_updates_description">Affiche une notification dans l\'application quand une mise à jour est disponible pour Azahar.</string>
+    <string name="check_for_updates_description">Affiche une notification dans l\'application quand une mise à jour est disponible pour CitraVR.</string>
     <string name="update_check_channel">Canal de mises à jour</string>
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Préversion</string>

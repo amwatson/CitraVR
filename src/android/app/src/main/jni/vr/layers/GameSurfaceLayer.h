@@ -199,7 +199,7 @@ private:
     void CreateSwapchain();
 
     static constexpr uint32_t SURFACE_WIDTH_UNSCALED =
-        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth)) - 300;
+        NUM_EYES * Core::kScreenTopWidth;
     static constexpr uint32_t SURFACE_HEIGHT_UNSCALED =
         (Core::kScreenTopHeight + Core::kScreenBottomHeight);
 

@@ -138,7 +138,9 @@ Panel CreateLowerPanelFromTopPanel(const Panel& topPanel, const bool isImmersive
                                                              : kDefaultLowerPanelYOffsetInMeters;
     lowerPanelFromWorld.position.z += isImmersiveModeEnabled ? kImmersiveLowerPanelZOffsetInMeters
                                                              : kDefaultLowerPanelZOffsetInMeters;
-    return Panel(lowerPanelFromWorld, topPanel.mWidth, topPanel.mHeight,
+    const float lowerPanelWidth =
+        topPanel.mWidth * Core::kScreenBottomWidth / Core::kScreenTopWidth;
+    return Panel(lowerPanelFromWorld, lowerPanelWidth, topPanel.mHeight,
                  kDefaultLowerPanelScaleFactor);
 }
 
@@ -391,7 +393,8 @@ void GameSurfaceLayer::FrameLowerPanel(const XrSpace&                   space,
     layer.subImage.imageRect.offset.y = mLowerPanel.mHeight + verticalBorderTex +
                                         mLowerPanel.mHeight * (0.5f - (0.5f / immersiveModeFactor));
     layer.subImage.imageRect.extent.width  = mLowerPanel.mWidth / immersiveModeFactor;
-    layer.subImage.imageRect.extent.height = mLowerPanel.mHeight / immersiveModeFactor;
+    layer.subImage.imageRect.extent.height =
+        mLowerPanel.mHeight / immersiveModeFactor - verticalBorderTex;
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mLowerPanel.mWorldFromPanel;
     const auto scale = GetDensityScaleFor3dsScreen(Core::kScreenBottomWidth,

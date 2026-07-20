@@ -280,7 +280,8 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
                                      const bool   isImmersiveModeEnabled,
                                      const float& immersiveModeFactor) {
     // Prevent a seam between the top and bottom view
-    constexpr uint32_t verticalBorderTex = 1;
+    constexpr uint32_t verticalBorderTex   = 1;
+    constexpr uint32_t horizontalBorderTex = 1;
     const bool         useCylinder       = (GetCylinderSysprop() != 0) || (mImmersiveMode > 0);
     if (useCylinder) {
         // Create the Top Display Panel (Curved display)
@@ -311,9 +312,11 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain               = mSwapchain.mHandle;
-            layer.subImage.imageRect.offset.x      = eye == 0 ? 0 : mTopPanel.mWidth;
+            layer.subImage.imageRect.offset.x =
+                (eye == 0 ? 0 : mTopPanel.mWidth) + horizontalBorderTex;
             layer.subImage.imageRect.offset.y      = 0;
-            layer.subImage.imageRect.extent.width  = mTopPanel.mWidth;
+            layer.subImage.imageRect.extent.width =
+                mTopPanel.mWidth - (2 * horizontalBorderTex);
             layer.subImage.imageRect.extent.height = mTopPanel.mHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex         = 0;
             layer.pose                             = topPanelFromWorld;
@@ -346,9 +349,11 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
             layer.eyeVisibility = eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
             memset(&layer.subImage, 0, sizeof(XrSwapchainSubImage));
             layer.subImage.swapchain          = mSwapchain.mHandle;
-            layer.subImage.imageRect.offset.x = eye == 0 ? 0 : mTopPanel.mWidth;
+            layer.subImage.imageRect.offset.x =
+                (eye == 0 ? 0 : mTopPanel.mWidth) + horizontalBorderTex;
             layer.subImage.imageRect.offset.y = 0;
-            layer.subImage.imageRect.extent.width  = mTopPanel.mWidth;
+            layer.subImage.imageRect.extent.width =
+                mTopPanel.mWidth - (2 * horizontalBorderTex);
             layer.subImage.imageRect.extent.height = mTopPanel.mHeight - verticalBorderTex;
             layer.subImage.imageArrayIndex         = 0;
             layer.pose                             = mTopPanel.mWorldFromPanel;

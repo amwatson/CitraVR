@@ -17,13 +17,15 @@ static std::weak_ptr<EmuWindow::TouchState> global_touch_state;
 #ifdef ANDROID
 Layout::FramebufferLayout MakeCitraVRFramebufferLayout(u32 width, u32 height) {
     const u32 top_height = height / 2;
+    const u32 bottom_width =
+        width * Core::kScreenBottomWidth / Core::kScreenTopWidth;
     Layout::FramebufferLayout layout{
         width,
         height,
         true,
         true,
         Common::Rectangle<u32>{0, 0, width, top_height},
-        Common::Rectangle<u32>{0, top_height, width, height},
+        Common::Rectangle<u32>{0, top_height, bottom_width, height},
         true,
         false,
         false,

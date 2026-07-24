@@ -17,10 +17,12 @@ static constexpr float BOT_SCREEN_ASPECT_RATIO =
     static_cast<float>(Core::kScreenBottomHeight) / Core::kScreenBottomWidth;
 
 u32 FramebufferLayout::GetScalingRatio() const {
+    // SideBySide renders each eye at half the top-screen rectangle's width.
+    const u32 top_screen_width = top_screen.GetWidth() / 2;
     if (is_rotated) {
-        return static_cast<u32>(((top_screen.GetWidth() - 1) / Core::kScreenTopWidth) + 1);
+        return static_cast<u32>(((top_screen_width - 1) / Core::kScreenTopWidth) + 1);
     } else {
-        return static_cast<u32>(((top_screen.GetWidth() - 1) / Core::kScreenTopHeight) + 1);
+        return static_cast<u32>(((top_screen_width - 1) / Core::kScreenTopHeight) + 1);
     }
 }
 

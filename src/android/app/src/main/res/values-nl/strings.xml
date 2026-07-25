@@ -130,4 +130,13 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="cancelling">Annuleren…</string>
         <string name="swap_buttons_b_y">B- en Y-knoppen omwisselen</string>
     <string name="swap_buttons_b_y_description">Het indrukken van B activeert Y en omgekeerd. Geldt voor gamepads en VR-touchcontrollers zonder de bovenstaande knoptoewijzingen te wijzigen.</string>
+    <string name="update_install">Installeren</string>
+    <string name="update_installing">Bijwerken naar %1$s</string>
+    <string name="update_downloading">Update downloaden…</string>
+    <string name="update_permission_needed">CitraVR heeft toestemming nodig om updates te installeren. Tik op Toestemming verlenen en sta vervolgens \"Onbekende apps installeren\" toe voor CitraVR.</string>
+    <string name="update_grant_permission">Toestemming verlenen</string>
+    <string name="update_download_failed">De update kon niet worden gedownload. Je kunt deze handmatig downloaden vanaf de releasepagina.</string>
+    <string name="update_would_downgrade">De geïnstalleerde versie is nieuwer dan deze release en kan er daarom niet overheen worden geïnstalleerd.</string>
+    <string name="update_install_failed">De update kon niet worden geïnstalleerd.</string>
+    <string name="update_open_release_page">Releasepagina</string>
 </resources>

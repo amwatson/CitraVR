@@ -327,4 +327,13 @@
     <string name="emulation_switch_secondary_layout_description">El diseño usado por una pantalla secundaria conectada, alámbrica o inalámbrica (Chromecast, Miracast)</string>
         <string name="swap_buttons_b_y">Intercambiar los botones B e Y</string>
     <string name="swap_buttons_b_y_description">Al presionar B se activa Y y viceversa. Se aplica a los gamepads y a los controles táctiles de VR sin cambiar las asignaciones de botones anteriores.</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_installing">Actualizando a %1$s</string>
+    <string name="update_downloading">Descargando actualización…</string>
+    <string name="update_permission_needed">CitraVR necesita permiso para instalar actualizaciones. Presiona Conceder permiso y luego permite «Instalar aplicaciones desconocidas» para CitraVR.</string>
+    <string name="update_grant_permission">Conceder permiso</string>
+    <string name="update_download_failed">No se pudo descargar la actualización. Puedes descargarla manualmente desde la página de versiones.</string>
+    <string name="update_would_downgrade">La versión instalada es más reciente que esta actualización, por lo que no se puede instalar encima.</string>
+    <string name="update_install_failed">No se pudo instalar la actualización.</string>
+    <string name="update_open_release_page">Página de versiones</string>
 </resources>

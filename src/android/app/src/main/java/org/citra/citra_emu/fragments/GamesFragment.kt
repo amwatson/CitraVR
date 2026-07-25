@@ -260,8 +260,11 @@ class GamesFragment : Fragment() {
                     baseVersion.isPreRelease || IntSetting.UPDATE_CHECK_CHANNEL.int == 1
                 val latestRelease = UpdateChecker.getLatestRelease(includePrereleases)
 
-                if (latestRelease != null && latestRelease.second > baseVersion) {
-                    UpdateAvailableNotificationFragment.newInstance(latestRelease.first)
+                if (latestRelease != null && latestRelease.version > baseVersion) {
+                    UpdateAvailableNotificationFragment.newInstance(
+                        latestRelease.tag,
+                        latestRelease.apkUrl
+                    )
                         .show(
                             requireActivity().supportFragmentManager,
                             UpdateAvailableNotificationFragment.TAG

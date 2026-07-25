@@ -213,4 +213,13 @@
     <string name="may">Gegužė</string>
         <string name="swap_buttons_b_y">Sukeisti B ir Y mygtukus</string>
     <string name="swap_buttons_b_y_description">Paspaudus B suaktyvinamas Y ir atvirkščiai. Taikoma žaidimų pultams ir VR jutikliniams valdikliams, nekeičiant aukščiau esančių mygtukų priskyrimų.</string>
+    <string name="update_install">Įdiegti</string>
+    <string name="update_installing">Atnaujinama į %1$s</string>
+    <string name="update_downloading">Atsisiunčiamas atnaujinimas…</string>
+    <string name="update_permission_needed">„CitraVR“ reikia leidimo diegti atnaujinimus. Palieskite „Suteikti leidimą“, tada leiskite „CitraVR“ diegti nežinomas programas.</string>
+    <string name="update_grant_permission">Suteikti leidimą</string>
+    <string name="update_download_failed">Nepavyko atsisiųsti atnaujinimo. Galite jį atsisiųsti rankiniu būdu iš leidimų puslapio.</string>
+    <string name="update_would_downgrade">Įdiegta versija yra naujesnė už šią, todėl jos negalima įdiegti ant viršaus.</string>
+    <string name="update_install_failed">Nepavyko įdiegti atnaujinimo.</string>
+    <string name="update_open_release_page">Leidimų puslapis</string>
 </resources>

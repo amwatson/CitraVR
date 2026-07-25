@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project / CitraVR Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,10 +15,12 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 
-class UpdateAvailableNotificationFragment(newVersionOverride: String) : DialogFragment() {
+class UpdateAvailableNotificationFragment(newVersionOverride: String, apkUrlOverride: String?) :
+    DialogFragment() {
     private lateinit var mainActivity: MainActivity
 
     private val newVersion = newVersionOverride
+    private val apkUrl = apkUrlOverride
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         BuildUtil.assertNotGooglePlay()
@@ -29,26 +31,46 @@ class UpdateAvailableNotificationFragment(newVersionOverride: String) : DialogFr
         val updateNotificationDescription =
             getString(R.string.update_available_description, newVersion)
 
-        return MaterialAlertDialogBuilder(requireContext())
+        val builder = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.update_available)
             .setMessage(updateNotificationDescription)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(getString(R.string.update_link, newVersion))
-                )
-                startActivity(intent)
-            }
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+
+        // Prefer the in-app installer; fall back to the browser when the release has
+        // no APK asset attached.
+        if (apkUrl != null) {
+            builder
+                .setPositiveButton(R.string.update_install) { _: DialogInterface, _: Int ->
+                    UpdateInstallDialogFragment.newInstance(newVersion, apkUrl)
+                        .show(mainActivity.supportFragmentManager, UpdateInstallDialogFragment.TAG)
+                }
+                .setNeutralButton(R.string.update_open_release_page) { _: DialogInterface, _: Int ->
+                    openReleasePage()
+                }
+        } else {
+            builder.setPositiveButton(R.string.update_open_release_page) { _, _ ->
+                openReleasePage()
+            }
+        }
+
+        return builder.show()
+    }
+
+    private fun openReleasePage() {
+        startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(getString(R.string.update_link, newVersion))
+            )
+        )
     }
 
     companion object {
         const val TAG = "UpdateAvailableNotificationFragment"
 
-        fun newInstance(newVersion: String): UpdateAvailableNotificationFragment {
+        fun newInstance(newVersion: String, apkUrl: String?): UpdateAvailableNotificationFragment {
             BuildUtil.assertNotGooglePlay()
-            return UpdateAvailableNotificationFragment(newVersion)
+            return UpdateAvailableNotificationFragment(newVersion, apkUrl)
         }
     }
 }

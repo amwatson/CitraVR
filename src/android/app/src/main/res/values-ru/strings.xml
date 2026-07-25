@@ -604,4 +604,13 @@
     <string name="vr_stats_input_latency_label">Время задержки ввода</string>
     <string name="swap_buttons_b_y">Поменять местами кнопки B и Y</string>
     <string name="swap_buttons_b_y_description">Нажатие B активирует Y и наоборот. Применяется к геймпадам и сенсорным VR-контроллерам, не изменяя назначения кнопок выше.</string>
+    <string name="update_install">Установить</string>
+    <string name="update_installing">Обновление до %1$s</string>
+    <string name="update_downloading">Скачивание обновления…</string>
+    <string name="update_permission_needed">CitraVR требуется разрешение на установку обновлений. Нажмите «Предоставить разрешение», затем разрешите «Установку неизвестных приложений» для CitraVR.</string>
+    <string name="update_grant_permission">Предоставить разрешение</string>
+    <string name="update_download_failed">Не удалось скачать обновление. Вы можете скачать его вручную со страницы релизов.</string>
+    <string name="update_would_downgrade">Установленная версия новее этого релиза, поэтому её нельзя перезаписать.</string>
+    <string name="update_install_failed">Не удалось установить обновление.</string>
+    <string name="update_open_release_page">Страница релизов</string>
 </resources>

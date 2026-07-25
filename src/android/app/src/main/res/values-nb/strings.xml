@@ -171,4 +171,13 @@
     <string name="vr_stats_input_latency_label">Inndataforsinkelse</string>
     <string name="swap_buttons_b_y">Bytt om B- og Y-knappene</string>
     <string name="swap_buttons_b_y_description">Å trykke på B aktiverer Y og omvendt. Gjelder for gamepader og VR-berøringskontrollere uten å endre knappetilordningene ovenfor.</string>
+    <string name="update_install">Installer</string>
+    <string name="update_installing">Oppdaterer til %1$s</string>
+    <string name="update_downloading">Laster ned oppdatering…</string>
+    <string name="update_permission_needed">CitraVR trenger tillatelse til å installere oppdateringer. Trykk på Gi tillatelse, og tillat deretter «Installer ukjente apper» for CitraVR.</string>
+    <string name="update_grant_permission">Gi tillatelse</string>
+    <string name="update_download_failed">Oppdateringen kunne ikke lastes ned. Du kan laste den ned manuelt fra utgivelsessiden.</string>
+    <string name="update_would_downgrade">Den installerte versjonen er nyere enn denne utgivelsen, så den kan ikke installeres over.</string>
+    <string name="update_install_failed">Oppdateringen kunne ikke installeres.</string>
+    <string name="update_open_release_page">Utgivelsesside</string>
 </resources>

@@ -848,4 +848,13 @@
     <string name="decompress_failed">Dosya ayıklama işlemi başarısız.</string>
     <string name="compress_decompress_installed_app">Halihazırda kurulu olan uygulamalar sıkıştırılamaz veya ayıklanamaz.</string>
 
-  </resources>
+      <string name="update_install">Yükle</string>
+    <string name="update_installing">%1$s sürümüne güncelleniyor</string>
+    <string name="update_downloading">Güncelleme indiriliyor…</string>
+    <string name="update_permission_needed">CitraVR\'nin güncellemeleri yüklemek için izne ihtiyacı var. İzin Ver\'e dokunun, ardından CitraVR için \"Bilinmeyen uygulamaları yükleme\" iznini verin.</string>
+    <string name="update_grant_permission">İzin Ver</string>
+    <string name="update_download_failed">Güncelleme indirilemedi. Sürümler sayfasından manuel olarak indirebilirsiniz.</string>
+    <string name="update_would_downgrade">Yüklü sürüm bu sürümden daha yeni olduğundan üzerine yüklenemez.</string>
+    <string name="update_install_failed">Güncelleme yüklenemedi.</string>
+    <string name="update_open_release_page">Sürümler Sayfası</string>
+</resources>

@@ -123,4 +123,13 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_input_latency_label">Sisääntulo Viive</string>
     <string name="swap_buttons_b_y">Vaihda B- ja Y-painikkeet keskenään</string>
     <string name="swap_buttons_b_y_description">B:n painaminen aktivoi Y:n ja päinvastoin. Koskee peliohjaimia ja VR-kosketusohjaimia muuttamatta yllä olevia painikemäärityksiä.</string>
+    <string name="update_install">Asenna</string>
+    <string name="update_installing">Päivitetään versioon %1$s</string>
+    <string name="update_downloading">Ladataan päivitystä…</string>
+    <string name="update_permission_needed">CitraVR tarvitsee luvan asentaa päivityksiä. Napauta Myönnä lupa ja salli sitten \"Tuntemattomien sovellusten asentaminen\" CitraVR:lle.</string>
+    <string name="update_grant_permission">Myönnä lupa</string>
+    <string name="update_download_failed">Päivitystä ei voitu ladata. Voit ladata sen manuaalisesti julkaisusivulta.</string>
+    <string name="update_would_downgrade">Asennettu versio on uudempi kuin tämä julkaisu, joten sitä ei voi asentaa sen päälle.</string>
+    <string name="update_install_failed">Päivitystä ei voitu asentaa.</string>
+    <string name="update_open_release_page">Julkaisusivu</string>
 </resources>

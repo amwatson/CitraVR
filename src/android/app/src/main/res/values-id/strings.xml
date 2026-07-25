@@ -42,4 +42,13 @@
     <string name="notifications">Notifikasi</string>
         <string name="swap_buttons_b_y">Tukar tombol B dan Y</string>
     <string name="swap_buttons_b_y_description">Menekan B akan mengaktifkan Y dan sebaliknya. Berlaku untuk gamepad dan kontroler sentuh VR tanpa mengubah pemetaan tombol di atas.</string>
+    <string name="update_install">Pasang</string>
+    <string name="update_installing">Memperbarui ke %1$s</string>
+    <string name="update_downloading">Mengunduh pembaruan…</string>
+    <string name="update_permission_needed">CitraVR memerlukan izin untuk memasang pembaruan. Ketuk Beri Izin, lalu izinkan \"Pasang aplikasi tak dikenal\" untuk CitraVR.</string>
+    <string name="update_grant_permission">Beri Izin</string>
+    <string name="update_download_failed">Pembaruan tidak dapat diunduh. Anda dapat mengunduhnya secara manual dari halaman rilis.</string>
+    <string name="update_would_downgrade">Versi yang terpasang lebih baru daripada rilis ini, sehingga tidak dapat dipasang di atasnya.</string>
+    <string name="update_install_failed">Pembaruan tidak dapat dipasang.</string>
+    <string name="update_open_release_page">Halaman Rilis</string>
 </resources>

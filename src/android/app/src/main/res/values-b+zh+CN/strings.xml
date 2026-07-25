@@ -914,4 +914,13 @@
     <string name="vr_stats_comp_tear_count">撕裂计数（总计）</string>
     <string name="vr_stats_build_version_label">应用程序版本</string>
     <string name="vr_stats_input_latency_label">输入延迟</string>
+    <string name="update_install">安装</string>
+    <string name="update_installing">正在更新到 %1$s</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="update_permission_needed">CitraVR 需要安装更新的权限。请点按“授予权限”，然后为 CitraVR 允许“安装未知应用”。</string>
+    <string name="update_grant_permission">授予权限</string>
+    <string name="update_download_failed">无法下载更新。你可以从发布页面手动下载。</string>
+    <string name="update_would_downgrade">已安装的版本比此版本更新，因此无法覆盖安装。</string>
+    <string name="update_install_failed">无法安装更新。</string>
+    <string name="update_open_release_page">发布页面</string>
 </resources>

@@ -60,4 +60,13 @@
     <string name="vr_stats_input_latency_label">입력 지연</string>
     <string name="swap_buttons_b_y">B와 Y 버튼 바꾸기</string>
     <string name="swap_buttons_b_y_description">B를 누르면 Y가 입력되고 그 반대도 마찬가지입니다. 위의 버튼 매핑을 변경하지 않고 게임패드와 VR 터치 컨트롤러에 적용됩니다.</string>
+    <string name="update_install">설치</string>
+    <string name="update_installing">%1$s(으)로 업데이트 중</string>
+    <string name="update_downloading">업데이트 다운로드 중…</string>
+    <string name="update_permission_needed">CitraVR이 업데이트를 설치하려면 권한이 필요합니다. 권한 부여를 탭한 다음 CitraVR에 대해 \"알 수 없는 앱 설치\"를 허용하세요.</string>
+    <string name="update_grant_permission">권한 부여</string>
+    <string name="update_download_failed">업데이트를 다운로드할 수 없습니다. 릴리스 페이지에서 직접 다운로드할 수 있습니다.</string>
+    <string name="update_would_downgrade">설치된 버전이 이 릴리스보다 최신이므로 덮어쓸 수 없습니다.</string>
+    <string name="update_install_failed">업데이트를 설치할 수 없습니다.</string>
+    <string name="update_open_release_page">릴리스 페이지</string>
 </resources>

@@ -956,4 +956,13 @@
     <string name="decompress_failed">Dekomprimeringen mislykkedes.</string>
     <string name="compress_decompress_installed_app">Allerede installerede programmer kan ikke komprimeres eller dekomprimeres.</string>
 
-  </resources>
+      <string name="update_install">Installér</string>
+    <string name="update_installing">Opdaterer til %1$s</string>
+    <string name="update_downloading">Downloader opdatering…</string>
+    <string name="update_permission_needed">CitraVR har brug for tilladelse til at installere opdateringer. Tryk på Giv tilladelse, og tillad derefter \"Installér ukendte apps\" for CitraVR.</string>
+    <string name="update_grant_permission">Giv tilladelse</string>
+    <string name="update_download_failed">Opdateringen kunne ikke downloades. Du kan downloade den manuelt fra udgivelsessiden.</string>
+    <string name="update_would_downgrade">Den installerede version er nyere end denne udgivelse og kan derfor ikke installeres over den.</string>
+    <string name="update_install_failed">Opdateringen kunne ikke installeres.</string>
+    <string name="update_open_release_page">Udgivelsesside</string>
+</resources>

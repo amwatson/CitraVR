@@ -920,4 +920,13 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="decompress_failed">Va fallar la descompressió.</string>
     <string name="compress_decompress_installed_app">Les aplicacions ja instal·lades no es poden comprimir ni descomprimir.</string>
 
-  </resources>
+      <string name="update_install">Instal·la</string>
+    <string name="update_installing">S\'està actualitzant a %1$s</string>
+    <string name="update_downloading">S\'està baixant l\'actualització…</string>
+    <string name="update_permission_needed">CitraVR necessita permís per a instal·lar actualitzacions. Toca Concedeix el permís i després permet «Instal·lar aplicacions desconegudes» per a CitraVR.</string>
+    <string name="update_grant_permission">Concedeix el permís</string>
+    <string name="update_download_failed">No s\'ha pogut baixar l\'actualització. Pots baixar-la manualment des de la pàgina de versions.</string>
+    <string name="update_would_downgrade">La versió instal·lada és més recent que esta versió, per la qual cosa no es pot instal·lar damunt.</string>
+    <string name="update_install_failed">No s\'ha pogut instal·lar l\'actualització.</string>
+    <string name="update_open_release_page">Pàgina de versions</string>
+</resources>

@@ -59,4 +59,13 @@
     <string name="vr_stats_input_latency_label">输入延迟</string>
     <string name="swap_buttons_b_y">交換 B 與 Y 按鈕</string>
     <string name="swap_buttons_b_y_description">按下 B 將觸發 Y，反之亦然。適用於遊戲手把與 VR 觸控控制器，不會變更上方的按鍵對應。</string>
+    <string name="update_install">安裝</string>
+    <string name="update_installing">正在更新到 %1$s</string>
+    <string name="update_downloading">正在下載更新…</string>
+    <string name="update_permission_needed">CitraVR 需要安裝更新的權限。請點選「授予權限」，然後為 CitraVR 允許「安裝未知的應用程式」。</string>
+    <string name="update_grant_permission">授予權限</string>
+    <string name="update_download_failed">無法下載更新。你可以從發布頁面手動下載。</string>
+    <string name="update_would_downgrade">已安裝的版本比此版本更新，因此無法覆蓋安裝。</string>
+    <string name="update_install_failed">無法安裝更新。</string>
+    <string name="update_open_release_page">發布頁面</string>
 </resources>

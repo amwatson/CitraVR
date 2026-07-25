@@ -1061,6 +1061,15 @@
     <string name="update_available_description">A newer version of CitraVR is available (version %1$s).\nWould you like to download it?</string>
     <string name="check_for_updates">Check For Updates</string>
     <string name="check_for_updates_description">Display an in-app notification when an update is available for CitraVR.</string>
+    <string name="update_install">Install</string>
+    <string name="update_installing">Updating to %1$s</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_permission_needed">CitraVR needs permission to install updates. Tap Grant Permission, then allow \"Install unknown apps\" for CitraVR.</string>
+    <string name="update_grant_permission">Grant Permission</string>
+    <string name="update_download_failed">The update could not be downloaded. You can download it manually from the releases page.</string>
+    <string name="update_would_downgrade">The installed build is newer than this release, so it can\'t be installed over it.</string>
+    <string name="update_install_failed">The update could not be installed.</string>
+    <string name="update_open_release_page">Release Page</string>
     <string name="update_check_channel">Update Channel</string>
     <string name="update_check_channel_description">Which update channel to use when checking for updates.</string>
     <string name="update_check_channel_stable">Stable</string>

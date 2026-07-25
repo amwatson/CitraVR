@@ -101,14 +101,17 @@ object UpdateChecker {
         return this.drop(1).dropLast(1)
     }
 
+    /** [apkUrl] is null when the release has no .apk asset attached. */
+    class ReleaseInfo(val tag: String, val version: Version, val apkUrl: String?)
+
     /**
-     * The newest release available in the given channel, as (tag, version), or null
-     * on failure or when nothing qualifies. The stable channel only considers
-     * releases not flagged as prereleases on GitHub; the prerelease channel
-     * considers all of them. Playtest releases never qualify in either channel
-     * because their tags don't parse as versions.
+     * The newest release available in the given channel, or null on failure or when
+     * nothing qualifies. The stable channel only considers releases not flagged as
+     * prereleases on GitHub; the prerelease channel considers all of them. Playtest
+     * releases never qualify in either channel because their tags don't parse as
+     * versions.
      */
-    fun getLatestRelease(includePrereleases: Boolean): Pair<String, Version>? {
+    fun getLatestRelease(includePrereleases: Boolean): ReleaseInfo? {
         val response =
             getResponse("https://api.github.com/repos/amwatson/CitraVR/releases?per_page=30")
 
@@ -125,9 +128,16 @@ object UpdateChecker {
                     if (!includePrereleases && fields["prerelease"].toString() == "true") {
                         return@mapNotNull null
                     }
-                    Version.parse(tag)?.let { Pair(tag, it) }
+                    val version = Version.parse(tag) ?: return@mapNotNull null
+                    val apkUrl = (fields["assets"] as? JsonArray)
+                        ?.firstOrNull {
+                            it.jsonObject["name"].toString().stripQuotes()
+                                ?.endsWith(".apk") == true
+                        }
+                        ?.jsonObject?.get("browser_download_url")?.toString()?.stripQuotes()
+                    ReleaseInfo(tag, version, apkUrl)
                 }
-                .maxByOrNull { it.second }
+                .maxByOrNull { it.version }
         } catch (e: Exception) {
             Log.error("[UpdateChecker] JSON decode failed: $e")
             return null

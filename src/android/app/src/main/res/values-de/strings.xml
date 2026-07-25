@@ -822,4 +822,13 @@ Nachdem die Shader geladen wurden, werden sie auf dem Gerät gespeichert und ver
     <string name="vr_stats_comp_tear_count">Tear-Zähler (gesamt)</string>
     <string name="vr_stats_build_version_label">App Version</string>
     <string name="vr_stats_input_latency_label">Eingabeverzögerung</string>
+    <string name="update_install">Installieren</string>
+    <string name="update_installing">Aktualisierung auf %1$s</string>
+    <string name="update_downloading">Update wird heruntergeladen…</string>
+    <string name="update_permission_needed">CitraVR benötigt die Berechtigung, Updates zu installieren. Tippe auf Berechtigung erteilen und erlaube dann „Unbekannte Apps installieren“ für CitraVR.</string>
+    <string name="update_grant_permission">Berechtigung erteilen</string>
+    <string name="update_download_failed">Das Update konnte nicht heruntergeladen werden. Du kannst es manuell von der Release-Seite herunterladen.</string>
+    <string name="update_would_downgrade">Die installierte Version ist neuer als dieses Release und kann daher nicht überschrieben werden.</string>
+    <string name="update_install_failed">Das Update konnte nicht installiert werden.</string>
+    <string name="update_open_release_page">Release-Seite</string>
 </resources>

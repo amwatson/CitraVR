@@ -3,4 +3,13 @@
 
         <string name="swap_buttons_b_y">Hoán đổi nút B và Y</string>
     <string name="swap_buttons_b_y_description">Nhấn B sẽ kích hoạt Y và ngược lại. Áp dụng cho tay cầm và bộ điều khiển cảm ứng VR mà không thay đổi các gán nút ở trên.</string>
+    <string name="update_install">Cài đặt</string>
+    <string name="update_installing">Đang cập nhật lên %1$s</string>
+    <string name="update_downloading">Đang tải bản cập nhật…</string>
+    <string name="update_permission_needed">CitraVR cần quyền để cài đặt bản cập nhật. Nhấn Cấp quyền, sau đó cho phép \"Cài đặt ứng dụng không xác định\" cho CitraVR.</string>
+    <string name="update_grant_permission">Cấp quyền</string>
+    <string name="update_download_failed">Không thể tải bản cập nhật. Bạn có thể tải thủ công từ trang phát hành.</string>
+    <string name="update_would_downgrade">Phiên bản đã cài mới hơn bản phát hành này nên không thể cài đè.</string>
+    <string name="update_install_failed">Không thể cài đặt bản cập nhật.</string>
+    <string name="update_open_release_page">Trang phát hành</string>
 </resources>

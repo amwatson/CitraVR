@@ -936,4 +936,13 @@ Después de que se carguen los sombreadores, estos se guardan en el dispositivo,
     <string name="vr_stats_comp_tear_count">Contare lacrime (totale)</string>
     <string name="vr_stats_build_version_label">Versione dell\'app</string>
     <string name="vr_stats_input_latency_label">Latenza di input</string>
+    <string name="update_install">Installa</string>
+    <string name="update_installing">Aggiornamento a %1$s</string>
+    <string name="update_downloading">Download dell\'aggiornamento…</string>
+    <string name="update_permission_needed">CitraVR ha bisogno dell\'autorizzazione per installare gli aggiornamenti. Tocca Concedi autorizzazione, quindi consenti \"Installa app sconosciute\" per CitraVR.</string>
+    <string name="update_grant_permission">Concedi autorizzazione</string>
+    <string name="update_download_failed">Impossibile scaricare l\'aggiornamento. Puoi scaricarlo manualmente dalla pagina delle versioni.</string>
+    <string name="update_would_downgrade">La versione installata è più recente di questa, quindi non può essere sovrascritta.</string>
+    <string name="update_install_failed">Impossibile installare l\'aggiornamento.</string>
+    <string name="update_open_release_page">Pagina delle versioni</string>
 </resources>

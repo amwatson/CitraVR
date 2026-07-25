@@ -397,4 +397,13 @@
     <string name="decompress_failed">Η αποσυμπίεση απέτυχε.</string>
         <string name="swap_buttons_b_y">Εναλλαγή κουμπιών B και Y</string>
     <string name="swap_buttons_b_y_description">Το πάτημα του B ενεργοποιεί το Y και αντίστροφα. Ισχύει για χειριστήρια και VR touch controllers χωρίς να αλλάζουν οι παραπάνω αντιστοιχίσεις κουμπιών.</string>
+    <string name="update_install">Εγκατάσταση</string>
+    <string name="update_installing">Ενημέρωση σε %1$s</string>
+    <string name="update_downloading">Λήψη ενημέρωσης…</string>
+    <string name="update_permission_needed">Το CitraVR χρειάζεται άδεια για να εγκαθιστά ενημερώσεις. Πατήστε Παραχώρηση άδειας και έπειτα επιτρέψτε την «Εγκατάσταση άγνωστων εφαρμογών» για το CitraVR.</string>
+    <string name="update_grant_permission">Παραχώρηση άδειας</string>
+    <string name="update_download_failed">Δεν ήταν δυνατή η λήψη της ενημέρωσης. Μπορείτε να τη λάβετε χειροκίνητα από τη σελίδα εκδόσεων.</string>
+    <string name="update_would_downgrade">Η εγκατεστημένη έκδοση είναι νεότερη από αυτήν την έκδοση, επομένως δεν μπορεί να εγκατασταθεί πάνω της.</string>
+    <string name="update_install_failed">Δεν ήταν δυνατή η εγκατάσταση της ενημέρωσης.</string>
+    <string name="update_open_release_page">Σελίδα εκδόσεων</string>
 </resources>

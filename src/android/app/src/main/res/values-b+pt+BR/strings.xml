@@ -1027,4 +1027,13 @@ Após os shaders serem carregados, eles são armazenados no dispositivo, evitand
     <string name="vr_stats_comp_tear_count">Número de rasgos (total)</string>
     <string name="vr_stats_build_version_label">Versão do aplicativo</string>
     <string name="vr_stats_input_latency_label">Latência de Entrada</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_installing">Atualizando para %1$s</string>
+    <string name="update_downloading">Baixando atualização…</string>
+    <string name="update_permission_needed">O CitraVR precisa de permissão para instalar atualizações. Toque em Conceder permissão e permita \"Instalar apps desconhecidos\" para o CitraVR.</string>
+    <string name="update_grant_permission">Conceder permissão</string>
+    <string name="update_download_failed">Não foi possível baixar a atualização. Você pode baixá-la manualmente na página de versões.</string>
+    <string name="update_would_downgrade">A versão instalada é mais recente que esta atualização, portanto não é possível instalá-la por cima.</string>
+    <string name="update_install_failed">Não foi possível instalar a atualização.</string>
+    <string name="update_open_release_page">Página de versões</string>
 </resources>

@@ -3,4 +3,13 @@
 
         <string name="swap_buttons_b_y">B és Y gombok felcserélése</string>
     <string name="swap_buttons_b_y_description">A B megnyomása az Y-t aktiválja, és fordítva. A gamepadekre és a VR-vezérlőkre is érvényes, a fenti gombhozzárendelések módosítása nélkül.</string>
+    <string name="update_install">Telepítés</string>
+    <string name="update_installing">Frissítés erre: %1$s</string>
+    <string name="update_downloading">Frissítés letöltése…</string>
+    <string name="update_permission_needed">A CitraVR-nek engedélyre van szüksége a frissítések telepítéséhez. Koppints az Engedély megadása gombra, majd engedélyezd az „Ismeretlen alkalmazások telepítése” opciót a CitraVR számára.</string>
+    <string name="update_grant_permission">Engedély megadása</string>
+    <string name="update_download_failed">A frissítést nem sikerült letölteni. Manuálisan letöltheted a kiadási oldalról.</string>
+    <string name="update_would_downgrade">A telepített verzió újabb, mint ez a kiadás, ezért nem telepíthető rá.</string>
+    <string name="update_install_failed">A frissítést nem sikerült telepíteni.</string>
+    <string name="update_open_release_page">Kiadási oldal</string>
 </resources>

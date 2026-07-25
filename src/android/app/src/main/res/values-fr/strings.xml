@@ -994,4 +994,13 @@ Une fois les shaders chargés, ils sont enregistrés sur l\'appareil, ce qui emp
     <string name="update_check_channel">Canal de mises à jour</string>
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Préversion</string>
+    <string name="update_install">Installer</string>
+    <string name="update_installing">Mise à jour vers %1$s</string>
+    <string name="update_downloading">Téléchargement de la mise à jour…</string>
+    <string name="update_permission_needed">CitraVR a besoin de l\'autorisation d\'installer les mises à jour. Appuyez sur Accorder l\'autorisation, puis autorisez « Installer des applis inconnues » pour CitraVR.</string>
+    <string name="update_grant_permission">Accorder l\'autorisation</string>
+    <string name="update_download_failed">La mise à jour n\'a pas pu être téléchargée. Vous pouvez la télécharger manuellement depuis la page des versions.</string>
+    <string name="update_would_downgrade">La version installée est plus récente que cette mise à jour, elle ne peut donc pas être installée par-dessus.</string>
+    <string name="update_install_failed">La mise à jour n\'a pas pu être installée.</string>
+    <string name="update_open_release_page">Page des versions</string>
 </resources>

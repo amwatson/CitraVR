@@ -221,4 +221,13 @@
     <string name="update_available"> アップデートがあります</string>
     <string name="swap_buttons_b_y">BボタンとYボタンを入れ替える</string>
     <string name="swap_buttons_b_y_description">Bを押すとYが、Yを押すとBが入力されます。上のボタン割り当てを変更せずに、ゲームパッドとVRタッチコントローラーの両方に適用されます。</string>
+    <string name="update_install">インストール</string>
+    <string name="update_installing">%1$s に更新中</string>
+    <string name="update_downloading">アップデートをダウンロード中…</string>
+    <string name="update_permission_needed">CitraVR がアップデートをインストールするには権限が必要です。「権限を許可」をタップし、CitraVR に「不明なアプリのインストール」を許可してください。</string>
+    <string name="update_grant_permission">権限を許可</string>
+    <string name="update_download_failed">アップデートをダウンロードできませんでした。リリースページから手動でダウンロードできます。</string>
+    <string name="update_would_downgrade">インストール済みのバージョンの方が新しいため、このリリースを上書きインストールできません。</string>
+    <string name="update_install_failed">アップデートをインストールできませんでした。</string>
+    <string name="update_open_release_page">リリースページ</string>
 </resources>

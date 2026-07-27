@@ -21,7 +21,7 @@ import org.citra.citra_emu.utils.BuildUtil
  * A cached document tree for Citra user directory.
  * For every filepath which is not startsWith "content://" will need to use this class to traverse.
  * For example:
- * C++ Citra log file directory will be /log/azahar_log.txt.
+ * C++ Citra log file directory will be /log/citravr_log.txt.
  * After DocumentsTree.resolvePath() it will become content URI.
  */
 class DocumentsTree {

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,6 +27,7 @@ enum class WindowSystemType : u8 {
     MacOS,
     X11,
     Wayland,
+    LibRetro,
 };
 
 struct Frame;
@@ -83,13 +84,13 @@ public:
     }
 
     /// Inform the driver to swap the front/back buffers and present the current image
-    virtual void SwapBuffers(){};
+    virtual void SwapBuffers() {};
 
     /// Makes the graphics context current for the caller thread
-    virtual void MakeCurrent(){};
+    virtual void MakeCurrent() {};
 
     /// Releases (dunno if this is the "right" word) the context from the caller thread
-    virtual void DoneCurrent(){};
+    virtual void DoneCurrent() {};
 
     /// Gets the GPU driver library (used by Android only)
     virtual std::shared_ptr<Common::DynamicLibrary> GetDriverLibrary() {
@@ -183,12 +184,12 @@ public:
     /**
      * Save current GraphicsContext.
      */
-    virtual void SaveContext(){};
+    virtual void SaveContext() {};
 
     /**
      * Restore saved GraphicsContext.
      */
-    virtual void RestoreContext(){};
+    virtual void RestoreContext() {};
 
     /**
      * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
@@ -254,6 +255,38 @@ public:
                                         bool is_portrait_mode = {});
 
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
+    bool isSecondary() const {
+        return is_secondary;
+    }
+
+    /**
+     * Requests for a frontend to setup a framebuffer.
+     */
+    virtual void SetupFramebuffer() {}
+
+    /// Flags that the framebuffer should be cleared.
+    virtual bool NeedsClearing() const {
+        return true;
+    }
+
+    /// Cursor state for rendering a touch crosshair on the bottom screen.
+    struct CursorInfo {
+        bool visible = false;
+
+        /// Cursor position in bottom-screen-local pixel coordinates.
+        /// Origin is the top-left corner of the bottom screen, with x ranging
+        /// from 0 to bottom_screen.GetWidth() and y from 0 to
+        /// bottom_screen.GetHeight().
+        float projected_x = 0;
+        float projected_y = 0;
+    };
+
+    /// Returns the current cursor state. Override to provide cursor position.
+    virtual CursorInfo GetCursorInfo() const {
+        return {};
+    }
+
+    Settings::StereoRenderOption get3DMode() const;
 
 protected:
     EmuWindow();

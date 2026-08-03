@@ -3,7 +3,7 @@
  <class>ConfigureDialog</class>
  <widget class="QDialog" name="ConfigureDialog">
   <property name="windowTitle">
-   <string>Citra Configuration</string>
+   <string>Azahar Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -98,9 +98,15 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>ConfigureLayout</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_layout.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>ConfigureWeb</class>
    <extends>QWidget</extends>
-   <header>configuration/configure_web.h</header>
+   <header>configuration/configure_network.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

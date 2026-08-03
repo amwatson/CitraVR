@@ -1,18 +1,22 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <fmt/format.h>
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
+#include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/hio.h"
+#endif
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
@@ -73,6 +77,12 @@ enum class KernelState {
      * Reboots the console
      */
     KERNEL_STATE_REBOOT = 7,
+
+    // Special Citra only states.
+    /**
+     * Sets the emulation speed percentage. A value of 0 means unthrottled.
+     */
+    KERNEL_STATE_CITRA_EMULATION_SPEED = 0x20000 ///
 };
 
 struct PageInfo {
@@ -111,6 +121,11 @@ enum class SystemInfoType {
      * For the ARM11 NATIVE_FIRM kernel, this is 5, for processes sm, fs, pm, loader, and pxi."
      */
     KERNEL_SPAWNED_PIDS = 26,
+    /**
+     * Check various Luma3DS config values. This parameter is not available on real systems,
+     * but can be used by homebrew applications.
+     */
+    LUMA_CFW_INFO = 0x10000,
     /**
      * Check if the current system is a new 3DS. This parameter is not available on real systems,
      * but can be used by homebrew applications.
@@ -262,14 +277,24 @@ enum class SystemInfoMemUsageRegion {
     BASE = 3,
 };
 
+enum class SystemInfoLumaCFWInformation {
+    REAL_APP_REGION_SIZE = 0x80, // Gets the real APPLICATION region size,
+                                 // instead of the one reported by the kernel shared page
+                                 // which depends on the memory mode.
+    IS_N3DS = 0x201,             // Checks if the system is a N3DS or not.
+};
+
 /**
  * Accepted by svcGetSystemInfo param with CITRA_INFORMATION type. Selects which information
  * to fetch from Citra. Some string params don't fit in 7 bytes, so they are split.
  */
-enum class SystemInfoCitraInformation {
-    IS_CITRA = 0,          // Always set the output to 1, signaling the app is running on Citra.
+enum class SystemInfoEmulatorInformation {
+    EMULATOR_ID = 0,       // Always set the output to 1, signaling the app is running on Citra.
+    HOST_TICK = 1,         // Tick reference from the host in ns, unaffected by lag or cpu speed.
+    EMULATION_SPEED = 2,   // Gets the emulation speed set by the user or by KernelSetState.
     BUILD_NAME = 10,       // (ie: Nightly, Canary).
     BUILD_VERSION = 11,    // Build version.
+    BUILD_PLATFORM = 12,   // Build platform, see SystemInfoCitraPlatform.
     BUILD_DATE_PART1 = 20, // Build date first 7 characters.
     BUILD_DATE_PART2 = 21, // Build date next 7 characters.
     BUILD_DATE_PART3 = 22, // Build date next 7 characters.
@@ -278,6 +303,26 @@ enum class SystemInfoCitraInformation {
     BUILD_GIT_BRANCH_PART2 = 31,      // Git branch last 7 characters.
     BUILD_GIT_DESCRIPTION_PART1 = 40, // Git description (commit) first 7 characters.
     BUILD_GIT_DESCRIPTION_PART2 = 41, // Git description (commit) last 7 characters.
+};
+
+/**
+ * Used by the IS_EMULATOR information
+ */
+enum class EmulatorIDs {
+    NONE = 0,
+    CITRA_EMULATOR = 1,
+    AZAHAR_EMULATOR = 2,
+};
+
+/**
+ * Current officially supported platforms.
+ */
+enum class SystemInfoCitraPlatform {
+    PLATFORM_UNKNOWN = 0,
+    PLATFORM_WINDOWS = 1,
+    PLATFORM_LINUX = 2,
+    PLATFORM_APPLE = 3,
+    PLATFORM_ANDROID = 4,
 };
 
 /**
@@ -347,6 +392,16 @@ enum class ControlProcessOP {
     PROCESSOP_DISABLE_CREATE_THREAD_RESTRICTIONS,
 };
 
+/**
+ * Accepted by the custom svcMapProcessMemoryEx.
+ */
+enum class MapMemoryExFlag {
+    /**
+     * Maps the memory region as PRIVATE instead of SHARED
+     */
+    MAPEXFLAGS_PRIVATE = (1 << 0),
+};
+
 class SVC : public SVCWrapper<SVC> {
 public:
     SVC(Core::System& system);
@@ -382,6 +437,9 @@ private:
                                 s64 nano_seconds);
     Result ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                            Handle reply_target);
+    Result InvalidateProcessDataCache(Handle process_handle, VAddr address, u32 size);
+    Result StoreProcessDataCache(Handle process_handle, VAddr address, u32 size);
+    Result FlushProcessDataCache(Handle process_handle, VAddr address, u32 size);
     Result CreateAddressArbiter(Handle* out_handle);
     Result ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s64 nanoseconds);
     void Break(u8 break_reason);
@@ -435,7 +493,8 @@ private:
     Result InvalidateEntireInstructionCache();
     u32 ConvertVaToPa(u32 addr);
     Result MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address, Handle src_process_handle,
-                              u32 src_address, u32 size);
+                              u32 src_address, u32 size, MapMemoryExFlag flags,
+                              Handle dst_process_handle_backup);
     Result UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size);
     Result ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32 varg3);
 
@@ -445,6 +504,7 @@ private:
         u32 id;
         Func func;
         const char* name;
+        u32 cycles;
     };
 
     static const std::array<FunctionDef, 180> SVC_Table;
@@ -612,7 +672,18 @@ Result SVC::SendSyncRequest(Handle handle) {
         kernel.GetIPCRecorder().RegisterRequest(session, thread);
     }
 
-    return session->SendSyncRequest(thread);
+    const bool is_hle =
+        session->parent->server != nullptr && session->parent->server->hle_handler != nullptr;
+
+    if (is_hle) {
+        system.perf_stats->BeginIPCProcessing();
+    }
+    const auto res = session->SendSyncRequest(thread);
+    if (is_hle) {
+        system.perf_stats->EndIPCProcessing();
+    }
+
+    return res;
 }
 
 Result SVC::OpenProcess(Handle* out_handle, u32 process_id) {
@@ -687,7 +758,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
-        ar& do_output;
+        ar & do_output;
     }
     friend class boost::serialization::access;
 };
@@ -1005,6 +1076,39 @@ Result SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
     return ResultSuccess;
 }
 
+/// Invalidates the specified cache range (stubbed as we do not emulate cache).
+Result SVC::InvalidateProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
+    return ResultSuccess;
+}
+
+/// Stores the specified cache range (stubbed as we do not emulate cache).
+Result SVC::StoreProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
+    return ResultSuccess;
+}
+
+/// Flushes the specified cache range (stubbed as we do not emulate cache).
+Result SVC::FlushProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
+    return ResultSuccess;
+}
+
 /// Create an address arbiter (to allocate access to shared resources)
 Result SVC::CreateAddressArbiter(Handle* out_handle) {
     // Update address arbiter count in resource limit.
@@ -1069,7 +1173,9 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     }
 
     if (len == 0) {
-        GDBStub::SetHioRequest(system, address);
+#ifdef ENABLE_GDBSTUB
+        GDBStub::SetHioRequest(system, kernel.GetCurrentProcess().get(), address);
+#endif
         return;
     }
 
@@ -1206,7 +1312,7 @@ Result SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr sta
     }
 
     // Create thread.
-    const std::string name = fmt::format("thread-{:08X}", entry_point);
+    const std::string name = fmt::format("{}-{:08X}", current_process->codeset->name, entry_point);
     CASCADE_RESULT(std::shared_ptr<Thread> thread,
                    kernel.CreateThread(name, entry_point, priority, arg, processor_id, stack_top,
                                        current_process));
@@ -1370,6 +1476,18 @@ Result SVC::KernelSetState(u32 kernel_state, u32 varg1, u32 varg2) {
     case KernelState::KERNEL_STATE_REBOOT:
         system.RequestShutdown();
         break;
+
+    // Citra specific states.
+    case KernelState::KERNEL_STATE_CITRA_EMULATION_SPEED: {
+        u16 new_value = static_cast<u16>(varg1);
+        if (new_value == 0xFFFF) {
+            Settings::is_temporary_frame_limit = false;
+            Settings::temporary_frame_limit = 0;
+        } else {
+            Settings::is_temporary_frame_limit = true;
+            Settings::temporary_frame_limit = static_cast<double>(new_value);
+        }
+    } break;
     default:
         LOG_ERROR(Kernel_SVC, "Unknown KernelSetState state={} varg1={} varg2={}", kernel_state,
                   varg1, varg2);
@@ -1540,11 +1658,7 @@ void SVC::SleepThread(s64 nanoseconds) {
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
 s64 SVC::GetSystemTick() {
     // TODO: Use globalTicks here?
-    s64 result = system.GetRunningCore().GetTimer().GetTicks();
-    // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
-    // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
-    system.GetRunningCore().GetTimer().AddTicks(150);
-    return result;
+    return system.GetRunningCore().GetTimer().GetTicks();
 }
 
 // Returns information of the specified handle
@@ -1587,7 +1701,7 @@ Result SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_per
     std::shared_ptr<SharedMemory> shared_memory = nullptr;
 
     auto VerifyPermissions = [](MemoryPermission permission) {
-        // SharedMemory blocks can not be created with Execute permissions
+        // SharedMemory blocks can not be created with execute permissions
         switch (permission) {
         case MemoryPermission::None:
         case MemoryPermission::Read:
@@ -1729,6 +1843,20 @@ Result SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
         *out = 5;
         break;
+    case SystemInfoType::LUMA_CFW_INFO:
+        switch ((SystemInfoLumaCFWInformation)param) {
+        case SystemInfoLumaCFWInformation::REAL_APP_REGION_SIZE:
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->size;
+            break;
+        case SystemInfoLumaCFWInformation::IS_N3DS:
+            *out = Settings::values.is_new_3ds ? 1 : 0;
+            break;
+        default:
+            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0x10000 region: param={}", param);
+            *out = 0;
+            break;
+        }
+        break;
     case SystemInfoType::NEW_3DS_INFO:
         // The actual subtypes are not implemented, homebrew just check
         // this doesn't return an error in n3ds to know the system type
@@ -1736,45 +1864,67 @@ Result SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
         *out = 0;
         return (system.GetNumCores() == 4) ? ResultSuccess : ResultInvalidEnumValue;
     case SystemInfoType::CITRA_INFORMATION:
-        switch ((SystemInfoCitraInformation)param) {
-        case SystemInfoCitraInformation::IS_CITRA:
-            *out = 1;
+        switch ((SystemInfoEmulatorInformation)param) {
+        case SystemInfoEmulatorInformation::EMULATOR_ID:
+            *out = static_cast<s64>(EmulatorIDs::AZAHAR_EMULATOR);
             break;
-        case SystemInfoCitraInformation::BUILD_NAME:
+        case SystemInfoEmulatorInformation::HOST_TICK:
+            *out = static_cast<s64>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                        std::chrono::steady_clock::now().time_since_epoch())
+                                        .count());
+            break;
+        case SystemInfoEmulatorInformation::EMULATION_SPEED:
+            *out = static_cast<s64>(Settings::values.frame_limit.GetValue());
+            break;
+        case SystemInfoEmulatorInformation::BUILD_NAME:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_name, 0, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_VERSION:
+        case SystemInfoEmulatorInformation::BUILD_VERSION:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_version, 0, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_DATE_PART1:
+        case SystemInfoEmulatorInformation::BUILD_PLATFORM: {
+#if defined(_WIN32)
+            *out = static_cast<s64>(SystemInfoCitraPlatform::PLATFORM_WINDOWS);
+#elif defined(ANDROID)
+            *out = static_cast<s64>(SystemInfoCitraPlatform::PLATFORM_ANDROID);
+#elif defined(__linux__)
+            *out = static_cast<s64>(SystemInfoCitraPlatform::PLATFORM_LINUX);
+#elif defined(__APPLE__)
+            *out = static_cast<s64>(SystemInfoCitraPlatform::PLATFORM_APPLE);
+#else
+            *out = static_cast<s64>(SystemInfoCitraPlatform::PLATFORM_UNKNOWN);
+#endif
+            break;
+        }
+        case SystemInfoEmulatorInformation::BUILD_DATE_PART1:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
                            (sizeof(s64) - 1) * 0, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_DATE_PART2:
+        case SystemInfoEmulatorInformation::BUILD_DATE_PART2:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
                            (sizeof(s64) - 1) * 1, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_DATE_PART3:
+        case SystemInfoEmulatorInformation::BUILD_DATE_PART3:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
                            (sizeof(s64) - 1) * 2, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_DATE_PART4:
+        case SystemInfoEmulatorInformation::BUILD_DATE_PART4:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
                            (sizeof(s64) - 1) * 3, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_GIT_BRANCH_PART1:
+        case SystemInfoEmulatorInformation::BUILD_GIT_BRANCH_PART1:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_branch,
                            (sizeof(s64) - 1) * 0, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_GIT_BRANCH_PART2:
+        case SystemInfoEmulatorInformation::BUILD_GIT_BRANCH_PART2:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_branch,
                            (sizeof(s64) - 1) * 1, sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_GIT_DESCRIPTION_PART1:
+        case SystemInfoEmulatorInformation::BUILD_GIT_DESCRIPTION_PART1:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_desc, (sizeof(s64) - 1) * 0,
                            sizeof(s64));
             break;
-        case SystemInfoCitraInformation::BUILD_GIT_DESCRIPTION_PART2:
+        case SystemInfoEmulatorInformation::BUILD_GIT_DESCRIPTION_PART2:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_desc, (sizeof(s64) - 1) * 1,
                            sizeof(s64));
             break;
@@ -1905,12 +2055,16 @@ Result SVC::GetProcessList(s32* process_count, VAddr out_process_array,
 }
 
 Result SVC::InvalidateInstructionCacheRange(u32 addr, u32 size) {
-    system.GetRunningCore().InvalidateCacheRange(addr, size);
+    for (size_t i = 0; i < system.GetNumCores(); i++) {
+        system.GetCore(i).InvalidateCacheRange(addr, size);
+    }
     return ResultSuccess;
 }
 
 Result SVC::InvalidateEntireInstructionCache() {
-    system.GetRunningCore().ClearInstructionCache();
+    for (size_t i = 0; i < system.GetNumCores(); i++) {
+        system.GetCore(i).ClearInstructionCache();
+    }
     return ResultSuccess;
 }
 
@@ -1926,7 +2080,22 @@ u32 SVC::ConvertVaToPa(u32 addr) {
 }
 
 Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
-                               Handle src_process_handle, u32 src_address, u32 size) {
+                               Handle src_process_handle, u32 src_address, u32 size,
+                               MapMemoryExFlag flags, Handle dst_process_handle_backup) {
+
+    // Determine if this is the second version of the svc by checking the value at R0.
+    constexpr u32 SVC_VERSION2_MAGIC = 0xFFFFFFF2;
+    if (static_cast<u32>(dst_process_handle) == SVC_VERSION2_MAGIC) {
+        // Version 2, actual handle is provided in 6th argument
+        dst_process_handle = dst_process_handle_backup;
+    } else {
+        // Version 1, the flags argument is not used
+        flags = static_cast<MapMemoryExFlag>(0);
+    }
+
+    const bool map_as_private =
+        (static_cast<u32>(flags) & static_cast<u32>(MapMemoryExFlag::MAPEXFLAGS_PRIVATE)) != 0;
+
     std::shared_ptr<Process> dst_process =
         kernel.GetCurrentProcess()->handle_table.Get<Process>(dst_process_handle);
     std::shared_ptr<Process> src_process =
@@ -1938,11 +2107,12 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
         size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
     }
 
+    // TODO(PabloMK7) Fix-up this svc.
+
     // Only linear memory supported
     auto vma = src_process->vm_manager.FindVMA(src_address);
     R_UNLESS(vma != src_process->vm_manager.vma_map.end() &&
-                 vma->second.type == VMAType::BackingMemory &&
-                 vma->second.meminfo_state == MemoryState::Continuous,
+                 vma->second.type == VMAType::BackingMemory,
              ResultInvalidAddress);
 
     const u32 offset = src_address - vma->second.base;
@@ -1952,7 +2122,7 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
         dst_address,
         memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
                            kernel.memory.GetFCRAMPointer(0)),
-        size, Kernel::MemoryState::Continuous);
+        size, map_as_private ? MemoryState::Private : MemoryState::Shared);
 
     if (!vma_res.Succeeded()) {
         return ResultInvalidAddressState;
@@ -1974,8 +2144,7 @@ Result SVC::UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size) {
     // Only linear memory supported
     auto vma = dst_process->vm_manager.FindVMA(dst_address);
     R_UNLESS(vma != dst_process->vm_manager.vma_map.end() &&
-                 vma->second.type == VMAType::BackingMemory &&
-                 vma->second.meminfo_state == MemoryState::Continuous,
+                 vma->second.type == VMAType::BackingMemory,
              ResultInvalidAddress);
 
     dst_process->vm_manager.UnmapRange(dst_address, size);
@@ -2022,7 +2191,11 @@ Result SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32
                     kernel.GetCurrentThreadManager().GetCurrentThread()->thread_id) {
                     continue;
                 }
-                thread.get()->can_schedule = !varg2;
+                if (varg2) {
+                    thread->SetUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                } else {
+                    thread->ClearUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                }
             }
         }
         return ResultSuccess;
@@ -2041,188 +2214,207 @@ Result SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32
     }
 }
 
+// Array of SVC handlers, and the cycles it takes to process them.
+// The cycles have been obtained from real hardware using a
+// custom svc profiler and doing an average.
+// TODO(PabloMK7):
+//    1. Use a better profiling technique. The profiler used
+//       did not handle context switching well, so cycle
+//       counts are not very accurate. Manual adjustments
+//       had to be done which may not fully reflect how
+//       real hardware works.
+//    2. Figure out timings for barely used SVCs. The profile
+//       method involved running several commercial applications
+//       which do not use all SVCs. A custom homebrew app will
+//       need to be used. For now, 1000 cycles are assumed for
+//       SVCs that couldn't be profiled.
 const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
-    {0x00, nullptr, "Unknown"},
-    {0x01, &SVC::Wrap<&SVC::ControlMemory>, "ControlMemory"},
-    {0x02, &SVC::Wrap<&SVC::QueryMemory>, "QueryMemory"},
-    {0x03, &SVC::ExitProcess, "ExitProcess"},
-    {0x04, nullptr, "GetProcessAffinityMask"},
-    {0x05, nullptr, "SetProcessAffinityMask"},
-    {0x06, nullptr, "GetProcessIdealProcessor"},
-    {0x07, nullptr, "SetProcessIdealProcessor"},
-    {0x08, &SVC::Wrap<&SVC::CreateThread>, "CreateThread"},
-    {0x09, &SVC::ExitThread, "ExitThread"},
-    {0x0A, &SVC::Wrap<&SVC::SleepThread>, "SleepThread"},
-    {0x0B, &SVC::Wrap<&SVC::GetThreadPriority>, "GetThreadPriority"},
-    {0x0C, &SVC::Wrap<&SVC::SetThreadPriority>, "SetThreadPriority"},
-    {0x0D, nullptr, "GetThreadAffinityMask"},
-    {0x0E, nullptr, "SetThreadAffinityMask"},
-    {0x0F, nullptr, "GetThreadIdealProcessor"},
-    {0x10, nullptr, "SetThreadIdealProcessor"},
-    {0x11, nullptr, "GetCurrentProcessorNumber"},
-    {0x12, nullptr, "Run"},
-    {0x13, &SVC::Wrap<&SVC::CreateMutex>, "CreateMutex"},
-    {0x14, &SVC::Wrap<&SVC::ReleaseMutex>, "ReleaseMutex"},
-    {0x15, &SVC::Wrap<&SVC::CreateSemaphore>, "CreateSemaphore"},
-    {0x16, &SVC::Wrap<&SVC::ReleaseSemaphore>, "ReleaseSemaphore"},
-    {0x17, &SVC::Wrap<&SVC::CreateEvent>, "CreateEvent"},
-    {0x18, &SVC::Wrap<&SVC::SignalEvent>, "SignalEvent"},
-    {0x19, &SVC::Wrap<&SVC::ClearEvent>, "ClearEvent"},
-    {0x1A, &SVC::Wrap<&SVC::CreateTimer>, "CreateTimer"},
-    {0x1B, &SVC::Wrap<&SVC::SetTimer>, "SetTimer"},
-    {0x1C, &SVC::Wrap<&SVC::CancelTimer>, "CancelTimer"},
-    {0x1D, &SVC::Wrap<&SVC::ClearTimer>, "ClearTimer"},
-    {0x1E, &SVC::Wrap<&SVC::CreateMemoryBlock>, "CreateMemoryBlock"},
-    {0x1F, &SVC::Wrap<&SVC::MapMemoryBlock>, "MapMemoryBlock"},
-    {0x20, &SVC::Wrap<&SVC::UnmapMemoryBlock>, "UnmapMemoryBlock"},
-    {0x21, &SVC::Wrap<&SVC::CreateAddressArbiter>, "CreateAddressArbiter"},
-    {0x22, &SVC::Wrap<&SVC::ArbitrateAddress>, "ArbitrateAddress"},
-    {0x23, &SVC::Wrap<&SVC::CloseHandle>, "CloseHandle"},
-    {0x24, &SVC::Wrap<&SVC::WaitSynchronization1>, "WaitSynchronization1"},
-    {0x25, &SVC::Wrap<&SVC::WaitSynchronizationN>, "WaitSynchronizationN"},
-    {0x26, nullptr, "SignalAndWait"},
-    {0x27, &SVC::Wrap<&SVC::DuplicateHandle>, "DuplicateHandle"},
-    {0x28, &SVC::Wrap<&SVC::GetSystemTick>, "GetSystemTick"},
-    {0x29, &SVC::Wrap<&SVC::GetHandleInfo>, "GetHandleInfo"},
-    {0x2A, &SVC::Wrap<&SVC::GetSystemInfo>, "GetSystemInfo"},
-    {0x2B, &SVC::Wrap<&SVC::GetProcessInfo>, "GetProcessInfo"},
-    {0x2C, &SVC::Wrap<&SVC::GetThreadInfo>, "GetThreadInfo"},
-    {0x2D, &SVC::Wrap<&SVC::ConnectToPort>, "ConnectToPort"},
-    {0x2E, nullptr, "SendSyncRequest1"},
-    {0x2F, nullptr, "SendSyncRequest2"},
-    {0x30, nullptr, "SendSyncRequest3"},
-    {0x31, nullptr, "SendSyncRequest4"},
-    {0x32, &SVC::Wrap<&SVC::SendSyncRequest>, "SendSyncRequest"},
-    {0x33, &SVC::Wrap<&SVC::OpenProcess>, "OpenProcess"},
-    {0x34, &SVC::Wrap<&SVC::OpenThread>, "OpenThread"},
-    {0x35, &SVC::Wrap<&SVC::GetProcessId>, "GetProcessId"},
-    {0x36, &SVC::Wrap<&SVC::GetProcessIdOfThread>, "GetProcessIdOfThread"},
-    {0x37, &SVC::Wrap<&SVC::GetThreadId>, "GetThreadId"},
-    {0x38, &SVC::Wrap<&SVC::GetResourceLimit>, "GetResourceLimit"},
-    {0x39, &SVC::Wrap<&SVC::GetResourceLimitLimitValues>, "GetResourceLimitLimitValues"},
-    {0x3A, &SVC::Wrap<&SVC::GetResourceLimitCurrentValues>, "GetResourceLimitCurrentValues"},
-    {0x3B, nullptr, "GetThreadContext"},
-    {0x3C, &SVC::Wrap<&SVC::Break>, "Break"},
-    {0x3D, &SVC::Wrap<&SVC::OutputDebugString>, "OutputDebugString"},
-    {0x3E, nullptr, "ControlPerformanceCounter"},
-    {0x3F, nullptr, "Unknown"},
-    {0x40, nullptr, "Unknown"},
-    {0x41, nullptr, "Unknown"},
-    {0x42, nullptr, "Unknown"},
-    {0x43, nullptr, "Unknown"},
-    {0x44, nullptr, "Unknown"},
-    {0x45, nullptr, "Unknown"},
-    {0x46, nullptr, "Unknown"},
-    {0x47, &SVC::Wrap<&SVC::CreatePort>, "CreatePort"},
-    {0x48, &SVC::Wrap<&SVC::CreateSessionToPort>, "CreateSessionToPort"},
-    {0x49, &SVC::Wrap<&SVC::CreateSession>, "CreateSession"},
-    {0x4A, &SVC::Wrap<&SVC::AcceptSession>, "AcceptSession"},
-    {0x4B, nullptr, "ReplyAndReceive1"},
-    {0x4C, nullptr, "ReplyAndReceive2"},
-    {0x4D, nullptr, "ReplyAndReceive3"},
-    {0x4E, nullptr, "ReplyAndReceive4"},
-    {0x4F, &SVC::Wrap<&SVC::ReplyAndReceive>, "ReplyAndReceive"},
-    {0x50, nullptr, "BindInterrupt"},
-    {0x51, nullptr, "UnbindInterrupt"},
-    {0x52, nullptr, "InvalidateProcessDataCache"},
-    {0x53, nullptr, "StoreProcessDataCache"},
-    {0x54, nullptr, "FlushProcessDataCache"},
-    {0x55, nullptr, "StartInterProcessDma"},
-    {0x56, nullptr, "StopDma"},
-    {0x57, nullptr, "GetDmaState"},
-    {0x58, nullptr, "RestartDma"},
-    {0x59, nullptr, "SetGpuProt"},
-    {0x5A, nullptr, "SetWifiEnabled"},
-    {0x5B, nullptr, "Unknown"},
-    {0x5C, nullptr, "Unknown"},
-    {0x5D, nullptr, "Unknown"},
-    {0x5E, nullptr, "Unknown"},
-    {0x5F, nullptr, "Unknown"},
-    {0x60, nullptr, "DebugActiveProcess"},
-    {0x61, nullptr, "BreakDebugProcess"},
-    {0x62, nullptr, "TerminateDebugProcess"},
-    {0x63, nullptr, "GetProcessDebugEvent"},
-    {0x64, nullptr, "ContinueDebugEvent"},
-    {0x65, &SVC::Wrap<&SVC::GetProcessList>, "GetProcessList"},
-    {0x66, nullptr, "GetThreadList"},
-    {0x67, nullptr, "GetDebugThreadContext"},
-    {0x68, nullptr, "SetDebugThreadContext"},
-    {0x69, nullptr, "QueryDebugProcessMemory"},
-    {0x6A, nullptr, "ReadProcessMemory"},
-    {0x6B, nullptr, "WriteProcessMemory"},
-    {0x6C, nullptr, "SetHardwareBreakPoint"},
-    {0x6D, nullptr, "GetDebugThreadParam"},
-    {0x6E, nullptr, "Unknown"},
-    {0x6F, nullptr, "Unknown"},
-    {0x70, nullptr, "ControlProcessMemory"},
-    {0x71, nullptr, "MapProcessMemory"},
-    {0x72, nullptr, "UnmapProcessMemory"},
-    {0x73, nullptr, "CreateCodeSet"},
-    {0x74, nullptr, "RandomStub"},
-    {0x75, nullptr, "CreateProcess"},
-    {0x76, &SVC::Wrap<&SVC::TerminateProcess>, "TerminateProcess"},
-    {0x77, nullptr, "SetProcessResourceLimits"},
-    {0x78, nullptr, "CreateResourceLimit"},
-    {0x79, &SVC::Wrap<&SVC::SetResourceLimitLimitValues>, "SetResourceLimitLimitValues"},
-    {0x7A, nullptr, "AddCodeSegment"},
-    {0x7B, nullptr, "Backdoor"},
-    {0x7C, &SVC::Wrap<&SVC::KernelSetState>, "KernelSetState"},
-    {0x7D, &SVC::Wrap<&SVC::QueryProcessMemory>, "QueryProcessMemory"},
+    {0x00, nullptr, "Unknown", 0},
+    {0x01, &SVC::Wrap<&SVC::ControlMemory, 0x01>, "ControlMemory", 1000},
+    {0x02, &SVC::Wrap<&SVC::QueryMemory, 0x02>, "QueryMemory", 1000},
+    {0x03, &SVC::ExitProcess, "ExitProcess", 1000},
+    {0x04, nullptr, "GetProcessAffinityMask", 1000},
+    {0x05, nullptr, "SetProcessAffinityMask", 1000},
+    {0x06, nullptr, "GetProcessIdealProcessor", 1000},
+    {0x07, nullptr, "SetProcessIdealProcessor", 1000},
+    {0x08, &SVC::Wrap<&SVC::CreateThread, 0x08>, "CreateThread", 5214},
+    {0x09, &SVC::ExitThread, "ExitThread", 1000},
+    {0x0A, &SVC::Wrap<&SVC::SleepThread, 0x0A>, "SleepThread", 946},
+    {0x0B, &SVC::Wrap<&SVC::GetThreadPriority, 0x0B>, "GetThreadPriority", 616},
+    {0x0C, &SVC::Wrap<&SVC::SetThreadPriority, 0x0C>, "SetThreadPriority", 1812},
+    {0x0D, nullptr, "GetThreadAffinityMask", 1000},
+    {0x0E, nullptr, "SetThreadAffinityMask", 1000},
+    {0x0F, nullptr, "GetThreadIdealProcessor", 1000},
+    {0x10, nullptr, "SetThreadIdealProcessor", 1000},
+    {0x11, nullptr, "GetCurrentProcessorNumber", 1000},
+    {0x12, nullptr, "Run", 1000},
+    {0x13, &SVC::Wrap<&SVC::CreateMutex, 0x13>, "CreateMutex", 1000},
+    {0x14, &SVC::Wrap<&SVC::ReleaseMutex, 0x14>, "ReleaseMutex", 1324},
+    {0x15, &SVC::Wrap<&SVC::CreateSemaphore, 0x15>, "CreateSemaphore", 1000},
+    {0x16, &SVC::Wrap<&SVC::ReleaseSemaphore, 0x16>, "ReleaseSemaphore", 2713},
+    {0x17, &SVC::Wrap<&SVC::CreateEvent, 0x17>, "CreateEvent", 4329},
+    {0x18, &SVC::Wrap<&SVC::SignalEvent, 0x18>, "SignalEvent", 3285},
+    {0x19, &SVC::Wrap<&SVC::ClearEvent, 0x19>, "ClearEvent", 1389},
+    {0x1A, &SVC::Wrap<&SVC::CreateTimer, 0x1A>, "CreateTimer", 1000},
+    {0x1B, &SVC::Wrap<&SVC::SetTimer, 0x1B>, "SetTimer", 5163},
+    {0x1C, &SVC::Wrap<&SVC::CancelTimer, 0x1C>, "CancelTimer", 1000},
+    {0x1D, &SVC::Wrap<&SVC::ClearTimer, 0x1D>, "ClearTimer", 1000},
+    {0x1E, &SVC::Wrap<&SVC::CreateMemoryBlock, 0x1E>, "CreateMemoryBlock", 1000},
+    {0x1F, &SVC::Wrap<&SVC::MapMemoryBlock, 0x1F>, "MapMemoryBlock", 1000},
+    {0x20, &SVC::Wrap<&SVC::UnmapMemoryBlock, 0x20>, "UnmapMemoryBlock", 1000},
+    {0x21, &SVC::Wrap<&SVC::CreateAddressArbiter, 0x21>, "CreateAddressArbiter", 1000},
+    {0x22, &SVC::Wrap<&SVC::ArbitrateAddress, 0x22>, "ArbitrateAddress", 5664},
+    {0x23, &SVC::Wrap<&SVC::CloseHandle, 0x23>, "CloseHandle", 2937},
+    {0x24, &SVC::Wrap<&SVC::WaitSynchronization1, 0x24>, "WaitSynchronization1", 4005},
+    {0x25, &SVC::Wrap<&SVC::WaitSynchronizationN, 0x25>, "WaitSynchronizationN", 6918},
+    {0x26, nullptr, "SignalAndWait", 1000},
+    {0x27, &SVC::Wrap<&SVC::DuplicateHandle, 0x27>, "DuplicateHandle", 1000},
+    {0x28, &SVC::Wrap<&SVC::GetSystemTick, 0x28>, "GetSystemTick", 340},
+    {0x29, &SVC::Wrap<&SVC::GetHandleInfo, 0x29>, "GetHandleInfo", 1000},
+    {0x2A, &SVC::Wrap<&SVC::GetSystemInfo, 0x2A>, "GetSystemInfo", 1000},
+    {0x2B, &SVC::Wrap<&SVC::GetProcessInfo, 0x2B>, "GetProcessInfo", 1510},
+    {0x2C, &SVC::Wrap<&SVC::GetThreadInfo, 0x2C>, "GetThreadInfo", 1000},
+    {0x2D, &SVC::Wrap<&SVC::ConnectToPort, 0x2D>, "ConnectToPort", 1000},
+    {0x2E, nullptr, "SendSyncRequest1", 1000},
+    {0x2F, nullptr, "SendSyncRequest2", 1000},
+    {0x30, nullptr, "SendSyncRequest3", 1000},
+    {0x31, nullptr, "SendSyncRequest4", 1000},
+    {0x32, &SVC::Wrap<&SVC::SendSyncRequest, 0x32>, "SendSyncRequest", 5825},
+    {0x33, &SVC::Wrap<&SVC::OpenProcess, 0x33>, "OpenProcess", 1000},
+    {0x34, &SVC::Wrap<&SVC::OpenThread, 0x34>, "OpenThread", 1000},
+    {0x35, &SVC::Wrap<&SVC::GetProcessId, 0x35>, "GetProcessId", 1000},
+    {0x36, &SVC::Wrap<&SVC::GetProcessIdOfThread, 0x36>, "GetProcessIdOfThread", 1000},
+    {0x37, &SVC::Wrap<&SVC::GetThreadId, 0x37>, "GetThreadId", 677},
+    {0x38, &SVC::Wrap<&SVC::GetResourceLimit, 0x38>, "GetResourceLimit", 1000},
+    {0x39, &SVC::Wrap<&SVC::GetResourceLimitLimitValues, 0x39>, "GetResourceLimitLimitValues",
+     1000},
+    {0x3A, &SVC::Wrap<&SVC::GetResourceLimitCurrentValues, 0x3A>, "GetResourceLimitCurrentValues",
+     1000},
+    {0x3B, nullptr, "GetThreadContext", 1000},
+    {0x3C, &SVC::Wrap<&SVC::Break, 0x3C>, "Break", 1000},
+    {0x3D, &SVC::Wrap<&SVC::OutputDebugString, 0x3D>, "OutputDebugString", 1000},
+    {0x3E, nullptr, "ControlPerformanceCounter", 1000},
+    {0x3F, nullptr, "Unknown", 1000},
+    {0x40, nullptr, "Unknown", 1000},
+    {0x41, nullptr, "Unknown", 1000},
+    {0x42, nullptr, "Unknown", 1000},
+    {0x43, nullptr, "Unknown", 1000},
+    {0x44, nullptr, "Unknown", 1000},
+    {0x45, nullptr, "Unknown", 1000},
+    {0x46, nullptr, "Unknown", 1000},
+    {0x47, &SVC::Wrap<&SVC::CreatePort, 0x47>, "CreatePort", 1000},
+    {0x48, &SVC::Wrap<&SVC::CreateSessionToPort, 0x48>, "CreateSessionToPort", 5122},
+    {0x49, &SVC::Wrap<&SVC::CreateSession, 0x49>, "CreateSession", 3492},
+    {0x4A, &SVC::Wrap<&SVC::AcceptSession, 0x4A>, "AcceptSession", 1842},
+    {0x4B, nullptr, "ReplyAndReceive1", 1000},
+    {0x4C, nullptr, "ReplyAndReceive2", 1000},
+    {0x4D, nullptr, "ReplyAndReceive3", 1000},
+    {0x4E, nullptr, "ReplyAndReceive4", 1000},
+    {0x4F, &SVC::Wrap<&SVC::ReplyAndReceive, 0x4F>, "ReplyAndReceive", 8762},
+    {0x50, nullptr, "BindInterrupt", 1000},
+    {0x51, nullptr, "UnbindInterrupt", 1000},
+    {0x52, &SVC::Wrap<&SVC::InvalidateProcessDataCache, 0x52>, "InvalidateProcessDataCache", 9609},
+    {0x53, &SVC::Wrap<&SVC::StoreProcessDataCache, 0x53>, "StoreProcessDataCache", 7174},
+    {0x54, &SVC::Wrap<&SVC::FlushProcessDataCache, 0x54>, "FlushProcessDataCache", 9084},
+    {0x55, nullptr, "StartInterProcessDma", 9146},
+    {0x56, nullptr, "StopDma", 1163},
+    {0x57, nullptr, "GetDmaState", 2222},
+    {0x58, nullptr, "RestartDma", 8096},
+    {0x59, nullptr, "SetGpuProt", 356},
+    {0x5A, nullptr, "SetWifiEnabled", 1000},
+    {0x5B, nullptr, "Unknown", 1000},
+    {0x5C, nullptr, "Unknown", 1000},
+    {0x5D, nullptr, "Unknown", 1000},
+    {0x5E, nullptr, "Unknown", 1000},
+    {0x5F, nullptr, "Unknown", 1000},
+    {0x60, nullptr, "DebugActiveProcess", 1000},
+    {0x61, nullptr, "BreakDebugProcess", 1000},
+    {0x62, nullptr, "TerminateDebugProcess", 1000},
+    {0x63, nullptr, "GetProcessDebugEvent", 1000},
+    {0x64, nullptr, "ContinueDebugEvent", 1000},
+    {0x65, &SVC::Wrap<&SVC::GetProcessList, 0x65>, "GetProcessList", 1000},
+    {0x66, nullptr, "GetThreadList", 1000},
+    {0x67, nullptr, "GetDebugThreadContext", 1000},
+    {0x68, nullptr, "SetDebugThreadContext", 1000},
+    {0x69, nullptr, "QueryDebugProcessMemory", 1000},
+    {0x6A, nullptr, "ReadProcessMemory", 1000},
+    {0x6B, nullptr, "WriteProcessMemory", 1000},
+    {0x6C, nullptr, "SetHardwareBreakPoint", 1000},
+    {0x6D, nullptr, "GetDebugThreadParam", 1000},
+    {0x6E, nullptr, "Unknown", 1000},
+    {0x6F, nullptr, "Unknown", 1000},
+    {0x70, nullptr, "ControlProcessMemory", 1000},
+    {0x71, nullptr, "MapProcessMemory", 1000},
+    {0x72, nullptr, "UnmapProcessMemory", 1000},
+    {0x73, nullptr, "CreateCodeSet", 1000},
+    {0x74, nullptr, "RandomStub", 1000},
+    {0x75, nullptr, "CreateProcess", 1000},
+    {0x76, &SVC::Wrap<&SVC::TerminateProcess, 0x76>, "TerminateProcess", 1000},
+    {0x77, nullptr, "SetProcessResourceLimits", 1000},
+    {0x78, nullptr, "CreateResourceLimit", 1000},
+    {0x79, &SVC::Wrap<&SVC::SetResourceLimitLimitValues, 0x79>, "SetResourceLimitLimitValues",
+     1000},
+    {0x7A, nullptr, "AddCodeSegment", 1000},
+    {0x7B, nullptr, "Backdoor", 1000},
+    {0x7C, &SVC::Wrap<&SVC::KernelSetState, 0x7C>, "KernelSetState", 1000},
+    {0x7D, &SVC::Wrap<&SVC::QueryProcessMemory, 0x7D>, "QueryProcessMemory", 1000},
     // Custom SVCs
-    {0x7E, nullptr, "Unused"},
-    {0x7F, nullptr, "Unused"},
-    {0x80, nullptr, "CustomBackdoor"},
-    {0x81, nullptr, "Unused"},
-    {0x82, nullptr, "Unused"},
-    {0x83, nullptr, "Unused"},
-    {0x84, nullptr, "Unused"},
-    {0x85, nullptr, "Unused"},
-    {0x86, nullptr, "Unused"},
-    {0x87, nullptr, "Unused"},
-    {0x88, nullptr, "Unused"},
-    {0x89, nullptr, "Unused"},
-    {0x8A, nullptr, "Unused"},
-    {0x8B, nullptr, "Unused"},
-    {0x8C, nullptr, "Unused"},
-    {0x8D, nullptr, "Unused"},
-    {0x8E, nullptr, "Unused"},
-    {0x8F, nullptr, "Unused"},
-    {0x90, &SVC::Wrap<&SVC::ConvertVaToPa>, "ConvertVaToPa"},
-    {0x91, nullptr, "FlushDataCacheRange"},
-    {0x92, nullptr, "FlushEntireDataCache"},
-    {0x93, &SVC::Wrap<&SVC::InvalidateInstructionCacheRange>, "InvalidateInstructionCacheRange"},
-    {0x94, &SVC::Wrap<&SVC::InvalidateEntireInstructionCache>, "InvalidateEntireInstructionCache"},
-    {0x95, nullptr, "Unused"},
-    {0x96, nullptr, "Unused"},
-    {0x97, nullptr, "Unused"},
-    {0x98, nullptr, "Unused"},
-    {0x99, nullptr, "Unused"},
-    {0x9A, nullptr, "Unused"},
-    {0x9B, nullptr, "Unused"},
-    {0x9C, nullptr, "Unused"},
-    {0x9D, nullptr, "Unused"},
-    {0x9E, nullptr, "Unused"},
-    {0x9F, nullptr, "Unused"},
-    {0xA0, &SVC::Wrap<&SVC::MapProcessMemoryEx>, "MapProcessMemoryEx"},
-    {0xA1, &SVC::Wrap<&SVC::UnmapProcessMemoryEx>, "UnmapProcessMemoryEx"},
-    {0xA2, nullptr, "ControlMemoryEx"},
-    {0xA3, nullptr, "ControlMemoryUnsafe"},
-    {0xA4, nullptr, "Unused"},
-    {0xA5, nullptr, "Unused"},
-    {0xA6, nullptr, "Unused"},
-    {0xA7, nullptr, "Unused"},
-    {0xA8, nullptr, "Unused"},
-    {0xA9, nullptr, "Unused"},
-    {0xAA, nullptr, "Unused"},
-    {0xAB, nullptr, "Unused"},
-    {0xAC, nullptr, "Unused"},
-    {0xAD, nullptr, "Unused"},
-    {0xAE, nullptr, "Unused"},
-    {0xAF, nullptr, "Unused"},
-    {0xB0, nullptr, "ControlService"},
-    {0xB1, nullptr, "CopyHandle"},
-    {0xB2, nullptr, "TranslateHandle"},
-    {0xB3, &SVC::Wrap<&SVC::ControlProcess>, "ControlProcess"},
+    {0x7E, nullptr, "Unused", 1000},
+    {0x7F, nullptr, "Unused", 1000},
+    {0x80, nullptr, "CustomBackdoor", 1000},
+    {0x81, nullptr, "Unused", 1000},
+    {0x82, nullptr, "Unused", 1000},
+    {0x83, nullptr, "Unused", 1000},
+    {0x84, nullptr, "Unused", 1000},
+    {0x85, nullptr, "Unused", 1000},
+    {0x86, nullptr, "Unused", 1000},
+    {0x87, nullptr, "Unused", 1000},
+    {0x88, nullptr, "Unused", 1000},
+    {0x89, nullptr, "Unused", 1000},
+    {0x8A, nullptr, "Unused", 1000},
+    {0x8B, nullptr, "Unused", 1000},
+    {0x8C, nullptr, "Unused", 1000},
+    {0x8D, nullptr, "Unused", 1000},
+    {0x8E, nullptr, "Unused", 1000},
+    {0x8F, nullptr, "Unused", 1000},
+    {0x90, &SVC::Wrap<&SVC::ConvertVaToPa, 0x90>, "ConvertVaToPa", 1000},
+    {0x91, nullptr, "FlushDataCacheRange", 1000},
+    {0x92, nullptr, "FlushEntireDataCache", 1000},
+    {0x93, &SVC::Wrap<&SVC::InvalidateInstructionCacheRange, 0x93>,
+     "InvalidateInstructionCacheRange", 1000},
+    {0x94, &SVC::Wrap<&SVC::InvalidateEntireInstructionCache, 0x94>,
+     "InvalidateEntireInstructionCache", 1000},
+    {0x95, nullptr, "Unused", 1000},
+    {0x96, nullptr, "Unused", 1000},
+    {0x97, nullptr, "Unused", 1000},
+    {0x98, nullptr, "Unused", 1000},
+    {0x99, nullptr, "Unused", 1000},
+    {0x9A, nullptr, "Unused", 1000},
+    {0x9B, nullptr, "Unused", 1000},
+    {0x9C, nullptr, "Unused", 1000},
+    {0x9D, nullptr, "Unused", 1000},
+    {0x9E, nullptr, "Unused", 1000},
+    {0x9F, nullptr, "Unused", 1000},
+    {0xA0, &SVC::Wrap<&SVC::MapProcessMemoryEx, 0xA0>, "MapProcessMemoryEx", 1000},
+    {0xA1, &SVC::Wrap<&SVC::UnmapProcessMemoryEx, 0xA1>, "UnmapProcessMemoryEx", 1000},
+    {0xA2, nullptr, "ControlMemoryEx", 1000},
+    {0xA3, nullptr, "ControlMemoryUnsafe", 1000},
+    {0xA4, nullptr, "Unused", 1000},
+    {0xA5, nullptr, "Unused", 1000},
+    {0xA6, nullptr, "Unused", 1000},
+    {0xA7, nullptr, "Unused", 1000},
+    {0xA8, nullptr, "Unused", 1000},
+    {0xA9, nullptr, "Unused", 1000},
+    {0xAA, nullptr, "Unused", 1000},
+    {0xAB, nullptr, "Unused", 1000},
+    {0xAC, nullptr, "Unused", 1000},
+    {0xAD, nullptr, "Unused", 1000},
+    {0xAE, nullptr, "Unused", 1000},
+    {0xAF, nullptr, "Unused", 1000},
+    {0xB0, nullptr, "ControlService", 1000},
+    {0xB1, nullptr, "CopyHandle", 1000},
+    {0xB2, nullptr, "TranslateHandle", 1000},
+    {0xB3, &SVC::Wrap<&SVC::ControlProcess, 0xB3>, "ControlProcess", 1000},
 }};
 
 const SVC::FunctionDef* SVC::GetSVCInfo(u32 func_num) {
@@ -2237,6 +2429,7 @@ MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
 
 void SVC::CallSVC(u32 immediate) {
     MICROPROFILE_SCOPE(Kernel_SVC);
+    system.perf_stats->BeginSVCProcessing();
 
     // Lock the kernel mutex when we enter the kernel HLE.
     std::scoped_lock lock{kernel.GetHLELock()};
@@ -2248,11 +2441,13 @@ void SVC::CallSVC(u32 immediate) {
     LOG_TRACE(Kernel_SVC, "calling {}", info->name);
     if (info) {
         if (info->func) {
+            system.GetRunningCore().GetTimer().AddTicks(info->cycles);
             (this->*(info->func))();
         } else {
-            LOG_ERROR(Kernel_SVC, "unimplemented SVC function {}(..)", info->name);
+            LOG_ERROR(Kernel_SVC, "unimplemented SVC function {:02X} {}(..)", info->id, info->name);
         }
     }
+    system.perf_stats->EndSVCProcessing();
 }
 
 SVC::SVC(Core::System& system) : system(system), kernel(system.Kernel()), memory(system.Memory()) {}

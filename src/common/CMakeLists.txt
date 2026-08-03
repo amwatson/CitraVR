@@ -1,65 +1,11 @@
-# Add a custom command to generate a new shader_cache_version hash when any of the following files change
-# NOTE: This is an approximation of what files affect shader generation, its possible something else
-# could affect the result, but much more unlikely than the following files. Keeping a list of files
-# like this allows for much better caching since it doesn't force the user to recompile binary shaders every update
-set(VIDEO_CORE "${CMAKE_SOURCE_DIR}/src/video_core")
+include(GenerateSCMRev)
 
-# Pass the path to git to the GenerateSCMRev.cmake as well
-find_package(Git QUIET)
-
-add_custom_command(OUTPUT scm_rev.cpp
-    COMMAND ${CMAKE_COMMAND}
-      -DSRC_DIR="${CMAKE_SOURCE_DIR}"
-      -DGIT_EXECUTABLE="${GIT_EXECUTABLE}"
-      -P "${CMAKE_SOURCE_DIR}/CMakeModules/GenerateSCMRev.cmake"
-    DEPENDS
-      # WARNING! It was too much work to try and make a common location for this list,
-      # so if you need to change it, please update CMakeModules/GenerateSCMRev.cmake as well
-      "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.cpp"
-      "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.h"
-      "${VIDEO_CORE}/renderer_opengl/gl_shader_util.cpp"
-      "${VIDEO_CORE}/renderer_opengl/gl_shader_util.h"
-      "${VIDEO_CORE}/renderer_vulkan/vk_shader_util.cpp"
-      "${VIDEO_CORE}/renderer_vulkan/vk_shader_util.h"
-      "${VIDEO_CORE}/shader/generator/glsl_fs_shader_gen.cpp"
-      "${VIDEO_CORE}/shader/generator/glsl_fs_shader_gen.h"
-      "${VIDEO_CORE}/shader/generator/glsl_shader_decompiler.cpp"
-      "${VIDEO_CORE}/shader/generator/glsl_shader_decompiler.h"
-      "${VIDEO_CORE}/shader/generator/glsl_shader_gen.cpp"
-      "${VIDEO_CORE}/shader/generator/glsl_shader_gen.h"
-      "${VIDEO_CORE}/shader/generator/pica_fs_config.cpp"
-      "${VIDEO_CORE}/shader/generator/pica_fs_config.h"
-      "${VIDEO_CORE}/shader/generator/shader_gen.cpp"
-      "${VIDEO_CORE}/shader/generator/shader_gen.h"
-      "${VIDEO_CORE}/shader/generator/shader_uniforms.cpp"
-      "${VIDEO_CORE}/shader/generator/shader_uniforms.h"
-      "${VIDEO_CORE}/shader/generator/spv_fs_shader_gen.cpp"
-      "${VIDEO_CORE}/shader/generator/spv_fs_shader_gen.h"
-      "${VIDEO_CORE}/shader/shader.cpp"
-      "${VIDEO_CORE}/shader/shader.h"
-      "${VIDEO_CORE}/pica/regs_framebuffer.h"
-      "${VIDEO_CORE}/pica/regs_lighting.h"
-      "${VIDEO_CORE}/pica/regs_pipeline.h"
-      "${VIDEO_CORE}/pica/regs_rasterizer.h"
-      "${VIDEO_CORE}/pica/regs_shader.h"
-      "${VIDEO_CORE}/pica/regs_texturing.h"
-      "${VIDEO_CORE}/pica/regs_internal.cpp"
-      "${VIDEO_CORE}/pica/regs_internal.h"
-      # and also check that the scm_rev files haven't changed
-      "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in"
-      "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.h"
-      # technically we should regenerate if the git version changed, but its not worth the effort imo
-      "${CMAKE_SOURCE_DIR}/CMakeModules/GenerateSCMRev.cmake"
-)
-
-add_library(citra_common STATIC
+add_library(citra_common STATIC EXCLUDE_FROM_ALL
     aarch64/cpu_detect.cpp
     aarch64/cpu_detect.h
     aarch64/oaknut_abi.h
     aarch64/oaknut_util.h
     alignment.h
-    android_storage.h
-    android_storage.cpp
     announce_multiplayer_room.h
     arch.h
     archives.h
@@ -68,6 +14,7 @@ add_library(citra_common STATIC
     detached_tasks.cpp
     detached_tasks.h
     bit_field.h
+    bit_field.natvis
     bit_set.h
     bounded_threadsafe_queue.h
     cityhash.cpp
@@ -88,6 +35,10 @@ add_library(citra_common STATIC
     file_util.cpp
     file_util.h
     hash.h
+    hacks/hack_list.h
+    hacks/hack_list.cpp
+    hacks/hack_manager.h
+    hacks/hack_manager.cpp
     literals.h
     logging/backend.cpp
     logging/backend.h
@@ -99,6 +50,7 @@ add_library(citra_common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     logging/types.h
+    math_util.cpp
     math_util.h
     memory_detect.cpp
     memory_detect.h
@@ -107,8 +59,11 @@ add_library(citra_common STATIC
     microprofile.cpp
     microprofile.h
     microprofileui.h
+    optional_helper.h
     param_package.cpp
     param_package.h
+    play_time_manager.cpp
+    play_time_manager.h
     polyfill_thread.h
     precompiled_headers.h
     quaternion.h
@@ -116,9 +71,11 @@ add_library(citra_common STATIC
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
+    setting_keys.h
     settings.cpp
     settings.h
     slot_vector.h
+    stall_telemetry.h
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h
@@ -130,8 +87,6 @@ add_library(citra_common STATIC
     string_util.cpp
     string_util.h
     swap.h
-    telemetry.cpp
-    telemetry.h
     texture.cpp
     texture.h
     thread.cpp
@@ -143,7 +98,8 @@ add_library(citra_common STATIC
     timer.h
     unique_function.h
     vector_math.h
-    web_result.h
+    web_util.cpp
+    web_util.h
     x64/cpu_detect.cpp
     x64/cpu_detect.h
     x64/xbyak_abi.h
@@ -151,6 +107,8 @@ add_library(citra_common STATIC
     zstd_compression.cpp
     zstd_compression.h
 )
+
+target_include_directories(citra_common PUBLIC ${CMAKE_BINARY_DIR}/src)
 
 if (UNIX AND NOT APPLE)
   target_sources(citra_common PRIVATE
@@ -161,11 +119,22 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(citra_common PRIVATE gamemode)
 endif()
 
-if (APPLE)
-    target_sources(citra_common PUBLIC
-        apple_authorization.h
-        apple_authorization.cpp
-    )
+if (APPLE AND NOT ENABLE_LIBRETRO)
+  target_sources(citra_common PUBLIC
+    apple_authorization.h
+    apple_authorization.cpp
+    apple_utils.cpp
+    apple_utils.h
+    apple_utils.mm
+  )
+endif()
+
+# Android storage is only used for non-libretro Android builds
+if (ANDROID AND NOT ENABLE_LIBRETRO)
+  target_sources(citra_common PRIVATE
+    android_utils.cpp
+    android_utils.h
+  )
 endif()
 
 if (MSVC)
@@ -185,7 +154,7 @@ endif()
 create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
-target_link_libraries(citra_common PRIVATE zstd)
+target_link_libraries(citra_common PRIVATE cryptopp zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)
@@ -204,3 +173,10 @@ if (BACKTRACE_LIBRARY AND ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_CO
     target_link_libraries(citra_common PRIVATE ${BACKTRACE_LIBRARY} dl)
     target_compile_definitions(citra_common PRIVATE CITRA_LINUX_GCC_BACKTRACE)
 endif()
+
+if (SSE42_COMPILE_OPTION)
+    target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
+    target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
+endif()
+
+target_link_libraries(citra_common PUBLIC xxHash::xxhash)

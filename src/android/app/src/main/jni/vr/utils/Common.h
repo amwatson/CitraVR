@@ -45,3 +45,12 @@ union XrCompositionLayer {
     XrCompositionLayerCylinderKHR   mCylinder;
     XrCompositionLayerPassthroughFB mPassthrough;
 };
+
+// Android-surface-backed swapchains hold content that is vertically flipped
+// relative to OpenXR's UV convention. Chain this on a layer's `next` (with
+// XR_FB_composition_layer_image_layout enabled) so the compositor samples it
+// flipped. This replaces the out-of-spec negative size.height/aspectRatio
+// trick, which newer Horizon OS compositors render as nothing.
+inline constexpr XrCompositionLayerImageLayoutFB kVerticalFlipLayout{
+    XR_TYPE_COMPOSITION_LAYER_IMAGE_LAYOUT_FB, nullptr,
+    XR_COMPOSITION_LAYER_IMAGE_LAYOUT_VERTICAL_FLIP_BIT_FB};

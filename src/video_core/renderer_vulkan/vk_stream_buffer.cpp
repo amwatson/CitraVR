@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -6,6 +10,7 @@
 #include <limits>
 #include "common/alignment.h"
 #include "common/assert.h"
+#include "common/literals.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
@@ -14,6 +19,8 @@
 namespace Vulkan {
 
 namespace {
+
+using namespace Common::Literals;
 
 std::string_view BufferTypeName(BufferType type) {
     switch (type) {
@@ -47,19 +54,41 @@ vk::MemoryPropertyFlags MakePropertyFlags(BufferType type) {
 /// Get the preferred host visible memory type.
 u32 GetMemoryType(const vk::PhysicalDeviceMemoryProperties& properties, BufferType type) {
     vk::MemoryPropertyFlags flags = MakePropertyFlags(type);
-    std::optional preferred_type = FindMemoryType(properties, flags);
+    std::optional<u32> preferred_type;
 
+    // Try to find a memory type with all the requested flags
+    preferred_type = FindMemoryType(properties, flags);
+    if (preferred_type) {
+        return *preferred_type;
+    }
+
+    // If not found, try removing flags one by one
     constexpr std::array remove_flags = {
+        vk::MemoryPropertyFlagBits::eDeviceLocal,
         vk::MemoryPropertyFlagBits::eHostCached,
         vk::MemoryPropertyFlagBits::eHostCoherent,
     };
 
-    for (u32 i = 0; i < remove_flags.size() && !preferred_type; i++) {
-        flags &= ~remove_flags[i];
+    for (auto remove_flag : remove_flags) {
+        if ((flags & remove_flag) == vk::MemoryPropertyFlags{}) {
+            continue;
+        }
+        flags &= ~remove_flag;
         preferred_type = FindMemoryType(properties, flags);
+        if (preferred_type) {
+            return *preferred_type;
+        }
     }
-    ASSERT_MSG(preferred_type, "No suitable memory type found");
-    return preferred_type.value();
+
+    // If still not found, try with only eHostVisible flag
+    preferred_type = FindMemoryType(properties, vk::MemoryPropertyFlagBits::eHostVisible);
+    if (preferred_type) {
+        return *preferred_type;
+    }
+
+    // If we reach here, we couldn't find any suitable memory type
+    UNREACHABLE_MSG("Failed to find a suitable memory type for buffer type {}",
+                    BufferTypeName(type));
 }
 
 constexpr u64 WATCHES_INITIAL_RESERVE = 0x4000;
@@ -82,7 +111,7 @@ StreamBuffer::~StreamBuffer() {
     device.freeMemory(memory);
 }
 
-std::tuple<u8*, u64, bool> StreamBuffer::Map(u64 size, u64 alignment) {
+std::tuple<u8*, u32, bool> StreamBuffer::Map(u32 size, u64 alignment) {
     if (!is_coherent && type == BufferType::Stream) {
         size = Common::AlignUp(size, instance.NonCoherentAtomSize());
     }
@@ -114,7 +143,7 @@ std::tuple<u8*, u64, bool> StreamBuffer::Map(u64 size, u64 alignment) {
     return std::make_tuple(mapped + offset, offset, invalidate);
 }
 
-void StreamBuffer::Commit(u64 size) {
+void StreamBuffer::Commit(u32 size) {
     if (!is_coherent && type == BufferType::Stream) {
         size = Common::AlignUp(size, instance.NonCoherentAtomSize());
     }
@@ -145,7 +174,7 @@ void StreamBuffer::Commit(u64 size) {
     watch.tick = scheduler.CurrentTick();
 }
 
-void StreamBuffer::CreateBuffers(u64 prefered_size) {
+void StreamBuffer::CreateBuffers(u64 preferred_size) {
     const vk::Device device = instance.GetDevice();
     const auto memory_properties = instance.GetPhysicalDevice().getMemoryProperties();
     const u32 preferred_type = GetMemoryType(memory_properties, type);
@@ -158,54 +187,81 @@ void StreamBuffer::CreateBuffers(u64 prefered_size) {
     const vk::DeviceSize heap_size = memory_properties.memoryHeaps[preferred_heap].size;
     // As per DXVK's example, using `heap_size / 2`
     const vk::DeviceSize allocable_size = heap_size / 2;
-    buffer = device.createBuffer({
-        .size = std::min(prefered_size, allocable_size),
-        .usage = usage,
-    });
 
-    const auto requirements_chain =
-        device
-            .getBufferMemoryRequirements2<vk::MemoryRequirements2, vk::MemoryDedicatedRequirements>(
-                {.buffer = buffer});
+    vk::DeviceSize attempt_size = std::min(preferred_size, allocable_size);
 
-    const auto& requirements = requirements_chain.get<vk::MemoryRequirements2>();
-    const auto& dedicated_requirements = requirements_chain.get<vk::MemoryDedicatedRequirements>();
+    // Retry allocation until we reach minimum 8 KiB allocation size
+    const vk::DeviceSize min_buffer_size = std::min<vk::DeviceSize>(8_KiB, attempt_size);
 
-    stream_buffer_size = static_cast<u64>(requirements.memoryRequirements.size);
+    while (attempt_size >= min_buffer_size) {
+        try {
+            // Create buffer with current attempt size
+            buffer = device.createBuffer({
+                .size = attempt_size,
+                .usage = usage,
+            });
 
-    LOG_INFO(Render_Vulkan, "Creating {} buffer with size {} KiB with flags {}",
-             BufferTypeName(type), stream_buffer_size / 1024,
-             vk::to_string(mem_type.propertyFlags));
+            const auto requirements_chain = device.getBufferMemoryRequirements2<
+                vk::MemoryRequirements2, vk::MemoryDedicatedRequirements>({.buffer = buffer});
 
-    if (dedicated_requirements.prefersDedicatedAllocation) {
-        vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryDedicatedAllocateInfo> alloc_chain =
-            {};
+            const auto& requirements = requirements_chain.get<vk::MemoryRequirements2>();
+            const auto& dedicated_requirements =
+                requirements_chain.get<vk::MemoryDedicatedRequirements>();
 
-        auto& alloc_info = alloc_chain.get<vk::MemoryAllocateInfo>();
-        alloc_info.allocationSize = requirements.memoryRequirements.size;
-        alloc_info.memoryTypeIndex = preferred_type;
+            if (dedicated_requirements.prefersDedicatedAllocation) {
+                vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryDedicatedAllocateInfo>
+                    alloc_chain{};
 
-        auto& dedicated_alloc_info = alloc_chain.get<vk::MemoryDedicatedAllocateInfo>();
-        dedicated_alloc_info.buffer = buffer;
+                auto& alloc_info = alloc_chain.get<vk::MemoryAllocateInfo>();
+                alloc_info.allocationSize = requirements.memoryRequirements.size;
+                alloc_info.memoryTypeIndex = preferred_type;
 
-        memory = device.allocateMemory(alloc_chain.get());
-    } else {
-        memory = device.allocateMemory({
-            .allocationSize = requirements.memoryRequirements.size,
-            .memoryTypeIndex = preferred_type,
-        });
-    }
+                auto& dedicated_alloc_info = alloc_chain.get<vk::MemoryDedicatedAllocateInfo>();
+                dedicated_alloc_info.buffer = buffer;
 
-    device.bindBufferMemory(buffer, memory, 0);
-    mapped = reinterpret_cast<u8*>(device.mapMemory(memory, 0, VK_WHOLE_SIZE));
+                memory = device.allocateMemory(alloc_chain.get());
+            } else {
+                memory = device.allocateMemory({
+                    .allocationSize = requirements.memoryRequirements.size,
+                    .memoryTypeIndex = preferred_type,
+                });
+            }
 
-    if (instance.HasDebuggingToolAttached()) {
-        Vulkan::SetObjectName(device, buffer, "StreamBuffer({}): {} KiB {}", BufferTypeName(type),
+            // Allocation succeeded, bind and map
+            device.bindBufferMemory(buffer, memory, 0);
+
+            mapped = reinterpret_cast<u8*>(
+                device.mapMemory(memory, 0, requirements.memoryRequirements.size));
+
+            stream_buffer_size = static_cast<u64>(attempt_size);
+
+            LOG_INFO(Render_Vulkan, "Created {} buffer with size {} KiB (flags {})",
+                     BufferTypeName(type), stream_buffer_size / 1024,
+                     vk::to_string(mem_type.propertyFlags));
+
+            if (instance.HasDebuggingToolAttached()) {
+                SetObjectName(device, buffer, "StreamBuffer({}): {} KiB {}", BufferTypeName(type),
                               stream_buffer_size / 1024, vk::to_string(mem_type.propertyFlags));
-        Vulkan::SetObjectName(device, memory, "StreamBufferMemory({}): {} Kib {}",
+                SetObjectName(device, memory, "StreamBufferMemory({}): {} Kib {}",
                               BufferTypeName(type), stream_buffer_size / 1024,
                               vk::to_string(mem_type.propertyFlags));
+            }
+
+            return;
+        } catch (const vk::SystemError& err) {
+            // Allocation failed, clean up and retry smaller
+            if (buffer) {
+                device.destroyBuffer(buffer);
+                buffer = VK_NULL_HANDLE;
+            }
+
+            attempt_size /= 2;
+        }
     }
+
+    UNREACHABLE_MSG("Failed to allocate {} buffer of preferred size {} KiB (flags {})",
+                    BufferTypeName(type), preferred_size / 1024,
+                    vk::to_string(mem_type.propertyFlags));
 }
 
 void StreamBuffer::ReserveWatches(std::vector<Watch>& watches, std::size_t grow_size) {

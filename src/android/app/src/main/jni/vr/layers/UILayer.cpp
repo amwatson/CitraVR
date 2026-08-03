@@ -183,6 +183,7 @@ void UILayer::Frame(const XrSpace&                   space,
     XrCompositionLayerQuad layer = {};
 
     layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
+    layer.next       = &kVerticalFlipLayout;
     layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
@@ -199,7 +200,7 @@ void UILayer::Frame(const XrSpace&                   space,
     layer.subImage.imageRect.extent.height = mSwapchain.mHeight;
     layer.subImage.imageArrayIndex         = 0;
     layer.pose                             = mWorldFromPanel;
-    const auto scale  = GetDensityScaleForSize(mSwapchain.mWidth, -mSwapchain.mHeight, 1.0f);
+    const auto scale  = GetDensityScaleForSize(mSwapchain.mWidth, mSwapchain.mHeight, 1.0f);
     layer.size.width  = scale.x;
     layer.size.height = scale.y;
     layers[layerCount++].mQuad = layer;
@@ -214,7 +215,7 @@ bool UILayer::GetRayIntersectionWithPanel(const XrVector3f& start,
                                          scale, start, end, result2d, result3d);
 }
 
-// Next error code: -8
+// Next error code: -9
 int32_t UILayer::Init(const jclass classObject, const jobject activityObject,
                       const XrVector3f& position, const XrSession& session) {
     mVrUILayerClass = classObject;
@@ -236,6 +237,10 @@ int32_t UILayer::Init(const jclass classObject, const jobject activityObject,
     mSendClickToUIMethodID = mEnv->GetMethodID(mVrUILayerClass, "sendClickToUI", "(FFI)I");
 
     BAIL_ON_COND(mSendClickToUIMethodID == nullptr, "could not find sendClickToUI()", -6);
+
+    mSendScrollToUIMethodID = mEnv->GetMethodID(mVrUILayerClass, "sendScrollToUI", "(FFFF)I");
+
+    BAIL_ON_COND(mSendScrollToUIMethodID == nullptr, "could not find sendScrollToUI()", -8);
 
     BAIL_ON_ERR(CreateSwapchain(), -7);
 
@@ -322,4 +327,9 @@ int UILayer::CreateSwapchain() {
 
 void UILayer::SendClickToUI(const XrVector2f& pos2d, const int type) {
     mEnv->CallIntMethod(mVrUILayerObject, mSendClickToUIMethodID, pos2d.x, pos2d.y, type);
+}
+
+void UILayer::SendScrollToUI(const XrVector2f& pos2d, const XrVector2f& scroll2d) {
+    mEnv->CallIntMethod(mVrUILayerObject, mSendScrollToUIMethodID, pos2d.x, pos2d.y, scroll2d.x,
+                        scroll2d.y);
 }

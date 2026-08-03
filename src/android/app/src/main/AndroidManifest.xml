@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:horizonos="http://schemas.horizonos/sdk">
 
-
     <!-- Declare the minimum Horizon OS SDK version so HzOS SDK managers -->
     <horizonos:uses-horizonos-sdk
         horizonos:minSdkVersion="65"
         horizonos:targetSdkVersion="83" />
+
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -40,12 +40,14 @@
     <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     <uses-feature android:name="com.oculus.feature.BOUNDARYLESS_APP" android:required="false" />
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- This section allows us to avoid pulling Oculus SDK's libopenxr_loader into our app and use the Apache-licensed OpenXR loader instead.
       Khronos' loader will pull in the Oculus implementation from "libopenxr_forwardloader.oculus.so",
@@ -64,6 +66,7 @@
 
     <application
         android:name="org.citra.citra_emu.vr.VrCitraApplication"
+        android:appCategory="game"
         android:allowBackup="false"
         android:banner="@mipmap/ic_launcher"
         android:icon="@mipmap/ic_launcher"
@@ -75,10 +78,15 @@
         <meta-data android:name="android.game_mode_config"
             android:resource="@xml/game_mode_config" />
 
+        <receiver
+            android:name="org.citra.citra_emu.features.updatechecker.InstallStatusReceiver"
+            android:exported="false" />
+
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:configChanges="density|orientation|screenSize|keyboard|keyboardHidden|uiMode"
             android:exported="true"
+            android:launchMode="singleTask"
             android:resizeableActivity="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Citra.Splash.Main">
@@ -122,10 +130,6 @@
             </intent-filter>
 
         </activity>
-
-        <service android:name="org.citra.citra_emu.utils.ForegroundService" android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keep emulation running in background"/>
-        </service>
 
         <activity
             android:name="org.citra.citra_emu.vr.VrActivity"

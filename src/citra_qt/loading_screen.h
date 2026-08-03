@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -40,7 +40,8 @@ public:
     void Clear();
 
     /// Slot used to update the status of the progress bar
-    void OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
+    void OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                        const std::string& object);
 
     /// Hides the LoadingScreen with a fade out effect
     void OnLoadComplete();
@@ -49,8 +50,12 @@ public:
     // See https://wiki.qt.io/How_to_Change_the_Background_Color_of_QWidget
     void paintEvent(QPaintEvent* event) override;
 
+    QString GetStageTranslation(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                std::size_t total, const std::string& object = "");
+
 signals:
-    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
+    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                      const std::string& object);
     /// Signals that this widget is completely hidden now and should be replaced with the other
     /// widget
     void Hidden();

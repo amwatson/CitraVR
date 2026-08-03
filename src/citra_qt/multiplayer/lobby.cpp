@@ -1,12 +1,12 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <QInputDialog>
 #include <QList>
 #include <QtConcurrent/QtConcurrentRun>
+#include "citra_qt/citra_qt.h"
 #include "citra_qt/game_list_p.h"
-#include "citra_qt/main.h"
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/lobby_p.h"
 #include "citra_qt/multiplayer/message.h"
@@ -15,7 +15,6 @@
 #include "common/logging/log.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 #include "ui_lobby.h"
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/web_backend.h"
@@ -54,12 +53,7 @@ Lobby::Lobby(Core::System& system_, QWidget* parent, QStandardItemModel* list,
     ui->room_list->setExpandsOnDoubleClick(false);
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    ui->nickname->setValidator(validation.GetNickname());
-    ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(NetSettings::values.citra_username));
-    }
+    ui->nickname->setReadOnly(true);
 
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::clicked, this, &Lobby::RefreshLobby);
@@ -105,6 +99,11 @@ void Lobby::RetranslateUi() {
     ui->retranslateUi(this);
 }
 
+void Lobby::showEvent(QShowEvent* event) {
+    ui->nickname->setText(QString::fromStdString(Service::CFG::GetUsername(system)));
+    QDialog::showEvent(event);
+}
+
 QString Lobby::PasswordPrompt() {
     bool ok;
     const QString text =
@@ -135,7 +134,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     if (source.parent() != QModelIndex()) {
         index = source.parent();
     }
-    if (!ui->nickname->hasAcceptableInput()) {
+    QString nickname_qs = ui->nickname->text();
+    int pos = 0;
+    if (validation.GetNickname()->validate(nickname_qs, pos) != QValidator::State::Acceptable) {
         NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
@@ -160,11 +161,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     QFuture<void> f = QtConcurrent::run([this, nickname, ip, port, password, verify_UID] {
         std::string token;
 #ifdef ENABLE_WEB_SERVICE
-        if (!NetSettings::values.citra_username.empty() &&
-            !NetSettings::values.citra_token.empty()) {
-            WebService::Client client(NetSettings::values.web_api_url,
-                                      NetSettings::values.citra_username,
-                                      NetSettings::values.citra_token);
+        if (!nickname.empty() && !Settings::values.network_token.GetValue().empty()) {
+            WebService::Client client(Settings::values.web_api_url.GetValue(), nickname,
+                                      Settings::values.network_token.GetValue());
             token = client.GetExternalJWT(verify_UID).returned_data;
             if (token.empty()) {
                 LOG_ERROR(WebService, "Could not get external JWT, verification may fail");
@@ -174,8 +173,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         }
 #endif
         if (auto room_member = Network::GetRoomMember().lock()) {
-            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(), port, 0,
-                              Network::NoPreferredMac, password, token);
+            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(),
+                              static_cast<u16>(port), 0, Service::CFG::GetConsoleMacAddress(system),
+                              password, token);
         }
     });
     watcher->setFuture(f);
@@ -183,7 +183,6 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     // TODO(jroweboy): disable widgets and display a connecting while we wait
 
     // Save settings
-    UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = proxy->data(connection_index, LobbyItemHost::HostIPRole).toString();
     UISettings::values.port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toString();
     UISettings::values.multiplayer_filter_text = ui->search->text();
@@ -197,7 +196,8 @@ void Lobby::ResetModel() {
     model->insertColumns(0, Column::TOTAL);
     model->setHeaderData(Column::EXPAND, Qt::Horizontal, QString(), Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, tr("Room Name"), Qt::DisplayRole);
-    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Game"), Qt::DisplayRole);
+    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Application"),
+                         Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, tr("Host"), Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, tr("Players"), Qt::DisplayRole);
 }

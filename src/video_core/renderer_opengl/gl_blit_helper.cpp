@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,8 +43,9 @@ OGLSampler CreateSampler(GLenum filter) {
     return sampler;
 }
 
-OGLProgram CreateProgram(std::string_view frag) {
+OGLProgram CreateProgram(std::string_view frag, std::string_view debug_name) {
     OGLProgram program;
+    program.SetDebugName(debug_name);
     program.Create(HostShaders::FULL_SCREEN_TRIANGLE_VERT, frag);
     glProgramUniform2f(program.handle, 0, 1.f, 1.f);
     glProgramUniform2f(program.handle, 1, 0.f, 0.f);
@@ -55,16 +56,16 @@ OGLProgram CreateProgram(std::string_view frag) {
 
 BlitHelper::BlitHelper(const Driver& driver_)
     : driver{driver_}, linear_sampler{CreateSampler(GL_LINEAR)},
-      nearest_sampler{CreateSampler(GL_NEAREST)}, bicubic_program{CreateProgram(
-                                                      HostShaders::BICUBIC_FRAG)},
-      scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG)},
-      xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG)},
-      mmpx_program{CreateProgram(HostShaders::MMPX_FRAG)}, gradient_x_program{CreateProgram(
-                                                               HostShaders::X_GRADIENT_FRAG)},
-      gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG)},
-      refine_program{CreateProgram(HostShaders::REFINE_FRAG)},
-      d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG)},
-      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG)} {
+      nearest_sampler{CreateSampler(GL_NEAREST)},
+      bicubic_program{CreateProgram(HostShaders::BICUBIC_FRAG, "BICUBIC_FRAG")},
+      scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG, "SCALE_FORCE_FRAG")},
+      xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG, "XBRZ_FREESCALE_FRAG")},
+      mmpx_program{CreateProgram(HostShaders::MMPX_FRAG, "MMPX_FRAG")},
+      gradient_x_program{CreateProgram(HostShaders::X_GRADIENT_FRAG, "X_GRADIENT_FRAG")},
+      gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG, "Y_GRADIENT_FRAG")},
+      refine_program{CreateProgram(HostShaders::REFINE_FRAG, "REFINE_FRAG")},
+      d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG, "D24S8_TO_RGBA8_FRAG")},
+      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG, "RGBA4_TO_RGB5A1_FRAG")} {
     vao.Create();
     draw_fbo.Create();
     state.draw.vertex_array = vao.handle;
@@ -87,6 +88,7 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
     SCOPE_EXIT({ prev_state.Apply(); });
 
     state.texture_units[0].texture_2d = source.Handle();
+    state.texture_units[0].target = GL_TEXTURE_2D;
     state.texture_units[0].sampler = 0;
     state.texture_units[1].sampler = 0;
 
@@ -102,6 +104,7 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
         temp_tex.Release();
         temp_tex.Create();
         state.texture_units[1].texture_2d = temp_tex.handle;
+        state.texture_units[1].target = GL_TEXTURE_2D;
         state.Apply();
         glActiveTexture(GL_TEXTURE1);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, temp_extent.width,
@@ -110,6 +113,7 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
     state.texture_units[1].texture_2d = temp_tex.handle;
+    state.texture_units[1].target = GL_TEXTURE_2D;
     state.Apply();
 
     glActiveTexture(GL_TEXTURE1);
@@ -144,6 +148,7 @@ bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
     SCOPE_EXIT({ prev_state.Apply(); });
 
     state.texture_units[0].texture_2d = source.Handle();
+    state.texture_units[0].target = GL_TEXTURE_2D;
 
     const Common::Rectangle src_rect{copy.src_offset.x, copy.src_offset.y + copy.extent.height,
                                      copy.src_offset.x + copy.extent.width, copy.src_offset.x};
@@ -159,7 +164,7 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     const auto filter = Settings::values.texture_filter.GetValue();
     const bool is_depth =
         surface.type == SurfaceType::Depth || surface.type == SurfaceType::DepthStencil;
-    if (filter == Settings::TextureFilter::None || is_depth) {
+    if (filter == Settings::TextureFilter::NoFilter || is_depth) {
         return false;
     }
     if (blit.src_level != 0) {
@@ -205,6 +210,7 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
         texture.fbo.Create();
         texture.tex.Create();
         state.texture_units[1].texture_2d = texture.tex.handle;
+        state.texture_units[1].target = GL_TEXTURE_2D;
         state.draw.draw_framebuffer = texture.fbo.handle;
         state.Apply();
         glActiveTexture(GL_TEXTURE1);
@@ -227,6 +233,10 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
     state.texture_units[1].texture_2d = LUMAD.tex.handle;
     state.texture_units[2].texture_2d = XY.tex.handle;
 
+    state.texture_units[0].target = GL_TEXTURE_2D;
+    state.texture_units[1].target = GL_TEXTURE_2D;
+    state.texture_units[2].target = GL_TEXTURE_2D;
+
     // gradient x pass
     Draw(gradient_x_program, XY.tex.handle, XY.fbo.handle, 0, temp_rect);
 
@@ -248,6 +258,7 @@ void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& b
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[0].texture_2d = surface.Handle(0);
+    state.texture_units[0].target = GL_TEXTURE_2D;
     SetParams(bicubic_program, surface.RealExtent(false), blit.src_rect);
     Draw(bicubic_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
@@ -256,6 +267,7 @@ void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[0].texture_2d = surface.Handle(0);
+    state.texture_units[0].target = GL_TEXTURE_2D;
     SetParams(scale_force_program, surface.RealExtent(false), blit.src_rect);
     Draw(scale_force_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
@@ -264,6 +276,7 @@ void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[0].texture_2d = surface.Handle(0);
+    state.texture_units[0].target = GL_TEXTURE_2D;
     glProgramUniform1f(xbrz_program.handle, 2, static_cast<GLfloat>(surface.res_scale));
     SetParams(xbrz_program, surface.RealExtent(false), blit.src_rect);
     Draw(xbrz_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
@@ -273,6 +286,7 @@ void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[0].texture_2d = surface.Handle(0);
+    state.texture_units[0].target = GL_TEXTURE_2D;
     SetParams(mmpx_program, surface.RealExtent(false), blit.src_rect);
     Draw(mmpx_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }

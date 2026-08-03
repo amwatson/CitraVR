@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -38,7 +38,8 @@ enum class Class : u8 {
     Core_ARM11,        ///< ARM11 CPU core
     Core_Timing,       ///< CoreTiming functions
     Core_Cheats,       ///< Cheat functions
-    Config,            ///< Emulator configuration (including commandline)
+    Config,            ///< Emulator configuration
+    Savestate,         ///< Savestates
     Debug,             ///< Debugging tools
     Debug_Emulated,    ///< Debug messages from the emulated programs
     Debug_GPU,         ///< GPU debugging tools
@@ -88,6 +89,8 @@ enum class Class : u8 {
     HW_LCD,          ///< LCD register emulation
     HW_GPU,          ///< GPU control emulation
     HW_AES,          ///< AES engine emulation
+    HW_RSA,          ///< RSA engine emulation
+    HW_ECC,          ///< ECC engine emulation
     Frontend,        ///< Emulator UI
     Render,          ///< Emulator video output and hardware acceleration
     Render_Software, ///< Software renderer backend

@@ -1,4 +1,8 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// PPSSPP Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,18 +15,20 @@
 #include <vector>
 #include <boost/container/flat_set.hpp>
 #include <boost/serialization/export.hpp>
+#include <queue>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
 namespace Kernel {
 
 class Mutex;
-class Process;
 
 enum ThreadPriority : u32 {
     ThreadPrioHighest = 0,      ///< Highest thread priority
@@ -45,7 +51,7 @@ enum class ThreadStatus {
     Running,      ///< Currently running
     Ready,        ///< Ready to run
     WaitArb,      ///< Waiting on an address arbiter
-    WaitSleep,    ///< Waiting due to a SleepThread SVC
+    WaitSleep,    ///< Waiting due to a SleepThread SVC or time limited
     WaitIPC,      ///< Waiting for the reply from an IPC request
     WaitSynchAny, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
     WaitSynchAll, ///< Waiting due to WaitSynchronizationN with wait_all = true
@@ -67,11 +73,73 @@ public:
     virtual void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                         std::shared_ptr<WaitObject> object) = 0;
 
+    virtual bool SupportsSerialization() {
+        return true;
+    }
+
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
+
+class CpuLimiter {
+public:
+    CpuLimiter() = default;
+    virtual ~CpuLimiter() = 0;
+
+    virtual void Start() = 0;
+    virtual void End() = 0;
+
+    virtual void UpdateAppCpuLimit() = 0;
+
+    virtual bool DoTimeLimit(Thread* thread) = 0;
+};
+
+class CpuLimiterMulti : public CpuLimiter {
+public:
+    CpuLimiterMulti(Kernel::KernelSystem& kernel);
+    ~CpuLimiterMulti() override = default;
+
+    void Initialize(bool is_single);
+
+    void Start() override;
+    void End() override;
+
+    void UpdateAppCpuLimit() override;
+
+    bool DoTimeLimit(Thread* thread) override;
+
+private:
+    enum class SchedState : u32 {
+        APP,
+        SYS,
+    };
+
+    void OnTick(s64 cycles_late);
+
+    void ChangeState(s64 cycles_late);
+
+    void WakeupSleepingThreads();
+
+    static constexpr u64 base_tick_interval = nsToCycles(2'000'000); // 2ms
+
+    Kernel::KernelSystem& kernel;
+    Core::TimingEventType* tick_event{};
+
+    bool ready = false;
+    bool active = false;
+    Core1CpuTime app_cpu_time = Core1CpuTime::PREEMPTION_DISABLED;
+    SchedState curr_state{};
+    std::queue<u32> sleeping_thread_ids;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
+
+// TODO(PabloMK7): Replace with proper implementation
+using CpuLimiterSingle = CpuLimiterMulti;
 
 class ThreadManager {
 public:
@@ -116,10 +184,21 @@ public:
     /**
      * Get a const reference to the thread list for debug use
      */
-    std::span<const std::shared_ptr<Thread>> GetThreadList();
+    std::span<const std::shared_ptr<Thread>> GetThreadList() const;
+
+    std::shared_ptr<Thread> GetThreadByID(u32 thread_id) const;
 
     void SetCPU(Core::ARM_Interface& cpu_) {
         cpu = &cpu_;
+    }
+
+    void SetScheduleMode(Core1ScheduleMode mode);
+
+    void UpdateAppCpuLimit();
+
+    CpuLimiter* GetCpuLimiter() {
+        return (current_schedule_mode == Core1ScheduleMode::Single) ? &single_time_limiter
+                                                                    : &multi_time_limiter;
     }
 
 private:
@@ -143,11 +222,11 @@ private:
     void ThreadWakeupCallback(u64 thread_id, s64 cycles_late);
 
     Kernel::KernelSystem& kernel;
-    Core::ARM_Interface* cpu;
+    u32 core_id;
+    Core::ARM_Interface* cpu{};
 
     std::shared_ptr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
-    std::deque<Thread*> unscheduled_ready_queue;
     std::unordered_map<u64, Thread*> wakeup_callback_table;
 
     /// Event type for the thread wake up event
@@ -155,6 +234,10 @@ private:
 
     // Lists all threadsthat aren't deleted.
     std::vector<std::shared_ptr<Thread>> thread_list;
+
+    Core1ScheduleMode current_schedule_mode{};
+    CpuLimiterSingle single_time_limiter;
+    CpuLimiterMulti multi_time_limiter;
 
     friend class Thread;
     friend class KernelSystem;
@@ -282,11 +365,17 @@ public:
         return status == ThreadStatus::WaitSynchAll;
     }
 
+    bool CanSchedule() {
+        return static_cast<u32>(unschedule_mode) == 0;
+    }
+
+    bool SetUnscheduleMode(UnscheduleMode mode);
+    bool ClearUnscheduleMode(UnscheduleMode mode);
+
     Core::ARM_Interface::ThreadContext context{};
 
     u32 thread_id;
 
-    bool can_schedule{true};
     ThreadStatus status;
     VAddr entry_point;
     VAddr stack_top;
@@ -308,6 +397,8 @@ public:
 
     std::weak_ptr<Process> owner_process{}; ///< Process that owns this thread
 
+    ResourceLimitCategory resource_limit_category{};
+
     /// Objects that the thread is waiting on, in the same order as they were
     /// passed to WaitSynchronization1/N.
     std::vector<std::shared_ptr<WaitObject>> wait_objects{};
@@ -325,6 +416,10 @@ public:
 
 private:
     ThreadManager& thread_manager;
+
+    // Does not represent how real HW works, instead it mimics behaviour
+    // taking into account how our scheduler works.
+    UnscheduleMode unschedule_mode{};
 
     friend class boost::serialization::access;
     template <class Archive>

@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -12,8 +16,6 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "common/zstd_compression.h"
-#include "core/core.h"
-#include "core/loader/loader.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 
 namespace OpenGL {
@@ -103,8 +105,8 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
     return true;
 }
 
-ShaderDiskCache::ShaderDiskCache(bool separable)
-    : separable{separable}, transferable_file(AppendTransferableFile()),
+ShaderDiskCache::ShaderDiskCache(u64 program_id, bool separable)
+    : separable{separable}, program_id{program_id}, transferable_file(AppendTransferableFile()),
       // seperable shaders use the virtual precompile file, that already has a header.
       precompiled_file(AppendPrecompiledFile(!separable)) {}
 
@@ -119,6 +121,17 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
     if (transferable_file.GetSize() == 0) {
         LOG_INFO(Render_OpenGL, "No transferable shader cache found for game with title id={}",
                  GetTitleID());
+        return std::nullopt;
+    }
+
+    // The persistent handle is opened in append mode, so its position is not
+    // guaranteed to be at the start (a freshly-written version header leaves
+    // it at EOF, and SAF/FUSE-backed fds on Android start at EOF for append
+    // modes). Reading the cache without rewinding fails and nukes the cache
+    // on every boot.
+    if (!transferable_file.Seek(0, SEEK_SET)) {
+        LOG_ERROR(Render_OpenGL, "Failed to rewind transferable cache for title id={}",
+                  GetTitleID());
         return std::nullopt;
     }
 
@@ -172,6 +185,11 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         }
     }
 
+    // Reposition at EOF for the SaveRaw appends that follow; stdio also
+    // requires a positioning call when switching from reading to writing on
+    // an update stream.
+    transferable_file.Seek(0, SEEK_END);
+
     LOG_INFO(Render_OpenGL, "Found a transferable disk cache with {} entries", raws.size());
     return {std::move(raws)};
 }
@@ -188,6 +206,9 @@ ShaderDiskCache::LoadPrecompiled(bool compressed) {
     }
 
     const auto result = LoadPrecompiledFile(precompiled_file, compressed);
+    // Reposition at EOF for the SaveDump/SaveDecompiledToFile appends that
+    // follow (see LoadTransferable).
+    precompiled_file.Seek(0, SEEK_END);
     if (!result) {
         LOG_INFO(Render_OpenGL,
                  "Failed to load precompiled cache for game with title id={} - removing",
@@ -200,6 +221,12 @@ ShaderDiskCache::LoadPrecompiled(bool compressed) {
 
 std::optional<std::pair<std::unordered_map<u64, ShaderDiskCacheDecompiled>, ShaderDumpsMap>>
 ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file, bool compressed) {
+    // The handle is opened in append mode and may be positioned at EOF; the
+    // whole file must be read from the start (see LoadTransferable).
+    if (!file.Seek(0, SEEK_SET)) {
+        LOG_ERROR(Render_OpenGL, "Failed to rewind precompiled cache");
+        return std::nullopt;
+    }
     // Read compressed file from disk and decompress to virtual precompiled cache file
     std::vector<u8> precompiled_file(file.GetSize());
     file.ReadBytes(precompiled_file.data(), precompiled_file.size());
@@ -455,6 +482,14 @@ FileUtil::IOFile ShaderDiskCache::AppendTransferableFile() {
     const auto transferable_path{GetTransferablePath()};
     const bool existed = FileUtil::Exists(transferable_path);
 
+#ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
+    if (!existed) {
+        FileUtil::CreateEmptyFile(transferable_path);
+    }
+#endif
+
     FileUtil::IOFile file(transferable_path, "ab+");
     if (!file.IsOpen()) {
         LOG_ERROR(Render_OpenGL, "Failed to open transferable cache in path={}", transferable_path);
@@ -467,6 +502,11 @@ FileUtil::IOFile ShaderDiskCache::AppendTransferableFile() {
                       transferable_path);
             return {};
         }
+        // Flush immediately: on Android the process is routinely killed
+        // without a clean shutdown, and a header left in the stdio buffer
+        // makes the next boot see a truncated file and invalidate the entire
+        // cache.
+        file.Flush();
     }
     return file;
 }
@@ -477,6 +517,14 @@ FileUtil::IOFile ShaderDiskCache::AppendPrecompiledFile(bool write_header) {
 
     const auto precompiled_path{GetPrecompiledPath()};
     const bool existed = FileUtil::Exists(precompiled_path);
+
+#ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
+    if (!existed) {
+        FileUtil::CreateEmptyFile(precompiled_path);
+    }
+#endif
 
     FileUtil::IOFile file(precompiled_path, "ab+");
     if (!file.IsOpen()) {
@@ -492,6 +540,9 @@ FileUtil::IOFile ShaderDiskCache::AppendPrecompiledFile(bool write_header) {
                       precompiled_path);
             return {};
         }
+        // Flush immediately so a process kill cannot leave a truncated header
+        // (see AppendTransferableFile).
+        file.Flush();
     }
     return file;
 }
@@ -511,6 +562,13 @@ void ShaderDiskCache::SaveVirtualPrecompiledFile() {
         Common::Compression::CompressDataZSTDDefault(decompressed_precompiled_cache);
 
     const auto precompiled_path{GetPrecompiledPath()};
+
+#ifdef HAVE_LIBRETRO_VFS
+    const bool existed = FileUtil::Exists(precompiled_path);
+    if (!existed) {
+        FileUtil::CreateEmptyFile(precompiled_path);
+    }
+#endif
 
     precompiled_file.Close();
     if (!FileUtil::Delete(GetPrecompiledPath())) {
@@ -568,15 +626,7 @@ std::string ShaderDiskCache::GetBaseDir() const {
     return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + DIR_SEP "opengl";
 }
 
-u64 ShaderDiskCache::GetProgramID() {
-    // Skip games without title id
-    if (program_id != 0) {
-        return program_id;
-    }
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
-        Loader::ResultStatus::Success) {
-        return 0;
-    }
+u64 ShaderDiskCache::GetProgramID() const {
     return program_id;
 }
 

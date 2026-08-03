@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,10 +21,16 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
 
     ui->graphics_api_combo->setEnabled(!is_powered_on);
     ui->physical_device_combo->setEnabled(!is_powered_on);
+    ui->toggle_accurate_mul->setEnabled(!is_powered_on);
     ui->toggle_async_shaders->setEnabled(!is_powered_on);
     ui->toggle_async_present->setEnabled(!is_powered_on);
+    ui->toggle_display_refresh_rate_detection->setEnabled(!is_powered_on);
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
+
+    const auto width = static_cast<int>(QString::fromStdString("000000000").size() * 6);
+    ui->delay_render_display_label->setMinimumWidth(width);
+    ui->delay_render_combo->setVisible(!Settings::IsConfiguringGlobal());
 
     auto graphics_api_combo_model =
         qobject_cast<QStandardItemModel*>(ui->graphics_api_combo->model());
@@ -54,6 +60,7 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
 
         ui->physical_device_combo->setVisible(false);
         ui->spirv_shader_gen->setVisible(false);
+        ui->disable_spirv_optimizer->setVisible(false);
     } else {
         for (const QString& name : physical_devices) {
             ui->physical_device_combo->addItem(name);
@@ -82,12 +89,25 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
     connect(ui->graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureGraphics::SetPhysicalDeviceComboVisibility);
 
+    connect(ui->delay_render_slider, &QSlider::valueChanged, this, [&](int value) {
+        ui->delay_render_display_label->setText(
+            QStringLiteral("%1 ms")
+                .arg(((double)value) / 1000.f, 0, 'f', 3)
+                .rightJustified(QString::fromStdString("000000000").size()));
+    });
+
     SetConfiguration();
 }
 
 ConfigureGraphics::~ConfigureGraphics() = default;
 
 void ConfigureGraphics::SetConfiguration() {
+    ui->delay_render_slider->setValue(Settings::values.delay_game_render_thread_us.GetValue());
+    ui->delay_render_display_label->setText(
+        QStringLiteral("%1 ms")
+            .arg(((double)ui->delay_render_slider->value()) / 1000, 0, 'f', 3)
+            .rightJustified(QString::fromStdString("000000000").size()));
+
     if (!Settings::IsConfiguringGlobal()) {
         ConfigurationShared::SetHighlight(ui->graphics_api_group,
                                           !Settings::values.graphics_api.UsingGlobal());
@@ -101,6 +121,16 @@ void ConfigureGraphics::SetConfiguration() {
                                                &Settings::values.texture_sampling);
         ConfigurationShared::SetHighlight(ui->widget_texture_sampling,
                                           !Settings::values.texture_sampling.UsingGlobal());
+        ConfigurationShared::SetHighlight(
+            ui->delay_render_layout, !Settings::values.delay_game_render_thread_us.UsingGlobal());
+
+        if (Settings::values.delay_game_render_thread_us.UsingGlobal()) {
+            ui->delay_render_combo->setCurrentIndex(0);
+            ui->delay_render_slider->setEnabled(false);
+        } else {
+            ui->delay_render_combo->setCurrentIndex(1);
+            ui->delay_render_slider->setEnabled(true);
+        }
     } else {
         ui->graphics_api_combo->setCurrentIndex(
             static_cast<int>(Settings::values.graphics_api.GetValue()));
@@ -113,14 +143,20 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader.GetValue());
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
-    ui->toggle_vsync_new->setChecked(Settings::values.use_vsync_new.GetValue());
+    ui->toggle_vsync->setChecked(Settings::values.use_vsync.GetValue());
+    ui->toggle_skip_duplicate_frames->setChecked(
+        Settings::values.use_skip_duplicate_frames.GetValue());
     ui->spirv_shader_gen->setChecked(Settings::values.spirv_shader_gen.GetValue());
+    ui->disable_spirv_optimizer->setChecked(Settings::values.disable_spirv_optimizer.GetValue());
     ui->toggle_async_shaders->setChecked(Settings::values.async_shader_compilation.GetValue());
     ui->toggle_async_present->setChecked(Settings::values.async_presentation.GetValue());
 
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit.GetValue());
+        ui->toggle_display_refresh_rate_detection->setChecked(
+            Settings::values.use_display_refresh_rate_detection.GetValue());
     }
+    ui->simulate_3ds_gpu_timings->setChecked(Settings::values.simulate_3ds_gpu_timings.GetValue());
 }
 
 void ConfigureGraphics::ApplyConfiguration() {
@@ -134,6 +170,8 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->toggle_async_present, async_presentation);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.spirv_shader_gen,
                                              ui->spirv_shader_gen, spirv_shader_gen);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.disable_spirv_optimizer,
+                                             ui->disable_spirv_optimizer, disable_spirv_optimizer);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_hw_shader, ui->toggle_hw_shader,
                                              use_hw_shader);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.shaders_accurate_mul,
@@ -142,11 +180,22 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->texture_sampling_combobox);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_disk_shader_cache,
                                              ui->toggle_disk_shader_cache, use_disk_shader_cache);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync_new, ui->toggle_vsync_new,
-                                             use_vsync_new);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync, ui->toggle_vsync,
+                                             use_vsync);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_skip_duplicate_frames,
+                                             ui->toggle_skip_duplicate_frames,
+                                             use_skip_duplicate_frames);
+    ConfigurationShared::ApplyPerGameSetting(
+        &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
+        [this](s32) { return ui->delay_render_slider->value(); });
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.simulate_3ds_gpu_timings,
+                                             ui->simulate_3ds_gpu_timings,
+                                             simulate_3ds_gpu_timings);
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
+        Settings::values.use_display_refresh_rate_detection =
+            ui->toggle_display_refresh_rate_detection->isChecked();
     }
 }
 
@@ -162,18 +211,31 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_accurate_mul->setEnabled(Settings::values.shaders_accurate_mul.UsingGlobal());
         ui->toggle_disk_shader_cache->setEnabled(
             Settings::values.use_disk_shader_cache.UsingGlobal());
-        ui->toggle_vsync_new->setEnabled(ui->toggle_vsync_new->isEnabled() &&
-                                         Settings::values.use_vsync_new.UsingGlobal());
+        ui->toggle_vsync->setEnabled(ui->toggle_vsync->isEnabled() &&
+                                     Settings::values.use_vsync.UsingGlobal());
+        ui->toggle_skip_duplicate_frames->setEnabled(
+            ui->toggle_skip_duplicate_frames->isEnabled() &&
+            Settings::values.use_skip_duplicate_frames.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
         ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
         ui->toggle_async_present->setEnabled(Settings::values.async_presentation.UsingGlobal());
         ui->graphics_api_combo->setEnabled(Settings::values.graphics_api.UsingGlobal());
         ui->physical_device_combo->setEnabled(Settings::values.physical_device.UsingGlobal());
+        ui->delay_render_combo->setEnabled(
+            Settings::values.delay_game_render_thread_us.UsingGlobal());
+        ui->simulate_3ds_gpu_timings->setEnabled(
+            Settings::values.simulate_3ds_gpu_timings.UsingGlobal());
         return;
     }
 
+    connect(ui->delay_render_combo, qOverload<int>(&QComboBox::activated), this, [this](int index) {
+        ui->delay_render_slider->setEnabled(index == 1);
+        ConfigurationShared::SetHighlight(ui->delay_render_layout, index == 1);
+    });
+
     ui->toggle_shader_jit->setVisible(false);
+    ui->toggle_display_refresh_rate_detection->setVisible(false);
 
     ConfigurationShared::SetColoredComboBox(
         ui->graphics_api_combo, ui->graphics_api_group,
@@ -194,8 +256,11 @@ void ConfigureGraphics::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->toggle_disk_shader_cache,
                                             Settings::values.use_disk_shader_cache,
                                             use_disk_shader_cache);
-    ConfigurationShared::SetColoredTristate(ui->toggle_vsync_new, Settings::values.use_vsync_new,
-                                            use_vsync_new);
+    ConfigurationShared::SetColoredTristate(ui->toggle_vsync, Settings::values.use_vsync,
+                                            use_vsync);
+    ConfigurationShared::SetColoredTristate(ui->toggle_skip_duplicate_frames,
+                                            Settings::values.use_skip_duplicate_frames,
+                                            use_skip_duplicate_frames);
     ConfigurationShared::SetColoredTristate(ui->toggle_async_shaders,
                                             Settings::values.async_shader_compilation,
                                             async_shader_compilation);
@@ -203,6 +268,12 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_async_present, Settings::values.async_presentation, async_presentation);
     ConfigurationShared::SetColoredTristate(ui->spirv_shader_gen, Settings::values.spirv_shader_gen,
                                             spirv_shader_gen);
+    ConfigurationShared::SetColoredTristate(ui->disable_spirv_optimizer,
+                                            Settings::values.disable_spirv_optimizer,
+                                            disable_spirv_optimizer);
+    ConfigurationShared::SetColoredTristate(ui->simulate_3ds_gpu_timings,
+                                            Settings::values.simulate_3ds_gpu_timings,
+                                            simulate_3ds_gpu_timings);
 }
 
 void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {
@@ -225,5 +296,6 @@ void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {
 
     ui->physical_device_group->setVisible(effective_api == Settings::GraphicsAPI::Vulkan);
     ui->spirv_shader_gen->setVisible(effective_api == Settings::GraphicsAPI::Vulkan);
+    ui->disable_spirv_optimizer->setVisible(effective_api == Settings::GraphicsAPI::Vulkan);
     ui->opengl_renderer_group->setVisible(effective_api == Settings::GraphicsAPI::OpenGL);
 }

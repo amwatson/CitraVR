@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2018 yuzu emulator team
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -27,8 +31,10 @@ bool HasSupportedFileExtension(const std::string& file_name) {
 } // Anonymous namespace
 
 GameListWorker::GameListWorker(QVector<UISettings::GameDir>& game_dirs,
-                               const CompatibilityList& compatibility_list)
-    : game_dirs(game_dirs), compatibility_list(compatibility_list) {}
+                               const CompatibilityList& compatibility_list,
+                               const PlayTime::PlayTimeManager& play_time_manager_)
+    : game_dirs(game_dirs), compatibility_list(compatibility_list),
+      play_time_manager{play_time_manager_} {}
 
 GameListWorker::~GameListWorker() = default;
 
@@ -86,7 +92,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             if (Loader::IsValidSMDH(smdh)) {
                 if (system_title) {
                     auto smdh_struct = reinterpret_cast<Loader::SMDH*>(smdh.data());
-                    if (!(smdh_struct->flags & Loader::SMDH::Flags::Visible)) {
+                    if (!smdh_struct->flags.visible) {
                         // Skip system titles without the visible flag.
                         return true;
                     }
@@ -106,12 +112,15 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             emit EntryReady(
                 {
                     new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
-                                         extdata_id, media_type),
+                                         extdata_id, media_type,
+                                         res == Loader::ResultStatus::ErrorEncrypted,
+                                         loader->GetFileType() == Loader::FileType::CCI),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
-                    new GameListItem(
-                        QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
+                    new GameListItem(QString::fromStdString(Loader::GetFileTypeString(
+                        loader->GetFileType(), loader->IsFileCompressed()))),
                     new GameListItemSize(FileUtil::GetSize(physical_name)),
+                    new GameListItemPlayTime(play_time_manager.GetPlayTime(program_id)),
                 },
                 parent_dir);
 

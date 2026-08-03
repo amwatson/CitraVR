@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,14 +19,12 @@ AC_U::AC_U(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:u"
         {0x000A, nullptr, "GetLastErrorCode"},
         {0x000C, &AC_U::GetStatus, "GetStatus"},
         {0x000D, &AC_U::GetWifiStatus, "GetWifiStatus"},
-        {0x000E, &AC_U::GetCurrentAPInfo, "GetCurrentAPInfo"},
-        {0x000F, &AC_U::GetConnectingInfraPriority, "GetConnectingInfraPriority"},
+        {0x000E, nullptr, "GetCurrentAPInfo"},
         {0x0010, nullptr, "GetCurrentNZoneInfo"},
         {0x0011, nullptr, "GetNZoneApNumService"},
         {0x001D, nullptr, "ScanAPs"},
         {0x0024, nullptr, "AddDenyApType"},
         {0x0027, &AC_U::GetInfraPriority, "GetInfraPriority"},
-        {0x002C, &AC_U::SetFromApplication, "SetFromApplication"},
         {0x002D, &AC_U::SetRequestEulaVersion, "SetRequestEulaVersion"},
         {0x002F, &AC_U::GetNZoneBeaconNotFoundEvent, "GetNZoneBeaconNotFoundEvent"},
         {0x0030, &AC_U::RegisterDisconnectEvent, "RegisterDisconnectEvent"},

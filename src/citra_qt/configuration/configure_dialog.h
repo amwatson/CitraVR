@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,7 +23,9 @@ class ConfigureGeneral;
 class ConfigureSystem;
 class ConfigureInput;
 class ConfigureHotkeys;
+class ConfigureControllerHotkeys;
 class ConfigureGraphics;
+class ConfigureLayout;
 class ConfigureEnhancements;
 class ConfigureAudio;
 class ConfigureCamera;
@@ -64,8 +66,10 @@ private:
     std::unique_ptr<ConfigureSystem> system_tab;
     std::unique_ptr<ConfigureInput> input_tab;
     std::unique_ptr<ConfigureHotkeys> hotkeys_tab;
+    std::unique_ptr<ConfigureControllerHotkeys> hotkeys_controller_tab;
     std::unique_ptr<ConfigureGraphics> graphics_tab;
     std::unique_ptr<ConfigureEnhancements> enhancements_tab;
+    std::unique_ptr<ConfigureLayout> layout_tab;
     std::unique_ptr<ConfigureAudio> audio_tab;
     std::unique_ptr<ConfigureCamera> camera_tab;
     std::unique_ptr<ConfigureDebug> debug_tab;

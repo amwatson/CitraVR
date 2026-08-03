@@ -84,7 +84,6 @@ public:
         : Panel(pose, width, height, scaleFactor, {0, 0}, {width, height}) {}
 
     void  Transform(const XrVector2f& point2d, XrVector2f& result) const;
-    float AspectRatio() const { return (2.0f * mWidth) / mHeight; }
 
     struct {
         XrVector2f mMin;
@@ -200,7 +199,7 @@ private:
     void CreateSwapchain();
 
     static constexpr uint32_t SURFACE_WIDTH_UNSCALED =
-        (NUM_EYES * std::max(Core::kScreenTopWidth, Core::kScreenBottomWidth)) - 300;
+        NUM_EYES * Core::kScreenTopWidth;
     static constexpr uint32_t SURFACE_HEIGHT_UNSCALED =
         (Core::kScreenTopHeight + Core::kScreenBottomHeight);
 

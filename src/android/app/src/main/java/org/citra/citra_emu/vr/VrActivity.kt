@@ -11,8 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Display
-import android.view.InputDevice
-import android.view.KeyEvent
 import android.view.View
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.activities.EmulationActivity
@@ -21,6 +19,7 @@ import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.EmulationFragment.Companion
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.ButtonSwapUtils
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.Log
 import kotlin.system.exitProcess
@@ -29,6 +28,7 @@ import kotlin.system.exitProcess
 class VrActivity : EmulationActivity() {
     private var mHandle: Long = 0
     private var clickRunnable = ClickRunnable()
+    private var isQuitting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.info("VR [Java] onCreate()");
@@ -74,6 +74,10 @@ class VrActivity : EmulationActivity() {
 
     public override fun onPause() {
        Log.info("VR [Java] onPause");
+        // Synchronous save while onPause runs: the OS will not kill the
+        // process during this callback, making it the last reliable point to
+        // persist the pipeline cache before a potential process death.
+        NativeLibrary.saveDiskShaderCaches()
         super.onPause()
     }
 
@@ -91,11 +95,13 @@ class VrActivity : EmulationActivity() {
     }
 
     fun forwardVRInput(keycode: Int, isPressed: Boolean) {
-        val event = KeyEvent(
-            if (isPressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, keycode
+        val button = org.citra.citra_emu.vr.utils.VRUtils.ButtonType.androidToNativeLibrary(keycode)
+            ?: return
+        NativeLibrary.onGamePadEvent(
+            "Quest controller",
+            ButtonSwapUtils.applyBYSwap(button),
+            if (isPressed) NativeLibrary.ButtonState.PRESSED else NativeLibrary.ButtonState.RELEASED
         )
-        event.source = InputDevice.SOURCE_GAMEPAD
-        runOnUiThread { dispatchKeyEvent(event) }
     }
 
     fun forwardVRJoystick(x: Float, y: Float, joystickType: Int) {
@@ -120,6 +126,14 @@ class VrActivity : EmulationActivity() {
     }
 
     fun quitToMenu() {
+        // The exit button can deliver multiple events per click; only the
+        // first call may relaunch MainActivity or duplicate panels appear.
+        if (isQuitting) return
+        isQuitting = true
+        // Save the pipeline cache before starting teardown: onDestroy calls
+        // exitProcess(0) without ever stopping the core, so the renderer
+        // destructor (the normal save point) never runs on this path.
+        NativeLibrary.saveDiskShaderCaches()
         finish()
         val relaunchMainIntent = Intent(this, MainActivity::class.java)
         startActivity(relaunchMainIntent)
@@ -128,6 +142,10 @@ class VrActivity : EmulationActivity() {
     fun pauseGame() {
        Log.info("VR [Java] pauseGame");
         NativeLibrary.pauseEmulation();
+        // Emulation pauses whenever the user opens a menu or loses focus;
+        // piggyback on that to keep the on-disk pipeline cache fresh in case
+        // the process is later killed without warning.
+        NativeLibrary.saveDiskShaderCaches()
     }
 
     fun resumeGame() {

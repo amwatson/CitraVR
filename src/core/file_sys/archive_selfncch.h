@@ -29,11 +29,11 @@ struct NCCHData {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& icon;
-        ar& logo;
-        ar& banner;
-        ar& romfs_file;
-        ar& update_romfs_file;
+        ar & icon;
+        ar & logo;
+        ar & banner;
+        ar & romfs_file;
+        ar & update_romfs_file;
     }
     friend class boost::serialization::access;
 };
@@ -50,8 +50,8 @@ public:
         return "SelfNCCH";
     }
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path, u64 program_id) override;
-    Result Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
-                  u64 program_id) override;
+    Result Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info, u64 program_id,
+                  u32 directory_buckets, u32 file_buckets) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
 private:
@@ -61,7 +61,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& ncch_data;
+        ar & ncch_data;
     }
     friend class boost::serialization::access;
 };

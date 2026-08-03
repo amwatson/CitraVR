@@ -1,15 +1,17 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
+#include "common/swap.h"
 
 namespace Kernel {
 class Process;
@@ -34,7 +36,7 @@ constexpr u32 CITRA_PAGE_MASK = CITRA_PAGE_SIZE - 1;
 constexpr int CITRA_PAGE_BITS = 12;
 constexpr std::size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - CITRA_PAGE_BITS);
 
-enum class PageType {
+enum class PageType : u8 {
     /// Page is unmapped and should cause an access error.
     Unmapped,
     /// Page is mapped to regular memory. This is the only type you can get pointers to.
@@ -42,6 +44,12 @@ enum class PageType {
     /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
     /// invalidation
     RasterizerCachedMemory,
+    /// Page is mapped to regular memory. Furthermore a debug watchpoint is set to an address within
+    /// the page.
+    MemoryWatchpoint,
+    /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
+    /// invalidation. Furthermore a debug watchpoint is set to an address within the page.
+    RasterizerCachedMemoryWatchpoint,
 };
 
 /**
@@ -82,6 +90,10 @@ struct PageTable {
             return Entry(*this, static_cast<VAddr>(idx));
         }
 
+        const MemoryRef& Ref(std::size_t idx) {
+            return refs[idx];
+        }
+
     private:
         std::array<u8*, PAGE_TABLE_NUM_ENTRIES> raw;
         std::array<MemoryRef, PAGE_TABLE_NUM_ENTRIES> refs;
@@ -100,13 +112,30 @@ struct PageTable {
         return pointers.raw;
     }
 
+    struct WatchpointPageInfo {
+        u32 watchpoint_count{};
+        MemoryRef memory;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & watchpoint_count;
+            ar & memory;
+        }
+    };
+
+    // Map holding pages that are marked to contain watchpoints. We don't need
+    // any fancy performance tricks here, as watchpoints are only used rarely
+    // while debugging and performance is not a priority in such cases.
+    std::unordered_map<VAddr, WatchpointPageInfo> watchpoint_pages_map{};
+
     void Clear();
 
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& pointers.refs;
-        ar& attributes;
+        ar & pointers.refs;
+        ar & attributes;
+        ar & watchpoint_pages_map;
         for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
             pointers.raw[i] = pointers.refs[i].GetPtr();
         }
@@ -287,6 +316,17 @@ public:
     u8 Read8(VAddr addr);
 
     /**
+     * Reads an 8-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 8-bit value from.
+     *
+     * @returns the read 8-bit unsigned value.
+     */
+    u8 Read8(const Kernel::Process& process, VAddr addr);
+
+    /**
      * Reads a 16-bit unsigned value from the current process' address space
      * at the given virtual address.
      *
@@ -295,6 +335,17 @@ public:
      * @returns the read 16-bit unsigned value.
      */
     u16 Read16(VAddr addr);
+
+    /**
+     * Reads a 16-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 16-bit value from.
+     *
+     * @returns the read 16-bit unsigned value.
+     */
+    u16 Read16(const Kernel::Process& process, VAddr addr);
 
     /**
      * Reads a 32-bit unsigned value from the current process' address space
@@ -307,6 +358,17 @@ public:
     u32 Read32(VAddr addr);
 
     /**
+     * Reads a 32-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value.
+     */
+    u32 Read32(const Kernel::Process& process, VAddr addr);
+
+    /**
      * Reads a 64-bit unsigned value from the current process' address space
      * at the given virtual address.
      *
@@ -315,6 +377,40 @@ public:
      * @returns the read 64-bit value.
      */
     u64 Read64(VAddr addr);
+
+    /**
+     * Reads a 64-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 64-bit value from.
+     *
+     * @returns the read 64-bit value.
+     */
+    u64 Read64(const Kernel::Process& process, VAddr addr);
+
+    /**
+     * Reads a 32-bit unsigned value from the current process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(VAddr addr);
+
+    /**
+     * Reads a 32-bit unsigned value from the process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(const Kernel::Process& process, VAddr addr);
 
     /**
      * Writes an 8-bit unsigned integer to the given virtual address in
@@ -328,6 +424,18 @@ public:
     void Write8(VAddr addr, u8 data);
 
     /**
+     * Writes an 8-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 8-bit unsigned integer to.
+     * @param data The 8-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory at the given virtual address contains the specified data value.
+     */
+    void Write8(const Kernel::Process& process, VAddr addr, u8 data);
+
+    /**
      * Writes a 16-bit unsigned integer to the given virtual address in
      * the current process' address space.
      *
@@ -337,6 +445,18 @@ public:
      * @post The memory range [addr, sizeof(data)) contains the given data value.
      */
     void Write16(VAddr addr, u16 data);
+
+    /**
+     * Writes a 16-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 16-bit unsigned integer to.
+     * @param data The 16-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write16(const Kernel::Process& process, VAddr addr, u16 data);
 
     /**
      * Writes a 32-bit unsigned integer to the given virtual address in
@@ -350,6 +470,18 @@ public:
     void Write32(VAddr addr, u32 data);
 
     /**
+     * Writes a 32-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 32-bit unsigned integer to.
+     * @param data The 32-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write32(const Kernel::Process& process, VAddr addr, u32 data);
+
+    /**
      * Writes a 64-bit unsigned integer to the given virtual address in
      * the current process' address space.
      *
@@ -359,6 +491,18 @@ public:
      * @post The memory range [addr, sizeof(data)) contains the given data value.
      */
     void Write64(VAddr addr, u64 data);
+
+    /**
+     * Writes a 64-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 64-bit unsigned integer to.
+     * @param data The 64-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write64(const Kernel::Process& process, VAddr addr, u64 data);
 
     /**
      * Writes a {8, 16, 32, 64}-bit unsigned integer to the given virtual address in
@@ -520,16 +664,16 @@ public:
     std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr);
 
     /// Gets a pointer to the memory region beginning at the specified physical address.
-    u8* GetPhysicalPointer(PAddr address) const;
+    u8* GetPhysicalPointer(PAddr address);
 
     /// Returns a reference to the memory region beginning at the specified physical address
-    MemoryRef GetPhysicalRef(PAddr address) const;
+    MemoryRef GetPhysicalRef(PAddr address);
 
     /// Determines if the given VAddr is valid for the specified process.
     bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
     /// Returns true if the address refers to a valid memory region
-    bool IsValidPhysicalAddress(PAddr paddr) const;
+    bool IsValidPhysicalAddress(PAddr paddr);
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(const u8* pointer) const;
@@ -549,16 +693,27 @@ public:
     /// Unregisters page table for rasterizer cache marking
     void UnregisterPageTable(std::shared_ptr<PageTable> page_table);
 
-    void SetDSP(AudioCore::DspInterface& dsp);
+    /// Gets pointer to DSP shared memory with given offset
+    u8* GetDspMemory(std::size_t offset) const;
 
     void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
+    /// Returns a reference to the framebuffer address of the currently loaded 3GX plugin.
+    PAddr& Plugin3GXFramebufferAddress();
+
+    void RegisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size);
+
+    void UnregisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size);
+
 private:
     template <typename T>
-    T Read(const VAddr vaddr);
+    void UnmappedAccess(const VAddr vaddr, const T value, bool read);
 
     template <typename T>
-    void Write(const VAddr vaddr, const T data);
+    T Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr);
+
+    template <typename T>
+    void Write(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr, const T data);
 
     template <typename T>
     bool WriteExclusive(const VAddr vaddr, const T data, const T expected);
@@ -571,11 +726,34 @@ private:
      */
     MemoryRef GetPointerForRasterizerCache(VAddr addr) const;
 
+    class PhysMemRegionInfo {
+    public:
+        // Use a pointer to the shared pointer instead of the shared pointer directly to prevent
+        // overhead in hot code.
+        const std::shared_ptr<BackingMem>* backing_mem{};
+
+        PAddr region_start{};
+        PAddr region_end{};
+
+        PhysMemRegionInfo() = default;
+
+        PhysMemRegionInfo(const std::shared_ptr<BackingMem>* mem, PAddr reg_start, size_t reg_size)
+            : backing_mem(mem), region_start{reg_start},
+              region_end{reg_start + static_cast<PAddr>(reg_size)} {}
+
+        bool valid() const {
+            return backing_mem != nullptr;
+        }
+    };
+    PhysMemRegionInfo GetPhysMemRegionInfo(PAddr address);
+
     void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
 
 private:
     class Impl;
     std::unique_ptr<Impl> impl;
+
+    PhysMemRegionInfo phys_mem_region_info_cache{};
 
     friend class boost::serialization::access;
     template <class Archive>

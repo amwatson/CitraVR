@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,10 +26,11 @@ namespace Service::CAM {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
-    ar& cameras;
-    ar& ports;
-    ar& is_camera_reload_pending;
-    ar& initialized;
+    DEBUG_SERIALIZATION_POINT;
+    ar & cameras;
+    ar & ports;
+    ar & is_camera_reload_pending;
+    ar & initialized;
     if (Archive::is_loading::value && initialized) {
         for (int i = 0; i < NumCameras; i++) {
             LoadCameraImplementation(cameras[i], i);
@@ -1099,8 +1100,8 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
         for (int context_id = 0; context_id < 2; ++context_id) {
             // Note: the following default values are verified against real 3DS
             ContextConfig& context = camera.contexts[context_id];
-            context.flip = camera_id == 1 ? Flip::Horizontal : Flip::None;
-            context.effect = Effect::None;
+            context.flip = camera_id == 1 ? Flip::Horizontal : Flip::NoFlip;
+            context.effect = Effect::NoEffect;
             context.format = OutputFormat::YUV422;
             context.resolution =
                 context_id == 0 ? PRESET_RESOLUTION[5 /*DS_LCD*/] : PRESET_RESOLUTION[0 /*VGA*/];

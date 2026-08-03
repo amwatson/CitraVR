@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <nihstro/shader_bytecode.h>
 #include "common/aarch64/cpu_detect.h"
 #include "common/aarch64/oaknut_abi.h"
@@ -386,35 +387,55 @@ void JitShader::Compile_SanitizedMul(QReg src1, QReg src2, QReg scratch0) {
 }
 
 void JitShader::Compile_EvaluateCondition(Instruction instr) {
-    // Note: NXOR is used below to check for equality
+    const bool refx = instr.flow_control.refx.Value();
+    const bool refy = instr.flow_control.refy.Value();
+
     switch (instr.flow_control.op) {
-    case Instruction::FlowControlType::Or:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        MOV(XSCRATCH1, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
-        EOR(XSCRATCH1, XSCRATCH1, COND1);
-        ORR(XSCRATCH0, XSCRATCH0, XSCRATCH1);
-        break;
-
-    case Instruction::FlowControlType::And:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        MOV(XSCRATCH1, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
-        EOR(XSCRATCH1, XSCRATCH1, COND1);
-        AND(XSCRATCH0, XSCRATCH0, XSCRATCH1);
-        break;
-
-    case Instruction::FlowControlType::JustX:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
-        break;
-
-    case Instruction::FlowControlType::JustY:
-        MOV(XSCRATCH0, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND1);
+    // Note: NXOR is used below to check for equality
+    case Instruction::FlowControlType::Or: {
+        XReg OpX = XSCRATCH0;
+        if (!refx) {
+            EOR(OpX, COND0, u8(refx) ^ 1);
+        } else {
+            OpX = COND0;
+        }
+        XReg OpY = XSCRATCH1;
+        if (!refy) {
+            EOR(OpY, COND1, u8(refy) ^ 1);
+        } else {
+            OpY = COND1;
+        }
+        ORR(XSCRATCH0, OpX, OpY);
+        CMP(XSCRATCH0, 0);
         break;
     }
-    CMP(XSCRATCH0, 0);
+    // Note: TST will AND two registers and set the EQ/NE flags on the result
+    case Instruction::FlowControlType::And: {
+        XReg OpX = XSCRATCH0;
+        if (!refx) {
+            EOR(OpX, COND0, u8(refx) ^ 1);
+        } else {
+            OpX = COND0;
+        }
+        XReg OpY = XSCRATCH1;
+        if (!refy) {
+            EOR(OpY, COND1, u8(refy) ^ 1);
+        } else {
+            OpY = COND1;
+        }
+        TST(OpX, OpY);
+        break;
+    }
+    case Instruction::FlowControlType::JustX:
+        CMP(COND0, u8(refx) ^ 1);
+        break;
+    case Instruction::FlowControlType::JustY:
+        CMP(COND1, u8(refy) ^ 1);
+        break;
+    default:
+        UNREACHABLE();
+        break;
+    }
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
@@ -487,6 +508,7 @@ void JitShader::Compile_DPH(Instruction instr) {
 void JitShader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     STR(X30, SP, POST_INDEXED, -16);
+    exp2_used = true;
     BL(exp2_subroutine);
     LDR(X30, SP, PRE_INDEXED, 16);
     Compile_DestEnable(instr, SRC1);
@@ -495,6 +517,7 @@ void JitShader::Compile_EX2(Instruction instr) {
 void JitShader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     STR(X30, SP, POST_INDEXED, -16);
+    log2_used = true;
     BL(log2_subroutine);
     LDR(X30, SP, PRE_INDEXED, 16);
     Compile_DestEnable(instr, SRC1);
@@ -844,12 +867,13 @@ void JitShader::Compile_SETE(Instruction instr) {
 
     l(have_emitter);
 
-    MOV(XSCRATCH1.toW(), instr.setemit.vertex_id);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, vertex_id)));
-    MOV(XSCRATCH1.toW(), instr.setemit.prim_emit);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, prim_emit)));
-    MOV(XSCRATCH1.toW(), instr.setemit.winding);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, winding)));
+    const GeometryEmitter::EmitState new_state{
+        .winding = instr.setemit.winding != 0,
+        .prim_emit = instr.setemit.prim_emit != 0,
+        .vertex_id = static_cast<uint8_t>(instr.setemit.vertex_id),
+    };
+    MOV(XSCRATCH1.toW(), new_state.raw);
+    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, emit_state)));
 
     l(end);
 }
@@ -879,7 +903,21 @@ void JitShader::Compile_NextInstr() {
 
     l(instruction_labels[program_counter]);
 
-    const Instruction instr = {(*program_code)[program_counter++]};
+    // Always treat the last instruction of the program code as an
+    // end instruction. This fixes some games such as Thunder Blade
+    // or After Burner II which have malformed geo shaders without an
+    // end instruction crashing the emulator due to the program counter
+    // growing uncontrollably.
+    // TODO(PabloMK7): Find how real HW reacts to this, most likely the
+    // program counter wraps around after reaching the last instruction,
+    // but more testing is needed.
+    Instruction instr{};
+    if (program_counter < MAX_PROGRAM_CODE_LENGTH - 1) {
+        instr.hex = (*program_code)[program_counter];
+    } else {
+        instr.opcode.Assign(OpCode::Id::END);
+    }
+    ++program_counter;
 
     const OpCode::Id opcode = instr.opcode.Value();
     const auto instr_func = instr_table[static_cast<std::size_t>(opcode)];
@@ -922,7 +960,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     swizzle_data = swizzle_data_;
 
     // Reset flow control state
-    program = xptr<CompiledShader*>();
+    const std::uintptr_t program_offset = offset();
     program_counter = 0;
     loop_depth = 0;
     instruction_labels.fill(Label());
@@ -958,54 +996,66 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     // Compile entire program
     Compile_Block(static_cast<u32>(program_code->size()));
 
+    // Compile utility functions
+    if (log2_used) {
+        Compile_Log2(log2_subroutine);
+    }
+    if (exp2_used) {
+        Compile_Exp2(exp2_subroutine);
+    }
+
     // Free memory that's no longer needed
     program_code = nullptr;
     swizzle_data = nullptr;
     return_offsets.clear();
     return_offsets.shrink_to_fit();
 
+    // Copy to executable memory
+    const size_t code_size = code_vec.size() * sizeof(u32);
+
+    code_mem = std::make_unique<oaknut::CodeBlock>(code_size);
+    code_mem->unprotect();
+
+    program = reinterpret_cast<CompiledShader*>(reinterpret_cast<std::byte*>(code_mem->ptr()) +
+                                                program_offset);
+
+    // Copy to executable memory
+    std::memcpy(code_mem->ptr(), code_vec.data(), code_vec.size() * sizeof(u32));
+
     // Memory is ready to execute
-    protect();
-    invalidate_all();
+    code_mem->protect();
+    code_mem->invalidate_all();
 
-    const std::size_t code_size = static_cast<std::size_t>(offset());
-
-    ASSERT_MSG(code_size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
-    LOG_DEBUG(HW_GPU, "Compiled shader size={}", code_size);
+    // code_vec is no longer needed
+    code_vec.clear();
+    code_vec.shrink_to_fit();
 }
 
-JitShader::JitShader() : CodeBlock(MAX_SHADER_SIZE), CodeGenerator(CodeBlock::ptr()) {
-    unprotect();
-    CompilePrelude();
-}
+JitShader::JitShader() : oaknut::VectorCodeGenerator(code_vec) {}
 
-void JitShader::CompilePrelude() {
-    log2_subroutine = CompilePrelude_Log2();
-    exp2_subroutine = CompilePrelude_Exp2();
-}
-
-Label JitShader::CompilePrelude_Log2() {
-    Label subroutine;
-
+void JitShader::Compile_Log2(Label subroutine) {
     // We perform this approximation by first performing a range reduction into the range
     // [1.0, 2.0). A minimax polynomial which was fit for the function log2(x) / (x - 1) is then
     // evaluated. We multiply the result by (x - 1) then restore the result into the appropriate
     // range. Coefficients for the minimax polynomial.
     // f(x) computes approximately log2(x) / (x - 1).
     // f(x) = c4 + x * (c3 + x * (c2 + x * (c1 + x * c0)).
-    align(16);
-    const void* c0 = xptr<const void*>();
+    oaknut::Label c0;
+    // align(16);
+    l(c0);
     dw(0x3d74552f);
 
-    align(16);
-    const void* c14 = xptr<const void*>();
+    // align(16);
+    oaknut::Label c14;
+    l(c14);
     dw(0xbeee7397);
     dw(0x3fbd96dd);
     dw(0xc02153f6);
     dw(0x4038d96c);
 
-    align(16);
-    const void* negative_infinity_vector = xptr<const void*>();
+    // align(16);
+    oaknut::Label negative_infinity_vector;
+    l(negative_infinity_vector);
     dw(0xff800000);
     dw(0xff800000);
     dw(0xff800000);
@@ -1018,19 +1068,19 @@ Label JitShader::CompilePrelude_Log2() {
 
     Label input_is_nan, input_is_zero, input_out_of_range;
 
-    align(16);
+    // align(16);
     l(input_out_of_range);
     B(Cond::EQ, input_is_zero);
-    MOVP2R(XSCRATCH0, default_qnan_vector);
+    ADR(XSCRATCH0, default_qnan_vector);
     LDR(SRC1, XSCRATCH0);
     RET();
 
     l(input_is_zero);
-    MOVP2R(XSCRATCH0, negative_infinity_vector);
+    ADR(XSCRATCH0, negative_infinity_vector);
     LDR(SRC1, XSCRATCH0);
     RET();
 
-    align(16);
+    // align(16);
     l(subroutine);
 
     // Here we handle edge cases: input in {NaN, 0, -Inf, Negative}.
@@ -1058,14 +1108,14 @@ Label JitShader::CompilePrelude_Log2() {
     UCVTF(VSCRATCH1.toS(), VSCRATCH1.toS());
     // VSCRATCH1 now contains the exponent of the input.
 
-    MOVP2R(XSCRATCH0, c0);
+    ADR(XSCRATCH0, c0);
     LDR(XSCRATCH0.toW(), XSCRATCH0);
     MOV(VSCRATCH0.Selem()[0], XSCRATCH0.toW());
 
     // Complete computation of polynomial
     // Load C1,C2,C3,C4 into a single scratch register
     const QReg C14 = SRC2;
-    MOVP2R(XSCRATCH0, c14);
+    ADR(XSCRATCH0, c14);
     LDR(C14, XSCRATCH0);
     FMUL(VSCRATCH0.toS(), VSCRATCH0.toS(), SRC1.toS());
     FMLA(VSCRATCH0.toS(), ONE.toS(), C14.Selem()[0]);
@@ -1087,38 +1137,42 @@ Label JitShader::CompilePrelude_Log2() {
     DUP(SRC1.S4(), SRC1.Selem()[0]);
 
     RET();
-
-    return subroutine;
 }
 
-Label JitShader::CompilePrelude_Exp2() {
-    Label subroutine;
-
+void JitShader::Compile_Exp2(Label subroutine) {
     // This approximation first performs a range reduction into the range [-0.5, 0.5). A minmax
     // polynomial which was fit for the function exp2(x) is then evaluated. We then restore the
     // result into the appropriate range.
 
-    align(16);
-    const void* input_max = xptr<const void*>();
+    // align(16);
+    Label input_max;
+    l(input_max);
     dw(0x43010000);
-    const void* input_min = xptr<const void*>();
+    Label input_min;
+    l(input_min);
     dw(0xc2fdffff);
-    const void* c0 = xptr<const void*>();
+    Label c0;
+    l(c0);
     dw(0x3c5dbe69);
-    const void* half = xptr<const void*>();
+    Label half;
+    l(half);
     dw(0x3f000000);
-    const void* c1 = xptr<const void*>();
+    Label c1;
+    l(c1);
     dw(0x3d5509f9);
-    const void* c2 = xptr<const void*>();
+    Label c2;
+    l(c2);
     dw(0x3e773cc5);
-    const void* c3 = xptr<const void*>();
+    Label c3;
+    l(c3);
     dw(0x3f3168b3);
-    const void* c4 = xptr<const void*>();
+    Label c4;
+    l(c4);
     dw(0x3f800016);
 
     Label ret_label;
 
-    align(16);
+    // align(16);
     l(subroutine);
 
     // Handle edge cases
@@ -1129,15 +1183,15 @@ Label JitShader::CompilePrelude_Exp2() {
     // VSCRATCH0=2^round(input)
     // SRC1=input-round(input) [-0.5, 0.5)
     // Clamp to maximum range since we shift the value directly into the exponent.
-    MOVP2R(XSCRATCH0, input_max);
+    ADR(XSCRATCH0, input_max);
     LDR(VSCRATCH0.toS(), XSCRATCH0);
     FMIN(SRC1.toS(), SRC1.toS(), VSCRATCH0.toS());
 
-    MOVP2R(XSCRATCH0, input_min);
+    ADR(XSCRATCH0, input_min);
     LDR(VSCRATCH0.toS(), XSCRATCH0);
     FMAX(SRC1.toS(), SRC1.toS(), VSCRATCH0.toS());
 
-    MOVP2R(XSCRATCH0, half);
+    ADR(XSCRATCH0, half);
     LDR(VSCRATCH0.toS(), XSCRATCH0);
     FSUB(VSCRATCH0.toS(), SRC1.toS(), VSCRATCH0.toS());
 
@@ -1184,8 +1238,6 @@ Label JitShader::CompilePrelude_Exp2() {
     DUP(SRC1.S4(), SRC1.Selem()[0]);
 
     RET();
-
-    return subroutine;
 }
 
 } // namespace Pica::Shader

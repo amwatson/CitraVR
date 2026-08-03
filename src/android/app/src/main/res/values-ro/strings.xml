@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <string name="swap_buttons_b_y">Schimbă butoanele B și Y între ele</string>
+    <string name="swap_buttons_b_y_description">Apăsarea butonului B activează Y și invers. Se aplică gamepadurilor și controlerelor tactile VR fără a modifica maparea butoanelor de mai sus.</string>
+    <string name="update_install">Instalează</string>
+    <string name="update_installing">Se actualizează la %1$s</string>
+    <string name="update_downloading">Se descarcă actualizarea…</string>
+    <string name="update_permission_needed">CitraVR are nevoie de permisiune pentru a instala actualizări. Atinge Acordă permisiunea, apoi permite „Instalarea aplicațiilor necunoscute” pentru CitraVR.</string>
+    <string name="update_grant_permission">Acordă permisiunea</string>
+    <string name="update_download_failed">Actualizarea nu a putut fi descărcată. O poți descărca manual de pe pagina de lansări.</string>
+    <string name="update_would_downgrade">Versiunea instalată este mai nouă decât această lansare, deci nu poate fi instalată peste ea.</string>
+    <string name="update_install_failed">Actualizarea nu a putut fi instalată.</string>
+    <string name="update_open_release_page">Pagina de lansări</string>
+</resources>

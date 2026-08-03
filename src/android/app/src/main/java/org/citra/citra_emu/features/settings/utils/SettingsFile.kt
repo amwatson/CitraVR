@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,11 +7,17 @@ package org.citra.citra_emu.features.settings.utils
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import java.io.BufferedReader
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.TreeMap
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.SettingSection
@@ -22,12 +28,6 @@ import org.citra.citra_emu.utils.BiMap
 import org.citra.citra_emu.utils.DirectoryInitialization.userDirectory
 import org.citra.citra_emu.utils.Log
 import org.ini4j.Wini
-import java.io.BufferedReader
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStreamReader
-import java.util.TreeMap
-
 
 /**
  * Contains static methods for interacting with .ini.vr files in which settings are stored.
@@ -89,9 +89,8 @@ object SettingsFile {
         return sections
     }
 
-    fun readFile(fileName: String, view: SettingsActivityView?): HashMap<String, SettingSection?> {
-        return readFile(getSettingsFile(fileName), false, view)
-    }
+    fun readFile(fileName: String, view: SettingsActivityView?): HashMap<String, SettingSection?> =
+        readFile(getSettingsFile(fileName), false, view)
 
     fun readFile(fileName: String): HashMap<String, SettingSection?> = readFile(fileName, null)
 
@@ -106,9 +105,7 @@ object SettingsFile {
     fun readCustomGameSettings(
         gameId: String,
         view: SettingsActivityView?
-    ): HashMap<String, SettingSection?> {
-        return readFile(getCustomGameSettingsFile(gameId), true, view)
-    }
+    ): HashMap<String, SettingSection?> = readFile(getCustomGameSettingsFile(gameId), true, view)
 
     /**
      * Saves a Settings HashMap to a given .ini.vr file on disk. If unsuccessful, outputs an error
@@ -142,15 +139,13 @@ object SettingsFile {
             Log.error("[SettingsFile] File not found: $fileName.ini.vr: ${e.message}")
             view.showToastMessage(
                 CitraApplication.appContext
-                    .getString(R.string.error_saving, fileName, e.message), false
+                    .getString(R.string.error_saving, fileName, e.message),
+                false
             )
         }
     }
 
-    fun saveFile(
-        fileName: String,
-        setting: AbstractSetting
-    ) {
+    fun saveFile(fileName: String, setting: AbstractSetting) {
         val ini = getSettingsFile(fileName)
         try {
             val context: Context = CitraApplication.appContext
@@ -167,21 +162,19 @@ object SettingsFile {
         }
     }
 
-    private fun mapSectionNameFromIni(generalSectionName: String): String? {
-        return if (sectionsMap.getForward(generalSectionName) != null) {
+    private fun mapSectionNameFromIni(generalSectionName: String): String? =
+        if (sectionsMap.getForward(generalSectionName) != null) {
             sectionsMap.getForward(generalSectionName)
         } else {
             generalSectionName
         }
-    }
 
-    private fun mapSectionNameToIni(generalSectionName: String): String {
-        return if (sectionsMap.getBackward(generalSectionName) != null) {
+    private fun mapSectionNameToIni(generalSectionName: String): String =
+        if (sectionsMap.getBackward(generalSectionName) != null) {
             sectionsMap.getBackward(generalSectionName).toString()
         } else {
             generalSectionName
         }
-    }
 
     fun getSettingsFile(fileName: String): DocumentFile {
        return getSettingsFile(fileName, "ini.vr")
@@ -264,6 +257,11 @@ object SettingsFile {
         if (stringSetting != null) {
             stringSetting.string = value
             return stringSetting
+        }
+
+        val intListSetting = IntListSetting.from(key)
+        if (intListSetting != null) {
+            intListSetting.list = value.split(", ").map { it.toInt() }
         }
 
         return null

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,8 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import androidx.preference.PreferenceManager
+import android.os.Build
+import android.provider.DocumentsContract
+import androidx.activity.result.ActivityResultLauncher
 import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 
 object PermissionsHandler {
@@ -34,7 +37,11 @@ object PermissionsHandler {
 
             context.contentResolver.releasePersistableUriPermission(uri, takeFlags)
         } catch (e: Exception) {
-            Log.error("[PermissionsHandler]: Cannot check citra data directory permission, error: " + e.message)
+            // Do not use native library logging, as the native library may not be loaded yet
+            android.util.Log.e(
+                "PermissionsHandler",
+                "Cannot check citra data directory permission, error: ${e.message}"
+            )
         }
         return false
     }
@@ -47,4 +54,16 @@ object PermissionsHandler {
 
     fun setCitraDirectory(uriString: String?) =
         preferences.edit().putString(CITRA_DIRECTORY, uriString).apply()
+
+    fun compatibleSelectDirectory(activityLauncher: ActivityResultLauncher<Uri?>) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activityLauncher.launch(null)
+        } else {
+            val initialUri = DocumentsContract.buildRootUri(
+                "com.android.externalstorage.documents",
+                "primary"
+            )
+            activityLauncher.launch(initialUri)
+        }
+    }
 }

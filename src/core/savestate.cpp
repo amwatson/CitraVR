@@ -1,11 +1,11 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <chrono>
 #include <sstream>
 #include <cryptopp/hex.h>
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -13,6 +13,7 @@
 #include "common/swap.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
+#include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/savestate.h"
 #include "core/savestate_data.h"
@@ -89,7 +90,7 @@ static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 
 std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id) {
     std::vector<SaveStateInfo> result;
     result.reserve(SaveStateSlotCount);
-    for (u32 slot = 1; slot <= SaveStateSlotCount; ++slot) {
+    for (u32 slot = 0; slot <= SaveStateSlotCount; ++slot) {
         const auto path = GetSaveStatePath(program_id, movie_id, slot);
         if (!FileUtil::Exists(path)) {
             continue;
@@ -122,6 +123,12 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id) {
 }
 
 void System::SaveState(u32 slot) const {
+    if (app_loader) {
+        if (!app_loader->SupportsSaveStates()) {
+            throw std::runtime_error("The current app loader doesn't support save states");
+        }
+    }
+
     std::ostringstream sstream{std::ios_base::binary};
     // Serialize
     oarchive oa{sstream};
@@ -164,6 +171,11 @@ void System::SaveState(u32 slot) const {
 }
 
 void System::LoadState(u32 slot) {
+    if (app_loader) {
+        if (!app_loader->SupportsSaveStates()) {
+            throw std::runtime_error("The current app loader doesn't support save states");
+        }
+    }
     if (Network::GetRoomMember().lock()->IsConnected()) {
         throw std::runtime_error("Unable to load while connected to multiplayer");
     }
@@ -203,6 +215,79 @@ void System::LoadState(u32 slot) {
     // Deserialize
     iarchive ia{sstream};
     ia&* this;
+}
+
+std::vector<u8> System::SaveStateBuffer() const {
+    std::ostringstream sstream{std::ios_base::binary};
+    // Serialize
+    oarchive oa{sstream};
+    oa&* this;
+
+    const std::string& str{sstream.str()};
+    const auto data = std::span<const u8>{reinterpret_cast<const u8*>(str.data()), str.size()};
+    auto buffer = Common::Compression::CompressDataZSTDDefault(data);
+
+    CSTHeader header{};
+    header.filetype = header_magic_bytes;
+    header.program_id = title_id;
+    std::string rev_bytes;
+    CryptoPP::StringSource ss(Common::g_scm_rev, true,
+                              new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
+    std::memcpy(header.revision.data(), rev_bytes.data(), sizeof(header.revision));
+    header.time = std::chrono::duration_cast<std::chrono::seconds>(
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count();
+    const std::string build_fullname = Common::g_build_fullname;
+    std::memset(header.build_name.data(), 0, sizeof(header.build_name));
+    std::memcpy(header.build_name.data(), build_fullname.c_str(),
+                std::min(build_fullname.length(), sizeof(header.build_name) - 1));
+
+    std::vector<u8> result((u8*)&header, (u8*)&header + sizeof(header));
+    std::copy(buffer.begin(), buffer.end(), std::back_inserter(result));
+
+    return result;
+}
+
+bool System::LoadStateBuffer(std::vector<u8> buffer) {
+    CSTHeader header;
+
+    if (buffer.size() < sizeof(header)) {
+        LOG_ERROR(Core, "Save state too small");
+        return false;
+    }
+
+    header = *((CSTHeader*)buffer.data());
+
+    if (header.filetype != header_magic_bytes) {
+        LOG_ERROR(Core, "Invalid save state");
+        return false;
+    }
+
+    if (header.program_id != title_id) {
+        LOG_ERROR(Core, "Save state isn't for the current game");
+        return false;
+    }
+    std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
+    if (revision != Common::g_scm_rev) {
+        LOG_ERROR(Core,
+                  "Save state file created from a different revision (core: {}, savestate: {})",
+                  Common::g_scm_rev, revision);
+        return false;
+    }
+
+    std::vector<u8> state(buffer.begin() + sizeof(CSTHeader), buffer.end());
+    auto decompressed = Common::Compression::DecompressDataZSTD(state);
+
+    std::istringstream sstream{
+        std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
+        std::ios_base::binary};
+    decompressed.clear();
+
+    // Deserialize
+    iarchive ia{sstream};
+    ia&* this;
+
+    return true;
 }
 
 } // namespace Core

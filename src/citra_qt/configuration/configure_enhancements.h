@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -39,11 +39,11 @@ private:
 
     std::unique_ptr<Ui::ConfigureEnhancements> ui;
     ConfigurationShared::CheckState linear_filter;
-    ConfigurationShared::CheckState swap_screen;
-    ConfigurationShared::CheckState upright_screen;
+    ConfigurationShared::CheckState use_integer_scaling;
     ConfigurationShared::CheckState dump_textures;
     ConfigurationShared::CheckState custom_textures;
     ConfigurationShared::CheckState preload_textures;
     ConfigurationShared::CheckState async_custom_loading;
+    ConfigurationShared::CheckState disable_right_eye_render;
     QColor bg_color;
 };

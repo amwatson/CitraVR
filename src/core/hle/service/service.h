@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -81,6 +82,7 @@ private:
 
     struct FunctionInfoBase {
         u32 command_id;
+        bool implemented;
         HandlerFnP<ServiceFrameworkBase> handler_callback;
         const char* name;
     };
@@ -94,6 +96,8 @@ private:
 
     void RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n);
     void ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info);
+
+    void Empty(Kernel::HLERequestContext& ctx) {}
 
     /// Identifier string used to connect to the service.
     std::string service_name;
@@ -133,9 +137,11 @@ protected:
          */
         constexpr FunctionInfo(u32 command_id, HandlerFnP<Self> handler_callback, const char* name)
             : FunctionInfoBase{
-                  command_id,
+                  command_id, handler_callback != nullptr,
                   // Type-erase member function pointer by casting it down to the base class.
-                  static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback), name} {}
+                  handler_callback ? static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback)
+                                   : &ServiceFrameworkBase::Empty,
+                  name} {}
     };
 
     /**
@@ -183,12 +189,13 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system);
+void Init(Core::System& system, u64 loading_titleid, std::vector<u64>& lle_modules, bool allow_lle);
 
 struct ServiceModuleInfo {
     std::string name;
     u64 title_id;
     std::function<void(Core::System&)> init_function;
+    bool is_online_recommended;
 };
 
 extern const std::array<ServiceModuleInfo, 41> service_module_map;
@@ -218,6 +225,7 @@ extern const std::array<ServiceModuleInfo, 41> service_module_map;
 #define SERVICE_SERIALIZATION_SIMPLE                                                               \
     template <class Archive>                                                                       \
     void serialize(Archive& ar, const unsigned int) {                                              \
+        DEBUG_SERIALIZATION_POINT;                                                                 \
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
     }                                                                                              \
     friend class boost::serialization::access;

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,9 +21,10 @@ object StillImageCameraHelper {
     private var filePickerPath: String? = null
 
     // Opens file picker for camera.
+    @Suppress("unused")
     @Keep
     @JvmStatic
-    fun OpenFilePicker(): String? {
+    fun openFilePicker(): String? {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
 
         // At this point, we are assuming that we already have permissions as they are
@@ -44,19 +45,21 @@ object StillImageCameraHelper {
 
     // Called from EmulationActivity.
     @JvmStatic
-    fun OnFilePickerResult(result: String) {
+    fun onFilePickerResult(result: String) {
         filePickerPath = result
         synchronized(filePickerLock) { filePickerLock.notifyAll() }
     }
 
     // Blocking call. Load image from file and crop/resize it to fit in width x height.
+    @Suppress("unused")
     @Keep
     @JvmStatic
-    fun LoadImageFromFile(uri: String?, width: Int, height: Int): Bitmap? {
+    fun loadImageFromFile(uri: String?, width: Int, height: Int): Bitmap? {
         val context = CitraApplication.appContext
         val request = ImageRequest.Builder(context)
             .data(uri)
             .size(width, height)
+            .allowHardware(false)
             .build()
         return context.imageLoader.executeBlocking(request).drawable?.toBitmap(
             width,

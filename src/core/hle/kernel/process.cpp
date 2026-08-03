@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,9 @@
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -35,36 +38,36 @@ namespace Kernel {
 
 template <class Archive>
 void AddressMapping::serialize(Archive& ar, const unsigned int) {
-    ar& address;
-    ar& size;
-    ar& read_only;
-    ar& unk_flag;
+    ar & address;
+    ar & size;
+    ar & read_only;
+    ar & unk_flag;
 }
 SERIALIZE_IMPL(AddressMapping)
 
 template <class Archive>
 void Process::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Object>(*this);
-    ar& handle_table;
-    ar& codeset; // TODO: Replace with apploader reference
-    ar& resource_limit;
-    ar& svc_access_mask;
-    ar& handle_table_size;
+    ar & handle_table;
+    ar & codeset; // TODO: Replace with apploader reference
+    ar & resource_limit;
+    ar & svc_access_mask;
+    ar & handle_table_size;
     ar&(boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<
                                                      AddressMapping, 8, 0, true>>&)address_mappings;
-    ar& flags.raw;
-    ar& no_thread_restrictions;
-    ar& kernel_version;
-    ar& ideal_processor;
-    ar& status;
-    ar& process_id;
-    ar& creation_time_ticks;
-    ar& vm_manager;
-    ar& memory_used;
-    ar& memory_region;
-    ar& holding_memory;
-    ar& holding_tls_memory;
-    ar& tls_slots;
+    ar & flags.raw;
+    ar & no_thread_restrictions;
+    ar & kernel_version;
+    ar & ideal_processor;
+    ar & status;
+    ar & process_id;
+    ar & creation_time_ticks;
+    ar & vm_manager;
+    ar & memory_used;
+    ar & memory_region;
+    ar & holding_memory;
+    ar & holding_tls_memory;
+    ar & tls_slots;
 }
 SERIALIZE_IMPL(Process)
 
@@ -83,19 +86,19 @@ CodeSet::~CodeSet() {}
 template <class Archive>
 void CodeSet::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Object>(*this);
-    ar& memory;
-    ar& segments;
-    ar& entrypoint;
-    ar& name;
-    ar& program_id;
+    ar & memory;
+    ar & segments;
+    ar & entrypoint;
+    ar & name;
+    ar & program_id;
 }
 SERIALIZE_IMPL(CodeSet)
 
 template <class Archive>
 void CodeSet::Segment::serialize(Archive& ar, const unsigned int) {
-    ar& offset;
-    ar& addr;
-    ar& size;
+    ar & offset;
+    ar & addr;
+    ar & size;
 }
 SERIALIZE_IMPL(CodeSet::Segment)
 
@@ -123,6 +126,8 @@ void KernelSystem::TerminateProcess(std::shared_ptr<Process> process) {
     for (u32 core = 0; core < Core::GetNumCores(); core++) {
         GetThreadManager(core).TerminateProcessThreads(process);
     }
+
+    RestoreMemoryState(process->codeset->program_id);
 
     process->Exit();
     std::erase(process_list, process);
@@ -210,10 +215,10 @@ void Process::Set3dsxKernelCaps() {
     };
 
     // Similar to Rosalina, we set kernel version to a recent one.
-    // This is 11.2.0, to be consistent with core/hle/kernel/config_mem.cpp
+    // This is 11.17.0, to be consistent with core/hle/kernel/config_mem.cpp
     // TODO: refactor kernel version out so it is configurable and consistent
     // among all relevant places.
-    kernel_version = 0x234;
+    kernel_version = 0x23a;
 }
 
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
@@ -258,9 +263,25 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     vm_manager.LogLayout(Common::Log::Level::Debug);
     Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
+
+    // Pause process at start if flag enabled and we are not a sysmodule
+    if (Core::System::GetInstance().GetDebugNextProcessFlag() &&
+        resource_limit->GetCategory() != Kernel::ResourceLimitCategory::Other) {
+#ifdef ENABLE_GDBSTUB
+        if (GDBStub::IsServerEnabled()) {
+            LOG_INFO(Loader, "Pausing process {} at start", process_id);
+            SetUnscheduleMode(Kernel::UnscheduleMode::GDB);
+        }
+#endif
+        Core::System::GetInstance().ClearDebugNextProcessFlag();
+    }
 }
 
 void Process::Exit() {
+#ifdef ENABLE_GDBSTUB
+    GDBStub::OnProcessExit(process_id);
+#endif
+
     auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
     if (plgldr) {
         plgldr->OnProcessExit(*this, kernel);
@@ -588,6 +609,43 @@ Result Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                                        MemoryState::Private, perms));
 
     return ResultSuccess;
+}
+
+std::vector<std::shared_ptr<Kernel::Thread>> Kernel::Process::GetThreadList() {
+    std::vector<std::shared_ptr<Kernel::Thread>> ret;
+    for (u32 core = 0; core < Core::GetNumCores(); core++) {
+        auto thread_list = kernel.GetThreadManager(core).GetThreadList();
+        for (auto& thread : thread_list) {
+            if (thread->owner_process.lock().get() == this) {
+                ret.push_back(thread);
+            }
+        }
+    }
+    return ret;
+}
+
+void Kernel::Process::ChangeUnscheduleMode(UnscheduleMode mode, std::vector<u32> thread_ids,
+                                           bool set) {
+    auto thread_list = GetThreadList();
+    bool needs_reschedule = false;
+    for (auto& t : thread_list) {
+
+        if (!thread_ids.empty()) {
+            u32 thread_id = t->thread_id;
+            if (std::find(thread_ids.begin(), thread_ids.end(), thread_id) == thread_ids.end()) {
+                continue;
+            }
+        }
+
+        needs_reschedule |= (set ? t->SetUnscheduleMode(mode) : t->ClearUnscheduleMode(mode));
+    }
+
+    if (needs_reschedule) {
+        for (u32 i = 0; i < Core::GetNumCores(); i++) {
+            Core::GetCore(i).PrepareReschedule();
+            kernel.GetThreadManager(i).Reschedule();
+        }
+    }
 }
 
 void Process::FreeAllMemory() {

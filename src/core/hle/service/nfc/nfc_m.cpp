@@ -47,8 +47,7 @@ NFC_M::NFC_M(std::shared_ptr<Module> nfc) : Module::Interface(std::move(nfc), "n
         {0x0404, &NFC_M::SetRegisterInfo, "SetRegisterInfo"},
         {0x0405, &NFC_M::DeleteRegisterInfo, "DeleteRegisterInfo"},
         {0x0406, &NFC_M::DeleteApplicationArea, "DeleteApplicationArea"},
-        {0x0407, &NFC_M::ExistsApplicationArea, "ExistsApplicationArea"}
-        // clang-format on
+        {0x0407, &NFC_M::ExistsApplicationArea, "ExistsApplicationArea"} // clang-format on
     };
     RegisterHandlers(functions);
 }

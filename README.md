@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://citra-emu.org/"><img src="assets/citravr_logo.png" alt="CitraVR" width="500"></a> (Beta)
+  <a href="https://github.com/amwatson/CitraVR"><img src="assets/citravr_logo.png" alt="CitraVR" width="500"></a> (Beta)
 </h1>
 
 <h4 align="center"> Play 3DS homebrew and personal game backups in 3D on the go with your Quest.
@@ -27,7 +27,9 @@ Specifically:
 - Creating a VR app to render 2D interactive windows without an engine
 - Using VR layers to get sharp, crisp text and visuals.
 
-A Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emulator](https://github.com/citra-emu/citra) Seemed like a great and fun way to demonstrate all these things at once.
+CitraVR began as a Quest-native (i.e. OpenXR, without a third-party game engine) port of the [Citra 3DS emulator](https://github.com/citra-emu/citra). It seemed like a great and fun way to demonstrate all these things at once.
+
+The original Citra project is now defunct. [Azahar](https://github.com/azahar-emu/azahar) was built on Citra's foundation and continues its development. CitraVR has since incorporated the changes from Azahar and now uses Azahar as its upstream emulator project.
 
 The project is still small, but I'm looking for ways to improve it as time goes on.
 
@@ -79,8 +81,6 @@ Otherwise, follow the instructions for <a href="#discord">Discord</a> and post i
 
 ## Support
 [Buy me a beer](https://www.buymeacoffee.com/fewerwrong)
-
-You can also [buy the original \(non-VR\) Citra project a beer](https://www.patreon.com/citraemu)
 
 ## License
 CitraVR is licensed under the GPLv3 (or any later version). Refer to the [LICENSE.txt](https://github.com/amwatson/CitraVR/blob/master/license.txt) file.

@@ -27,16 +27,16 @@ public:
         return "SDMCArchive: " + mount_point;
     }
 
-    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
-                                                     const Mode& mode) const override;
+    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode& mode,
+                                                     u32 attributes) override;
     Result DeleteFile(const Path& path) const override;
     Result RenameFile(const Path& src_path, const Path& dest_path) const override;
     Result DeleteDirectory(const Path& path) const override;
     Result DeleteDirectoryRecursively(const Path& path) const override;
-    Result CreateFile(const Path& path, u64 size) const override;
-    Result CreateDirectory(const Path& path) const override;
+    Result CreateFile(const Path& path, u64 size, u32 attributes) const override;
+    Result CreateDirectory(const Path& path, u32 attributes) const override;
     Result RenameDirectory(const Path& src_path, const Path& dest_path) const override;
-    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
+    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) override;
     u64 GetFreeBytes() const override;
 
 protected:
@@ -47,7 +47,7 @@ protected:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveBackend>(*this);
-        ar& mount_point;
+        ar & mount_point;
     }
     friend class boost::serialization::access;
 };
@@ -68,8 +68,8 @@ public:
     }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path, u64 program_id) override;
-    Result Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
-                  u64 program_id) override;
+    Result Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info, u64 program_id,
+                  u32 directory_buckets, u32 file_buckets) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
 private:
@@ -79,7 +79,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& sdmc_directory;
+        ar & sdmc_directory;
     }
     friend class boost::serialization::access;
 };

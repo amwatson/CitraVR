@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <string name="preferences_vr">VR</string>
+    <string name="vr_background">VR环境</string>
+    <string name="vr_error_two_instances_title">错误：检测到两个CitraVR实例</string>
+    <string name="vr_error_two_instances_message">检测到CitraVR的一个致命启动错误。这是一个已知问题。\n\n问题现已解决。请尝试重新启动游戏。</string>
+    <string name="vr_extra_performance_mode">VR额外性能模式</string>
+    <string name="vr_cpu_level">CPU级别</string>
+    <string name="vr_cpu_level_description">更高的级别可能会提高音频/仿真性能，但会更快耗尽电池</string>
+    <string name="vr_immersive_mode_title">【警告：图形错误】沉浸模式（实验性）</string>
+    <string name="vr_immersive_mode_description">将顶屏围绕一个圆柱体扩展，以实现沉浸式游戏体验</string>
+    <string name="vr_graphics_warning">危险：并非所有游戏/级别在沉浸模式下都表现良好。选择此选项时，出现大型视觉错误是常见的</string>
+    <string name="vr_graphics_warning_short">警告：这将在大多数内容中引起视觉错误</string>
+    <string name="vr_new_3ds_description">对于大多数标题应启用。禁用时，可提高特定标题的性能（例如：星际火狐64 3D）</string>
+    <string name="release_notes_title">发布说明</string>
+    <string name="vr_licenses_description">使Citra和CitraVR成为可能的项目</string>
+    <string name="game_compat_tooltip">游戏兼容性表</string>
+    <string name="vr_extra_performance_mode_description">覆盖其他设置的值以最小化开销并最大化性能。注意：启用此设置时，将忽略用户对以下设置的值：VR环境（始终选择空白），音频拉伸（禁用）</string>
+    <string name="vr_notice_title">注意:</string>
+    <string name="vr_notice_description">在你第一次玩游戏或关卡时，你可能会遇到短暂的暂停或音频卡顿。
+
+在着色器加载完成后，它们会被存储到设备上，从而避免了后续启动时的卡顿。</string>
+    <string name="vr_notice_description2">有些游戏很难运行良好。请务必查阅 CitraVR 游戏兼容性列表，了解哪些游戏性能最佳。</string>
+    <string name="vr_input_binding_subtitle">遇到问题了吗？按下“选择”和“开始”键来禁用游戏手柄凝视模式，然后再试一次。</string>
+    <string name="immersive_mode">沉浸模式</string>
+    <string name="vr_si_mode_register_offset_title">寄存器偏移</string>
+    <string name="vr_si_mode_register_offset_description">设置使用超级沉浸模式配置文件2时用于视图的寄存器偏移量-根据游戏而变化。</string>
+    <string name="vr_immersive_pos_game_scaler_title">位置运动因子倍增器</string>
+    <string name="vr_immersive_pos_game_scaler_description">调整左/右/上/下的运动对游戏摄像机的影响程度，某些游戏需要更大的值，因此这个设置会将位置运动因子乘以一个标量。</string>
+    <string name="vr_ribbon_menus_text_label">菜单:</string>
+    <string name="header_instructions_text">移动板块：</string>
+    <string name="vertical_header_text">垂直运动</string>
+    <string name="vertical_instruction_1_text">针对面板时按住食指扳机。</string>
+    <string name="vertical_instruction_2_text">滑动运动控制器向上或向下调整面板的垂直位置。</string>
+    <string name="depth_header_text">深度调整 </string>
+    <string name="depth_top_panel_instruction_text">(顶部面板) 将拇指杆向前移动，以延伸更深，或向后拉动以使其更加靠近。</string>
+    <string name="depth_lower_panel_instruction_text">(下部面板) 将拇指杆移动以调整面板角度朝向或远离您。</string>
+    <string name="horizontal_instruction_toggle_text">使用切换按钮来启用或禁用水平移动。</string>
+    <string name="horizontal_instruction_slide_text">带有水平移动功能时，滑动左右来调整水平位置。</string>
+    <string name="reset_button_text">重置</string>
+    <string name="reset_header_text">重置</string>
+    <string name="reset_instruction_text">按下这个按钮来重置位置。</string>
+    <string name="horizontal_header_text">水平移动</string>
+    <string name="toggle_off_text">关闭 (zh-CN)</string>
+    <string name="toggle_on_text">开启</string>
+    <string name="vr_stats_game_label">游戏</string>
+    <string name="vr_stats_game_frame_time_label">帧时间</string>
+    <string name="vr_stats_ms_unit">毫秒</string>
+    <string name="vr_stats_emulation_speed_label">模拟速度</string>
+    <string name="vr_stats_cpu_util_label">CPU 使用率</string>
+    <string name="vr_stats_gpu_util_label">GPU 使用率</string>
+    <string name="vr_stats_vr_app_label">VR 应用程序</string>
+    <string name="vr_stats_gpu_frame_time_label">GPU 帧时长</string>
+    <string name="vr_stats_cpu_frame_time_label">CPU 帧时间</string>
+    <string name="vr_stats_vr_compositor_label">VR 组合器</string>
+    <string name="vr_stats_comp_tear_count">撕裂计数（总计）</string>
+    <string name="vr_stats_build_version_label">应用程序版本</string>
+    <string name="vr_stats_input_latency_label">输入延迟</string>
+    <string name="swap_buttons_b_y">交換 B 與 Y 按鈕</string>
+    <string name="swap_buttons_b_y_description">按下 B 將觸發 Y，反之亦然。適用於遊戲手把與 VR 觸控控制器，不會變更上方的按鍵對應。</string>
+    <string name="update_install">安裝</string>
+    <string name="update_installing">正在更新到 %1$s</string>
+    <string name="update_downloading">正在下載更新…</string>
+    <string name="update_permission_needed">CitraVR 需要安裝更新的權限。請點選「授予權限」，然後為 CitraVR 允許「安裝未知的應用程式」。</string>
+    <string name="update_grant_permission">授予權限</string>
+    <string name="update_download_failed">無法下載更新。你可以從發布頁面手動下載。</string>
+    <string name="update_would_downgrade">已安裝的版本比此版本更新，因此無法覆蓋安裝。</string>
+    <string name="update_install_failed">無法安裝更新。</string>
+    <string name="update_open_release_page">發布頁面</string>
+</resources>

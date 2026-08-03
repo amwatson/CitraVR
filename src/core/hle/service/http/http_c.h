@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
+#include <boost/regex.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/string.hpp>
@@ -19,6 +20,7 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include <httplib.h>
 #include "common/thread.h"
+#include "common/web_util.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
@@ -48,12 +50,31 @@ enum class RequestMethod : u8 {
 constexpr u32 TotalRequestMethods = 8;
 
 enum class RequestState : u8 {
-    NotStarted = 0x1,             // Request has not started yet.
-    ConnectingToServer = 0x5,     // Request in progress, connecting to server.
-    SendingRequest = 0x6,         // Request in progress, sending HTTP request.
-    ReceivingResponse = 0x7,      // Request in progress, receiving HTTP response.
-    ReadyToDownloadContent = 0x8, // Ready to download the content.
-    TimedOut = 0xA,               // Request timed out?
+    /// Request has not started yet.
+    NotStarted = 0x1,
+
+    /// Request in progress, connecting to server.
+    ConnectingToServer = 0x5,
+
+    /// Request in progress, sending HTTP request.
+    /// HTTPC stays in this state when there is POST
+    /// data pending.
+    SendingRequest = 0x6,
+
+    // Request in progress, receiving HTTP response and headers.
+    ReceivingResponse = 0x7,
+
+    /// Request in progress, receiving HTTP body. The HTTP module may
+    /// get stuck in this state if the internal receive buffer gets full.
+    /// Once the user calls ReceiveData it will get unstuck.
+    ReceivingBody = 0x8,
+
+    /// Request is finished and all data has been received. HTTP transitions
+    /// to the Completed state shortly afterwards after some cleanup.
+    Received = 0x9,
+
+    /// Request is completed.
+    Completed = 0xA,
 };
 
 enum class PostDataEncoding : u8 {
@@ -72,13 +93,6 @@ enum class ClientCertID : u32 {
     Default = 0x40, // Default client cert
 };
 
-struct URLInfo {
-    bool is_https;
-    std::string host;
-    int port;
-    std::string path;
-};
-
 /// Represents a client certificate along with its private key, stored as a byte array of DER data.
 /// There can only be at most one client certificate context attached to an HTTP context at any
 /// given time.
@@ -93,11 +107,11 @@ struct ClientCertContext {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& handle;
-        ar& session_id;
-        ar& cert_id;
-        ar& certificate;
-        ar& private_key;
+        ar & handle;
+        ar & session_id;
+        ar & cert_id;
+        ar & certificate;
+        ar & private_key;
     }
     friend class boost::serialization::access;
 };
@@ -115,9 +129,9 @@ struct RootCertChain {
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& handle;
-            ar& session_id;
-            ar& certificate;
+            ar & handle;
+            ar & session_id;
+            ar & certificate;
         }
         friend class boost::serialization::access;
     };
@@ -130,9 +144,9 @@ struct RootCertChain {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& handle;
-        ar& session_id;
-        ar& certificates;
+        ar & handle;
+        ar & session_id;
+        ar & certificates;
     }
     friend class boost::serialization::access;
 };
@@ -141,6 +155,28 @@ struct ClCertAData {
     std::vector<u8> certificate;
     std::vector<u8> private_key;
     bool init = false;
+};
+
+class URLReplacer {
+private:
+    struct Rule {
+        boost::regex regex;
+
+        std::string pattern;
+        std::string replacement;
+    };
+
+    std::vector<Rule> rules;
+
+public:
+    URLReplacer();
+
+    bool HasRule(const std::string& pattern);
+    bool AddRule(const std::string& pattern, const std::string& replacement);
+    bool DeleteRule(const std::string& pattern);
+    std::string Apply(const std::string& url) const;
+
+    bool Save();
 };
 
 /// Represents an HTTP context.
@@ -161,10 +197,10 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& url;
-            ar& username;
-            ar& password;
-            ar& port;
+            ar & url;
+            ar & username;
+            ar & password;
+            ar & port;
         }
         friend class boost::serialization::access;
     };
@@ -176,22 +212,22 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& username;
-            ar& password;
+            ar & username;
+            ar & password;
         }
         friend class boost::serialization::access;
     };
 
     struct RequestHeader {
-        RequestHeader(std::string name, std::string value) : name(name), value(value){};
+        RequestHeader(std::string name, std::string value) : name(name), value(value) {};
         std::string name;
         std::string value;
 
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& name;
-            ar& value;
+            ar & name;
+            ar & value;
         }
         friend class boost::serialization::access;
     };
@@ -204,19 +240,19 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& options;
-            ar& client_cert_ctx;
-            ar& root_ca_chain;
+            ar & options;
+            ar & client_cert_ctx;
+            ar & root_ca_chain;
         }
         friend class boost::serialization::access;
     };
 
     struct Param {
         Param(const std::vector<u8>& value)
-            : name(value.begin(), value.end()), value(value.begin(), value.end()){};
-        Param(const std::string& name, const std::string& value) : name(name), value(value){};
+            : name(value.begin(), value.end()), value(value.begin(), value.end()) {};
+        Param(const std::string& name, const std::string& value) : name(name), value(value) {};
         Param(const std::string& name, const std::vector<u8>& value)
-            : name(name), value(value.begin(), value.end()), is_binary(true){};
+            : name(name), value(value.begin(), value.end()), is_binary(true) {};
         std::string name;
         std::string value;
         bool is_binary = false;
@@ -237,9 +273,9 @@ public:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
-            ar& name;
-            ar& value;
-            ar& is_binary;
+            ar & name;
+            ar & value;
+            ar & is_binary;
         }
         friend class boost::serialization::access;
     };
@@ -257,6 +293,9 @@ public:
     u32 socket_buffer_size;
     std::vector<RequestHeader> headers;
     const ClCertAData* clcert_data;
+    const URLReplacer* url_replacer;
+    bool post_data_added = false;
+    bool post_pending_request = false;
     Params post_data;
     std::string post_data_raw;
     PostDataEncoding post_data_encoding = PostDataEncoding::Auto;
@@ -277,9 +316,9 @@ public:
     void ParseAsciiPostData();
     std::string ParseMultipartFormData();
     void MakeRequest();
-    void MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestNonSSL(httplib::Request& request, const Common::URLInfo& url_info,
                            std::vector<Context::RequestHeader>& pending_headers);
-    void MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestSSL(httplib::Request& request, const Common::URLInfo& url_info,
                         std::vector<Context::RequestHeader>& pending_headers);
     bool ContentProvider(size_t offset, size_t length, httplib::DataSink& sink);
     bool ChunkedContentProvider(size_t offset, httplib::DataSink& sink);
@@ -308,11 +347,11 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
             *this);
-        ar& current_http_context;
-        ar& session_id;
-        ar& num_http_contexts;
-        ar& num_client_certs;
-        ar& initialized;
+        ar & current_http_context;
+        ar & session_id;
+        ar & num_http_contexts;
+        ar & num_client_certs;
+        ar & initialized;
     }
     friend class boost::serialization::access;
 };
@@ -682,6 +721,12 @@ private:
      */
     void GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx);
 
+    void GetResponseData(Kernel::HLERequestContext& ctx);
+
+    void GetResponseDataTimeout(Kernel::HLERequestContext& ctx);
+
+    void GetResponseDataImpl(Kernel::HLERequestContext& ctx, bool timeout);
+
     /**
      * GetResponseHeaderImpl:
      *  Implements GetResponseHeader and GetResponseHeaderTimeout service functions
@@ -839,6 +884,10 @@ private:
      */
     void Finalize(Kernel::HLERequestContext& ctx);
 
+    void RegisterURLReplacement(Kernel::HLERequestContext& ctx);
+
+    void UnregisterURLReplacement(Kernel::HLERequestContext& ctx);
+
     [[nodiscard]] SessionData* EnsureSessionInitialized(Kernel::HLERequestContext& ctx,
                                                         IPC::RequestParser rp);
 
@@ -873,19 +922,22 @@ private:
 
     ClCertAData ClCertA;
 
+    URLReplacer url_replacer;
+
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         // NOTE: Serialization of the HTTP service is on a 'best effort' basis.
         // There is a very good chance that saving/loading during a network connection will break,
         // regardless!
+        DEBUG_SERIALIZATION_POINT;
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& ClCertA.certificate;
-        ar& ClCertA.private_key;
-        ar& ClCertA.init;
-        ar& context_counter;
-        ar& client_certs_counter;
-        ar& client_certs;
+        ar & ClCertA.certificate;
+        ar & ClCertA.private_key;
+        ar & ClCertA.init;
+        ar & context_counter;
+        ar & client_certs_counter;
+        ar & client_certs;
         // NOTE: `contexts` is not serialized because it contains non-serializable data. (i.e.
         // handles to ongoing HTTP requests.) Serializing across HTTP contexts will break.
     }

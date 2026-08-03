@@ -1,9 +1,6 @@
 #!/bin/bash -ex
 
 export NDK_CCACHE=$(which ccache)
-[ "$GITHUB_REPOSITORY" = "citra-emu/citra-canary" ] &&
-   BUILD_FLAVOR=canary ||
-   BUILD_FLAVOR=nightly
 
 if [ ! -z "${ANDROID_KEYSTORE_B64}" ]; then
     export ANDROID_KEYSTORE_FILE="${GITHUB_WORKSPACE}/ks.jks"
@@ -12,8 +9,14 @@ fi
 
 cd src/android
 chmod +x ./gradlew
-./gradlew assemble${BUILD_FLAVOR}Release
-./gradlew bundle${BUILD_FLAVOR}Release
+
+if [[ "$TARGET" == "playtest" ]]; then
+    ./gradlew assemblePlaytest
+    ./gradlew bundlePlaytest
+else
+    ./gradlew assembleRelease
+    ./gradlew bundleRelease
+fi
 
 ccache -s -v
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,11 +25,13 @@ jmethodID GetOnCoreError();
 jmethodID GetDisplayAlertMsg();
 jmethodID GetDisplayAlertPrompt();
 jmethodID GetAlertPromptButton();
-jmethodID GetIsPortraitMode();
 jmethodID GetLandscapeScreenLayout();
+jmethodID GetPortraitScreenLayout();
 jmethodID GetExitEmulationActivity();
 jmethodID GetRequestCameraPermission();
 jmethodID GetRequestMicPermission();
+jmethodID GetAddNetPlayMessage();
+jmethodID ClearChat();
 
 jclass GetCheatClass();
 jfieldID GetCheatPointer();
@@ -39,6 +41,7 @@ jfieldID GetGameInfoPointer();
 
 jclass GetDiskCacheProgressClass();
 jmethodID GetDiskCacheLoadProgress();
+jmethodID GetCompressProgressMethod();
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage);
 
 jclass GetCiaInstallHelperClass();

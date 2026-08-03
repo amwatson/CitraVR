@@ -1,11 +1,10 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <glad/glad.h>
 #include "common/assert.h"
 #include "common/settings.h"
-#include "core/telemetry_session.h"
 #include "video_core/custom_textures/custom_format.h"
 #include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_vars.h"
@@ -70,12 +69,11 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
         level = Common::Log::Level::Debug;
         break;
     }
-
     LOG_GENERIC(Common::Log::Class::Render_OpenGL, level, "{} {} {}: {}", GetSource(source),
                 GetType(type), id, message);
 }
 
-Driver::Driver(Core::TelemetrySession& telemetry_session_) : telemetry_session{telemetry_session_} {
+Driver::Driver() {
     const bool enable_debug = Settings::values.renderer_debug.GetValue();
     if (enable_debug) {
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -135,12 +133,6 @@ void Driver::ReportDriverInfo() {
     LOG_INFO(Render_OpenGL, "GL_VERSION: {}", gl_version);
     LOG_INFO(Render_OpenGL, "GL_VENDOR: {}", gpu_vendor);
     LOG_INFO(Render_OpenGL, "GL_RENDERER: {}", gpu_model);
-
-    // Add the information to the telemetry system
-    constexpr auto user_system = Common::Telemetry::FieldType::UserSystem;
-    telemetry_session.AddField(user_system, "GPU_Vendor", std::string{gpu_vendor});
-    telemetry_session.AddField(user_system, "GPU_Model", std::string{gpu_model});
-    telemetry_session.AddField(user_system, "GPU_OpenGL_Version", std::string{gl_version});
 }
 
 void Driver::DeduceGLES() {
@@ -185,7 +177,7 @@ void Driver::CheckExtensionSupport() {
     nv_fragment_shader_interlock = GLAD_GL_NV_fragment_shader_interlock;
     intel_fragment_shader_ordering = GLAD_GL_INTEL_fragment_shader_ordering;
     blend_minmax_factor = GLAD_GL_AMD_blend_minmax_factor || GLAD_GL_NV_blend_minmax_factor;
-    is_suitable = GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_1;
+    is_suitable = GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_2;
 }
 
 void Driver::FindBugs() {
@@ -206,6 +198,15 @@ void Driver::FindBugs() {
 
     if (vendor == Vendor::Intel && !is_linux) {
         bugs |= DriverBug::BrokenClearTexture;
+    }
+
+    if (vendor == Vendor::ARM && gpu_model.find("Mali") != gpu_model.npos) {
+        constexpr GLint MIN_TEXTURE_BUFFER_SIZE = static_cast<GLint>((1 << 16));
+        GLint max_texel_buffer_size;
+        glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &max_texel_buffer_size);
+        if (max_texel_buffer_size == MIN_TEXTURE_BUFFER_SIZE) {
+            bugs |= DriverBug::SlowTextureBufferWithBigSize;
+        }
     }
 }
 

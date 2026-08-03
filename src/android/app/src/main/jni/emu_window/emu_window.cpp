@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <string>
 #include <android/native_window_jni.h>
+#include "common/android_utils.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "input_common/main.h"
@@ -16,25 +17,20 @@
 #include "network/network.h"
 #include "video_core/renderer_base.h"
 
-static bool IsPortraitMode() {
-    return JNI_FALSE != IDCache::GetEnvForThread()->CallStaticBooleanMethod(
-                            IDCache::GetNativeLibraryClass(), IDCache::GetIsPortraitMode());
-}
-
-static void UpdateLandscapeScreenLayout() {
-    Settings::values.layout_option =
-        static_cast<Settings::LayoutOption>(IDCache::GetEnvForThread()->CallStaticIntMethod(
-            IDCache::GetNativeLibraryClass(), IDCache::GetLandscapeScreenLayout()));
-}
-
-void EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
+bool EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
+    int temp_width = (surface == nullptr) ? 0 : ANativeWindow_getWidth(surface);
+    int temp_height = (surface == nullptr) ? 0 : ANativeWindow_getHeight(surface);
+    if (render_window == surface && temp_width == window_width && temp_height == window_height) {
+        return false;
+    }
+    window_width = temp_width;
+    window_height = temp_height;
     render_window = surface;
-
     window_info.type = Frontend::WindowSystemType::Android;
     window_info.render_surface = surface;
-
     StopPresenting();
     OnFramebufferSizeChanged();
+    return true;
 }
 
 bool EmuWindow_Android::OnTouchEvent(int x, int y, bool pressed) {
@@ -51,21 +47,13 @@ void EmuWindow_Android::OnTouchMoved(int x, int y) {
 }
 
 void EmuWindow_Android::OnFramebufferSizeChanged() {
-    UpdateLandscapeScreenLayout();
-    const bool is_portrait_mode{IsPortraitMode()};
-
-    const int bigger{window_width > window_height ? window_width : window_height};
-    const int smaller{window_width < window_height ? window_width : window_height};
-    if (is_portrait_mode) {
-        UpdateCurrentFramebufferLayout(smaller, bigger, is_portrait_mode);
-    } else {
-        UpdateCurrentFramebufferLayout(bigger, smaller, is_portrait_mode);
-    }
+    const bool is_portrait_mode = (AndroidUtils::IsPortraitMode() && !is_secondary);
+    UpdateCurrentFramebufferLayout(window_width, window_height, is_portrait_mode);
 }
 
-EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface) : host_window{surface} {
+EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
+    : EmuWindow{is_secondary}, host_window(surface) {
     LOG_DEBUG(Frontend, "Initializing EmuWindow_Android");
-
     if (!surface) {
         LOG_CRITICAL(Frontend, "surface is nullptr");
         return;
@@ -73,8 +61,6 @@ EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface) : host_window{surfa
 
     window_width = ANativeWindow_getWidth(surface);
     window_height = ANativeWindow_getHeight(surface);
-
-    Network::Init();
 }
 
 EmuWindow_Android::~EmuWindow_Android() {

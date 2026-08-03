@@ -1,15 +1,17 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <QMenu>
+#include <QPushButton>
 #include <QString>
 #include <QVector>
 #include <QWidget>
 #include "citra_qt/compatibility_list.h"
 #include "common/common_types.h"
+#include "common/play_time_manager.h"
 #include "uisettings.h"
 
 namespace Service::FS {
@@ -45,6 +47,11 @@ enum class GameListOpenTarget {
     SHADER_CACHE = 8
 };
 
+enum class GameListShortcutTarget {
+    Desktop,
+    Applications,
+};
+
 class GameList : public QWidget {
     Q_OBJECT
 
@@ -55,10 +62,11 @@ public:
         COLUMN_REGION,
         COLUMN_FILE_TYPE,
         COLUMN_SIZE,
+        COLUMN_PLAY_TIME,
         COLUMN_COUNT, // Number of columns
     };
 
-    explicit GameList(GMainWindow* parent = nullptr);
+    explicit GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* parent = nullptr);
     ~GameList() override;
 
     QString GetLastFilterResultItem() const;
@@ -80,20 +88,28 @@ public:
 
     void RefreshGameDirectory();
 
+    void ToggleFavorite(u64 program_id);
+    void AddFavorite(u64 program_id);
+    void RemoveFavorite(u64 program_id);
+
     static const QStringList supported_file_extensions;
 
 signals:
     void GameChosen(const QString& game_path);
     void ShouldCancelWorker();
     void OpenFolderRequested(u64 program_id, GameListOpenTarget target);
-    void NavigateToGamedbEntryRequested(u64 program_id,
-                                        const CompatibilityList& compatibility_list);
+    void CreateShortcut(u64 program_id, const std::string& game_path,
+                        GameListShortcutTarget target);
+    void RemovePlayTimeRequested(u64 program_id);
     void OpenPerGameGeneralRequested(const QString file);
     void DumpRomFSRequested(QString game_path, u64 program_id);
     void OpenDirectory(const QString& directory);
     void AddDirectory();
     void ShowList(bool show);
     void PopulatingCompleted();
+#ifdef ENABLE_DEVELOPER_OPTIONS
+    void StartingLaunchStressTest(const QString& game_path);
+#endif
 
 private slots:
     void OnItemExpanded(const QModelIndex& item);
@@ -110,9 +126,10 @@ private:
     void PopupContextMenu(const QPoint& menu_location);
     void PopupHeaderContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, const QString& path, const QString& name, u64 program_id,
-                      u64 extdata_id, Service::FS::MediaType media_type);
+                      u64 extdata_id, Service::FS::MediaType media_type, bool can_insert);
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
+    void AddFavoritesPopup(QMenu& context_menu);
     void UpdateColumnVisibility();
 
     QString FindGameByProgramID(QStandardItem* current_item, u64 program_id, int role);
@@ -130,9 +147,11 @@ private:
     CompatibilityList compatibility_list;
 
     friend class GameListSearchField;
-};
 
-Q_DECLARE_METATYPE(GameListOpenTarget);
+    const PlayTime::PlayTimeManager& play_time_manager;
+
+    std::chrono::time_point<std::chrono::steady_clock> time_last_refresh;
+};
 
 class GameListPlaceholder : public QWidget {
     Q_OBJECT

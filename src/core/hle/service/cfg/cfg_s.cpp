@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -20,7 +20,7 @@ CFG_S::CFG_S(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {0x0005, &CFG_S::GetSystemModel, "GetSystemModel"},
         {0x0006, &CFG_S::GetModelNintendo2DS, "GetModelNintendo2DS"},
         {0x0007, nullptr, "WriteToFirstByteCfgSavegame"},
-        {0x0008, nullptr, "TranslateCountryInfo"},
+        {0x0008, &CFG_S::TranslateCountryInfo, "TranslateCountryInfo"},
         {0x0009, &CFG_S::GetCountryCodeString, "GetCountryCodeString"},
         {0x000A, &CFG_S::GetCountryCodeID, "GetCountryCodeID"},
         {0x000B, nullptr, "IsFangateSupported"},
@@ -28,11 +28,11 @@ CFG_S::CFG_S(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {0x0401, &CFG_S::GetSystemConfig, "GetSystemConfig"},
         {0x0402, &CFG_S::SetSystemConfig, "SetSystemConfig"},
         {0x0403, &CFG_S::UpdateConfigNANDSavegame, "UpdateConfigNANDSavegame"},
-        {0x0404, nullptr, "GetLocalFriendCodeSeedData"},
-        {0x0405, nullptr, "GetLocalFriendCodeSeed"},
+        {0x0404, &CFG_S::GetLocalFriendCodeSeedData, "GetLocalFriendCodeSeedData"},
+        {0x0405, &CFG_S::GetLocalFriendCodeSeed, "GetLocalFriendCodeSeed"},
         {0x0406, &CFG_S::GetRegion, "GetRegion"},
         {0x0407, &CFG_S::SecureInfoGetByte101, "SecureInfoGetByte101"},
-        {0x0408, nullptr, "SecureInfoGetSerialNo"},
+        {0x0408, &CFG_S::SecureInfoGetSerialNo, "SecureInfoGetSerialNo"},
         {0x0409, nullptr, "UpdateConfigBlk00040003"},
         {0x040D, &CFG_S::SetUUIDClockSequence, "SetUUIDClockSequence"},
         {0x040E, &CFG_S::GetUUIDClockSequence, "GetUUIDClockSequence"},

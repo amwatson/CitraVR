@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,11 +12,13 @@
 #include "citra_qt/configuration/configure_general.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "citra_qt/configuration/configure_hotkeys.h"
+#include "citra_qt/configuration/configure_hotkeys_controller.h"
 #include "citra_qt/configuration/configure_input.h"
+#include "citra_qt/configuration/configure_layout.h"
+#include "citra_qt/configuration/configure_network.h"
 #include "citra_qt/configuration/configure_storage.h"
 #include "citra_qt/configuration/configure_system.h"
 #include "citra_qt/configuration/configure_ui.h"
-#include "citra_qt/configuration/configure_web.h"
 #include "citra_qt/hotkeys.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -29,11 +31,13 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
       system{system_}, is_powered_on{system.IsPoweredOn()},
       general_tab{std::make_unique<ConfigureGeneral>(this)},
       system_tab{std::make_unique<ConfigureSystem>(system, this)},
-      input_tab{std::make_unique<ConfigureInput>(this)},
+      input_tab{std::make_unique<ConfigureInput>(system, this)},
       hotkeys_tab{std::make_unique<ConfigureHotkeys>(this)},
+      hotkeys_controller_tab{std::make_unique<ConfigureControllerHotkeys>(this)},
       graphics_tab{
           std::make_unique<ConfigureGraphics>(gl_renderer, physical_devices, is_powered_on, this)},
       enhancements_tab{std::make_unique<ConfigureEnhancements>(this)},
+      layout_tab{std::make_unique<ConfigureLayout>(this)},
       audio_tab{std::make_unique<ConfigureAudio>(is_powered_on, this)},
       camera_tab{std::make_unique<ConfigureCamera>(this)},
       debug_tab{std::make_unique<ConfigureDebug>(is_powered_on, this)},
@@ -46,19 +50,20 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
     ui->tabWidget->addTab(general_tab.get(), tr("General"));
     ui->tabWidget->addTab(system_tab.get(), tr("System"));
     ui->tabWidget->addTab(input_tab.get(), tr("Input"));
-    ui->tabWidget->addTab(hotkeys_tab.get(), tr("Hotkeys"));
+    ui->tabWidget->addTab(hotkeys_controller_tab.get(), tr("Controller Hotkeys"));
+    ui->tabWidget->addTab(hotkeys_tab.get(), tr("Keyboard Hotkeys"));
     ui->tabWidget->addTab(graphics_tab.get(), tr("Graphics"));
     ui->tabWidget->addTab(enhancements_tab.get(), tr("Enhancements"));
+    ui->tabWidget->addTab(layout_tab.get(), tr("Layout"));
     ui->tabWidget->addTab(audio_tab.get(), tr("Audio"));
     ui->tabWidget->addTab(camera_tab.get(), tr("Camera"));
     ui->tabWidget->addTab(debug_tab.get(), tr("Debug"));
     ui->tabWidget->addTab(storage_tab.get(), tr("Storage"));
-    ui->tabWidget->addTab(web_tab.get(), tr("Web"));
+    ui->tabWidget->addTab(web_tab.get(), tr("Network"));
     ui->tabWidget->addTab(ui_tab.get(), tr("UI"));
 
     hotkeys_tab->Populate(registry);
-    web_tab->SetWebServiceConfigEnabled(enable_web_config);
-
+    hotkeys_controller_tab->Populate(registry);
     PopulateSelectionList();
 
     connect(ui_tab.get(), &ConfigureUi::LanguageChanged, this, &ConfigureDialog::OnLanguageChanged);
@@ -87,6 +92,7 @@ void ConfigureDialog::SetConfiguration() {
     input_tab->LoadConfiguration();
     graphics_tab->SetConfiguration();
     enhancements_tab->SetConfiguration();
+    layout_tab->SetConfiguration();
     audio_tab->SetConfiguration();
     camera_tab->SetConfiguration();
     debug_tab->SetConfiguration();
@@ -101,8 +107,10 @@ void ConfigureDialog::ApplyConfiguration() {
     input_tab->ApplyConfiguration();
     input_tab->ApplyProfile();
     hotkeys_tab->ApplyConfiguration(registry);
+    hotkeys_controller_tab->ApplyConfiguration(registry);
     graphics_tab->ApplyConfiguration();
     enhancements_tab->ApplyConfiguration();
+    layout_tab->ApplyConfiguration();
     audio_tab->ApplyConfiguration();
     camera_tab->ApplyConfiguration();
     debug_tab->ApplyConfiguration();
@@ -121,9 +129,9 @@ void ConfigureDialog::PopulateSelectionList() {
     const std::array<std::pair<QString, QList<QWidget*>>, 5> items{
         {{tr("General"), {general_tab.get(), web_tab.get(), debug_tab.get(), ui_tab.get()}},
          {tr("System"), {system_tab.get(), camera_tab.get(), storage_tab.get()}},
-         {tr("Graphics"), {enhancements_tab.get(), graphics_tab.get()}},
+         {tr("Graphics"), {enhancements_tab.get(), layout_tab.get(), graphics_tab.get()}},
          {tr("Audio"), {audio_tab.get()}},
-         {tr("Controls"), {input_tab.get(), hotkeys_tab.get()}}}};
+         {tr("Controls"), {input_tab.get(), hotkeys_controller_tab.get(), hotkeys_tab.get()}}}};
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
@@ -154,8 +162,10 @@ void ConfigureDialog::RetranslateUI() {
     system_tab->RetranslateUI();
     input_tab->RetranslateUI();
     hotkeys_tab->RetranslateUI();
+    hotkeys_controller_tab->RetranslateUI();
     graphics_tab->RetranslateUI();
     enhancements_tab->RetranslateUI();
+    layout_tab->RetranslateUI();
     audio_tab->RetranslateUI();
     camera_tab->RetranslateUI();
     debug_tab->RetranslateUI();
@@ -169,18 +179,21 @@ void ConfigureDialog::UpdateVisibleTabs() {
     if (items.isEmpty())
         return;
 
-    const std::map<QWidget*, QString> widgets = {{general_tab.get(), tr("General")},
-                                                 {system_tab.get(), tr("System")},
-                                                 {input_tab.get(), tr("Input")},
-                                                 {hotkeys_tab.get(), tr("Hotkeys")},
-                                                 {enhancements_tab.get(), tr("Enhancements")},
-                                                 {graphics_tab.get(), tr("Advanced")},
-                                                 {audio_tab.get(), tr("Audio")},
-                                                 {camera_tab.get(), tr("Camera")},
-                                                 {debug_tab.get(), tr("Debug")},
-                                                 {storage_tab.get(), tr("Storage")},
-                                                 {web_tab.get(), tr("Web")},
-                                                 {ui_tab.get(), tr("UI")}};
+    const std::map<QWidget*, QString> widgets = {
+        {general_tab.get(), tr("General")},
+        {system_tab.get(), tr("System")},
+        {input_tab.get(), tr("Input")},
+        {hotkeys_tab.get(), tr("Keyboard Hotkeys")},
+        {hotkeys_controller_tab.get(), tr("Controller Hotkeys")},
+        {enhancements_tab.get(), tr("Enhancements")},
+        {layout_tab.get(), tr("Layout")},
+        {graphics_tab.get(), tr("Advanced")},
+        {audio_tab.get(), tr("Audio")},
+        {camera_tab.get(), tr("Camera")},
+        {debug_tab.get(), tr("Debug")},
+        {storage_tab.get(), tr("Storage")},
+        {web_tab.get(), tr("Network")},
+        {ui_tab.get(), tr("UI")}};
 
     ui->tabWidget->clear();
 

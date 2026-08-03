@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,12 +14,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.divider.MaterialDividerItemDecoration
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
-class SettingsFragment : Fragment(), SettingsFragmentView {
+class SettingsFragment :
+    Fragment(),
+    SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
     private val fragmentPresenter = SettingsFragmentPresenter(this)
@@ -51,15 +52,9 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         settingsAdapter = SettingsAdapter(this, requireActivity())
-        val dividerDecoration = MaterialDividerItemDecoration(
-            requireContext(),
-            LinearLayoutManager.VERTICAL
-        )
-        dividerDecoration.isLastItemDecorated = false
         binding.listSettings.apply {
             adapter = settingsAdapter
             layoutManager = LinearLayoutManager(activity)
-            addItemDecoration(dividerDecoration)
         }
         fragmentPresenter.onViewCreated(settingsAdapter!!)
 
@@ -90,8 +85,8 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
         )
     }
 
-    override fun showToastMessage(message: String?, is_long: Boolean) {
-        activityView!!.showToastMessage(message!!, is_long)
+    override fun showToastMessage(message: String, isLong: Boolean) {
+        activityView!!.showToastMessage(message, isLong)
     }
 
     override fun putSetting(setting: AbstractSetting) {
@@ -104,10 +99,16 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
 
     private fun setInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(
-            binding.listSettings
-        ) { view: View, windowInsets: WindowInsetsCompat ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(bottom = insets.bottom)
+            binding.root
+        ) { _: View, windowInsets: WindowInsetsCompat ->
+            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+
+            binding.listSettings.updatePadding(
+                left = barInsets.left + cutoutInsets.left,
+                right = barInsets.right + cutoutInsets.right,
+                bottom = barInsets.bottom
+            )
             windowInsets
         }
     }

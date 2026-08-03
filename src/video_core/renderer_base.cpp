@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,7 +18,7 @@ RendererBase::RendererBase(Core::System& system_, Frontend::EmuWindow& window,
 RendererBase::~RendererBase() = default;
 
 u32 RendererBase::GetResolutionScaleFactor() {
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     if (graphics_api == Settings::GraphicsAPI::Software) {
         // Software renderer always render at native resolution
         return 1;
@@ -35,7 +35,7 @@ void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
         window.UpdateCurrentFramebufferLayout(layout.width, layout.height, is_portrait_mode);
     };
     update_layout(render_window);
-    if (secondary_window) {
+    if (secondary_window != nullptr) {
         update_layout(*secondary_window);
     }
 }
@@ -66,5 +66,4 @@ void RendererBase::RequestScreenshot(void* data, std::function<void(bool)> callb
     settings.screenshot_framebuffer_layout = layout;
     settings.screenshot_requested = true;
 }
-
 } // namespace VideoCore

@@ -32,6 +32,7 @@ License     :   Licensed under GPLv3 or any later version.
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <thread>
 #include <vector>
 
@@ -39,6 +40,7 @@ License     :   Licensed under GPLv3 or any later version.
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#include "common/stall_telemetry.h"
 #include "core/core.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -102,6 +104,12 @@ void ForwardButtonStateIfNeeded(JNIEnv* jni, jobject activityObject,
     }
 }
 
+// Whether the cursor is hovering over the settings menu panel. Set during the
+// cursor pass and consumed by input handling on the following frame: while
+// hovering, the pointing hand's thumbstick scrolls the settings list, so its
+// state must not also be forwarded to the game.
+bool sIsCursorHoveringSettingsMenu = false;
+
 void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
                               jmethodID                   sendClickToWindowMethodID,
                               const XrActionStateBoolean& triggerState,
@@ -143,6 +151,93 @@ void SendTriggerStateToWindow(JNIEnv* jni, jobject activityObject,
         default:
             return "Unknown";
     }
+}
+
+const char* XrPerfSettingsDomainToString(const XrPerfSettingsDomainEXT domain) {
+    switch (domain) {
+        case XR_PERF_SETTINGS_DOMAIN_CPU_EXT:
+            return "CPU";
+        case XR_PERF_SETTINGS_DOMAIN_GPU_EXT:
+            return "GPU";
+        default:
+            return "Unknown";
+    }
+}
+
+const char* XrPerfSettingsSubDomainToString(const XrPerfSettingsSubDomainEXT subDomain) {
+    switch (subDomain) {
+        case XR_PERF_SETTINGS_SUB_DOMAIN_COMPOSITING_EXT:
+            return "compositing";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_RENDERING_EXT:
+            return "rendering";
+        case XR_PERF_SETTINGS_SUB_DOMAIN_THERMAL_EXT:
+            return "thermal";
+        default:
+            return "unknown";
+    }
+}
+
+const char*
+XrPerfSettingsNotificationLevelToString(const XrPerfSettingsNotificationLevelEXT level) {
+    switch (level) {
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_NORMAL_EXT:
+            return "NORMAL";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_WARNING_EXT:
+            return "WARNING";
+        case XR_PERF_SETTINGS_NOTIF_LEVEL_IMPAIRED_EXT:
+            return "IMPAIRED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+// Logs a prominent, greppable marker plus a snapshot of the stall telemetry.
+// Triggered by the user clicking a thumbstick when they see a visible
+// stall/artifact, so log readers know where in the log to look.
+void LogUserStallMarker(const uint64_t frameIndex) {
+    auto&          telemetry = Common::StallTelemetry::Get();
+    const uint32_t markerIndex =
+        telemetry.user_marker_count.fetch_add(1, std::memory_order_relaxed) + 1;
+
+    ALOGW("==================== [USER-MARKER #{}] ====================", markerIndex);
+    ALOGW("[USER-MARKER #{}] VR frame {}: user flagged a visible stall/artifact here",
+          markerIndex, frameIndex);
+
+    const uint32_t compiles = telemetry.shader_compile_count.load(std::memory_order_relaxed);
+    const double   compileTimeMs =
+        telemetry.shader_compile_time_us.load(std::memory_order_relaxed) / 1000.0;
+    const int64_t lastCompileUs =
+        telemetry.last_shader_compile_steady_us.load(std::memory_order_relaxed);
+    if (lastCompileUs > 0) {
+        ALOGW("[USER-MARKER #{}] shaders: {} draw-time compiles ({:.1f} ms total), last one "
+              "{:.1f} s ago",
+              markerIndex, compiles, compileTimeMs,
+              (Common::SteadyNowUs() - lastCompileUs) / 1e6);
+    } else {
+        ALOGW("[USER-MARKER #{}] shaders: no draw-time compiles yet", markerIndex);
+    }
+
+    ALOGW("[USER-MARKER #{}] emu: slowFrames={} stallFrames={} worstFrame={:.1f} ms",
+          markerIndex, telemetry.emu_slow_frame_count.load(std::memory_order_relaxed),
+          telemetry.emu_stall_frame_count.load(std::memory_order_relaxed),
+          telemetry.emu_worst_frame_time_us.load(std::memory_order_relaxed) / 1000.0);
+
+    ALOGW("[USER-MARKER #{}] vr: missedFrames={} worstFrameGap={:.1f} ms worstWaitFrame={:.1f} ms",
+          markerIndex, telemetry.vr_missed_frame_count.load(std::memory_order_relaxed),
+          telemetry.vr_worst_frame_gap_us.load(std::memory_order_relaxed) / 1000.0,
+          telemetry.vr_worst_wait_frame_us.load(std::memory_order_relaxed) / 1000.0);
+
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn() && system.perf_stats != nullptr) {
+        const auto stats = system.perf_stats->GetLastStats();
+        ALOGW("[USER-MARKER #{}] game (last interval): fps={:.1f} speed={:.0f}% frame={:.1f} ms "
+              "(svc={:.1f} ipc={:.1f} gpu={:.1f} swap={:.1f} other={:.1f} ms) peak={:.1f} ms",
+              markerIndex, stats.game_fps, stats.emulation_speed * 100.0,
+              stats.time_vblank_interval * 1000.0, stats.time_hle_svc * 1000.0,
+              stats.time_hle_ipc * 1000.0, stats.time_gpu * 1000.0, stats.time_swap * 1000.0,
+              stats.time_remaining * 1000.0, stats.frametime_peak * 1000.0);
+    }
+    ALOGW("============================================================");
 }
 
 uint32_t GetDefaultGameResolutionFactorForHmd(const VRSettings::HMDType& hmdType) {
@@ -368,6 +463,8 @@ private:
 
     void Frame(JNIEnv* jni, const AppState& appState) {
 
+        const auto frameLoopStart = std::chrono::steady_clock::now();
+
         ////////////////////////////////
         // XrWaitFrame()
         ////////////////////////////////
@@ -379,6 +476,8 @@ private:
             XrFrameWaitInfo wfi = {XR_TYPE_FRAME_WAIT_INFO, nullptr};
             OXR(xrWaitFrame(gOpenXr->mSession, &wfi, &frameState));
         }
+
+        const auto waitFrameEnd = std::chrono::steady_clock::now();
 
         ////////////////////////////////
         // XrBeginFrame()
@@ -490,10 +589,69 @@ private:
                                              static_cast<uint32_t>(layerHeaders.size()),
                                              layerHeaders.data()};
         OXR(xrEndFrame(gOpenXr->mSession, &endFrameInfo));
+
+        TrackVrFramePacing(frameState, frameLoopStart, waitFrameEnd,
+                           std::chrono::steady_clock::now());
+    }
+
+    // Detects VR frames that missed the compositor deadline. The gap between
+    // successive xrEndFrame completions also covers the event/input/JNI work
+    // done in MainLoop before Frame(), so stalls anywhere on this thread are
+    // caught. xrWaitFrame blocking is normal pacing; a long *gap* with a short
+    // wait means this thread (or the JNI calls it makes) was slow, while a
+    // long wait means the runtime throttled us (e.g. GPU running behind).
+    void TrackVrFramePacing(const XrFrameState&                         frameState,
+                            const std::chrono::steady_clock::time_point frameLoopStart,
+                            const std::chrono::steady_clock::time_point waitFrameEnd,
+                            const std::chrono::steady_clock::time_point frameEnd) {
+        using FloatMs = std::chrono::duration<double, std::milli>;
+        auto&      telemetry = Common::StallTelemetry::Get();
+        const auto ToUs      = [](const auto duration) -> uint64_t {
+            return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+        };
+
+        const auto waitDuration = waitFrameEnd - frameLoopStart;
+        Common::UpdateMax(telemetry.vr_worst_wait_frame_us, ToUs(waitDuration));
+
+        const bool hasPreviousFrame =
+            mLastFrameEnd.time_since_epoch().count() != 0 && mFrameIndex > 1;
+        if (hasPreviousFrame && frameState.predictedDisplayPeriod > 0) {
+            const auto   gap      = frameEnd - mLastFrameEnd;
+            const double gapMs    = FloatMs(gap).count();
+            const double periodMs = static_cast<double>(frameState.predictedDisplayPeriod) / 1e6;
+            // Gaps over a second are session-lifecycle discontinuities
+            // (pause/resume), not stalls; don't let them poison the stats.
+            if (gapMs < 1000.0) {
+                Common::UpdateMax(telemetry.vr_worst_frame_gap_us, ToUs(gap));
+                if (gapMs > periodMs * 1.5) {
+                    telemetry.vr_missed_frame_count.fetch_add(1, std::memory_order_relaxed);
+                    if (frameEnd - mLastVrStallLog > std::chrono::seconds(1)) {
+                        mLastVrStallLog = frameEnd;
+                        ALOGW("[STALL][VR] frame {}: {:.1f} ms between frames (display period "
+                              "{:.1f} ms): wait={:.1f} ms render+submit={:.1f} ms",
+                              mFrameIndex, gapMs, periodMs, FloatMs(waitDuration).count(),
+                              FloatMs(frameEnd - waitFrameEnd).count());
+                    }
+                }
+            }
+        }
+        mLastFrameEnd = frameEnd;
     }
 
     void HandleInput(JNIEnv* jni, const InputStateFrame& inputState, AppState& newState) const {
         assert(gOpenXr != nullptr);
+
+        // User stall marker: thumbstick clicks are not mapped to any game
+        // input, so clicking either stick stamps a marker in the log for the
+        // user to flag "I just saw a stall/artifact here".
+        for (const auto hand :
+             {InputStateFrame::LEFT_CONTROLLER, InputStateFrame::RIGHT_CONTROLLER}) {
+            const auto& clickState = inputState.mThumbStickClickState[hand];
+            if (clickState.changedSinceLastSync && clickState.currentState == XR_TRUE) {
+                LogUserStallMarker(mFrameIndex);
+                break;
+            }
+        }
 
         // Forward VR input to Android gamepad emulation
 
@@ -583,24 +741,33 @@ private:
                 }
             }
 
+            // While the cursor hovers the settings menu, the pointing hand's
+            // thumbstick scrolls the menu (see HandleCursorLayer); forward
+            // zeroes to the game for that stick so scrolling doesn't also
+            // move the game's camera/character.
             if (dpadHand != cStickHand) {
                 const auto cStickThumbstickState = inputState.mThumbStickState[cStickHand];
+                const bool suppress = sIsCursorHoveringSettingsMenu &&
+                                      cStickHand == inputState.mPreferredHand;
                 if (cStickThumbstickState.currentState.y != 0 ||
                     cStickThumbstickState.currentState.x != 0 ||
                     cStickThumbstickState.changedSinceLastSync) {
                     jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        cStickThumbstickState.currentState.x,
-                                        cStickThumbstickState.currentState.y, 0);
+                                        suppress ? 0.0f : cStickThumbstickState.currentState.x,
+                                        suppress ? 0.0f : cStickThumbstickState.currentState.y, 0);
                 }
             }
             if (dpadHand != leftStickHand) {
                 const auto leftStickThumbstickState = inputState.mThumbStickState[leftStickHand];
+                const bool suppress = sIsCursorHoveringSettingsMenu &&
+                                      leftStickHand == inputState.mPreferredHand;
                 if (leftStickThumbstickState.currentState.y != 0 ||
                     leftStickThumbstickState.currentState.x != 0 ||
                     leftStickThumbstickState.changedSinceLastSync) {
                     jni->CallVoidMethod(mActivityObject, mForwardVRJoystickMethodID,
-                                        leftStickThumbstickState.currentState.x,
-                                        leftStickThumbstickState.currentState.y, 1);
+                                        suppress ? 0.0f : leftStickThumbstickState.currentState.x,
+                                        suppress ? 0.0f : leftStickThumbstickState.currentState.y,
+                                        1);
                 }
             }
         }
@@ -624,6 +791,9 @@ private:
         XrPosef                 cursorPose3d       = XrMath::Posef::Identity();
         XrVector2f              cursorPos2d        = {0, 0};
         float                   scaleFactor        = 0.01f;
+        // Re-derived below when the ribbon is hit-tested; cleared here so it
+        // can't go stale on frames where the ribbon isn't tested at all.
+        sIsCursorHoveringSettingsMenu              = false;
         CursorLayer::CursorType cursorType =
             appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU
                 ? CursorLayer::CursorType::CURSOR_TYPE_POSITIONAL_MENU
@@ -697,8 +867,26 @@ private:
                 if (!shouldRenderCursor && showUIRibbon) {
                     shouldRenderCursor = mRibbonLayer->GetRayIntersectionWithPanel(
                         start, end, cursorPos2d, cursorPose3d);
-                    if (shouldRenderCursor && triggerState.changedSinceLastSync) {
-                        mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                    // Tracks whether a press started on the panel, so drags
+                    // stream move events and a press that slides off the
+                    // panel is cancelled rather than left stuck.
+                    static bool sIsRibbonPressed = false;
+                    if (shouldRenderCursor) {
+                        if (triggerState.changedSinceLastSync) {
+                            mRibbonLayer->SendClickToUI(cursorPos2d, triggerState.currentState);
+                            sIsRibbonPressed = triggerState.currentState == 1;
+                        } else if (triggerState.currentState == 1 && sIsRibbonPressed) {
+                            // Move event while the trigger is held, so drag
+                            // gestures (e.g. scrolling the settings list) work.
+                            mRibbonLayer->SendClickToUI(cursorPos2d, 2);
+                        } else if (triggerState.currentState == 0) {
+                            // Release happened while off-panel; nothing to
+                            // cancel anymore.
+                            sIsRibbonPressed = false;
+                        }
+                    } else if (sIsRibbonPressed) {
+                        mRibbonLayer->SendClickToUI(cursorPos2d, 3 /* cancel */);
+                        sIsRibbonPressed = false;
                     }
                     // If trigger is pressed, thumbstick controls
                     // the depth
@@ -707,6 +895,24 @@ private:
                     static constexpr float kThumbStickDirectionThreshold = 0.5f;
                     const bool             hasThumbstickMotion =
                         std::abs(thumbstickState.currentState.y) > kThumbStickDirectionThreshold;
+
+                    // In the settings menu, the thumbstick scrolls the
+                    // content under the cursor (settings list or an open
+                    // dialog).
+                    sIsCursorHoveringSettingsMenu =
+                        shouldRenderCursor &&
+                        appState.mLowerMenuType == LowerMenuType::SETTINGS_MENU;
+                    if (sIsCursorHoveringSettingsMenu) {
+                        static constexpr float kScrollDeadZone = 0.3f;
+                        // Wheel notches per frame; scales thumbstick
+                        // deflection to a comfortable scroll speed.
+                        static constexpr float kScrollSpeedFactor = 0.5f;
+                        if (std::abs(thumbstickState.currentState.y) > kScrollDeadZone) {
+                            mRibbonLayer->SendScrollToUI(
+                                cursorPos2d,
+                                {0.0f, thumbstickState.currentState.y * kScrollSpeedFactor});
+                        }
+                    }
 
                     if (appState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU &&
                         (sIsLowerPanelBeingPositioned ||
@@ -822,6 +1028,7 @@ private:
                       newState.mLowerMenuType == LowerMenuType::POSITIONAL_MENU ? "P"
                       : newState.mLowerMenuType == LowerMenuType::MAIN_MENU     ? "M"
                       : newState.mLowerMenuType == LowerMenuType::STATS_MENU    ? "S"
+                      : newState.mLowerMenuType == LowerMenuType::SETTINGS_MENU ? "Set"
                                                                                 : "U");
                 if (shouldPauseEmulation) {
                     PauseEmulation(jni);
@@ -888,12 +1095,25 @@ private:
                           __func__);
                     break;
                 case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
-                    [[maybe_unused]] const XrEventDataPerfSettingsEXT* pfs =
+                    const XrEventDataPerfSettingsEXT* pfs =
                         (XrEventDataPerfSettingsEXT*)(baseEventHeader);
-                    ALOGV("{}(): Received "
-                          "XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {} "
-                          "subdomain {} : level {} -> level {}",
-                          __func__, pfs->type, pfs->subDomain, pfs->fromLevel, pfs->toLevel);
+                    // These events are the runtime reporting clock-level
+                    // changes (e.g. thermal throttling), a common cause of
+                    // otherwise-unexplained stutter -- log degradations at
+                    // warning level so they are visible in release builds.
+                    if (pfs->toLevel > pfs->fromLevel) {
+                        ALOGW("XR perf settings: {} {} degraded {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    } else {
+                        ALOGI("XR perf settings: {} {} recovered {} -> {}",
+                              XrPerfSettingsDomainToString(pfs->domain),
+                              XrPerfSettingsSubDomainToString(pfs->subDomain),
+                              XrPerfSettingsNotificationLevelToString(pfs->fromLevel),
+                              XrPerfSettingsNotificationLevelToString(pfs->toLevel));
+                    }
                 } break;
                 case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
                     ALOGV("{}(): Received "
@@ -987,6 +1207,7 @@ private:
                 }
                 OXR(pfnSetAndroidApplicationThreadKHR(
                     gOpenXr->mSession, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, gettid()));
+
                 if (mGameSurfaceLayer) {
                     ALOGD("SetSurface");
                     mGameSurfaceLayer->SetSurface(mActivityObject);
@@ -1155,6 +1376,9 @@ private:
     uint64_t    mFrameIndex = 0;
     std::thread mThread;
     jobject     mActivityObject;
+    // Stall diagnostics (see TrackVrFramePacing).
+    std::chrono::steady_clock::time_point mLastFrameEnd{};
+    std::chrono::steady_clock::time_point mLastVrStallLog{};
 
     class AppState {
     public:
@@ -1384,19 +1608,45 @@ Java_org_citra_citra_1emu_vr_ui_VrRibbonLayer_nativeGetStatsOXR(JNIEnv* env, job
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, compCpuFrameTimePath, &compCpuFrameTime);
     xrQueryPerformanceMetricsCounterMETA(vr::gSession, compGpuFrameTimePath, &compGpuFrameTime);
 
-    const jfloat metricsArray[8] = {
-        cpuUtilization.floatValue,                // Device CPU Utilization %
-        gpuUtilization.floatValue,                // Device GPU Utilization %
-        appCpuFrameTime.floatValue,               // App CPU Frametime (ms)
-        appGpuFrameTime.floatValue,               // App GPU Frametime (ms)
-        appVrLatency.floatValue,                  // App VR Latency (ms)
-        compCpuFrameTime.floatValue,              // Compositor CPU Frametime (ms)
-        compGpuFrameTime.floatValue,              // Compositor GPU Frametime (ms)
-        static_cast<jfloat>(compTears.uintValue)  // Compositor tear count
+    // Stall telemetry (cumulative since process start; see
+    // common/stall_telemetry.h). Appended after the runtime perf metrics.
+    auto&         telemetry = Common::StallTelemetry::Get();
+    const int64_t lastCompileUs =
+        telemetry.last_shader_compile_steady_us.load(std::memory_order_relaxed);
+    const jfloat secondsSinceLastCompile =
+        lastCompileUs > 0 ? static_cast<jfloat>((Common::SteadyNowUs() - lastCompileUs) / 1e6)
+                          : -1.0f;
+
+    const jfloat metricsArray[17] = {
+        cpuUtilization.floatValue,                 // Device CPU Utilization %
+        gpuUtilization.floatValue,                 // Device GPU Utilization %
+        appCpuFrameTime.floatValue,                // App CPU Frametime (ms)
+        appGpuFrameTime.floatValue,                // App GPU Frametime (ms)
+        appVrLatency.floatValue,                   // App VR Latency (ms)
+        compCpuFrameTime.floatValue,               // Compositor CPU Frametime (ms)
+        compGpuFrameTime.floatValue,               // Compositor GPU Frametime (ms)
+        static_cast<jfloat>(compTears.uintValue),  // Compositor tear count
+        static_cast<jfloat>(
+            telemetry.emu_slow_frame_count.load(std::memory_order_relaxed)),  // Emu slow frames
+        static_cast<jfloat>(
+            telemetry.emu_stall_frame_count.load(std::memory_order_relaxed)), // Emu stall frames
+        static_cast<jfloat>(telemetry.emu_worst_frame_time_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // Emu worst frame (ms)
+        static_cast<jfloat>(
+            telemetry.shader_compile_count.load(std::memory_order_relaxed)),  // Shader compiles
+        static_cast<jfloat>(telemetry.shader_compile_time_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // Shader compile total (ms)
+        secondsSinceLastCompile,                   // Secs since last compile (-1 = never)
+        static_cast<jfloat>(
+            telemetry.vr_missed_frame_count.load(std::memory_order_relaxed)), // VR missed frames
+        static_cast<jfloat>(telemetry.vr_worst_frame_gap_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // VR worst frame gap (ms)
+        static_cast<jfloat>(telemetry.vr_worst_wait_frame_us.load(std::memory_order_relaxed)) /
+            1000.0f,                               // VR worst wait (ms)
     };
 
-    const jfloatArray result = env->NewFloatArray(8);
-    env->SetFloatArrayRegion(result, 0, 8, metricsArray);
+    const jfloatArray result = env->NewFloatArray(17);
+    env->SetFloatArrayRegion(result, 0, 17, metricsArray);
 
     return result;
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -141,10 +141,10 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<RomFSReader>(*this);
-        ar& romfs;
-        ar& patch_path;
-        ar& patch_ext_path;
-        ar& load_relocations;
+        ar & romfs;
+        ar & patch_path;
+        ar & patch_ext_path;
+        ar & load_relocations;
         if (Archive::is_loading::value) {
             Load();
         }

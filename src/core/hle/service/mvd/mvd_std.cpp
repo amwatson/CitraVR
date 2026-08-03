@@ -24,8 +24,7 @@ MVD_STD::MVD_STD() : ServiceFramework("mvd:std", 1) {
         {0x001D, nullptr, "GetConfig"},
         {0x001E, nullptr, "SetConfig"},
         {0x001F, nullptr, "SetOutputBuffer"},
-        {0x0021, nullptr, "OverrideOutputBuffers"}
-        // clang-format on
+        {0x0021, nullptr, "OverrideOutputBuffers"} // clang-format on
     };
 
     RegisterHandlers(functions);

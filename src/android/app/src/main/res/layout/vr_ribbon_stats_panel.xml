@@ -158,13 +158,49 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp" />
 
+        <!-- Frame breakdown (gpu/swap/svc/ipc/other) -->
+        <TextView
+            android:id="@+id/bullet_frame_breakdown"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="• "
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/label_frame_breakdown"
+            app:layout_constraintTop_toBottomOf="@id/label_emulation_speed"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"/>
+
+        <TextView
+            android:id="@+id/label_frame_breakdown"
+            style="@style/VrRibbonStatsSubLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="@string/vr_stats_frame_breakdown_label"
+            app:layout_constraintStart_toEndOf="@id/bullet_frame_breakdown"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_emulation_speed"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/value_frame_breakdown"
+            style="@style/VrRibbonStatsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            app:layout_constraintStart_toStartOf="@id/guideline_values"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_frame_breakdown"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp" />
+
         <!-- Section Divider -->
         <View
             android:id="@+id/divider1"
             android:layout_width="0dp"
             android:layout_height="4dp"
             android:background="@drawable/vr_ribbon_button_default"
-            app:layout_constraintTop_toBottomOf="@id/value_emulation_speed"
+            app:layout_constraintTop_toBottomOf="@id/value_frame_breakdown"
             app:layout_constraintStart_toStartOf="@id/guideline_labels"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
@@ -521,13 +557,119 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_values_vr" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- Stall Diagnostics Section -->
+        <View
+            android:id="@+id/divider_stall"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:background="@drawable/vr_ribbon_button_default"
+            app:layout_constraintTop_toBottomOf="@id/section_vr"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/label_stall_section"
+            style="@style/VrRibbonStatsLabelDeveloper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/vr_stats_stall_section_label"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/divider_stall" />
+
+        <!-- Emu frames over budget: slow / stall counts + worst frame -->
+        <TextView
+            android:id="@+id/label_stall_emu"
+            style="@style/VrRibbonStatsSubLabelDeveloper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/vr_stats_stall_emu_label"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_stall_section" />
+
+        <TextView
+            android:id="@+id/value_stall_emu"
+            style="@style/VrRibbonStatsValueDeveloper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="--"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_stall_emu"
+            app:layout_constraintStart_toStartOf="@id/guideline_values" />
+
+        <!-- Draw-time shader compiles -->
+        <TextView
+            android:id="@+id/label_stall_shaders"
+            style="@style/VrRibbonStatsSubLabelDeveloper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/vr_stats_stall_shaders_label"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_stall_emu" />
+
+        <TextView
+            android:id="@+id/value_stall_shaders"
+            style="@style/VrRibbonStatsValueDeveloper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="--"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_stall_shaders"
+            app:layout_constraintStart_toStartOf="@id/guideline_values" />
+
+        <!-- VR missed frames -->
+        <TextView
+            android:id="@+id/label_stall_vr"
+            style="@style/VrRibbonStatsSubLabelDeveloper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/vr_stats_stall_vr_label"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toStartOf="@id/guideline_values"
+            app:layout_constraintTop_toBottomOf="@id/label_stall_shaders" />
+
+        <TextView
+            android:id="@+id/value_stall_vr"
+            style="@style/VrRibbonStatsValueDeveloper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="--"
+            app:layout_constraintBaseline_toBaselineOf="@id/label_stall_vr"
+            app:layout_constraintStart_toStartOf="@id/guideline_values" />
+
+        <TextView
+            android:id="@+id/label_stall_marker_hint"
+            style="@style/VrRibbonStatsSubLabelDeveloper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/vr_stats_stall_marker_hint"
+            app:layout_constraintStart_toStartOf="@id/guideline_labels"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/label_stall_vr" />
+
         <!-- Section Divider -->
         <View
             android:id="@+id/divider3"
             android:layout_width="0dp"
             android:layout_height="4dp"
             android:background="@drawable/vr_ribbon_button_default"
-            app:layout_constraintTop_toBottomOf="@id/section_vr"
+            app:layout_constraintTop_toBottomOf="@id/label_stall_marker_hint"
             app:layout_constraintStart_toStartOf="@id/guideline_labels"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />

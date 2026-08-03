@@ -1,36 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <string name="app_disclaimer">Tämä sovellus pelaa Nintendo 3DS-käsikonsolin pelejä. Pelejä itse ei tule sovelluksen mukana.\n\nEnnen kuin jatkat, laita itse omistamasi 3DS-pelien pelitiedostot laitteesi tallennustilaan.</string>
-    <string name="app_notification_channel_description">CitraVR 3DS-emulaattorin ilmoitukset</string>
-    <string name="app_notification_running">CitraVR on päällä</string>
-
+    <string name="grid_menu_core_settings">Asetukset</string>
     <string name="controller_c">C-Tikku</string>
     <string name="controller_triggers">Liipaisimet</string>
     <string name="controller_dpad">D-Pad</string>
-    <string name="controller_axis_vertical">Ylä/ala-akseli</string>
-    <string name="controller_axis_horizontal">Vasen/oikea akseli</string>
-    <string name="input_binding_description_vertical_axis">Liikuta tattia ylös tai alas.</string>
-    <string name="input_binding_description_horizontal_axis">Liikuta tattia vasemmalle tai oikealle.</string>
-    <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Nappulat</string>
-
-    <!-- Premium settings strings -->
-    <string name="design">Vaihda teema (Vaalea, Tumma)</string>
-    <string name="design_updated">Teema päivittyy kun asetukset suljetaan</string>
-
-    <!-- Core settings strings -->
-    <string name="cpu_jit">Aktivoi CPU JIT</string>
-    <string name="cpu_jit_description">Käyttää Just-in-Time (JIT) kääntäjää prosessorin emulointiin. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="init_clock">Järjestelmän kellotyyppi</string>
     <string name="init_clock_description">Aseta emuloidun 3DS:n kello samaksi kuin laitteesi kello, tai aloita kello simuloidusta päivämäärästä ja ajasta.</string>
-
-    <!-- System settings strings -->
-    <string name="init_time">Järjestelmän kellon aloitusajan yliajo.</string>
     <string name="emulated_region">Emuloitu alue</string>
     <string name="emulated_language">Emuloitu kieli</string>
-
-    <!-- Camera settings strings -->
     <string name="inner_camera">Sisäkamera</string>
     <string name="outer_left_camera">Vasen Ulkokamera</string>
     <string name="outer_right_camera">Oikea Ulkokamera</string>
@@ -42,57 +20,49 @@
     <string name="camera_facing_back">Takapuoli</string>
     <string name="camera_facing_external">Ulkoinen</string>
     <string name="image_flip">Kuvan kääntö</string>
-
-    <!-- Graphics settings strings -->
-    <string name="vsync">Aktivoi V-Sync</string>
-    <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
+    <string name="frame_limit_enable">Aktivoi nopeuden rajoitus</string>
+    <string name="frame_limit_slider">Rajoita nopeusprosenttia</string>
+    <string name="audio_stretch">Aktivoi äänen venytys</string>
+    <string name="cpu_jit">Aktivoi CPU JIT</string>
+    <string name="cpu_jit_description">Käyttää Just-in-Time (JIT) kääntäjää prosessorin emulointiin. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
     <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
-    <string name="frame_limit_enable">Aktivoi nopeuden rajoitus</string>
-    <string name="frame_limit_enable_description">Kun aktivoitu, emulaation nopeus on rajoitettu asetettuun prosenttiin normaalista nopeudesta.</string>
-    <string name="frame_limit_slider">Rajoita nopeusprosenttia</string>
-    <!-- Audio settings strings -->
-    <string name="audio_stretch">Aktivoi äänen venytys</string>
-    <!-- Miscellaneous -->
+    <string name="vsync">Aktivoi V-Sync</string>
     <string name="clear">Tyhjennä</string>
     <string name="slider_default">Oletus</string>
-    <string name="auto">Automaattinen mittakaava</string>
-    <!-- Game Grid Screen-->
-    <string name="grid_menu_core_settings">Asetukset</string>
-
-    <!-- Add Directory Screen-->
     <string name="select_game_folder">Valitse pelikansio</string>
-
-    <!-- Preferences Screen -->
     <string name="preferences_settings">Asetukset</string>
     <string name="preferences_general">Yleinen</string>
     <string name="preferences_system">Laite</string>
     <string name="preferences_controls">Ohjain</string>
     <string name="preferences_graphics">Grafiikat</string>
     <string name="preferences_audio">Ääni</string>
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Pelitiedostosi on salattu.</string>
-    <string name="loader_error_invalid_format">Epäsopiva pelitiedoston formaatti</string>
-
-    <!-- Emulation Menu -->
     <string name="emulation_show_fps">Näytä FPS</string>
     <string name="emulation_done">Valmis</string>
     <string name="emulation_open_settings">Avaa asetukset</string>
-    <string name="emulation_screen_layout_landscape">Oletus</string>
     <string name="emulation_screen_layout_single">Yksi näyttö</string>
     <string name="emulation_screen_layout_sidebyside">Näytöt vierekkäin</string>
     <string name="emulation_swap_screens">Vaihda näytöt</string>
     <string name="emulation_close_game">Sulje peli</string>
     <string name="emulation_close_game_message">Oletko varma että haluat sulkea nykyisen pelin?</string>
     <string name="load_settings">Ladataan asetuksia...</string>
-
-    <!-- Software Keyboard -->
     <string name="software_keyboard">Laitteistonäppäimistö</string>
     <string name="i_forgot">Unohdin</string>
     <string name="fixed_length_required">Tekstin pituus ei ole oikein (pitäisi olla %d merkkiä) </string>
     <string name="max_length_exceeded">Teksti on liian pitkä (ei pitäisi olla enempää kuin %d merkkiä)</string>
-
-    <!-- VR-specific -->
+    <string name="app_disclaimer">Tämä sovellus pelaa Nintendo 3DS-käsikonsolin pelejä. Pelejä itse ei tule sovelluksen mukana.\n\nEnnen kuin jatkat, laita itse omistamasi 3DS-pelien pelitiedostot laitteesi tallennustilaan.</string>
+    <string name="app_notification_channel_description">CitraVR 3DS-emulaattorin ilmoitukset</string>
+    <string name="app_notification_running">CitraVR on päällä</string>
+    <string name="controller_axis_vertical">Ylä/ala-akseli</string>
+    <string name="controller_axis_horizontal">Vasen/oikea akseli</string>
+    <string name="input_binding_description_vertical_axis">Liikuta tattia ylös tai alas.</string>
+    <string name="input_binding_description_horizontal_axis">Liikuta tattia vasemmalle tai oikealle.</string>
+    <string name="init_time">Järjestelmän kellon aloitusajan yliajo.</string>
+    <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
+    <string name="frame_limit_enable_description">Kun aktivoitu, emulaation nopeus on rajoitettu asetettuun prosenttiin normaalista nopeudesta.</string>
+    <string name="auto">Automaattinen mittakaava</string>
+    <string name="emulation_screen_layout_landscape">Oletus</string>
     <string name="preferences_vr">VR</string>
     <string name="vr_background">VR -ympäristö</string>
     <string name="vr_error_two_instances_title">VIRHE: havaitsi kaksi CitraVR -tapausta</string>
@@ -118,8 +88,6 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="immersive_mode">Immersiivinen Tila</string>
     <string name="vr_si_mode_register_offset_title">Rekisterin Siirtymä</string>
     <string name="vr_si_mode_register_offset_description">Asettaa rekisterin siirtymän, jota käytetään näkymässä käytettäessä Super Immersive Mode Profiilia 2 - vaihtelee pelistä riippuen.</string>
-    <string name="vr_immersive_pos_factor_title">Sijainnillisen Liikkeen Kerroin</string>
-    <string name="vr_immersive_pos_factor_description">Säätää, kuinka paljon liike vasemmalle/oikealle/ylös/alas vaikuttaa pelikameraan (0 = pois käytöstä)</string>
     <string name="vr_immersive_pos_game_scaler_title">Paikallisen Liikkeen Tekijän Kerroin</string>
     <string name="vr_immersive_pos_game_scaler_description">Säätää kuinka paljon liikkuminen vasemmalta/oikealta/ylös/alas vaikuttaa pelikameraan, joidenkin pelien vaatiessa suurempia arvoja, joten tämä kertoo Liike Kertoimen sijaintiin vaikuttavalta tekijältä.</string>
     <string name="cancelling">Peruutetaan...</string>
@@ -153,4 +121,15 @@ Shadereiden latautumisen jälkeen ne tallennetaan laitteeseen, mikä estää nä
     <string name="vr_stats_comp_tear_count">Revämälaskuri (kokonaisluku)</string>
     <string name="vr_stats_build_version_label">Sovelluksen Versio</string>
     <string name="vr_stats_input_latency_label">Sisääntulo Viive</string>
+    <string name="swap_buttons_b_y">Vaihda B- ja Y-painikkeet keskenään</string>
+    <string name="swap_buttons_b_y_description">B:n painaminen aktivoi Y:n ja päinvastoin. Koskee peliohjaimia ja VR-kosketusohjaimia muuttamatta yllä olevia painikemäärityksiä.</string>
+    <string name="update_install">Asenna</string>
+    <string name="update_installing">Päivitetään versioon %1$s</string>
+    <string name="update_downloading">Ladataan päivitystä…</string>
+    <string name="update_permission_needed">CitraVR tarvitsee luvan asentaa päivityksiä. Napauta Myönnä lupa ja salli sitten \"Tuntemattomien sovellusten asentaminen\" CitraVR:lle.</string>
+    <string name="update_grant_permission">Myönnä lupa</string>
+    <string name="update_download_failed">Päivitystä ei voitu ladata. Voit ladata sen manuaalisesti julkaisusivulta.</string>
+    <string name="update_would_downgrade">Asennettu versio on uudempi kuin tämä julkaisu, joten sitä ei voi asentaa sen päälle.</string>
+    <string name="update_install_failed">Päivitystä ei voitu asentaa.</string>
+    <string name="update_open_release_page">Julkaisusivu</string>
 </resources>

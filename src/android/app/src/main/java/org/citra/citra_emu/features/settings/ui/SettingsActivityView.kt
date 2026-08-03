@@ -46,6 +46,11 @@ interface SettingsActivityView {
     fun showToastMessage(message: String, isLong: Boolean)
 
     /**
+     * Show a title above the current settings list.
+     */
+    fun setToolbarTitle(title: String)
+
+    /**
      * End the activity.
      */
     fun finish()

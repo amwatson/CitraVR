@@ -14,6 +14,7 @@ option(USE_SYSTEM_JSON "Use the system JSON (nlohmann-json3) package (instead of
 option(USE_SYSTEM_DYNARMIC "Use the system dynarmic (instead of the bundled one)" OFF)
 option(USE_SYSTEM_FMT "Use the system fmt (instead of the bundled one)" OFF)
 option(USE_SYSTEM_XBYAK "Use the system xbyak (instead of the bundled one)" OFF)
+option(USE_SYSTEM_OAKNUT "Use the system oaknut (instead of the bundled one)" OFF)
 option(USE_SYSTEM_INIH "Use the system inih (instead of the bundled one)" OFF)
 option(USE_SYSTEM_FFMPEG_HEADERS "Use the system FFmpeg headers (instead of the bundled one)" OFF)
 option(USE_SYSTEM_GLSLANG "Use the system glslang and SPIR-V libraries (instead of the bundled ones)" OFF)
@@ -25,6 +26,7 @@ option(USE_SYSTEM_LODEPNG "Use the system lodepng (instead of the bundled one)" 
 option(USE_SYSTEM_OPENAL "Use the system OpenAL (instead of the bundled one)" OFF)
 option(USE_SYSTEM_VMA "Use the system VulkanMemoryAllocator (instead of the bundled one)" OFF)
 option(USE_SYSTEM_VULKAN_HEADERS "Use the system Vulkan headers (instead of the bundled ones)" OFF)
+option(USE_SYSTEM_SPIRV_HEADERS "Use the system SPIRV headers (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_CATCH2 "Use the system Catch2 (instead of the bundled one)" OFF)
 
 # Qt and MoltenVK are handled separately
@@ -39,6 +41,7 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_JSON "Disable system JSON" OFF "USE_SYSTEM
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_DYNARMIC "Disable system Dynarmic" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FMT "Disable system fmt" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_XBYAK "Disable system xbyak" OFF "USE_SYSTEM_LIBS" OFF)
+CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_OAKNUT "Disable system oaknut" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_INIH "Disable system inih" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FFMPEG_HEADERS "Disable system ffmpeg" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_GLSLANG "Disable system glslang" OFF "USE_SYSTEM_LIBS" OFF)
@@ -50,6 +53,7 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_LODEPNG "Disable system lodepng" OFF "USE_
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_OPENAL "Disable system OpenAL" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_VMA "Disable system VulkanMemoryAllocator" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_VULKAN_HEADERS "Disable system Vulkan headers" OFF "USE_SYSTEM_LIBS" OFF)
+CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SPIRV_HEADERS "Disable system SPIRV headers" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_CATCH2 "Disable system Catch2" OFF "USE_SYSTEM_LIBS" OFF)
 
 set(LIB_VAR_LIST
@@ -64,6 +68,7 @@ set(LIB_VAR_LIST
     DYNARMIC
     FMT
     XBYAK
+    OAKNUT
     INIH
     FFMPEG_HEADERS
     GLSLANG
@@ -75,6 +80,7 @@ set(LIB_VAR_LIST
     OPENAL
     VMA
     VULKAN_HEADERS
+    SPIRV_HEADERS
     CATCH2
     )
 

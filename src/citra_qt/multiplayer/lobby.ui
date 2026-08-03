@@ -35,9 +35,9 @@
          </item>
          <item>
           <widget class="QLineEdit" name="nickname">
-           <property name="placeholderText">
-            <string>Nickname</string>
-           </property>
+            <property name="toolTip">
+              <string>This property is linked to the 3DS system username.</string>
+            </property>
           </widget>
          </item>
          <item>
@@ -73,7 +73,7 @@
          <item>
           <widget class="QCheckBox" name="games_owned">
            <property name="text">
-            <string>Games I Own</string>
+            <string>Applications I Own</string>
            </property>
           </widget>
          </item>

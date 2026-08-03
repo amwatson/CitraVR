@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -46,22 +46,22 @@ struct ShaderUnit {
     }
 
 public:
-    s32 address_registers[3];
-    bool conditional_code[2];
-    alignas(16) std::array<Common::Vec4<f24>, 16> input;
-    alignas(16) std::array<Common::Vec4<f24>, 16> temporary;
-    alignas(16) std::array<Common::Vec4<f24>, 16> output;
+    s32 address_registers[3] = {};
+    bool conditional_code[2] = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> input = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> temporary = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> output = {};
     GeometryEmitter* emitter_ptr;
 
 private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version) {
-        ar& input;
-        ar& temporary;
-        ar& output;
-        ar& conditional_code;
-        ar& address_registers;
+        ar & input;
+        ar & temporary;
+        ar & output;
+        ar & conditional_code;
+        ar & address_registers;
     }
 };
 
@@ -75,22 +75,27 @@ struct GeometryEmitter {
     void Emit(std::span<Common::Vec4<f24>, 16> output_regs);
 
 public:
-    std::array<AttributeBuffer, 3> buffer;
-    u8 vertex_id;
-    bool prim_emit;
-    bool winding;
+    union EmitState {
+        struct {
+            bool winding : 1;
+            bool prim_emit : 1;
+            u8 vertex_id : 2;
+        };
+        u8 raw;
+    } emit_state;
+    static_assert(sizeof(emit_state) == 1);
+
     u32 output_mask;
+    std::array<AttributeBuffer, 3> buffer;
     Handlers* handlers;
 
 private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version) {
-        ar& buffer;
-        ar& vertex_id;
-        ar& prim_emit;
-        ar& winding;
-        ar& output_mask;
+        ar & buffer;
+        ar & emit_state.raw;
+        ar & output_mask;
     }
 };
 
@@ -113,7 +118,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version) {
         ar& boost::serialization::base_object<ShaderUnit>(*this);
-        ar& emitter;
+        ar & emitter;
     }
 };
 

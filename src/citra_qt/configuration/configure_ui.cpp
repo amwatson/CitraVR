@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,14 +24,24 @@ ConfigureUi::~ConfigureUi() = default;
 
 void ConfigureUi::InitializeLanguageComboBox() {
     ui->language_combobox->addItem(tr("<System>"), QString{});
-    ui->language_combobox->addItem(tr("English"), QStringLiteral("en"));
+    ui->language_combobox->addItem(QStringLiteral("English"), QStringLiteral("en"));
     QDirIterator it(QStringLiteral(":/languages"), QDirIterator::NoIteratorFlags);
     while (it.hasNext()) {
         QString locale = it.next();
         locale.truncate(locale.lastIndexOf(QLatin1Char{'.'}));
         locale.remove(0, locale.lastIndexOf(QLatin1Char{'/'}) + 1);
-        const QString lang = QLocale::languageToString(QLocale(locale).language());
+        if (locale.startsWith(QStringLiteral("qtbase"))) {
+            // The Qt Base QM translation files are lumped in with ours,
+            // so don't show them in the language list!
+            continue;
+        }
+        QString lang = QLocale::languageToString(QLocale(locale).language());
         const QString country = QLocale::territoryToString(QLocale(locale).territory());
+        if (locale == QString::fromStdString("ca_ES_valencia")) {
+            // QT returns "Catalan" for the "Valencian" dialect, so we have to change the
+            // language name manually here.
+            lang = QString::fromStdString("Valencian");
+        }
         ui->language_combobox->addItem(QStringLiteral("%1 (%2)").arg(lang, country), locale);
     }
 
@@ -45,7 +55,8 @@ void ConfigureUi::InitializeLanguageComboBox() {
 void ConfigureUi::SetConfiguration() {
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
     ui->language_combobox->setCurrentIndex(
-        ui->language_combobox->findData(UISettings::values.language));
+        // findData returns -1 if nothing found; Use <System> in this case (index 0).
+        std::max(0, ui->language_combobox->findData(UISettings::values.language)));
     ui->icon_size_combobox->setCurrentIndex(
         static_cast<int>(UISettings::values.game_list_icon_size.GetValue()));
     ui->row_1_text_combobox->setCurrentIndex(
@@ -55,6 +66,8 @@ void ConfigureUi::SetConfiguration() {
     ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon.GetValue());
     ui->toggle_single_line_mode->setChecked(
         UISettings::values.game_list_single_line_mode.GetValue());
+    ui->show_advanced_frametime_info->setChecked(
+        UISettings::values.show_advanced_frametime_info.GetValue());
 }
 
 void ConfigureUi::ApplyConfiguration() {
@@ -68,6 +81,7 @@ void ConfigureUi::ApplyConfiguration() {
         static_cast<UISettings::GameListText>(ui->row_2_text_combobox->currentIndex() - 1);
     UISettings::values.game_list_hide_no_icon = ui->toggle_hide_no_icon->isChecked();
     UISettings::values.game_list_single_line_mode = ui->toggle_single_line_mode->isChecked();
+    UISettings::values.show_advanced_frametime_info = ui->show_advanced_frametime_info->isChecked();
 }
 
 void ConfigureUi::OnLanguageChanged(int index) {

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,7 +27,7 @@ APT_U::APT_U(std::shared_ptr<Module> apt)
         {0x000E, &APT_U::GlanceParameter, "GlanceParameter"},
         {0x000F, &APT_U::CancelParameter, "CancelParameter"},
         {0x0010, nullptr, "DebugFunc"},
-        {0x0011, nullptr, "MapProgramIdForDebug"},
+        {0x0011, &APT_U::MapProgramIdForDebug, "MapProgramIdForDebug"},
         {0x0012, nullptr, "SetHomeMenuAppletIdForDebug"},
         {0x0013, nullptr, "GetPreparationState"},
         {0x0014, nullptr, "SetPreparationState"},
@@ -42,7 +42,7 @@ APT_U::APT_U(std::shared_ptr<Module> apt)
         {0x001D, &APT_U::CancelApplication, "CancelApplication"},
         {0x001E, &APT_U::StartLibraryApplet, "StartLibraryApplet"},
         {0x001F, &APT_U::StartSystemApplet, "StartSystemApplet"},
-        {0x0020, nullptr, "StartNewestHomeMenu"},
+        {0x0020, &APT_U::StartNewestHomeMenu, "StartNewestHomeMenu"},
         {0x0021, &APT_U::OrderToCloseApplication, "OrderToCloseApplication"},
         {0x0022, &APT_U::PrepareToCloseApplication, "PrepareToCloseApplication"},
         {0x0023, nullptr, "PrepareToJumpToApplication"},
@@ -87,7 +87,7 @@ APT_U::APT_U(std::shared_ptr<Module> apt)
         {0x004A, &APT_U::GetCaptureInfo, "GetCaptureInfo"},
         {0x004B, &APT_U::AppletUtility, "AppletUtility"},
         {0x004C, nullptr, "SetFatalErrDispMode"},
-        {0x004D, nullptr, "GetAppletProgramInfo"},
+        {0x004D, &APT_U::GetAppletProgramInfo, "GetAppletProgramInfo"},
         {0x004E, &APT_U::HardwareResetAsync, "HardwareResetAsync"},
         {0x004F, &APT_U::SetAppCpuTimeLimit, "SetAppCpuTimeLimit"},
         {0x0050, &APT_U::GetAppCpuTimeLimit, "GetAppCpuTimeLimit"},

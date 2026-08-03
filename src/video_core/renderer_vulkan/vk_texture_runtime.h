@@ -1,10 +1,9 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
-#include <deque>
 #include <span>
 #include "video_core/rasterizer_cache/framebuffer_base.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
@@ -22,15 +21,83 @@ struct Material;
 namespace Vulkan {
 
 class Instance;
-class RenderpassCache;
-class DescriptorPool;
-class DescriptorSetProvider;
+class RenderManager;
 class Surface;
+class DescriptorUpdateQueue;
+
+enum Type {
+    Current = -1,
+    Base = 0,
+    Scaled,
+    Custom,
+    Copy,
+    Num,
+};
+
+enum ViewType {
+    Sample = 0,
+    Mip0,
+    Storage,
+    Depth,
+    Stencil,
+    Max,
+};
 
 struct Handle {
-    VmaAllocation alloc;
-    vk::Image image;
-    vk::UniqueImageView image_view;
+    explicit Handle(const Instance& _instance) : instance(_instance) {}
+
+    ~Handle() {
+        Destroy();
+    }
+
+    Handle(const Handle& other) = delete;
+
+    Handle(Handle&& other) noexcept
+        : instance(other.instance), allocation(std::exchange(other.allocation, VK_NULL_HANDLE)),
+          image(std::exchange(other.image, VK_NULL_HANDLE)),
+          image_views(std::exchange(other.image_views, {})),
+          framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
+          width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
+          levels(std::exchange(other.levels, 0)), layers(std::exchange(other.layers, 0)) {}
+
+    Handle& operator=(const Handle& other) = delete;
+
+    Handle& operator=(Handle&& other) noexcept {
+        if (this == &other)
+            return *this;
+
+        allocation = std::exchange(other.allocation, VK_NULL_HANDLE);
+        image = std::exchange(other.image, VK_NULL_HANDLE);
+        image_views = std::exchange(other.image_views, {});
+        framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);
+        width = std::exchange(other.width, 0);
+        height = std::exchange(other.height, 0);
+        levels = std::exchange(other.levels, 0);
+        layers = std::exchange(other.layers, 0);
+
+        return *this;
+    }
+
+    void Create(u32 width, u32 height, u32 levels, VideoCore::TextureType type, vk::Format format,
+                vk::ImageUsageFlags usage, vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect,
+                bool need_format_list, std::string_view debug_name = {});
+
+    void Destroy();
+
+    operator bool() const {
+        return allocation;
+    }
+
+    const Instance& instance;
+
+    VmaAllocation allocation{VK_NULL_HANDLE};
+    vk::Image image{VK_NULL_HANDLE};
+    std::array<vk::ImageView, ViewType::Max> image_views{};
+    vk::Framebuffer framebuffer{VK_NULL_HANDLE};
+    u32 width{};
+    u32 height{};
+    u32 levels{};
+    u32 layers{};
 };
 
 /**
@@ -42,8 +109,8 @@ class TextureRuntime {
 
 public:
     explicit TextureRuntime(const Instance& instance, Scheduler& scheduler,
-                            RenderpassCache& renderpass_cache, DescriptorPool& pool,
-                            DescriptorSetProvider& texture_provider, u32 num_swapchain_images);
+                            RenderManager& renderpass_cache, DescriptorUpdateQueue& update_queue,
+                            u32 num_swapchain_images);
     ~TextureRuntime();
 
     const Instance& GetInstance() const {
@@ -54,7 +121,7 @@ public:
         return scheduler;
     }
 
-    RenderpassCache& GetRenderpassCache() {
+    RenderManager& GetRenderpassCache() {
         return renderpass_cache;
     }
 
@@ -74,7 +141,12 @@ public:
     bool ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
 
     /// Copies a rectangle of src_tex to another rectange of dst_rect
-    bool CopyTextures(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
+    bool CopyTextures(Surface& source, Surface& dest,
+                      std::span<const VideoCore::TextureCopy> copies);
+
+    bool CopyTextures(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy) {
+        return CopyTextures(source, dest, std::array{copy});
+    }
 
     /// Blits a rectangle of src_tex to another rectange of dst_rect
     bool BlitTextures(Surface& surface, Surface& dest, const VideoCore::TextureBlit& blit);
@@ -83,10 +155,7 @@ public:
     void GenerateMipmaps(Surface& surface);
 
     /// Returns true if the provided pixel format needs convertion
-    bool NeedsConversion(VideoCore::PixelFormat format) const;
-
-    /// Removes any descriptor sets that contain the provided image view.
-    void FreeDescriptorSetsWithImage(vk::ImageView image_view);
+    bool NeedsConversion(const Surface& surface) const;
 
 private:
     /// Clears a partial texture rect using a clear rectangle
@@ -95,8 +164,7 @@ private:
 private:
     const Instance& instance;
     Scheduler& scheduler;
-    RenderpassCache& renderpass_cache;
-    DescriptorSetProvider& texture_provider;
+    RenderManager& renderpass_cache;
     BlitHelper blit_helper;
     StreamBuffer upload_buffer;
     StreamBuffer download_buffer;
@@ -107,10 +175,10 @@ class Surface : public VideoCore::SurfaceBase {
     friend class TextureRuntime;
 
 public:
-    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
+    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params,
+                     const VideoCore::SurfaceFlagBits& initial_flag_bits = {});
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
-    ~Surface();
 
     Surface(const Surface&) = delete;
     Surface& operator=(const Surface&) = delete;
@@ -123,28 +191,56 @@ public:
     }
 
     /// Returns the image at index, otherwise the base image
-    vk::Image Image(u32 index = 1) const noexcept;
+    vk::Image Image(Type type = Type::Current) const noexcept {
+        return handles[type == Type::Current ? current : type].image;
+    }
 
     /// Returns the image view at index, otherwise the base view
-    vk::ImageView ImageView(u32 index = 1) const noexcept;
+    vk::ImageView ImageView(ViewType view_type = ViewType::Sample,
+                            Type type = Type::Current) noexcept;
+
+    /// Returns a framebuffer handle for rendering to this surface
+    vk::Framebuffer Framebuffer(Type type = Type::Current) noexcept;
+
+    /// Returns width of the surface
+    u32 GetWidth() const noexcept {
+        return width;
+    }
+
+    /// Returns height of the surface
+    u32 GetHeight() const noexcept {
+        return height;
+    }
+
+    /// Returns resolution scale of the surface
+    u32 GetResScale() const noexcept {
+        return res_scale;
+    }
 
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
 
     /// Returns the framebuffer view of the surface image
-    vk::ImageView FramebufferView() noexcept;
+    vk::ImageView FramebufferView() noexcept {
+        is_framebuffer = true;
+        return ImageView(ViewType::Mip0);
+    }
 
     /// Returns the depth view of the surface image
-    vk::ImageView DepthView() noexcept;
+    vk::ImageView DepthView() noexcept {
+        return ImageView(ViewType::Depth);
+    }
 
     /// Returns the stencil view of the surface image
-    vk::ImageView StencilView() noexcept;
+    vk::ImageView StencilView() noexcept {
+        return ImageView(ViewType::Stencil);
+    }
 
-    /// Returns the R32 image view used for atomic load/store
-    vk::ImageView StorageView() noexcept;
-
-    /// Returns a framebuffer handle for rendering to this surface
-    vk::Framebuffer Framebuffer() noexcept;
+    /// Returns the R32 image view used for atomic load/store.
+    vk::ImageView StorageView() noexcept {
+        is_storage = true;
+        return ImageView(ViewType::Storage);
+    }
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
@@ -177,13 +273,12 @@ private:
                               const VideoCore::StagingData& staging);
 
 public:
-    TextureRuntime* runtime;
-    const Instance* instance;
-    Scheduler* scheduler;
+    TextureRuntime& runtime;
+    const Instance& instance;
+    Scheduler& scheduler;
     FormatTraits traits;
-    std::array<Handle, 3> handles{};
-    std::array<vk::UniqueFramebuffer, 2> framebuffers{};
-    Handle copy_handle;
+    std::array<Handle, Type::Num> handles;
+    Type current{};
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
@@ -200,8 +295,35 @@ public:
     Framebuffer(const Framebuffer&) = delete;
     Framebuffer& operator=(const Framebuffer&) = delete;
 
-    Framebuffer(Framebuffer&& o) noexcept = default;
-    Framebuffer& operator=(Framebuffer&& o) noexcept = default;
+    Framebuffer(Framebuffer&& other) noexcept
+        : VideoCore::FramebufferParams(std::move(other)), instance(other.instance),
+          images(std::exchange(other.images, {})),
+          image_views(std::exchange(other.image_views, {})),
+          framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
+          render_pass(std::exchange(other.render_pass, VK_NULL_HANDLE)),
+          framebuffer_views(std::move(other.framebuffer_views)),
+          aspects(std::exchange(other.aspects, {})),
+          formats(std::exchange(
+              other.formats, {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid})),
+          width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
+          res_scale(std::exchange(other.res_scale, 1)) {}
+
+    Framebuffer& operator=(Framebuffer&& other) noexcept {
+        VideoCore::FramebufferParams::operator=(std::move(other));
+        images = std::exchange(other.images, {});
+        image_views = std::exchange(other.image_views, {});
+        framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);
+        render_pass = std::exchange(other.render_pass, VK_NULL_HANDLE);
+        framebuffer_views = std::move(other.framebuffer_views);
+        aspects = std::exchange(other.aspects, {});
+        formats = std::exchange(other.formats,
+                                {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid});
+        width = std::exchange(other.width, 0);
+        height = std::exchange(other.height, 0);
+        res_scale = std::exchange(other.res_scale, 1);
+
+        return *this;
+    }
 
     VideoCore::PixelFormat Format(VideoCore::SurfaceType type) const noexcept {
         return formats[Index(type)];
@@ -212,7 +334,7 @@ public:
     }
 
     [[nodiscard]] vk::Framebuffer Handle() const noexcept {
-        return framebuffer.get();
+        return framebuffer;
     }
 
     [[nodiscard]] std::array<vk::Image, 2> Images() const noexcept {
@@ -231,19 +353,13 @@ public:
         return res_scale;
     }
 
-    u32 Width() const noexcept {
-        return width;
-    }
-
-    u32 Height() const noexcept {
-        return height;
-    }
-
 private:
+    const Instance& instance;
     std::array<vk::Image, 2> images{};
     std::array<vk::ImageView, 2> image_views{};
-    vk::UniqueFramebuffer framebuffer;
-    vk::RenderPass render_pass;
+    vk::Framebuffer framebuffer{};
+    vk::RenderPass render_pass{};
+    std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};

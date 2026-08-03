@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2012 Michael Kang, 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -19,7 +23,9 @@
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
@@ -913,14 +919,16 @@ static int clz(unsigned int x) {
     return n;
 }
 
-MICROPROFILE_DEFINE(DynCom_Execute, "DynCom", "Execute", MP_RGB(255, 0, 0));
+MICROPROFILE_DEFINE(DynCom_Execute, "DynCom", "execute", MP_RGB(255, 0, 0));
 
 unsigned InterpreterMainLoop(ARMul_State* cpu) {
     MICROPROFILE_SCOPE(DynCom_Execute);
 
+#ifdef ENABLE_GDBSTUB
     /// Nearest upcoming GDB code execution breakpoint, relative to the last dispatch's address.
     GDBStub::BreakpointAddress breakpoint_data;
     breakpoint_data.type = GDBStub::BreakpointType::None;
+#endif
 
 #undef RM
 #undef RS
@@ -948,17 +956,15 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 #define INC_PC(l) ptr += sizeof(arm_inst) + l
 #define INC_PC_STUB ptr += sizeof(arm_inst)
 
-#ifdef ANDROID
+#ifndef ENABLE_GDBSTUB
 #define GDB_BP_CHECK
 #else
 #define GDB_BP_CHECK                                                                               \
     cpu->Cpsr &= ~(1 << 5);                                                                        \
     cpu->Cpsr |= cpu->TFlag << 5;                                                                  \
-    if (GDBStub::IsServerEnabled()) {                                                              \
-        if (GDBStub::IsMemoryBreak()) {                                                            \
-            goto END;                                                                              \
-        } else if (breakpoint_data.type != GDBStub::BreakpointType::None &&                        \
-                   PC == breakpoint_data.address) {                                                \
+    if (GDBStub::IsServerEnabled()) [[unlikely]] {                                                 \
+        if (breakpoint_data.type != GDBStub::BreakpointType::None &&                               \
+            PC == breakpoint_data.address) {                                                       \
             cpu->RecordBreak(breakpoint_data);                                                     \
             goto END;                                                                              \
         }                                                                                          \
@@ -1627,7 +1633,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     std::size_t ptr;
 
     LOAD_NZCVT;
-DISPATCH : {
+DISPATCH: {
     if (!cpu->NirqSig) {
         if (!(cpu->Cpsr & 0x80)) {
             goto END;
@@ -1651,7 +1657,7 @@ DISPATCH : {
             goto END;
     }
 
-#ifndef ANDROID
+#ifdef ENABLE_GDBSTUB
     // Find breakpoint if one exists within the block
     if (GDBStub::IsConnected()) {
         breakpoint_data =
@@ -1662,7 +1668,7 @@ DISPATCH : {
     inst_base = (arm_inst*)&trans_cache_buf[ptr];
     GOTO_NEXT_INST;
 }
-ADC_INST : {
+ADC_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         adc_inst* const inst_cream = (adc_inst*)inst_base->component;
 
@@ -1696,7 +1702,7 @@ ADC_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-ADD_INST : {
+ADD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         add_inst* const inst_cream = (add_inst*)inst_base->component;
 
@@ -1728,7 +1734,7 @@ ADD_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-AND_INST : {
+AND_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         and_inst* const inst_cream = (and_inst*)inst_base->component;
 
@@ -1761,7 +1767,7 @@ AND_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-BBL_INST : {
+BBL_INST: {
     if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         bbl_inst* inst_cream = (bbl_inst*)inst_base->component;
         if (inst_cream->L) {
@@ -1775,7 +1781,7 @@ BBL_INST : {
     INC_PC(sizeof(bbl_inst));
     goto DISPATCH;
 }
-BIC_INST : {
+BIC_INST: {
     bic_inst* inst_cream = (bic_inst*)inst_base->component;
     if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         u32 lop = RN;
@@ -1805,7 +1811,7 @@ BIC_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-BKPT_INST : {
+BKPT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
         LOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: {:#010X}", inst_cream->imm);
@@ -1815,7 +1821,7 @@ BKPT_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-BLX_INST : {
+BLX_INST: {
     blx_inst* inst_cream = (blx_inst*)inst_base->component;
     if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         unsigned int inst = inst_cream->inst;
@@ -1843,7 +1849,7 @@ BLX_INST : {
 }
 
 BX_INST:
-BXJ_INST : {
+BXJ_INST: {
     // Note that only the 'fail' case of BXJ is emulated. This is because
     // the facilities for Jazelle emulation are not implemented.
     //
@@ -1871,7 +1877,7 @@ BXJ_INST : {
     goto DISPATCH;
 }
 
-CDP_INST : {
+CDP_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         // Undefined instruction here
         cpu->NumInstrsToExecute = 0;
@@ -1883,14 +1889,14 @@ CDP_INST : {
     GOTO_NEXT_INST;
 }
 
-CLREX_INST : {
+CLREX_INST: {
     cpu->UnsetExclusiveMemoryAddress();
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(clrex_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-CLZ_INST : {
+CLZ_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         clz_inst* inst_cream = (clz_inst*)inst_base->component;
         RD = clz(RM);
@@ -1900,7 +1906,7 @@ CLZ_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-CMN_INST : {
+CMN_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         cmn_inst* const inst_cream = (cmn_inst*)inst_base->component;
 
@@ -1922,7 +1928,7 @@ CMN_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-CMP_INST : {
+CMP_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         cmp_inst* const inst_cream = (cmp_inst*)inst_base->component;
 
@@ -1944,7 +1950,7 @@ CMP_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-CPS_INST : {
+CPS_INST: {
     cps_inst* inst_cream = (cps_inst*)inst_base->component;
     u32 aif_val = 0;
     u32 aif_mask = 0;
@@ -1975,7 +1981,7 @@ CPS_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-CPY_INST : {
+CPY_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mov_inst* inst_cream = (mov_inst*)inst_base->component;
 
@@ -1990,7 +1996,7 @@ CPY_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-EOR_INST : {
+EOR_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         eor_inst* inst_cream = (eor_inst*)inst_base->component;
 
@@ -2021,7 +2027,7 @@ EOR_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDC_INST : {
+LDC_INST: {
     // Instruction not implemented
     // LOG_CRITICAL(Core_ARM11, "unimplemented instruction");
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -2029,7 +2035,7 @@ LDC_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDM_INST : {
+LDM_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2100,7 +2106,7 @@ LDM_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SXTH_INST : {
+SXTH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sxth_inst* inst_cream = (sxth_inst*)inst_base->component;
 
@@ -2117,7 +2123,7 @@ SXTH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDR_INST : {
+LDR_INST: {
     ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
     inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
@@ -2137,7 +2143,7 @@ LDR_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRCOND_INST : {
+LDRCOND_INST: {
     if (CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2158,7 +2164,7 @@ LDRCOND_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UXTH_INST : {
+UXTH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         uxth_inst* inst_cream = (uxth_inst*)inst_base->component;
         RD = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xffff;
@@ -2168,7 +2174,7 @@ UXTH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UXTAH_INST : {
+UXTAH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         uxtah_inst* inst_cream = (uxtah_inst*)inst_base->component;
         unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xffff;
@@ -2180,7 +2186,7 @@ UXTAH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRB_INST : {
+LDRB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2192,7 +2198,7 @@ LDRB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRBT_INST : {
+LDRBT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2211,7 +2217,7 @@ LDRBT_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRD_INST : {
+LDRD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         // Should check if RD is even-numbered, Rd != 14, addr[0:1] == 0, (CP15_reg1_U == 1 ||
@@ -2231,7 +2237,7 @@ LDRD_INST : {
     GOTO_NEXT_INST;
 }
 
-LDREX_INST : {
+LDREX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
@@ -2245,7 +2251,7 @@ LDREX_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDREXB_INST : {
+LDREXB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
@@ -2259,7 +2265,7 @@ LDREXB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDREXH_INST : {
+LDREXH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
@@ -2273,7 +2279,7 @@ LDREXH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDREXD_INST : {
+LDREXD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
@@ -2288,7 +2294,7 @@ LDREXD_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRH_INST : {
+LDRH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2300,7 +2306,7 @@ LDRH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRSB_INST : {
+LDRSB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2315,7 +2321,7 @@ LDRSB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRSH_INST : {
+LDRSH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2331,7 +2337,7 @@ LDRSH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-LDRT_INST : {
+LDRT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -2350,7 +2356,7 @@ LDRT_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MCR_INST : {
+MCR_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mcr_inst* inst_cream = (mcr_inst*)inst_base->component;
 
@@ -2368,7 +2374,7 @@ MCR_INST : {
     GOTO_NEXT_INST;
 }
 
-MCRR_INST : {
+MCRR_INST: {
     // Stubbed, as the MPCore doesn't have any registers that are accessible
     // through this instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
@@ -2385,7 +2391,7 @@ MCRR_INST : {
     GOTO_NEXT_INST;
 }
 
-MLA_INST : {
+MLA_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mla_inst* inst_cream = (mla_inst*)inst_base->component;
 
@@ -2404,7 +2410,7 @@ MLA_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MOV_INST : {
+MOV_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mov_inst* inst_cream = (mov_inst*)inst_base->component;
 
@@ -2430,7 +2436,7 @@ MOV_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MRC_INST : {
+MRC_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mrc_inst* inst_cream = (mrc_inst*)inst_base->component;
 
@@ -2451,7 +2457,7 @@ MRC_INST : {
     GOTO_NEXT_INST;
 }
 
-MRRC_INST : {
+MRRC_INST: {
     // Stubbed, as the MPCore doesn't have any registers that are accessible
     // through this instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
@@ -2468,7 +2474,7 @@ MRRC_INST : {
     GOTO_NEXT_INST;
 }
 
-MRS_INST : {
+MRS_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mrs_inst* inst_cream = (mrs_inst*)inst_base->component;
 
@@ -2484,7 +2490,7 @@ MRS_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MSR_INST : {
+MSR_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         msr_inst* inst_cream = (msr_inst*)inst_base->component;
         const u32 UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
@@ -2527,7 +2533,7 @@ MSR_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MUL_INST : {
+MUL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mul_inst* inst_cream = (mul_inst*)inst_base->component;
 
@@ -2544,7 +2550,7 @@ MUL_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-MVN_INST : {
+MVN_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mvn_inst* const inst_cream = (mvn_inst*)inst_base->component;
 
@@ -2571,7 +2577,7 @@ MVN_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-ORR_INST : {
+ORR_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         orr_inst* const inst_cream = (orr_inst*)inst_base->component;
 
@@ -2605,14 +2611,14 @@ ORR_INST : {
     GOTO_NEXT_INST;
 }
 
-NOP_INST : {
+NOP_INST: {
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC_STUB;
     FETCH_INST;
     GOTO_NEXT_INST;
 }
 
-PKHBT_INST : {
+PKHBT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         pkh_inst* inst_cream = (pkh_inst*)inst_base->component;
         RD = (RN & 0xFFFF) | ((RM << inst_cream->imm) & 0xFFFF0000);
@@ -2623,7 +2629,7 @@ PKHBT_INST : {
     GOTO_NEXT_INST;
 }
 
-PKHTB_INST : {
+PKHTB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         pkh_inst* inst_cream = (pkh_inst*)inst_base->component;
         int shift_imm = inst_cream->imm ? inst_cream->imm : 31;
@@ -2635,7 +2641,7 @@ PKHTB_INST : {
     GOTO_NEXT_INST;
 }
 
-PLD_INST : {
+PLD_INST: {
     // Not implemented. PLD is a hint instruction, so it's optional.
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -2647,7 +2653,7 @@ PLD_INST : {
 QADD_INST:
 QDADD_INST:
 QDSUB_INST:
-QSUB_INST : {
+QSUB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
         const u8 op1 = inst_cream->op1;
@@ -2721,7 +2727,7 @@ QADD16_INST:
 QADDSUBX_INST:
 QSUB8_INST:
 QSUB16_INST:
-QSUBADDX_INST : {
+QSUBADDX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
         const u16 rm_lo = (RM & 0xFFFF);
@@ -2779,7 +2785,7 @@ QSUBADDX_INST : {
 
 REV_INST:
 REV16_INST:
-REVSH_INST : {
+REVSH_INST: {
 
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         rev_inst* const inst_cream = (rev_inst*)inst_base->component;
@@ -2811,7 +2817,7 @@ REVSH_INST : {
     GOTO_NEXT_INST;
 }
 
-RFE_INST : {
+RFE_INST: {
     // RFE is unconditional
     ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
 
@@ -2825,7 +2831,7 @@ RFE_INST : {
     goto DISPATCH;
 }
 
-RSB_INST : {
+RSB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         rsb_inst* const inst_cream = (rsb_inst*)inst_base->component;
 
@@ -2859,7 +2865,7 @@ RSB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-RSC_INST : {
+RSC_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         rsc_inst* const inst_cream = (rsc_inst*)inst_base->component;
 
@@ -2899,7 +2905,7 @@ SSUB8_INST:
 SADD16_INST:
 SADDSUBX_INST:
 SSUBADDX_INST:
-SSUB16_INST : {
+SSUB16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
         const u8 op2 = inst_cream->op2;
@@ -3001,7 +3007,7 @@ SSUB16_INST : {
     GOTO_NEXT_INST;
 }
 
-SBC_INST : {
+SBC_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sbc_inst* const inst_cream = (sbc_inst*)inst_base->component;
 
@@ -3036,7 +3042,7 @@ SBC_INST : {
     GOTO_NEXT_INST;
 }
 
-SEL_INST : {
+SEL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
@@ -3074,7 +3080,7 @@ SEL_INST : {
     GOTO_NEXT_INST;
 }
 
-SETEND_INST : {
+SETEND_INST: {
     // SETEND is unconditional
     setend_inst* const inst_cream = (setend_inst*)inst_base->component;
     const bool big_endian = (inst_cream->set_bigend == 1);
@@ -3092,7 +3098,7 @@ SETEND_INST : {
     GOTO_NEXT_INST;
 }
 
-SEV_INST : {
+SEV_INST: {
     // Stubbed, as SEV is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         LOG_TRACE(Core_ARM11, "SEV executed.");
@@ -3109,7 +3115,7 @@ SHADD16_INST:
 SHADDSUBX_INST:
 SHSUB8_INST:
 SHSUB16_INST:
-SHSUBADDX_INST : {
+SHSUBADDX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
@@ -3175,7 +3181,7 @@ SHSUBADDX_INST : {
     GOTO_NEXT_INST;
 }
 
-SMLA_INST : {
+SMLA_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smla_inst* inst_cream = (smla_inst*)inst_base->component;
         s32 operand1, operand2;
@@ -3204,7 +3210,7 @@ SMLA_INST : {
 SMLAD_INST:
 SMLSD_INST:
 SMUAD_INST:
-SMUSD_INST : {
+SMUSD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
         const u8 op2 = inst_cream->op2;
@@ -3260,7 +3266,7 @@ SMUSD_INST : {
     GOTO_NEXT_INST;
 }
 
-SMLAL_INST : {
+SMLAL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         umlal_inst* inst_cream = (umlal_inst*)inst_base->component;
         long long int rm = RM;
@@ -3288,7 +3294,7 @@ SMLAL_INST : {
     GOTO_NEXT_INST;
 }
 
-SMLALXY_INST : {
+SMLALXY_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlalxy_inst* const inst_cream = (smlalxy_inst*)inst_base->component;
 
@@ -3317,7 +3323,7 @@ SMLALXY_INST : {
     GOTO_NEXT_INST;
 }
 
-SMLAW_INST : {
+SMLAW_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
@@ -3342,7 +3348,7 @@ SMLAW_INST : {
 }
 
 SMLALD_INST:
-SMLSLD_INST : {
+SMLSLD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlald_inst* const inst_cream = (smlald_inst*)inst_base->component;
 
@@ -3380,7 +3386,7 @@ SMLSLD_INST : {
 
 SMMLA_INST:
 SMMLS_INST:
-SMMUL_INST : {
+SMMUL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
@@ -3413,7 +3419,7 @@ SMMUL_INST : {
     GOTO_NEXT_INST;
 }
 
-SMUL_INST : {
+SMUL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smul_inst* inst_cream = (smul_inst*)inst_base->component;
         u32 operand1, operand2;
@@ -3433,7 +3439,7 @@ SMUL_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SMULL_INST : {
+SMULL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         umull_inst* inst_cream = (umull_inst*)inst_base->component;
         s64 rm = RM;
@@ -3459,7 +3465,7 @@ SMULL_INST : {
     GOTO_NEXT_INST;
 }
 
-SMULW_INST : {
+SMULW_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
@@ -3474,7 +3480,7 @@ SMULW_INST : {
     GOTO_NEXT_INST;
 }
 
-SRS_INST : {
+SRS_INST: {
     // SRS is unconditional
     ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
 
@@ -3490,7 +3496,7 @@ SRS_INST : {
     GOTO_NEXT_INST;
 }
 
-SSAT_INST : {
+SSAT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
 
@@ -3522,7 +3528,7 @@ SSAT_INST : {
     GOTO_NEXT_INST;
 }
 
-SSAT16_INST : {
+SSAT16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
         const u8 saturate_to = inst_cream->sat_imm;
@@ -3543,7 +3549,7 @@ SSAT16_INST : {
     GOTO_NEXT_INST;
 }
 
-STC_INST : {
+STC_INST: {
     // Instruction not implemented
     // LOG_CRITICAL(Core_ARM11, "unimplemented instruction");
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -3551,7 +3557,7 @@ STC_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STM_INST : {
+STM_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         unsigned int inst = inst_cream->inst;
@@ -3609,7 +3615,7 @@ STM_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SXTB_INST : {
+SXTB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sxtb_inst* inst_cream = (sxtb_inst*)inst_base->component;
 
@@ -3626,7 +3632,7 @@ SXTB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STR_INST : {
+STR_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3644,7 +3650,7 @@ STR_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UXTB_INST : {
+UXTB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         uxtb_inst* inst_cream = (uxtb_inst*)inst_base->component;
         RD = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xff;
@@ -3654,7 +3660,7 @@ UXTB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UXTAB_INST : {
+UXTAB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         uxtab_inst* inst_cream = (uxtab_inst*)inst_base->component;
 
@@ -3666,7 +3672,7 @@ UXTAB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STRB_INST : {
+STRB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3678,7 +3684,7 @@ STRB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STRBT_INST : {
+STRBT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3695,7 +3701,7 @@ STRBT_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STRD_INST : {
+STRD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3710,7 +3716,7 @@ STRD_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STREX_INST : {
+STREX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
@@ -3729,7 +3735,7 @@ STREX_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STREXB_INST : {
+STREXB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
@@ -3748,7 +3754,7 @@ STREXB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STREXD_INST : {
+STREXD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
@@ -3777,7 +3783,7 @@ STREXD_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STREXH_INST : {
+STREXH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
@@ -3796,7 +3802,7 @@ STREXH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STRH_INST : {
+STRH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3809,7 +3815,7 @@ STRH_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-STRT_INST : {
+STRT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
@@ -3830,7 +3836,7 @@ STRT_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SUB_INST : {
+SUB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sub_inst* const inst_cream = (sub_inst*)inst_base->component;
 
@@ -3862,7 +3868,7 @@ SUB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SWI_INST : {
+SWI_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         swi_inst* const inst_cream = (swi_inst*)inst_base->component;
         cpu->system.GetRunningCore().GetTimer().AddTicks(num_instrs);
@@ -3879,7 +3885,7 @@ SWI_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SWP_INST : {
+SWP_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         swp_inst* inst_cream = (swp_inst*)inst_base->component;
 
@@ -3894,7 +3900,7 @@ SWP_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SWPB_INST : {
+SWPB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         swp_inst* inst_cream = (swp_inst*)inst_base->component;
         addr = RN;
@@ -3907,7 +3913,7 @@ SWPB_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-SXTAB_INST : {
+SXTAB_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sxtab_inst* inst_cream = (sxtab_inst*)inst_base->component;
 
@@ -3924,7 +3930,7 @@ SXTAB_INST : {
 }
 
 SXTAB16_INST:
-SXTB16_INST : {
+SXTB16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sxtab_inst* const inst_cream = (sxtab_inst*)inst_base->component;
 
@@ -3955,7 +3961,7 @@ SXTB16_INST : {
     GOTO_NEXT_INST;
 }
 
-SXTAH_INST : {
+SXTAH_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sxtah_inst* inst_cream = (sxtah_inst*)inst_base->component;
 
@@ -3970,7 +3976,7 @@ SXTAH_INST : {
     GOTO_NEXT_INST;
 }
 
-TEQ_INST : {
+TEQ_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         teq_inst* const inst_cream = (teq_inst*)inst_base->component;
 
@@ -3991,7 +3997,7 @@ TEQ_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-TST_INST : {
+TST_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         tst_inst* const inst_cream = (tst_inst*)inst_base->component;
 
@@ -4018,7 +4024,7 @@ UADD16_INST:
 UADDSUBX_INST:
 USUB8_INST:
 USUB16_INST:
-USUBADDX_INST : {
+USUBADDX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
@@ -4188,7 +4194,7 @@ UHADD16_INST:
 UHADDSUBX_INST:
 UHSUBADDX_INST:
 UHSUB8_INST:
-UHSUB16_INST : {
+UHSUB16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
         const u32 rm_val = RM;
@@ -4261,7 +4267,7 @@ UHSUB16_INST : {
     GOTO_NEXT_INST;
 }
 
-UMAAL_INST : {
+UMAAL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         umaal_inst* const inst_cream = (umaal_inst*)inst_base->component;
         const u64 rm = RM;
@@ -4278,7 +4284,7 @@ UMAAL_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UMLAL_INST : {
+UMLAL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         umlal_inst* inst_cream = (umlal_inst*)inst_base->component;
         unsigned long long int rm = RM;
@@ -4300,7 +4306,7 @@ UMLAL_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-UMULL_INST : {
+UMULL_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         umull_inst* inst_cream = (umull_inst*)inst_base->component;
         unsigned long long int rm = RM;
@@ -4319,13 +4325,13 @@ UMULL_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-B_2_THUMB : {
+B_2_THUMB: {
     b_2_thumb* inst_cream = (b_2_thumb*)inst_base->component;
     cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
     INC_PC(sizeof(b_2_thumb));
     goto DISPATCH;
 }
-B_COND_THUMB : {
+B_COND_THUMB: {
     b_cond_thumb* inst_cream = (b_cond_thumb*)inst_base->component;
 
     if (CondPassed(cpu, inst_cream->cond))
@@ -4336,7 +4342,7 @@ B_COND_THUMB : {
     INC_PC(sizeof(b_cond_thumb));
     goto DISPATCH;
 }
-BL_1_THUMB : {
+BL_1_THUMB: {
     bl_1_thumb* inst_cream = (bl_1_thumb*)inst_base->component;
     cpu->Reg[14] = cpu->Reg[15] + 4 + inst_cream->imm;
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -4344,7 +4350,7 @@ BL_1_THUMB : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
-BL_2_THUMB : {
+BL_2_THUMB: {
     bl_2_thumb* inst_cream = (bl_2_thumb*)inst_base->component;
     int tmp = ((cpu->Reg[15] + 2) | 1);
     cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm);
@@ -4352,7 +4358,7 @@ BL_2_THUMB : {
     INC_PC(sizeof(bl_2_thumb));
     goto DISPATCH;
 }
-BLX_1_THUMB : {
+BLX_1_THUMB: {
     // BLX 1 for armv5t and above
     u32 tmp = cpu->Reg[15];
     blx_1_thumb* inst_cream = (blx_1_thumb*)inst_base->component;
@@ -4368,7 +4374,7 @@ UQADD16_INST:
 UQADDSUBX_INST:
 UQSUB8_INST:
 UQSUB16_INST:
-UQSUBADDX_INST : {
+UQSUBADDX_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
@@ -4424,7 +4430,7 @@ UQSUBADDX_INST : {
 }
 
 USAD8_INST:
-USADA8_INST : {
+USADA8_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
 
@@ -4455,7 +4461,7 @@ USADA8_INST : {
     GOTO_NEXT_INST;
 }
 
-USAT_INST : {
+USAT_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
 
@@ -4487,7 +4493,7 @@ USAT_INST : {
     GOTO_NEXT_INST;
 }
 
-USAT16_INST : {
+USAT16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
         const u8 saturate_to = inst_cream->sat_imm;
@@ -4509,7 +4515,7 @@ USAT16_INST : {
 }
 
 UXTAB16_INST:
-UXTB16_INST : {
+UXTB16_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         uxtab_inst* const inst_cream = (uxtab_inst*)inst_base->component;
 
@@ -4538,7 +4544,7 @@ UXTB16_INST : {
     GOTO_NEXT_INST;
 }
 
-WFE_INST : {
+WFE_INST: {
     // Stubbed, as WFE is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         LOG_TRACE(Core_ARM11, "WFE executed.");
@@ -4550,7 +4556,7 @@ WFE_INST : {
     GOTO_NEXT_INST;
 }
 
-WFI_INST : {
+WFI_INST: {
     // Stubbed, as WFI is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         LOG_TRACE(Core_ARM11, "WFI executed.");
@@ -4562,7 +4568,7 @@ WFI_INST : {
     GOTO_NEXT_INST;
 }
 
-YIELD_INST : {
+YIELD_INST: {
     // Stubbed, as YIELD is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         LOG_TRACE(Core_ARM11, "YIELD executed.");
@@ -4578,12 +4584,12 @@ YIELD_INST : {
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_IMPL
 
-END : {
+END: {
     SAVE_NZCVT;
     cpu->NumInstrsToExecute = 0;
     return num_instrs;
 }
-INIT_INST_LENGTH : {
+INIT_INST_LENGTH: {
     cpu->NumInstrsToExecute = 0;
     return num_instrs;
 }

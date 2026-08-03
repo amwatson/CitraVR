@@ -1,6 +1,8 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+
+// Originally MIT-licensed code from The Pixellizer Group
 
 // Copyright 2022 The Pixellizer Group
 //
@@ -38,7 +40,7 @@ SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
-static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
+static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 2);
 
 PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
@@ -65,33 +67,40 @@ PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system
 
 template <class Archive>
 void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
-    ar& is_enabled;
-    ar& allow_game_change;
-    ar& plugin_loaded;
-    ar& is_default_path;
-    ar& plugin_path;
-    ar& use_user_load_parameters;
-    ar& user_load_parameters;
-    ar& plg_event;
-    ar& plg_reply;
-    ar& memory_changed_handle;
-    ar& is_exe_load_function_set;
-    ar& exe_load_checksum;
-    ar& load_exe_func;
-    ar& load_exe_args;
-    ar& plugin_fb_addr;
+    ar & is_enabled;
+    ar & allow_game_change;
+    ar & plugin_loaded;
+    ar & is_default_path;
+    ar & plugin_path;
+    ar & memory_region;
+    ar & memory_block;
+    ar & plugin_process_id;
+    ar & use_user_load_parameters;
+    ar & user_load_parameters;
+    ar & plg_event;
+    ar & plg_reply;
+    ar & memory_changed_handle;
+    ar & is_exe_load_function_set;
+    ar & exe_load_checksum;
+    ar & load_exe_func;
+    ar & load_exe_args;
 }
 SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
 
 template <class Archive>
 void PLG_LDR::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar& plgldr_context;
+    ar & plgldr_context;
 }
 SERIALIZE_IMPL(PLG_LDR)
 
 void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel) {
-    if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded) {
+    constexpr u32 TITLE_ID_APP_MASK = 0xFFFFFFED;
+    constexpr u32 TITLE_ID_APP_VALUE = 0x00040000;
+    if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded ||
+        (static_cast<u32>(process.codeset->program_id >> 32) & TITLE_ID_APP_MASK) !=
+            TITLE_ID_APP_VALUE) {
         return;
     }
     {
@@ -106,9 +115,10 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         }
     }
     FileSys::Plugin3GXLoader plugin_loader;
+    const auto low_title_Id = plgldr_context.user_load_parameters.low_title_Id;
     if (plgldr_context.use_user_load_parameters &&
-        plgldr_context.user_load_parameters.low_title_Id ==
-            static_cast<u32>(process.codeset->program_id) &&
+        (low_title_Id == static_cast<u32>(process.codeset->program_id) ||
+         low_title_Id == 0 /* Should load for any title */) &&
         plgldr_context.user_load_parameters.path[0]) {
         std::string plugin_file = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
                                   std::string(plgldr_context.user_load_parameters.path + 1);
@@ -143,12 +153,22 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
 }
 
 void PLG_LDR::OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kernel) {
-    if (plgldr_context.plugin_loaded) {
+    if (plgldr_context.plugin_loaded && process.process_id == plgldr_context.plugin_process_id) {
         u32 status = kernel.memory.Read32(FileSys::Plugin3GXLoader::_3GX_exe_load_addr - 0xC);
         if (status == 0) {
             LOG_CRITICAL(Service_PLGLDR, "Failed to launch {}: Checksum failed",
                          plgldr_context.plugin_path);
         }
+        if (plgldr_context.memory_region != static_cast<Kernel::MemoryRegion>(0)) {
+            kernel.GetMemoryRegion(plgldr_context.memory_region)
+                ->Free(plgldr_context.memory_block.first, plgldr_context.memory_block.second);
+            plgldr_context.memory_region = static_cast<Kernel::MemoryRegion>(0);
+        }
+        plgldr_context.plugin_loaded = false;
+        plgldr_context.plugin_process_id = UINT32_MAX;
+        plgldr_context.memory_changed_handle = 0;
+        kernel.memory.Plugin3GXFramebufferAddress() = 0;
+        LOG_INFO(Service_PLGLDR, "Plugin unloaded successfully.");
     }
 }
 
@@ -204,7 +224,10 @@ void PLG_LDR::SetLoadSettings(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     plgldr_context.use_user_load_parameters = true;
-    plgldr_context.user_load_parameters.no_flash = rp.Pop<u32>() == 1;
+    u32_le flags = rp.Pop<u32>();
+    plgldr_context.user_load_parameters.no_flash = (flags & 1) == 1;
+    plgldr_context.user_load_parameters.plugin_memory_strategy =
+        static_cast<PluginMemoryStrategy>((flags >> 8) & 0xF);
     plgldr_context.user_load_parameters.low_title_Id = rp.Pop<u32>();
 
     auto path = rp.PopMappedBuffer();

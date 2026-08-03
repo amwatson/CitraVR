@@ -1,4 +1,4 @@
-add_library(citra_core STATIC
+add_library(citra_core STATIC EXCLUDE_FROM_ALL
     3ds.h
     arm/arm_interface.h
     arm/dyncom/arm_dyncom.cpp
@@ -40,10 +40,14 @@ add_library(citra_core STATIC
     dumping/backend.h
     dumping/ffmpeg_backend.cpp
     dumping/ffmpeg_backend.h
+    file_sys/archive_artic.cpp
+    file_sys/archive_artic.h
     file_sys/archive_backend.cpp
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
     file_sys/archive_extsavedata.h
+    file_sys/archive_nand.cpp
+    file_sys/archive_nand.h
     file_sys/archive_ncch.cpp
     file_sys/archive_ncch.h
     file_sys/archive_other_savedata.cpp
@@ -60,7 +64,10 @@ add_library(citra_core STATIC
     file_sys/archive_source_sd_savedata.h
     file_sys/archive_systemsavedata.cpp
     file_sys/archive_systemsavedata.h
-    file_sys/cia_common.h
+    file_sys/artic_cache.cpp
+    file_sys/artic_cache.h
+    file_sys/certificate.cpp
+    file_sys/certificate.h
     file_sys/cia_container.cpp
     file_sys/cia_container.h
     file_sys/directory_backend.h
@@ -76,6 +83,8 @@ add_library(citra_core STATIC
     file_sys/layered_fs.h
     file_sys/ncch_container.cpp
     file_sys/ncch_container.h
+    file_sys/otp.cpp
+    file_sys/otp.h
     file_sys/patch.cpp
     file_sys/patch.h
     file_sys/path_parser.cpp
@@ -87,8 +96,13 @@ add_library(citra_core STATIC
     file_sys/romfs_reader.h
     file_sys/savedata_archive.cpp
     file_sys/savedata_archive.h
+    file_sys/secure_value_backend_artic.cpp
+    file_sys/secure_value_backend_artic.h
+    file_sys/secure_value_backend.cpp
+    file_sys/secure_value_backend.h
     file_sys/seed_db.cpp
     file_sys/seed_db.h
+    file_sys/signature.h
     file_sys/ticket.cpp
     file_sys/ticket.h
     file_sys/title_metadata.cpp
@@ -112,10 +126,6 @@ add_library(citra_core STATIC
     frontend/image_interface.cpp
     frontend/image_interface.h
     frontend/input.h
-    gdbstub/gdbstub.cpp
-    gdbstub/gdbstub.h
-    gdbstub/hio.cpp
-    gdbstub/hio.h
     hle/applets/applet.cpp
     hle/applets/applet.h
     hle/applets/erreula.cpp
@@ -195,6 +205,8 @@ add_library(citra_core STATIC
     hle/service/ac/ac_u.h
     hle/service/act/act.cpp
     hle/service/act/act.h
+    hle/service/act/act_errors.cpp
+    hle/service/act/act_errors.h
     hle/service/act/act_a.cpp
     hle/service/act/act_a.h
     hle/service/act/act_u.cpp
@@ -279,6 +291,11 @@ add_library(citra_core STATIC
     hle/service/dlp/dlp_fkcl.h
     hle/service/dlp/dlp_srvr.cpp
     hle/service/dlp/dlp_srvr.h
+    hle/service/dlp/dlp_clt_base.cpp
+    hle/service/dlp/dlp_clt_base.h
+    hle/service/dlp/dlp_base.cpp
+    hle/service/dlp/dlp_base.h
+    hle/service/dlp/dlp_crypto.cpp
     hle/service/dsp/dsp_dsp.cpp
     hle/service/dsp/dsp_dsp.h
     hle/service/err/err_f.cpp
@@ -329,6 +346,8 @@ add_library(citra_core STATIC
     hle/service/ldr_ro/ldr_ro.h
     hle/service/mcu/mcu_hwc.cpp
     hle/service/mcu/mcu_hwc.h
+    hle/service/mcu/mcu_rtc.cpp
+    hle/service/mcu/mcu_rtc.h
     hle/service/mcu/mcu.cpp
     hle/service/mcu/mcu.h
     hle/service/mic/mic_u.cpp
@@ -439,12 +458,18 @@ add_library(citra_core STATIC
     hw/aes/ccm.h
     hw/aes/key.cpp
     hw/aes/key.h
+    hw/ecc.cpp
+    hw/ecc.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
+    hw/unique_data.cpp
+    hw/unique_data.h
     hw/y2r.cpp
     hw/y2r.h
     loader/3dsx.cpp
     loader/3dsx.h
+    loader/artic.cpp
+    loader/artic.h
     loader/elf.cpp
     loader/elf.h
     loader/loader.cpp
@@ -467,12 +492,14 @@ add_library(citra_core STATIC
     savestate_data.h
     system_titles.cpp
     system_titles.h
-    telemetry_session.cpp
-    telemetry_session.h
     tracer/citrace.h
     tracer/recorder.cpp
     tracer/recorder.h
 )
+
+if (ENABLE_BUILTIN_KEYBLOB)
+    target_sources(citra_core PRIVATE hw/default_keys.h)
+endif()
 
 create_target_directory_groups(citra_core)
 
@@ -495,6 +522,16 @@ if (ENABLE_SCRIPTING)
         rpc/server.h
         rpc/udp_server.cpp
         rpc/udp_server.h
+    )
+endif()
+
+if (ENABLE_GDBSTUB)
+    target_compile_definitions(citra_core PUBLIC -DENABLE_GDBSTUB)
+    target_sources(citra_core PRIVATE
+        gdbstub/gdbstub.cpp
+        gdbstub/gdbstub.h
+        gdbstub/hio.cpp
+        gdbstub/hio.h
     )
 endif()
 

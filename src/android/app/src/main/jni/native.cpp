@@ -73,6 +73,7 @@
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 #include "vr/main_helper.h"
+#include "vr/vr_settings.h"
 
 namespace {
 
@@ -198,6 +199,19 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         system.InsertCartridge(inserted_cartridge);
     }
 
+    FileUtil::SetCurrentRomPath(filepath);
+    u64 program_id{};
+    auto app_loader = Loader::GetLoader(filepath);
+    if (app_loader) {
+        app_loader->ReadProgramId(program_id);
+        system.RegisterAppLoaderEarly(app_loader);
+    }
+
+    // Load the title's compatibility settings before choosing a graphics
+    // backend. Graphics API and the other boot-only settings cannot be changed
+    // safely after the renderer and VR swapchain have been created.
+    Config{program_id};
+
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
     // CitraVR: only create the secondary window when a secondary surface actually
@@ -250,16 +264,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         break;
     }
 
-    // Forces a config reload on game boot, if the user changed settings in the UI
-    Config{};
-    // Replace with game-specific settings
-    u64 program_id{};
-    FileUtil::SetCurrentRomPath(filepath);
-    auto app_loader = Loader::GetLoader(filepath);
-    if (app_loader) {
-        app_loader->ReadProgramId(program_id);
-        system.RegisterAppLoaderEarly(app_loader);
-    }
     system.ApplySettings();
     Settings::LogSettings();
 
@@ -971,13 +975,36 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
-    Config{};
     Core::System& system{Core::System::GetInstance()};
+    u64 program_id{};
 
-    // Replace with game-specific settings
-    if (system.IsPoweredOn()) {
-        u64 program_id{};
+    const bool is_powered_on = system.IsPoweredOn();
+    if (is_powered_on) {
         system.GetAppLoader().ReadProgramId(program_id);
+    }
+
+    // Preserve settings whose owning subsystems were created at game boot. The
+    // new values remain staged in per_game.ini.vr and will take effect after a
+    // game restart; runtime-safe values such as stereoscopy are still applied.
+    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const bool async_shader_compilation =
+        Settings::values.async_shader_compilation.GetValue();
+    const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
+    const uint32_t resolution_factor = VRSettings::values.resolution_factor;
+    const int32_t vr_environment = VRSettings::values.vr_environment;
+    const int32_t immersive_mode = VRSettings::values.vr_immersive_mode;
+
+    Config{program_id};
+
+    if (is_powered_on) {
+        Settings::values.graphics_api = graphics_api;
+        Settings::values.async_shader_compilation = async_shader_compilation;
+        Settings::values.is_new_3ds = is_new_3ds;
+        VRSettings::values.resolution_factor = resolution_factor;
+        Settings::values.resolution_factor.SetValue(0);
+        VRSettings::values.vr_environment = vr_environment;
+        VRSettings::values.vr_immersive_mode = immersive_mode;
+        Settings::values.vr_immersive_mode = static_cast<u32>(immersive_mode);
     }
 
     if (multiplayer) {

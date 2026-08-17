@@ -5,7 +5,9 @@
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.color.MaterialColors
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
@@ -36,4 +38,40 @@ abstract class SettingViewHolder(itemView: View, protected val adapter: Settings
     abstract override fun onClick(clicked: View)
 
     abstract override fun onLongClick(clicked: View): Boolean
+
+    protected fun descriptionFor(item: SettingsItem): String? {
+        val baseDescription = if (item.descriptionId != 0) {
+            itemView.context.getString(item.descriptionId)
+        } else {
+            null
+        }
+        return listOfNotNull(baseDescription, item.perGameStatusText)
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString("\n")
+    }
+
+    protected fun applyPerGameTextColors(
+        item: SettingsItem,
+        name: TextView,
+        description: TextView,
+        value: TextView? = null
+    ) {
+        val normalNameColor = MaterialColors.getColor(
+            itemView,
+            com.google.android.material.R.attr.colorOnSurface
+        )
+        val normalDescriptionColor = MaterialColors.getColor(
+            itemView,
+            com.google.android.material.R.attr.colorOnSurfaceVariant
+        )
+        val highlightColor = MaterialColors.getColor(
+            itemView,
+            com.google.android.material.R.attr.colorTertiary
+        )
+        name.setTextColor(if (item.isOverriddenByGlobal) highlightColor else normalNameColor)
+        description.setTextColor(
+            if (item.isOverriddenByGlobal) highlightColor else normalDescriptionColor
+        )
+        value?.setTextColor(if (item.isOverriddenByGlobal) highlightColor else normalNameColor)
+    }
 }

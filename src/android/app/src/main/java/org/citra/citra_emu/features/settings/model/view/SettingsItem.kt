@@ -23,9 +23,16 @@ abstract class SettingsItem(
 ) {
     abstract val type: Int
 
+    /** Additional provenance shown by the in-game per-title settings UI. */
+    var perGameStatusText: String? = null
+    var isOverriddenByGlobal: Boolean = false
+    var configuredPerGameChoice: Int? = null
+    var allowRuntimeStaging: Boolean = false
+
     open val isEditable: Boolean
         get() {
             if (!EmulationActivity.isRunning()) return true
+            if (allowRuntimeStaging) return true
             return setting?.isRuntimeEditable ?: false
         }
 

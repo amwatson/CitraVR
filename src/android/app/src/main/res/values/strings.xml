@@ -1074,4 +1074,17 @@
     <string name="update_check_channel_description">Which update channel to use when checking for updates.</string>
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Prerelease</string>
+    <!-- In-game per-title compatibility settings -->
+    <string name="settings_scope_global">Global</string>
+    <string name="settings_scope_per_game">Per-game</string>
+    <string name="per_game_settings_loaded">Per-game settings loaded for %1$s</string>
+    <string name="per_game_settings_not_loaded">No per-game settings for %1$s. Changing a compatibility setting will create them.</string>
+    <string name="global_settings_require_exit_title">Global settings</string>
+    <string name="global_settings_require_exit_message">Exit the game to the main menu to change global settings. In-game changes to the supported compatibility settings are saved only for this game.</string>
+    <string name="per_game_overridden_by_global">Global value in use: %1$s. The base per-game config recommends %2$s.</string>
+    <string name="per_game_restart_required">A game restart is required for a changed per-game value to take effect.</string>
+    <string name="per_game_restart_pending">Restart this game to apply the staged compatibility changes.</string>
+    <string name="per_game_configured_choice">base per-game config</string>
+    <string name="setting_value_enabled">Enabled</string>
+    <string name="setting_value_disabled">Disabled</string>
 </resources>

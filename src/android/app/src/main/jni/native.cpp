@@ -838,6 +838,15 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIE
     return static_cast<jboolean>(!stop_run);
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_prepareGameSettings(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jlong j_program_id) {
+    const u64 program_id = static_cast<u64>(j_program_id);
+    if (program_id != 0) {
+        Config{program_id};
+        LOG_INFO(Frontend, "Prepared settings for title {:016X}", program_id);
+    }
+}
+
 jlong Java_org_citra_citra_1emu_NativeLibrary_getRunningTitleId([[maybe_unused]] JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
     u64 title_id{};

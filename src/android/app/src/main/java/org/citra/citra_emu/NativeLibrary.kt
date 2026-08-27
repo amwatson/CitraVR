@@ -176,6 +176,12 @@ object NativeLibrary {
      */
     external fun run(path: String)
 
+    /**
+     * Loads a title's boot-time settings before the VR layer creates its game
+     * surface. The game scanner has already resolved this ID.
+     */
+    external fun prepareGameSettings(titleId: Long)
+
     // Surface Handling
     external fun surfaceChanged(surf: Surface, shouldReleaseSurface: Boolean)
     external fun surfaceDestroyed()

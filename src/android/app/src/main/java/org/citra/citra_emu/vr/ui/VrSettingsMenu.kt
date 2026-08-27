@@ -135,7 +135,8 @@ class VrSettingsMenu(
     }
 
     private fun loadMenu(menuTag: String) {
-        presenter = SettingsFragmentPresenter(this, ::showResetPerGameDialog).also {
+        val resetSettings = if (scope == Scope.PER_GAME) ::showResetPerGameDialog else null
+        presenter = SettingsFragmentPresenter(this, resetSettings).also {
             it.onCreate(menuTag, "")
             it.onViewCreated(adapter!!)
         }
@@ -144,10 +145,16 @@ class VrSettingsMenu(
     }
 
     private fun saveAndApply() {
-        if (!isDirty || scope != Scope.PER_GAME) {
+        if (!isDirty) {
             return
         }
         isDirty = false
+
+        if (scope == Scope.GLOBAL) {
+            settings.saveSettings(this)
+            NativeLibrary.reloadSettings()
+            return
+        }
 
         val currentValues = PerGameSettings.readCurrentValues()
         val titleId = activeTitleId
@@ -216,10 +223,8 @@ class VrSettingsMenu(
             return
         }
 
-        if (scope == Scope.PER_GAME) {
-            handler.removeCallbacks(applyRunnable)
-            saveAndApply()
-        }
+        handler.removeCallbacks(applyRunnable)
+        saveAndApply()
 
         scope = newScope
         settings.loadSettings(this)
@@ -297,7 +302,7 @@ class VrSettingsMenu(
         val snapshot = perGameSnapshot ?: return
         perGameBanner.visibility = View.VISIBLE
         if (scope == Scope.GLOBAL) {
-            perGameStatus.setText(R.string.global_settings_read_only_status)
+            perGameStatus.setText(R.string.global_settings_status)
             return
         }
         val gameLabel = gameTitle?.takeIf(String::isNotBlank) ?: titleId
@@ -347,7 +352,6 @@ class VrSettingsMenu(
     override fun finish() {}
 
     override fun onSettingChanged() {
-        if (scope != Scope.PER_GAME) return
         isDirty = true
         // Debounce so a burst of changes results in a single INI write and
         // core settings reload.
@@ -358,21 +362,19 @@ class VrSettingsMenu(
     //// SettingsFragmentView ////
 
     override fun showSettingsList(settingsList: ArrayList<SettingsItem>) {
-        val snapshot = perGameSnapshot
-        settingsList.forEach { item ->
-            val definition = PerGameSettings.definitionFor(item.setting?.key)
-            val isPerGameReset =
-                item is RunnableSetting && item.nameId == R.string.reset_to_default
-            if (scope == Scope.GLOBAL) {
-                if (item.setting != null || item is RunnableSetting) {
+        if (scope == Scope.PER_GAME) {
+            val snapshot = perGameSnapshot
+            settingsList.forEach { item ->
+                val definition = PerGameSettings.definitionFor(item.setting?.key)
+                val isPerGameReset =
+                    item is RunnableSetting && item.nameId == R.string.reset_to_default
+                if (definition != null && snapshot != null) {
+                    decoratePerGameSetting(item, snapshot)
+                } else if ((item.setting != null || item is RunnableSetting) && !isPerGameReset) {
+                    // This compatibility file currently supports only the declared
+                    // per-title keys; do not let other settings silently save globally.
                     item.isReadOnly = true
                 }
-            } else if (definition != null && snapshot != null) {
-                decoratePerGameSetting(item, snapshot)
-            } else if ((item.setting != null || item is RunnableSetting) && !isPerGameReset) {
-                // This compatibility file currently supports only the declared
-                // per-title keys; do not let other settings silently save globally.
-                item.isReadOnly = true
             }
         }
         adapter?.setSettingsList(settingsList)

@@ -135,7 +135,7 @@ class VrSettingsMenu(
     }
 
     private fun loadMenu(menuTag: String) {
-        presenter = SettingsFragmentPresenter(this).also {
+        presenter = SettingsFragmentPresenter(this, ::showResetPerGameDialog).also {
             it.onCreate(menuTag, "")
             it.onViewCreated(adapter!!)
         }
@@ -244,6 +244,38 @@ class VrSettingsMenu(
         updatingScopeToggle = false
     }
 
+    private fun showResetPerGameDialog() {
+        if (scope != Scope.PER_GAME || activeTitleId == null) return
+        adapter?.showConfirmationDialog(
+            R.string.reset_per_game_settings,
+            R.string.reset_per_game_settings_description
+        ) {
+            resetPerGameSettings()
+        }
+    }
+
+    private fun resetPerGameSettings() {
+        val titleId = activeTitleId ?: return
+        handler.removeCallbacks(applyRunnable)
+        isDirty = false
+        if (!PerGameSettings.clearUserValues(titleId)) {
+            adapter?.showMessageDialog(
+                R.string.reset_per_game_settings,
+                R.string.reset_per_game_settings_failed
+            )
+            return
+        }
+
+        settings.loadSettings(this)
+        loadPerGameSettings()
+        NativeLibrary.reloadSettings()
+        presenter?.loadSettingsList()
+        // Settings are process-wide objects, so old and new rows see the same
+        // updated value during DiffUtil comparison. Force their visible values
+        // to be rebound after the reset.
+        adapter?.notifyDataSetChanged()
+    }
+
     private fun prepareTargetSettingsForGlobalSave(snapshot: PerGameSettings.Snapshot) {
         PerGameSettings.definitions.forEach { definition ->
             val section = settings.getSection(definition.section) ?: return@forEach
@@ -329,13 +361,15 @@ class VrSettingsMenu(
         val snapshot = perGameSnapshot
         settingsList.forEach { item ->
             val definition = PerGameSettings.definitionFor(item.setting?.key)
+            val isPerGameReset =
+                item is RunnableSetting && item.nameId == R.string.reset_to_default
             if (scope == Scope.GLOBAL) {
                 if (item.setting != null || item is RunnableSetting) {
                     item.isReadOnly = true
                 }
             } else if (definition != null && snapshot != null) {
                 decoratePerGameSetting(item, snapshot)
-            } else if (item.setting != null || item is RunnableSetting) {
+            } else if ((item.setting != null || item is RunnableSetting) && !isPerGameReset) {
                 // This compatibility file currently supports only the declared
                 // per-title keys; do not let other settings silently save globally.
                 item.isReadOnly = true

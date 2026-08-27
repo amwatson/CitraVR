@@ -802,7 +802,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         }
     }
 
-    private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
+    fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         dialog = showDialog(
             MaterialAlertDialogBuilder(context)
                 .setTitle(titleId)

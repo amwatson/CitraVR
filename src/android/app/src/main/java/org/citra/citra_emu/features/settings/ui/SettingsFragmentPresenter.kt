@@ -54,7 +54,10 @@ import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.vr.utils.VRUtils
 
-class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
+class SettingsFragmentPresenter(
+    private val fragmentView: SettingsFragmentView,
+    private val resetSettings: (() -> Unit)? = null
+) {
     private var menuTag: String? = null
     private lateinit var gameId: String
     private var settingsList: ArrayList<SettingsItem>? = null
@@ -252,9 +255,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 RunnableSetting(
                     R.string.reset_to_default,
                     0,
-                    false,
+                    resetSettings != null,
                     R.drawable.ic_restore,
-                    {
+                    resetSettings ?: {
                         // Requires an activity to host the dialog; unavailable
                         // from the in-VR settings panel.
                         settingsActivity?.let {
@@ -263,6 +266,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                                 ResetSettingsDialogFragment.TAG
                             )
                         }
+                        Unit
                     }
                 )
             )

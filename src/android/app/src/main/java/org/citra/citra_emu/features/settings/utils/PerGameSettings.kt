@@ -165,6 +165,24 @@ object PerGameSettings {
         }
     }
 
+    fun clearUserValues(titleId: String): Boolean {
+        val file = findExistingFile() ?: return true
+        return try {
+            val context = CitraApplication.appContext
+            val input = context.contentResolver.openInputStream(file.uri) ?: return false
+            val ini = input.use(::Wini)
+            val section = "$titleId.user"
+            if (!ini.containsKey(section)) return true
+            ini.remove(section)
+            val output = context.contentResolver.openOutputStream(file.uri, "wt") ?: return false
+            output.use(ini::store)
+            true
+        } catch (e: Exception) {
+            Log.error("[PerGameSettings] Error clearing per-game settings: ${e.message}")
+            false
+        }
+    }
+
     private fun findExistingFile(): DocumentFile? {
         val root = DocumentFile.fromTreeUri(
             CitraApplication.appContext,

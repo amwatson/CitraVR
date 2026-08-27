@@ -43,7 +43,10 @@ import org.citra.citra_emu.utils.TurboHelper
  * effect is visible in-game immediately. Settings the core only reads at boot
  * (and VR settings, which are read at VR init) still require a restart.
  */
-class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityView {
+class VrSettingsMenu(
+    panelRoot: View,
+    private val gameTitle: String?
+) : SettingsFragmentView, SettingsActivityView {
 
     override val settings = Settings()
 
@@ -265,10 +268,11 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
             perGameStatus.setText(R.string.global_settings_read_only_status)
             return
         }
+        val gameLabel = gameTitle?.takeIf(String::isNotBlank) ?: titleId
         val status = if (snapshot.hasTitleSettings) {
-            listView.context.getString(R.string.per_game_settings_loaded, titleId)
+            listView.context.getString(R.string.per_game_settings_loaded, gameLabel)
         } else {
-            listView.context.getString(R.string.per_game_settings_not_loaded, titleId)
+            listView.context.getString(R.string.per_game_settings_not_loaded, gameLabel)
         }
         val currentValues = PerGameSettings.readCurrentValues()
         val hasPendingRestart = PerGameSettings.definitions.any { definition ->

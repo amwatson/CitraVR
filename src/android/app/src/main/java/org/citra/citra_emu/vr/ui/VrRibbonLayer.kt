@@ -87,7 +87,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
         Log.error("VrRibbonLayer: settings panel not found")
         return
       }
-      settingsMenu = VrSettingsMenu(panelRoot)
+      settingsMenu = VrSettingsMenu(
+        panelRoot,
+        activity.intent.getStringExtra("SelectedTitle")
+      )
     }
     settingsMenu?.onShow()
   }

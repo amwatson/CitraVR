@@ -1077,11 +1077,11 @@
     <!-- In-game per-title compatibility settings -->
     <string name="settings_scope_global">Global</string>
     <string name="settings_scope_per_game">Per-game</string>
-    <string name="per_game_settings_loaded">Per-game settings loaded for %1$s</string>
-    <string name="per_game_settings_not_loaded">No per-game settings for %1$s. Changing a compatibility setting will create them.</string>
+    <string name="per_game_settings_loaded">Per-game settings loaded for “%1$s”</string>
+    <string name="per_game_settings_not_loaded">No per-game settings for “%1$s”. Changing a compatibility setting will create them.</string>
     <string name="global_settings_read_only_status">Global settings are read-only. Exit to the main menu to change them.</string>
     <string name="per_game_overridden_by_global">Global value in use: %1$s. The base per-game config recommends %2$s.</string>
-    <string name="per_game_restart_required">A game restart is required for a changed per-game value to take effect.</string>
+    <string name="per_game_restart_required">A game restart is required for this changed per-game value to take effect.</string>
     <string name="per_game_restart_pending">Restart this game to apply the staged compatibility changes.</string>
     <string name="per_game_configured_choice">base per-game config</string>
     <string name="setting_value_enabled">Enabled</string>

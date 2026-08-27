@@ -1083,8 +1083,8 @@
     <string name="per_game_overridden_by_global">Global value in use: %1$s. The base per-game config recommends %2$s.</string>
     <string name="per_game_restart_required">A game restart is required for this changed per-game value to take effect.</string>
     <string name="per_game_restart_pending">Restart this game to apply the staged compatibility changes.</string>
-    <string name="reset_per_game_settings">Reset Per-game Settings?</string>
-    <string name="reset_per_game_settings_description">Remove this game\'s overrides and restore its effective compatibility and global values?</string>
+    <string name="reset_per_game_settings">Reset per-game settings?</string>
+    <string name="reset_per_game_settings_description">Remove this game’s overrides and restore its effective compatibility and global values?</string>
     <string name="reset_per_game_settings_failed">The per-game settings could not be reset.</string>
     <string name="per_game_configured_choice">base per-game config</string>
     <string name="setting_value_enabled">Enabled</string>

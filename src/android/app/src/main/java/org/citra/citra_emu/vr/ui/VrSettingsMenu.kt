@@ -43,10 +43,9 @@ import org.citra.citra_emu.utils.TurboHelper
  * effect is visible in-game immediately. Settings the core only reads at boot
  * (and VR settings, which are read at VR init) still require a restart.
  */
-class VrSettingsMenu(
-    panelRoot: View,
-    private val gameTitle: String?
-) : SettingsFragmentView, SettingsActivityView {
+class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
+    SettingsFragmentView,
+    SettingsActivityView {
 
     override val settings = Settings()
 
@@ -72,12 +71,11 @@ class VrSettingsMenu(
     private var baselineValues: Map<String, String> = emptyMap()
     private var runningValues: Map<String, String> = emptyMap()
     private var scope = Scope.PER_GAME
-    private var updatingScopeToggle = false
 
     init {
         backButton.setOnClickListener { goBack() }
         scopeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (!isChecked || updatingScopeToggle) return@addOnButtonCheckedListener
+            if (!isChecked) return@addOnButtonCheckedListener
             when (checkedId) {
                 R.id.settings_scope_global -> switchScope(Scope.GLOBAL)
                 R.id.settings_scope_per_game -> switchScope(Scope.PER_GAME)
@@ -165,28 +163,15 @@ class VrSettingsMenu(
             }
             if (changedValues.isNotEmpty()) {
                 if (PerGameSettings.writeUserValues(titleId, changedValues)) {
-                    perGameSnapshot = snapshot.copy(
-                        fileExists = true,
-                        hasTitleSettings = true,
-                        userValues = snapshot.userValues + changedValues,
-                        effectiveValues = currentValues
-                    )
+                    perGameSnapshot = snapshot.copy(hasTitleSettings = true)
                     baselineValues = currentValues
                 } else {
                     // Leave the menu dirty so hiding it retries instead of silently
                     // dropping a per-game selection.
                     isDirty = true
+                    return
                 }
             }
-
-            // Keep existing runtime/global settings behavior for settings outside
-            // this compatibility schema, while guaranteeing that effective
-            // per-game values never leak into config.ini.vr.
-            prepareTargetSettingsForGlobalSave(snapshot)
-            settings.saveSettings(this)
-            PerGameSettings.applyValues(currentValues)
-        } else {
-            settings.saveSettings(this)
         }
 
         NativeLibrary.reloadSettings()
@@ -225,6 +210,10 @@ class VrSettingsMenu(
 
         handler.removeCallbacks(applyRunnable)
         saveAndApply()
+        if (isDirty) {
+            updateScopeToggle()
+            return
+        }
 
         scope = newScope
         settings.loadSettings(this)
@@ -238,7 +227,6 @@ class VrSettingsMenu(
     }
 
     private fun updateScopeToggle() {
-        updatingScopeToggle = true
         scopeToggle.check(
             if (scope == Scope.GLOBAL) {
                 R.id.settings_scope_global
@@ -246,7 +234,6 @@ class VrSettingsMenu(
                 R.id.settings_scope_per_game
             }
         )
-        updatingScopeToggle = false
     }
 
     private fun showResetPerGameDialog() {
@@ -279,19 +266,6 @@ class VrSettingsMenu(
         // updated value during DiffUtil comparison. Force their visible values
         // to be rebound after the reset.
         adapter?.notifyDataSetChanged()
-    }
-
-    private fun prepareTargetSettingsForGlobalSave(snapshot: PerGameSettings.Snapshot) {
-        PerGameSettings.definitions.forEach { definition ->
-            val section = settings.getSection(definition.section) ?: return@forEach
-            val globalValue = snapshot.globalCustomValues[definition.key]
-            if (globalValue == null) {
-                section.settings.remove(definition.key)
-            } else {
-                PerGameSettings.applyValues(mapOf(definition.key to globalValue))
-                section.putSetting(definition.setting)
-            }
-        }
     }
 
     private fun updateBanner() {
@@ -370,7 +344,9 @@ class VrSettingsMenu(
                     item is RunnableSetting && item.nameId == R.string.reset_to_default
                 if (definition != null && snapshot != null) {
                     decoratePerGameSetting(item, snapshot)
-                } else if ((item.setting != null || item is RunnableSetting) && !isPerGameReset) {
+                } else if (isPerGameReset) {
+                    item.isReadOnly = activeTitleId == null
+                } else if (item.setting != null || item is RunnableSetting) {
                     // This compatibility file currently supports only the declared
                     // per-title keys; do not let other settings silently save globally.
                     item.isReadOnly = true

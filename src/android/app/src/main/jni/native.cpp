@@ -843,7 +843,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_prepareGameSettings(
     const u64 program_id = static_cast<u64>(j_program_id);
     if (program_id != 0) {
         Config{program_id};
-        LOG_INFO(Frontend, "Prepared settings for title {:016X}", program_id);
     }
 }
 

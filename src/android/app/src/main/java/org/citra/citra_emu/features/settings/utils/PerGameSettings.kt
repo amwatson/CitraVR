@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright CitraVR Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,9 +6,6 @@ package org.citra.citra_emu.features.settings.utils
 
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
 import java.util.Locale
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
@@ -30,71 +27,35 @@ import org.ini4j.Wini
 object PerGameSettings {
     private const val FILE_NAME = "per_game"
 
-    data class Definition(
-        val key: String,
-        val section: String,
-        val setting: AbstractSetting,
-        val restartRequired: Boolean
-    )
+    data class Definition(val setting: AbstractSetting, val restartRequired: Boolean) {
+        val key = requireNotNull(setting.key)
+        val section = requireNotNull(setting.section)
+    }
 
     data class Snapshot(
-        val fileExists: Boolean,
         val hasTitleSettings: Boolean,
-        val userValues: Map<String, String>,
-        val effectiveValues: Map<String, String>,
         val globalCustomValues: Map<String, String>,
         val baseValues: Map<String, String>,
-        private val titleValues: Map<String, String> = emptyMap()
+        private val titleValues: Map<String, String>
     ) {
         fun isBaseOverriddenByGlobal(key: String): Boolean =
             titleValues.containsKey(key) && globalCustomValues.containsKey(key)
     }
 
     val definitions = listOf(
-        Definition(
-            key = IntSetting.GRAPHICS_API.key,
-            section = Settings.SECTION_RENDERER,
-            setting = IntSetting.GRAPHICS_API,
-            restartRequired = true
-        ),
-        Definition(
-            key = IntSetting.RESOLUTION_FACTOR.key,
-            section = Settings.SECTION_RENDERER,
-            setting = IntSetting.RESOLUTION_FACTOR,
-            restartRequired = true
-        ),
-        Definition(
-            key = BooleanSetting.ASYNC_SHADERS.key,
-            section = Settings.SECTION_RENDERER,
-            setting = BooleanSetting.ASYNC_SHADERS,
-            restartRequired = true
-        ),
-        Definition(
-            key = BooleanSetting.NEW_3DS.key,
-            section = Settings.SECTION_SYSTEM,
-            setting = BooleanSetting.NEW_3DS,
-            restartRequired = true
-        ),
-        Definition(
-            key = IntSetting.VR_IMMERSIVE_MODE.key,
-            section = Settings.SECTION_VR,
-            setting = IntSetting.VR_IMMERSIVE_MODE,
-            restartRequired = true
-        ),
-        Definition(
-            key = IntSetting.STEREOSCOPIC_3D_DEPTH.key,
-            section = Settings.SECTION_RENDERER,
-            setting = IntSetting.STEREOSCOPIC_3D_DEPTH,
-            restartRequired = false
-        )
+        Definition(setting = IntSetting.GRAPHICS_API, restartRequired = true),
+        Definition(setting = IntSetting.RESOLUTION_FACTOR, restartRequired = true),
+        Definition(setting = BooleanSetting.ASYNC_SHADERS, restartRequired = true),
+        Definition(setting = BooleanSetting.NEW_3DS, restartRequired = true),
+        Definition(setting = IntSetting.VR_IMMERSIVE_MODE, restartRequired = true),
+        Definition(setting = IntSetting.STEREOSCOPIC_3D_DEPTH, restartRequired = false)
     )
 
     private val definitionsByKey = definitions.associateBy { it.key }
 
     fun definitionFor(key: String?): Definition? = key?.let(definitionsByKey::get)
 
-    fun formatTitleId(titleId: Long): String =
-        String.format(Locale.ROOT, "%016X", titleId)
+    fun formatTitleId(titleId: Long): String = String.format(Locale.ROOT, "%016X", titleId)
 
     fun readCurrentValues(): Map<String, String> =
         definitions.associate { it.key to it.setting.valueAsString }
@@ -111,19 +72,19 @@ object PerGameSettings {
 
     fun load(titleId: String, settings: Settings): Snapshot {
         val currentValues = readCurrentValues()
-        val globalCustomValues = definitions.associateNotNull { definition ->
+        val globalCustomValues = definitions.mapNotNull { definition ->
             val value = settings.getSection(definition.section)
                 ?.getSetting(definition.key)
                 ?.valueAsString
             value?.let { definition.key to it }
-        }
+        }.toMap()
 
-        val file = findExistingFile()
-        val fileValues = file?.let(::readIniValues) ?: emptyMap()
-        val titleValues = fileValues[titleId] ?: emptyMap()
-        val userValues = fileValues["$titleId.user"] ?: emptyMap()
+        val ini = findExistingFile()?.let(::readIni)
+        val titleValues = readValues(ini, titleId)
+        val userValues = readValues(ini, "$titleId.user")
         val baseValues = definitions.associate { definition ->
-            definition.key to (titleValues[definition.key] ?: currentValues.getValue(definition.key))
+            val value = titleValues[definition.key] ?: currentValues.getValue(definition.key)
+            definition.key to value
         }
         val effectiveValues = baseValues.toMutableMap().apply {
             globalCustomValues.forEach { (key, value) -> this[key] = value }
@@ -136,10 +97,7 @@ object PerGameSettings {
         applyValues(effectiveValues)
 
         return Snapshot(
-            fileExists = file != null,
             hasTitleSettings = titleValues.isNotEmpty() || userValues.isNotEmpty(),
-            userValues = userValues,
-            effectiveValues = effectiveValues,
             globalCustomValues = globalCustomValues,
             baseValues = baseValues,
             titleValues = titleValues
@@ -149,36 +107,30 @@ object PerGameSettings {
     fun writeUserValues(titleId: String, values: Map<String, String>): Boolean {
         if (values.isEmpty()) return true
 
-        return try {
-            val file = SettingsFile.getSettingsFile(FILE_NAME)
-            val context = CitraApplication.appContext
-            val input = context.contentResolver.openInputStream(file.uri)
-            val ini = input?.use(::Wini) ?: Wini(ByteArrayInputStream(byteArrayOf()))
+        return updateIni({ SettingsFile.getSettingsFile(FILE_NAME) }) { ini ->
             val section = "$titleId.user"
             values.forEach { (key, value) -> ini.put(section, key, value) }
-            val output = context.contentResolver.openOutputStream(file.uri, "wt") ?: return false
-            output.use(ini::store)
-            true
-        } catch (e: Exception) {
-            Log.error("[PerGameSettings] Error writing per_game.ini.vr: ${e.message}")
-            false
         }
     }
 
-    fun clearUserValues(titleId: String): Boolean {
-        val file = findExistingFile() ?: return true
+    fun clearUserValues(titleId: String): Boolean = updateIni(::findExistingFile) { ini ->
+        ini.remove("$titleId.user")
+    }
+
+    private fun updateIni(getFile: () -> DocumentFile?, update: (Wini) -> Unit): Boolean {
         return try {
-            val context = CitraApplication.appContext
-            val input = context.contentResolver.openInputStream(file.uri) ?: return false
+            val file = getFile() ?: return true
+            val resolver = CitraApplication.appContext.contentResolver
+            val input = resolver.openInputStream(file.uri)
+                ?: error("Could not open ${file.uri} for reading")
             val ini = input.use(::Wini)
-            val section = "$titleId.user"
-            if (!ini.containsKey(section)) return true
-            ini.remove(section)
-            val output = context.contentResolver.openOutputStream(file.uri, "wt") ?: return false
-            output.use(ini::store)
+            update(ini)
+            val output = resolver.openOutputStream(file.uri, "wt")
+                ?: error("Could not open ${file.uri} for writing")
+            output.use { ini.store(it) }
             true
         } catch (e: Exception) {
-            Log.error("[PerGameSettings] Error clearing per-game settings: ${e.message}")
+            Log.error("[PerGameSettings] Failed to update $FILE_NAME.ini.vr: $e")
             false
         }
     }
@@ -191,47 +143,19 @@ object PerGameSettings {
         return root.findFile("config")?.findFile("$FILE_NAME.ini.vr")
     }
 
-    private fun readIniValues(file: DocumentFile): Map<String, Map<String, String>> {
-        val values = linkedMapOf<String, MutableMap<String, String>>()
-        var section: MutableMap<String, String>? = null
-        return try {
-            val input = CitraApplication.appContext.contentResolver.openInputStream(file.uri)
-                ?: return emptyMap()
-            input.use { stream ->
-                BufferedReader(InputStreamReader(stream)).forEachLine { line ->
-                    val trimmed = line.trim()
-                    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                        section = values.getOrPut(trimmed.substring(1, trimmed.length - 1)) {
-                            linkedMapOf()
-                        }
-                    } else if (
-                        section != null &&
-                        !trimmed.startsWith("#") &&
-                        !trimmed.startsWith(";")
-                    ) {
-                        val separator = trimmed.indexOf('=')
-                        if (separator > 0) {
-                            val key = trimmed.substring(0, separator).trim()
-                            val value = trimmed.substring(separator + 1).trim()
-                            if (value.isNotEmpty()) {
-                                section!![key] = value
-                            }
-                        }
-                    }
-                }
-            }
-            values
-        } catch (e: Exception) {
-            Log.error("[PerGameSettings] Error reading per_game.ini.vr: ${e.message}")
-            emptyMap()
-        }
+    private fun readIni(file: DocumentFile): Wini? = try {
+        val input = CitraApplication.appContext.contentResolver.openInputStream(file.uri)
+            ?: error("Could not open ${file.uri} for reading")
+        input.use(::Wini)
+    } catch (e: Exception) {
+        Log.error("[PerGameSettings] Failed to read $FILE_NAME.ini.vr: $e")
+        null
     }
 
-    private inline fun <T, K, V> Iterable<T>.associateNotNull(
-        transform: (T) -> Pair<K, V>?
-    ): Map<K, V> = buildMap {
-        for (item in this@associateNotNull) {
-            transform(item)?.let { (key, value) -> put(key, value) }
-        }
-    }
+    private fun readValues(ini: Wini?, section: String): Map<String, String> =
+        definitions.mapNotNull { definition ->
+            ini?.get(section, definition.key)
+                ?.takeIf(String::isNotEmpty)
+                ?.let { definition.key to it }
+        }.toMap()
 }

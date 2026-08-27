@@ -215,7 +215,8 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                     oldItem.isOverriddenByGlobal != newItem.isOverriddenByGlobal ||
                     oldItem.configuredPerGameChoice != newItem.configuredPerGameChoice ||
                     oldItem.allowRuntimeStaging != newItem.allowRuntimeStaging ||
-                    oldItem.isReadOnly != newItem.isReadOnly) {
+                    oldItem.isReadOnly != newItem.isReadOnly
+                ) {
                     return false
                 }
 
@@ -802,7 +803,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         }
     }
 
-    fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
+    internal fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         dialog = showDialog(
             MaterialAlertDialogBuilder(context)
                 .setTitle(titleId)

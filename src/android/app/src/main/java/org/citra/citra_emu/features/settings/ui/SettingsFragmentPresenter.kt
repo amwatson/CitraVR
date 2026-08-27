@@ -159,20 +159,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addConfigSettings(sl: ArrayList<SettingsItem>) {
         activityView.setToolbarTitle(context.getString(R.string.preferences_settings))
         sl.apply {
-            // VR and gamepad settings are only offered in the 2D settings
-            // before launching VR: VR settings are read once at VR init, and
-            // button mapping can't capture controller input from the headset.
             val isInVr = settingsActivity == null
-            if (!isInVr) {
-                add(
-                    SubmenuSetting(
-                        R.string.preferences_vr,
-                        0,
-                        R.drawable.ic_vr_adjust_depth,
-                        Settings.SECTION_VR
-                    )
+            add(
+                SubmenuSetting(
+                    R.string.preferences_vr,
+                    0,
+                    R.drawable.ic_vr_adjust_depth,
+                    Settings.SECTION_VR
                 )
-            }
+            )
             add(
                 SubmenuSetting(
                     R.string.preferences_general,
@@ -197,6 +192,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     Settings.SECTION_CAMERA
                 )
             )
+            // Button mapping can't capture controller input from the headset.
             if (!isInVr) {
                 add(
                     SubmenuSetting(

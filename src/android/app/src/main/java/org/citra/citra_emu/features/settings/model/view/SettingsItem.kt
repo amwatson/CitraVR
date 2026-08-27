@@ -28,9 +28,11 @@ abstract class SettingsItem(
     var isOverriddenByGlobal: Boolean = false
     var configuredPerGameChoice: Int? = null
     var allowRuntimeStaging: Boolean = false
+    var isReadOnly: Boolean = false
 
     open val isEditable: Boolean
         get() {
+            if (isReadOnly) return false
             if (!EmulationActivity.isRunning()) return true
             if (allowRuntimeStaging) return true
             return setting?.isRuntimeEditable ?: false

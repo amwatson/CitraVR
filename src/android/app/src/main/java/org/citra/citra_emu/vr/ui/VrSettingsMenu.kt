@@ -12,6 +12,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.view.RunnableSetting
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
@@ -67,16 +68,16 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
     private var perGameSnapshot: PerGameSettings.Snapshot? = null
     private var baselineValues: Map<String, String> = emptyMap()
     private var runningValues: Map<String, String> = emptyMap()
+    private var scope = Scope.PER_GAME
+    private var updatingScopeToggle = false
 
     init {
         backButton.setOnClickListener { goBack() }
-        scopeToggle.addOnButtonCheckedListener { group, checkedId, isChecked ->
-            if (isChecked && checkedId == R.id.settings_scope_global) {
-                adapter?.showMessageDialog(
-                    R.string.global_settings_require_exit_title,
-                    R.string.global_settings_require_exit_message
-                )
-                group.check(R.id.settings_scope_per_game)
+        scopeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || updatingScopeToggle) return@addOnButtonCheckedListener
+            when (checkedId) {
+                R.id.settings_scope_global -> switchScope(Scope.GLOBAL)
+                R.id.settings_scope_per_game -> switchScope(Scope.PER_GAME)
             }
         }
     }
@@ -95,7 +96,12 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         // Reload from disk on every presentation so deleting per_game.ini.vr or
         // editing it outside the app is reflected without retaining stale state.
         settings.loadSettings(this)
-        loadPerGameSettings()
+        if (scope == Scope.PER_GAME) {
+            loadPerGameSettings()
+        } else {
+            updateBanner()
+        }
+        updateScopeToggle()
         if (menuStack.isEmpty()) {
             showSettingsFragment(SettingsFile.FILE_NAME_CONFIG, false, "")
         } else {
@@ -135,7 +141,7 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
     }
 
     private fun saveAndApply() {
-        if (!isDirty) {
+        if (!isDirty || scope != Scope.PER_GAME) {
             return
         }
         isDirty = false
@@ -198,8 +204,41 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         activeTitleId = titleId
         perGameSnapshot = snapshot
         baselineValues = resolvedValues
-        scopeToggle.check(R.id.settings_scope_per_game)
         updateBanner()
+    }
+
+    private fun switchScope(newScope: Scope) {
+        if (scope == newScope) {
+            updateScopeToggle()
+            return
+        }
+
+        if (scope == Scope.PER_GAME) {
+            handler.removeCallbacks(applyRunnable)
+            saveAndApply()
+        }
+
+        scope = newScope
+        settings.loadSettings(this)
+        if (scope == Scope.PER_GAME) {
+            loadPerGameSettings()
+        } else {
+            updateBanner()
+        }
+        updateScopeToggle()
+        menuStack.lastOrNull()?.let(::loadMenu)
+    }
+
+    private fun updateScopeToggle() {
+        updatingScopeToggle = true
+        scopeToggle.check(
+            if (scope == Scope.GLOBAL) {
+                R.id.settings_scope_global
+            } else {
+                R.id.settings_scope_per_game
+            }
+        )
+        updatingScopeToggle = false
     }
 
     private fun prepareTargetSettingsForGlobalSave(snapshot: PerGameSettings.Snapshot) {
@@ -222,6 +261,10 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         }
         val snapshot = perGameSnapshot ?: return
         perGameBanner.visibility = View.VISIBLE
+        if (scope == Scope.GLOBAL) {
+            perGameStatus.setText(R.string.global_settings_read_only_status)
+            return
+        }
         val status = if (snapshot.hasTitleSettings) {
             listView.context.getString(R.string.per_game_settings_loaded, titleId)
         } else {
@@ -268,6 +311,7 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
     override fun finish() {}
 
     override fun onSettingChanged() {
+        if (scope != Scope.PER_GAME) return
         isDirty = true
         // Debounce so a burst of changes results in a single INI write and
         // core settings reload.
@@ -279,8 +323,19 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
 
     override fun showSettingsList(settingsList: ArrayList<SettingsItem>) {
         val snapshot = perGameSnapshot
-        if (snapshot != null) {
-            settingsList.forEach { item -> decoratePerGameSetting(item, snapshot) }
+        settingsList.forEach { item ->
+            val definition = PerGameSettings.definitionFor(item.setting?.key)
+            if (scope == Scope.GLOBAL) {
+                if (item.setting != null || item is RunnableSetting) {
+                    item.isReadOnly = true
+                }
+            } else if (definition != null && snapshot != null) {
+                decoratePerGameSetting(item, snapshot)
+            } else if (item.setting != null || item is RunnableSetting) {
+                // This compatibility file currently supports only the declared
+                // per-title keys; do not let other settings silently save globally.
+                item.isReadOnly = true
+            }
         }
         adapter?.setSettingsList(settingsList)
     }
@@ -347,5 +402,10 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
 
     companion object {
         private const val APPLY_DELAY_MS = 500L
+    }
+
+    private enum class Scope {
+        GLOBAL,
+        PER_GAME
     }
 }

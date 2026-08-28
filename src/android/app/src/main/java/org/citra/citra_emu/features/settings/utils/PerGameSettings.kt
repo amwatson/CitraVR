@@ -34,12 +34,14 @@ object PerGameSettings {
 
     data class Snapshot(
         val hasTitleSettings: Boolean,
-        val globalCustomValues: Map<String, String>,
-        val baseValues: Map<String, String>,
-        private val titleValues: Map<String, String>
+        private val globalCustomValues: Map<String, String>,
+        private val titleValues: Map<String, String>,
+        private val userValues: Map<String, String>
     ) {
         fun isBaseOverriddenByGlobal(key: String): Boolean =
-            titleValues.containsKey(key) && globalCustomValues.containsKey(key)
+            titleValues.containsKey(key) &&
+                globalCustomValues.containsKey(key) &&
+                !userValues.containsKey(key)
     }
 
     val definitions = listOf(
@@ -82,11 +84,10 @@ object PerGameSettings {
         val ini = findExistingFile()?.let(::readIni)
         val titleValues = readValues(ini, titleId)
         val userValues = readValues(ini, "$titleId.user")
-        val baseValues = definitions.associate { definition ->
+        val effectiveValues = definitions.associate { definition ->
             val value = titleValues[definition.key] ?: currentValues.getValue(definition.key)
             definition.key to value
-        }
-        val effectiveValues = baseValues.toMutableMap().apply {
+        }.toMutableMap().apply {
             globalCustomValues.forEach { (key, value) -> this[key] = value }
             userValues.forEach { (key, value) -> this[key] = value }
         }
@@ -99,8 +100,8 @@ object PerGameSettings {
         return Snapshot(
             hasTitleSettings = titleValues.isNotEmpty() || userValues.isNotEmpty(),
             globalCustomValues = globalCustomValues,
-            baseValues = baseValues,
-            titleValues = titleValues
+            titleValues = titleValues,
+            userValues = userValues
         )
     }
 

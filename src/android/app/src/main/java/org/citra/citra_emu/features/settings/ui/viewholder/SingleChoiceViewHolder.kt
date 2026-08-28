@@ -27,12 +27,6 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
         }
         binding.textSettingValue.visibility = View.VISIBLE
         binding.textSettingValue.text = getTextSetting()
-        applyPerGameTextColors(
-            item,
-            binding.textSettingName,
-            binding.textSettingDescription,
-            binding.textSettingValue
-        )
 
         if (setting.isActive) {
             binding.textSettingName.alpha = 1f

@@ -13,10 +13,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.RunnableSetting
-import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
-import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
-import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 import org.citra.citra_emu.features.settings.ui.SettingsFragmentPresenter
@@ -262,10 +259,6 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
         loadPerGameSettings()
         NativeLibrary.reloadSettings()
         presenter?.loadSettingsList()
-        // Settings are process-wide objects, so old and new rows see the same
-        // updated value during DiffUtil comparison. Force their visible values
-        // to be rebound after the reset.
-        adapter?.notifyDataSetChanged()
     }
 
     private fun updateBanner() {
@@ -374,41 +367,12 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
 
         val statusLines = mutableListOf<String>()
         if (snapshot.isBaseOverriddenByGlobal(definition.key)) {
-            val globalValue = displayValue(item, snapshot.globalCustomValues.getValue(definition.key))
-            val baseValue = displayValue(item, snapshot.baseValues.getValue(definition.key))
-            item.isOverriddenByGlobal = true
-            item.configuredPerGameChoice = snapshot.baseValues[definition.key]?.toIntOrNull()
-            statusLines += listView.context.getString(
-                R.string.per_game_overridden_by_global,
-                globalValue,
-                baseValue
-            )
+            statusLines += listView.context.getString(R.string.per_game_overridden_by_global)
         }
         if (definition.restartRequired) {
             statusLines += listView.context.getString(R.string.in_game_restart_required)
         }
         item.perGameStatusText = statusLines.takeIf { it.isNotEmpty() }?.joinToString("\n")
-    }
-
-    private fun displayValue(item: SettingsItem, value: String): String {
-        return when (item) {
-            is SingleChoiceSetting -> {
-                val intValue = value.toIntOrNull()
-                val values = listView.context.resources.getIntArray(item.valuesId)
-                val names = listView.context.resources.getStringArray(item.choicesId)
-                val index = intValue?.let(values::indexOf) ?: -1
-                index.takeIf { it >= 0 }?.let { names[it] } ?: value
-            }
-
-            is SwitchSetting -> if (value.toBoolean()) {
-                listView.context.getString(R.string.setting_value_enabled)
-            } else {
-                listView.context.getString(R.string.setting_value_disabled)
-            }
-
-            is SliderSetting -> "$value${item.units}"
-            else -> value
-        }
     }
 
     override fun loadSettingsList() {

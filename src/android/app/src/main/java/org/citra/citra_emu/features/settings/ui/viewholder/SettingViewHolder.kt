@@ -5,9 +5,7 @@
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.color.MaterialColors
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
@@ -50,28 +48,4 @@ abstract class SettingViewHolder(itemView: View, protected val adapter: Settings
             ?.joinToString("\n")
     }
 
-    protected fun applyPerGameTextColors(
-        item: SettingsItem,
-        name: TextView,
-        description: TextView,
-        value: TextView? = null
-    ) {
-        val normalNameColor = MaterialColors.getColor(
-            itemView,
-            com.google.android.material.R.attr.colorOnSurface
-        )
-        val normalDescriptionColor = MaterialColors.getColor(
-            itemView,
-            com.google.android.material.R.attr.colorOnSurfaceVariant
-        )
-        val highlightColor = MaterialColors.getColor(
-            itemView,
-            com.google.android.material.R.attr.colorTertiary
-        )
-        name.setTextColor(if (item.isOverriddenByGlobal) highlightColor else normalNameColor)
-        description.setTextColor(
-            if (item.isOverriddenByGlobal) highlightColor else normalDescriptionColor
-        )
-        value?.setTextColor(if (item.isOverriddenByGlobal) highlightColor else normalNameColor)
-    }
 }

@@ -27,8 +27,6 @@ abstract class SettingsItem(
 
     /** Additional provenance shown by the in-game per-title settings UI. */
     var perGameStatusText: String? = null
-    var isOverriddenByGlobal: Boolean = false
-    var configuredPerGameChoice: Int? = null
     var allowRuntimeStaging: Boolean = false
     var isReadOnly: Boolean = false
 

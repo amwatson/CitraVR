@@ -129,14 +129,14 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
         return false
     }
 
-    private fun loadMenu(menuTag: String) {
+    private fun loadMenu(menuTag: String, resetScroll: Boolean = true) {
         val resetSettings = if (scope == Scope.PER_GAME) ::showResetPerGameDialog else null
         presenter = SettingsFragmentPresenter(this, resetSettings).also {
             it.onCreate(menuTag, "")
             it.onViewCreated(adapter!!)
         }
         backButton.visibility = if (menuStack.size > 1) View.VISIBLE else View.INVISIBLE
-        listView.scrollToPosition(0)
+        if (resetScroll) listView.scrollToPosition(0)
     }
 
     private fun saveAndApply() {
@@ -220,7 +220,7 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
             updateBanner()
         }
         updateScopeToggle()
-        menuStack.lastOrNull()?.let(::loadMenu)
+        menuStack.lastOrNull()?.let { loadMenu(it, resetScroll = false) }
     }
 
     private fun updateScopeToggle() {

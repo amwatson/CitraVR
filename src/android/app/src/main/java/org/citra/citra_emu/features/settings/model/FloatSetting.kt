@@ -37,7 +37,11 @@ enum class FloatSetting(
         }
 
     companion object {
-        private val NOT_RUNTIME_EDITABLE = emptyList<FloatSetting>()
+        private val NOT_RUNTIME_EDITABLE = listOf(
+            BACKGROUND_RED,
+            BACKGROUND_BLUE,
+            BACKGROUND_GREEN
+        )
 
         fun from(key: String): FloatSetting? = FloatSetting.values().firstOrNull { it.key == key }
 

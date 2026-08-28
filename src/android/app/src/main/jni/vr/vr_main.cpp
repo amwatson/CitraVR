@@ -390,7 +390,8 @@ private:
         // Create the game surface layer.
         {
             ALOGI("VR Extra Performance Mode: {}",
-                  VRSettings::values.extra_performance_mode_enabled ? "enabled" : "disabled");
+                  Settings::values.vr_extra_performance_mode_enabled.GetValue() ? "enabled"
+                                                                                : "disabled");
 
             const uint32_t defaultResolutionFactor =
                 GetDefaultGameResolutionFactorForHmd(VRSettings::values.hmd_type);

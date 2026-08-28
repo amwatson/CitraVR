@@ -214,6 +214,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                 if (oldItem.perGameStatusText != newItem.perGameStatusText ||
                     oldItem.isOverriddenByGlobal != newItem.isOverriddenByGlobal ||
                     oldItem.configuredPerGameChoice != newItem.configuredPerGameChoice ||
+                    oldItem.valueAtCreation != newItem.valueAtCreation ||
                     oldItem.allowRuntimeStaging != newItem.allowRuntimeStaging ||
                     oldItem.isReadOnly != newItem.isReadOnly
                 ) {

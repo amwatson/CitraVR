@@ -336,7 +336,16 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
     //// SettingsFragmentView ////
 
     override fun showSettingsList(settingsList: ArrayList<SettingsItem>) {
-        if (scope == Scope.PER_GAME) {
+        if (scope == Scope.GLOBAL) {
+            settingsList.forEach { item ->
+                if (item.setting?.isRuntimeEditable == false) {
+                    item.allowRuntimeStaging = true
+                    item.perGameStatusText = listView.context.getString(
+                        R.string.in_game_restart_required
+                    )
+                }
+            }
+        } else {
             val snapshot = perGameSnapshot
             settingsList.forEach { item ->
                 val definition = PerGameSettings.definitionFor(item.setting?.key)
@@ -376,7 +385,7 @@ class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
             )
         }
         if (definition.restartRequired) {
-            statusLines += listView.context.getString(R.string.per_game_restart_required)
+            statusLines += listView.context.getString(R.string.in_game_restart_required)
         }
         item.perGameStatusText = statusLines.takeIf { it.isNotEmpty() }?.joinToString("\n")
     }

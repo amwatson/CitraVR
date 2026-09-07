@@ -19,14 +19,14 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
     override fun bind(item: SettingsItem) {
         setting = item as SwitchSetting
         binding.textSettingName.setText(item.nameId)
-        if (item.descriptionId != 0) {
-            binding.textSettingDescription.setText(item.descriptionId)
+        val description = descriptionFor(item)
+        if (description != null) {
+            binding.textSettingDescription.text = description
             binding.textSettingDescription.visibility = View.VISIBLE
         } else {
             binding.textSettingDescription.text = ""
             binding.textSettingDescription.visibility = View.GONE
         }
-
         binding.switchWidget.setOnCheckedChangeListener(null)
         binding.switchWidget.isChecked = setting.isChecked
         binding.switchWidget.setOnCheckedChangeListener { _: CompoundButton, _: Boolean ->

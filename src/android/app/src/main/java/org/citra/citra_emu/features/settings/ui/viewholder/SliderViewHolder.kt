@@ -23,9 +23,10 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
     override fun bind(item: SettingsItem) {
         setting = item as SliderSetting
         binding.textSettingName.setText(item.nameId)
-        if (item.descriptionId != 0) {
+        val description = descriptionFor(item)
+        if (description != null) {
             binding.textSettingDescription.visibility = View.VISIBLE
-            binding.textSettingDescription.setText(item.descriptionId)
+            binding.textSettingDescription.text = description
         } else {
             binding.textSettingDescription.visibility = View.GONE
         }
@@ -38,7 +39,6 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
            setting.setting is FloatSetting -> "${(setting.setting as AbstractFloatSetting).float}${setting.units}"
             else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
         }
-
         if (setting.isActive) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f

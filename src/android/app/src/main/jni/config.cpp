@@ -27,13 +27,34 @@
 #include "vr/utils/LogUtils.h"
 #include "vr/vr_settings.h"
 
-Config::Config() {
+Config::Config(u64 program_id_) : program_id{program_id_} {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     android_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini.vr";
     std::string ini_buffer;
     FileUtil::ReadFileToString(true, android_config_loc, ini_buffer);
     if (!ini_buffer.empty()) {
         android_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
+    }
+
+    // CitraVR per-game compatibility settings intentionally live in one optional
+    // file next to config.ini.vr. Merely loading a title never creates this file,
+    // so deleting it restores the normal defaults/global configuration on the
+    // next launch.
+    if (program_id != 0) {
+        const std::string per_game_config_loc =
+            FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "per_game.ini.vr";
+        std::string per_game_ini_buffer;
+        FileUtil::ReadFileToString(true, per_game_config_loc, per_game_ini_buffer);
+        if (!per_game_ini_buffer.empty()) {
+            auto reader = std::make_unique<INIReader>(per_game_ini_buffer.c_str(),
+                                                      per_game_ini_buffer.size());
+            if (reader->ParseError() >= 0) {
+                per_game_config = std::move(reader);
+            } else {
+                ANDROID_ONLY_LOGW("Failed to parse optional per-game config %s",
+                                  per_game_config_loc.c_str());
+            }
+        }
     }
 
     Reload();
@@ -104,9 +125,115 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<Type, range
     }
 }
 
+bool Config::HasCustomGlobalValue(const std::string& group, const std::string& key) const {
+    // The generated config contains blank `key =` declarations. GetString treats
+    // those as absent, which is exactly the distinction needed between defaults
+    // and a value explicitly selected in the global settings UI.
+    return !android_config->GetString(group, key, "").empty();
+}
+
+long Config::ResolvePerGameInteger(const std::string& title_section, const std::string& group,
+                                   const std::string& key, long current_value) const {
+    if (!per_game_config) {
+        return current_value;
+    }
+
+    long resolved = current_value;
+    if (!per_game_config->GetString(title_section, key, "").empty()) {
+        resolved = per_game_config->GetInteger(title_section, key, resolved);
+    }
+    if (HasCustomGlobalValue(group, key)) {
+        resolved = current_value;
+    }
+
+    const std::string user_section = title_section + ".user";
+    if (!per_game_config->GetString(user_section, key, "").empty()) {
+        resolved = per_game_config->GetInteger(user_section, key, resolved);
+    }
+    return resolved;
+}
+
+bool Config::ResolvePerGameBoolean(const std::string& title_section, const std::string& group,
+                                   const std::string& key, bool current_value) const {
+    if (!per_game_config) {
+        return current_value;
+    }
+
+    bool resolved = current_value;
+    if (!per_game_config->GetString(title_section, key, "").empty()) {
+        resolved = per_game_config->GetBoolean(title_section, key, resolved);
+    }
+    if (HasCustomGlobalValue(group, key)) {
+        resolved = current_value;
+    }
+
+    const std::string user_section = title_section + ".user";
+    if (!per_game_config->GetString(user_section, key, "").empty()) {
+        resolved = per_game_config->GetBoolean(user_section, key, resolved);
+    }
+    return resolved;
+}
+
+void Config::ApplyPerGameValues() {
+    if (!per_game_config || program_id == 0) {
+        return;
+    }
+
+    std::ostringstream section_stream;
+    section_stream << std::uppercase << std::hex << std::setw(16) << std::setfill('0')
+                   << program_id;
+    const std::string title_section = section_stream.str();
+    if (!per_game_config->HasSection(title_section) &&
+        !per_game_config->HasSection(title_section + ".user")) {
+        return;
+    }
+
+    const long graphics_api = ResolvePerGameInteger(
+        title_section, "Renderer", Settings::values.graphics_api.GetLabel(),
+        static_cast<long>(Settings::values.graphics_api.GetValue()));
+    if (graphics_api >= static_cast<long>(Settings::GraphicsAPI::OpenGL) &&
+        graphics_api <= static_cast<long>(Settings::GraphicsAPI::Vulkan)) {
+        Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(graphics_api);
+    }
+
+    const long resolution_factor = ResolvePerGameInteger(
+        title_section, "Renderer", Settings::values.resolution_factor.GetLabel(),
+        VRSettings::values.resolution_factor);
+    if (resolution_factor >= 0 && resolution_factor <= 10) {
+        VRSettings::values.resolution_factor = static_cast<uint32_t>(resolution_factor);
+        // The VR swapchain owns the actual scale; Citra's internal setting stays auto.
+        Settings::values.resolution_factor.SetValue(0);
+    }
+
+    Settings::values.async_shader_compilation = ResolvePerGameBoolean(
+        title_section, "Renderer", Settings::values.async_shader_compilation.GetLabel(),
+        Settings::values.async_shader_compilation.GetValue());
+    Settings::values.is_new_3ds = ResolvePerGameBoolean(
+        title_section, "System", Settings::values.is_new_3ds.GetLabel(),
+        Settings::values.is_new_3ds.GetValue());
+
+    const long immersive_mode = ResolvePerGameInteger(
+        title_section, "VR", Settings::values.vr_immersive_mode.GetLabel(),
+        VRSettings::values.vr_immersive_mode);
+    if (immersive_mode >= 0 && immersive_mode <= 3) {
+        VRSettings::values.vr_immersive_mode = static_cast<int32_t>(immersive_mode);
+        Settings::values.vr_immersive_mode = static_cast<u32>(immersive_mode);
+    }
+
+    const long factor_3d = ResolvePerGameInteger(
+        title_section, "Renderer", Settings::values.factor_3d.GetLabel(),
+        Settings::values.factor_3d.GetValue());
+    if (factor_3d >= 0 && factor_3d <= 400) {
+        Settings::values.factor_3d = static_cast<u32>(factor_3d);
+        VRSettings::values.vr_factor_3d = static_cast<int32_t>(factor_3d / 10);
+    }
+
+    ANDROID_ONLY_LOGI("Applied per-game settings for title %s", title_section.c_str());
+}
+
 void Config::ReadValues() {
     // VR::extra performance mode (configured first because it overrides other values)
-    VRSettings::values.extra_performance_mode_enabled = android_config->GetBoolean(
+    Settings::values.vr_extra_performance_mode_enabled = android_config->GetBoolean(
         "VR", "vr_extra_performance_mode", false);
 
     // Controls
@@ -280,7 +407,7 @@ void Config::ReadValues() {
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);
 
-    if (!VRSettings::values.extra_performance_mode_enabled) {
+    if (!Settings::values.vr_extra_performance_mode_enabled.GetValue()) {
       ReadSetting("Audio", Settings::values.enable_audio_stretching);
     } else {
       Settings::values.enable_audio_stretching = 0;
@@ -347,7 +474,7 @@ void Config::ReadValues() {
       ANDROID_ONLY_LOGI("HMD type: %s", hmdTypeStr.c_str());
       VRSettings::values.hmd_type = VRSettings::HmdTypeFromStr(hmdTypeStr);
     }
-    VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ?
+    VRSettings::values.vr_environment = Settings::values.vr_extra_performance_mode_enabled.GetValue() ?
       static_cast<long>(VRSettings::VREnvironmentType::VOID) : android_config->GetInteger(
           "VR", "vr_environment",
           static_cast<long>(VRSettings::values.hmd_type == VRSettings::HMDType::QUEST3 ?
@@ -355,7 +482,7 @@ void Config::ReadValues() {
     // CitraVR: default to the highest CPU clock level. Emulation is nearly
     // always CPU-bound, and the GPU level is already pinned to boost.
     VRSettings::values.cpu_level =
-      VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
+      Settings::values.vr_extra_performance_mode_enabled.GetValue() ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(android_config->GetInteger(
             "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
     VRSettings::values.vr_immersive_mode = android_config->GetInteger(
@@ -368,8 +495,8 @@ void Config::ReadValues() {
     // For immersive modes we use the factor_3d value as a camera movement factor
     // which means it affects stereo separation and positional movement
     // We have to divide this by 10 or the numbers are too big
-    VRSettings::values.vr_factor_3d = android_config->GetInteger(
-            "Renderer", "factor_3d", 100) / 10;
+    VRSettings::values.vr_factor_3d =
+        static_cast<int32_t>(Settings::values.factor_3d.GetValue() / 10);
     VRSettings::values.vr_immersive_positional_game_scaler = android_config->GetInteger(
             "VR", "vr_immersive_positional_game_scaler", 0);
     Settings::values.vr_immersive_positional_game_scaler = VRSettings::values.vr_immersive_positional_game_scaler;
@@ -377,6 +504,8 @@ void Config::ReadValues() {
     VRSettings::values.vr_immersive_eye_indicator = android_config->GetString(
             "VR", "vr_immersive_eye_indicator", "");
     Settings::values.vr_immersive_eye_indicator = VRSettings::values.vr_immersive_eye_indicator;
+
+    ApplyPerGameValues();
 
     if (Settings::values.vr_immersive_mode.GetValue() > 0) {
       ANDROID_ONLY_LOGI("VR immersive mode enabled");

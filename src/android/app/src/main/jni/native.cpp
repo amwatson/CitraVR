@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <codecvt>
 #include <thread>
+#include <vector>
 #include <dlfcn.h>
 
 #include <android/api-level.h>
@@ -73,6 +74,7 @@
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 #include "vr/main_helper.h"
+#include "vr/vr_settings.h"
 
 namespace {
 
@@ -198,6 +200,19 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         system.InsertCartridge(inserted_cartridge);
     }
 
+    FileUtil::SetCurrentRomPath(filepath);
+    u64 program_id{};
+    auto app_loader = Loader::GetLoader(filepath);
+    if (app_loader) {
+        app_loader->ReadProgramId(program_id);
+        system.RegisterAppLoaderEarly(app_loader);
+    }
+
+    // Load the title's compatibility settings before choosing a graphics
+    // backend. Graphics API and the other boot-only settings cannot be changed
+    // safely after the renderer and VR swapchain have been created.
+    Config{program_id};
+
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
     // CitraVR: only create the secondary window when a secondary surface actually
@@ -250,16 +265,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         break;
     }
 
-    // Forces a config reload on game boot, if the user changed settings in the UI
-    Config{};
-    // Replace with game-specific settings
-    u64 program_id{};
-    FileUtil::SetCurrentRomPath(filepath);
-    auto app_loader = Loader::GetLoader(filepath);
-    if (app_loader) {
-        app_loader->ReadProgramId(program_id);
-        system.RegisterAppLoaderEarly(app_loader);
-    }
     system.ApplySettings();
     Settings::LogSettings();
 
@@ -834,6 +839,14 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIE
     return static_cast<jboolean>(!stop_run);
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_prepareGameSettings(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jlong j_program_id) {
+    const u64 program_id = static_cast<u64>(j_program_id);
+    if (program_id != 0) {
+        Config{program_id};
+    }
+}
+
 jlong Java_org_citra_citra_1emu_NativeLibrary_getRunningTitleId([[maybe_unused]] JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
     u64 title_id{};
@@ -969,15 +982,49 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
     env->ReleaseStringUTFChars(j_path, path.data());
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
-                                                            [[maybe_unused]] jobject obj) {
-    Config{};
+void Java_org_citra_citra_1emu_NativeLibrary_reloadSettingsNative(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj,
+                                                                  jobjectArray j_non_runtime_keys) {
     Core::System& system{Core::System::GetInstance()};
+    u64 program_id{};
 
-    // Replace with game-specific settings
-    if (system.IsPoweredOn()) {
-        u64 program_id{};
+    const bool is_powered_on = system.IsPoweredOn();
+    if (is_powered_on) {
         system.GetAppLoader().ReadProgramId(program_id);
+
+        std::vector<std::string> non_runtime_keys;
+        const jsize key_count = env->GetArrayLength(j_non_runtime_keys);
+        non_runtime_keys.reserve(static_cast<size_t>(key_count));
+        for (jsize i = 0; i < key_count; ++i) {
+            auto key = static_cast<jstring>(env->GetObjectArrayElement(j_non_runtime_keys, i));
+            non_runtime_keys.emplace_back(GetJString(env, key));
+            env->DeleteLocalRef(key);
+        }
+
+        // Most settings are retained by RuntimeSettingsGuard. These legacy raw
+        // values do not use Settings::Setting and therefore need preserving here.
+        const auto camera_names = Settings::values.camera_name;
+        const auto camera_configs = Settings::values.camera_config;
+        const auto resolution_factor = VRSettings::values.resolution_factor;
+        const auto vr_environment = VRSettings::values.vr_environment;
+        const auto cpu_level = VRSettings::values.cpu_level;
+        const auto immersive_mode = VRSettings::values.vr_immersive_mode;
+
+        {
+            Settings::RuntimeSettingsGuard guard{non_runtime_keys};
+            Config{program_id};
+        }
+
+        Settings::values.camera_name = camera_names;
+        Settings::values.camera_config = camera_configs;
+        VRSettings::values.resolution_factor = resolution_factor;
+        Settings::values.resolution_factor.SetValue(0);
+        VRSettings::values.vr_environment = vr_environment;
+        VRSettings::values.cpu_level = cpu_level;
+        VRSettings::values.vr_immersive_mode = immersive_mode;
+        Settings::values.vr_immersive_mode = static_cast<u32>(immersive_mode);
+    } else {
+        Config{};
     }
 
     if (multiplayer) {

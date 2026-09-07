@@ -18,9 +18,10 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
     override fun bind(item: SettingsItem) {
         setting = item
         binding.textSettingName.setText(item.nameId)
-        if (item.descriptionId != 0) {
+        val description = descriptionFor(item)
+        if (description != null) {
             binding.textSettingDescription.visibility = View.VISIBLE
-            binding.textSettingDescription.setText(item.descriptionId)
+            binding.textSettingDescription.text = description
         } else {
             binding.textSettingDescription.visibility = View.GONE
         }

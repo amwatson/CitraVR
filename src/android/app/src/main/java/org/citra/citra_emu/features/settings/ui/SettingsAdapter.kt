@@ -207,6 +207,13 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                 if (oldItem == null || newItem == null || oldItem.type != newItem.type) {
                     return false
                 }
+                if (oldItem.perGameStatusText != newItem.perGameStatusText ||
+                    oldItem.valueAtCreation != newItem.valueAtCreation ||
+                    oldItem.allowRuntimeStaging != newItem.allowRuntimeStaging ||
+                    oldItem.isReadOnly != newItem.isReadOnly
+                ) {
+                    return false
+                }
 
                 return when (oldItem.type) {
                     SettingsItem.TYPE_SLIDER -> {
@@ -272,6 +279,16 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             MaterialAlertDialogBuilder(context)
                 .setTitle(item.nameId)
                 .setSingleChoiceItems(item.choicesId, value, this)
+        )
+    }
+
+    fun showMessageDialog(@StringRes titleId: Int, @StringRes messageId: Int) {
+        closeDialog()
+        dialog = showDialog(
+            MaterialAlertDialogBuilder(context)
+                .setTitle(titleId)
+                .setMessage(messageId)
+                .setPositiveButton(android.R.string.ok, defaultCancelListener)
         )
     }
 
@@ -753,7 +770,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         }
     }
 
-    private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
+    internal fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         dialog = showDialog(
             MaterialAlertDialogBuilder(context)
                 .setTitle(titleId)

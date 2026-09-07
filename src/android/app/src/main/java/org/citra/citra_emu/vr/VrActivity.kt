@@ -47,6 +47,7 @@ class VrActivity : EmulationActivity() {
         }
         hasRun = true
         currentActivity = this
+        NativeLibrary.prepareGameSettings(intent.getLongExtra(EXTRA_SELECTED_TITLE_ID, 0L))
         mHandle = nativeOnCreate()
     }
 
@@ -177,6 +178,7 @@ class VrActivity : EmulationActivity() {
 
     companion object {
         const val EXTRA_ERROR_TWO_INSTANCES = "org.citra.citra_emu.vr.ERROR_TWO_INSTANCES"
+        private const val EXTRA_SELECTED_TITLE_ID = "SelectedTitleId"
         var hasRun = false
         var currentActivity: VrActivity? = null
 
@@ -193,7 +195,7 @@ class VrActivity : EmulationActivity() {
 
         fun launch(
             context: Context, gamePath: String?,
-            gameTitle: String?
+            gameTitle: String?, gameTitleId: Long
         ) {
             val intent = Intent(context, VrActivity::class.java)
             val mainDisplayId = getMainDisplay(context)
@@ -205,8 +207,9 @@ class VrActivity : EmulationActivity() {
                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             )
-               intent.putExtra("SelectedGame", gamePath);
-              intent.putExtra("SelectedTitle", gameTitle);
+            intent.putExtra("SelectedGame", gamePath)
+            intent.putExtra("SelectedTitle", gameTitle)
+            intent.putExtra(EXTRA_SELECTED_TITLE_ID, gameTitleId)
             (context as Activity).finish()
             if (context is ContextWrapper) {
                 val baseContext = context.baseContext

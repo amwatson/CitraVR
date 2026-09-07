@@ -1074,4 +1074,16 @@
     <string name="update_check_channel_description">Which update channel to use when checking for updates.</string>
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Prerelease</string>
+    <!-- In-game per-title compatibility settings -->
+    <string name="settings_scope_global">Global</string>
+    <string name="settings_scope_per_game">Per-game</string>
+    <string name="per_game_settings_loaded">Per-game settings loaded for “%1$s”</string>
+    <string name="per_game_settings_not_loaded">No per-game settings for “%1$s”. Changing a compatibility setting will create them.</string>
+    <string name="global_settings_status">Global settings can be changed here. Settings marked as requiring a restart take effect the next time the game starts.</string>
+    <string name="per_game_overridden_by_global">A global setting overrides the base per-game default.</string>
+    <string name="in_game_restart_required">A game restart is required for this setting to take effect.</string>
+    <string name="per_game_restart_pending">Restart this game to apply the staged compatibility changes.</string>
+    <string name="reset_per_game_settings">Reset per-game settings?</string>
+    <string name="reset_per_game_settings_description">Remove this game’s overrides and restore its effective compatibility and global values?</string>
+    <string name="reset_per_game_settings_failed">The per-game settings could not be reset.</string>
 </resources>

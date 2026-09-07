@@ -36,4 +36,16 @@ abstract class SettingViewHolder(itemView: View, protected val adapter: Settings
     abstract override fun onClick(clicked: View)
 
     abstract override fun onLongClick(clicked: View): Boolean
+
+    protected fun descriptionFor(item: SettingsItem): String? {
+        val baseDescription = if (item.descriptionId != 0) {
+            itemView.context.getString(item.descriptionId)
+        } else {
+            null
+        }
+        return listOfNotNull(baseDescription, item.perGameStatusText)
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString("\n")
+    }
+
 }

@@ -13,13 +13,21 @@ class INIReader;
 class Config {
 private:
     std::unique_ptr<INIReader> android_config;
+    std::unique_ptr<INIReader> per_game_config;
     std::string android_config_loc;
+    u64 program_id{};
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
+    void ApplyPerGameValues();
+    bool HasCustomGlobalValue(const std::string& group, const std::string& key) const;
+    long ResolvePerGameInteger(const std::string& title_section, const std::string& group,
+                               const std::string& key, long current_value) const;
+    bool ResolvePerGameBoolean(const std::string& title_section, const std::string& group,
+                               const std::string& key, bool current_value) const;
 
 public:
-    Config();
+    explicit Config(u64 program_id = 0);
     ~Config();
 
     void Reload();

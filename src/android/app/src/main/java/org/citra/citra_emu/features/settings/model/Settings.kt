@@ -109,6 +109,21 @@ class Settings {
     }
 
     companion object {
+        val nonRuntimeEditableKeys: Array<String> by lazy {
+            sequenceOf<AbstractSetting>(
+                *BooleanSetting.values(),
+                *FloatSetting.values(),
+                *ScaledFloatSetting.values(),
+                *IntSetting.values(),
+                *IntListSetting.values(),
+                *StringSetting.values()
+            ).filterNot(AbstractSetting::isRuntimeEditable)
+                .mapNotNull(AbstractSetting::key)
+                .distinct()
+                .toList()
+                .toTypedArray()
+        }
+
         const val SECTION_CORE = "Core"
         const val SECTION_SYSTEM = "System"
         const val SECTION_CAMERA = "Camera"

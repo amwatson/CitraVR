@@ -294,10 +294,7 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
             XrCompositionLayerCylinderKHR layer = {};
 
             layer.type       = XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR;
-            layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-            layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-            layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
-            // NOTE: may not want unpremultiplied alpha
+            layer.layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 
             layer.space = space;
 
@@ -339,10 +336,7 @@ void GameSurfaceLayer::FrameTopPanel(const XrSpace& space, std::vector<XrComposi
 
             layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
             layer.next       = &kVerticalFlipLayout;
-            layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-            layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-            layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
-            // NOTE: may not want unpremultiplied alpha
+            layer.layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 
             layer.space = space;
 
@@ -386,8 +380,7 @@ void GameSurfaceLayer::FrameLowerPanel(const XrSpace&                   space,
 
     layer.type       = XR_TYPE_COMPOSITION_LAYER_QUAD;
     layer.next       = &kVerticalFlipLayout;
-    layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-    layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+    layer.layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 
     layer.space = space;
 

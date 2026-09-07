@@ -28,6 +28,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.lang.ref.WeakReference
 import java.util.Date
 import org.citra.citra_emu.activities.EmulationActivity
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
@@ -128,7 +129,9 @@ object NativeLibrary {
      */
     external fun onSecondaryTouchMoved(xAxis: Float, yAxis: Float)
 
-    external fun reloadSettings()
+    private external fun reloadSettingsNative(nonRuntimeEditableKeys: Array<String>)
+
+    fun reloadSettings() = reloadSettingsNative(Settings.nonRuntimeEditableKeys)
 
     external fun getTitleId(filename: String): Long
 
@@ -175,6 +178,12 @@ object NativeLibrary {
      * Begins emulation.
      */
     external fun run(path: String)
+
+    /**
+     * Loads a title's boot-time settings before the VR layer creates its game
+     * surface. The game scanner has already resolved this ID.
+     */
+    external fun prepareGameSettings(titleId: Long)
 
     // Surface Handling
     external fun surfaceChanged(surf: Surface, shouldReleaseSurface: Boolean)

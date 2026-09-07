@@ -54,7 +54,10 @@ import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.vr.utils.VRUtils
 
-class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
+class SettingsFragmentPresenter(
+    private val fragmentView: SettingsFragmentView,
+    private val resetSettings: (() -> Unit)? = null
+) {
     private var menuTag: String? = null
     private lateinit var gameId: String
     private var settingsList: ArrayList<SettingsItem>? = null
@@ -159,20 +162,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addConfigSettings(sl: ArrayList<SettingsItem>) {
         activityView.setToolbarTitle(context.getString(R.string.preferences_settings))
         sl.apply {
-            // VR and gamepad settings are only offered in the 2D settings
-            // before launching VR: VR settings are read once at VR init, and
-            // button mapping can't capture controller input from the headset.
             val isInVr = settingsActivity == null
-            if (!isInVr) {
-                add(
-                    SubmenuSetting(
-                        R.string.preferences_vr,
-                        0,
-                        R.drawable.ic_vr_adjust_depth,
-                        Settings.SECTION_VR
-                    )
+            add(
+                SubmenuSetting(
+                    R.string.preferences_vr,
+                    0,
+                    R.drawable.ic_vr_adjust_depth,
+                    Settings.SECTION_VR
                 )
-            }
+            )
             add(
                 SubmenuSetting(
                     R.string.preferences_general,
@@ -197,6 +195,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     Settings.SECTION_CAMERA
                 )
             )
+            // Button mapping can't capture controller input from the headset.
             if (!isInVr) {
                 add(
                     SubmenuSetting(
@@ -256,9 +255,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 RunnableSetting(
                     R.string.reset_to_default,
                     0,
-                    false,
+                    resetSettings != null,
                     R.drawable.ic_restore,
-                    {
+                    resetSettings ?: {
                         // Requires an activity to host the dialog; unavailable
                         // from the in-VR settings panel.
                         settingsActivity?.let {
@@ -267,6 +266,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                                 ResetSettingsDialogFragment.TAG
                             )
                         }
+                        Unit
                     }
                 )
             )

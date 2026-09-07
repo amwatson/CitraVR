@@ -19,5 +19,5 @@ class RunnableSetting(
     override val type = TYPE_RUNNABLE
 
     override val isEditable: Boolean
-        get() = if (EmulationActivity.isRunning()) isRuntimeRunnable else true
+        get() = !isReadOnly && (!EmulationActivity.isRunning() || isRuntimeRunnable)
 }

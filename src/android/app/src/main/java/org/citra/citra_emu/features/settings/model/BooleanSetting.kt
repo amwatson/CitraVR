@@ -166,7 +166,8 @@ enum class BooleanSetting(
             ANDROID_HIDE_IMAGES,
             PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
             APPLY_REGION_FREE_PATCH,
-            USE_INTEGER_SCALING
+            USE_INTEGER_SCALING,
+            VR_EXTRA_PERFORMANCE_MODE
         )
 
         fun from(key: String): BooleanSetting? =

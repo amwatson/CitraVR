@@ -15,6 +15,8 @@ namespace Settings {
 
 namespace {
 
+thread_local const std::vector<std::string>* non_runtime_editable_keys;
+
 std::string_view GetAudioEmulationName(AudioEmulation emulation) {
     switch (emulation) {
     case AudioEmulation::HLE:
@@ -74,6 +76,22 @@ std::string_view GetTextureSamplingName(TextureSampling sampling) {
 }
 
 } // Anonymous namespace
+
+bool IsRuntimeSettingUpdateAllowed(const std::string& label) {
+    return non_runtime_editable_keys == nullptr ||
+           std::find(non_runtime_editable_keys->cbegin(), non_runtime_editable_keys->cend(), label) ==
+               non_runtime_editable_keys->cend();
+}
+
+RuntimeSettingsGuard::RuntimeSettingsGuard(
+    const std::vector<std::string>& non_runtime_editable_keys_)
+    : previous_keys{non_runtime_editable_keys} {
+    non_runtime_editable_keys = &non_runtime_editable_keys_;
+}
+
+RuntimeSettingsGuard::~RuntimeSettingsGuard() {
+    non_runtime_editable_keys = previous_keys;
+}
 
 Values values = {};
 static bool configuring_global = true;

@@ -12,10 +12,7 @@ import android.icu.util.TimeZone
 import android.text.Editable
 import android.text.InputFilter
 import android.text.InputType
-import android.text.SpannableString
-import android.text.Spanned
 import android.text.TextWatcher
-import android.text.style.ForegroundColorSpan
 import android.text.format.DateFormat
 import android.view.Display
 import android.view.LayoutInflater
@@ -30,7 +27,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
@@ -212,9 +208,10 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
                     return false
                 }
                 if (oldItem.perGameStatusText != newItem.perGameStatusText ||
-                    oldItem.isOverriddenByGlobal != newItem.isOverriddenByGlobal ||
-                    oldItem.configuredPerGameChoice != newItem.configuredPerGameChoice ||
-                    oldItem.allowRuntimeStaging != newItem.allowRuntimeStaging) {
+                    oldItem.valueAtCreation != newItem.valueAtCreation ||
+                    oldItem.allowRuntimeStaging != newItem.allowRuntimeStaging ||
+                    oldItem.isReadOnly != newItem.isReadOnly
+                ) {
                     return false
                 }
 
@@ -278,38 +275,10 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
     private fun onSingleChoiceClick(item: SingleChoiceSetting) {
         clickedItem = item
         val value = getSelectionForSingleChoiceValue(item)
-        val configuredValue = item.configuredPerGameChoice
-        val choices = if (configuredValue != null) {
-            val values = context.resources.getIntArray(item.valuesId)
-            context.resources.getTextArray(item.choicesId).mapIndexed { index, choice ->
-                if (values.getOrNull(index) == configuredValue) {
-                    SpannableString(
-                        "$choice — ${context.getString(R.string.per_game_configured_choice)}"
-                    ).apply {
-                        setSpan(
-                            ForegroundColorSpan(
-                                MaterialColors.getColor(
-                                    context,
-                                    com.google.android.material.R.attr.colorTertiary,
-                                    0
-                                )
-                            ),
-                            0,
-                            length,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                        )
-                    }
-                } else {
-                    choice
-                }
-            }.toTypedArray()
-        } else {
-            context.resources.getTextArray(item.choicesId)
-        }
         dialog = showDialog(
             MaterialAlertDialogBuilder(context)
                 .setTitle(item.nameId)
-                .setSingleChoiceItems(choices, value, this)
+                .setSingleChoiceItems(item.choicesId, value, this)
         )
     }
 
@@ -801,7 +770,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         }
     }
 
-    private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
+    internal fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         dialog = showDialog(
             MaterialAlertDialogBuilder(context)
                 .setTitle(titleId)

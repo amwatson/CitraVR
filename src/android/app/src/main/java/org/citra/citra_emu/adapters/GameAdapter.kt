@@ -130,7 +130,12 @@ class GameAdapter(
 
        // val action = HomeNavigationDirections.actionGlobalEmulationActivity(holder.game)
        // view.findNavController().navigate(action)
-        VrActivity.launch(view.context, holder.game.path, holder.game.title)
+        VrActivity.launch(
+            view.context,
+            holder.game.path,
+            holder.game.title,
+            holder.game.titleId
+        )
     }
 
     /**

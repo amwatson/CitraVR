@@ -233,7 +233,7 @@ void Config::ApplyPerGameValues() {
 
 void Config::ReadValues() {
     // VR::extra performance mode (configured first because it overrides other values)
-    VRSettings::values.extra_performance_mode_enabled = android_config->GetBoolean(
+    Settings::values.vr_extra_performance_mode_enabled = android_config->GetBoolean(
         "VR", "vr_extra_performance_mode", false);
 
     // Controls
@@ -407,7 +407,7 @@ void Config::ReadValues() {
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);
 
-    if (!VRSettings::values.extra_performance_mode_enabled) {
+    if (!Settings::values.vr_extra_performance_mode_enabled.GetValue()) {
       ReadSetting("Audio", Settings::values.enable_audio_stretching);
     } else {
       Settings::values.enable_audio_stretching = 0;
@@ -474,7 +474,7 @@ void Config::ReadValues() {
       ANDROID_ONLY_LOGI("HMD type: %s", hmdTypeStr.c_str());
       VRSettings::values.hmd_type = VRSettings::HmdTypeFromStr(hmdTypeStr);
     }
-    VRSettings::values.vr_environment = VRSettings::values.extra_performance_mode_enabled ?
+    VRSettings::values.vr_environment = Settings::values.vr_extra_performance_mode_enabled.GetValue() ?
       static_cast<long>(VRSettings::VREnvironmentType::VOID) : android_config->GetInteger(
           "VR", "vr_environment",
           static_cast<long>(VRSettings::values.hmd_type == VRSettings::HMDType::QUEST3 ?
@@ -482,7 +482,7 @@ void Config::ReadValues() {
     // CitraVR: default to the highest CPU clock level. Emulation is nearly
     // always CPU-bound, and the GPU level is already pinned to boost.
     VRSettings::values.cpu_level =
-      VRSettings::values.extra_performance_mode_enabled ? XR_HIGHEST_CPU_PERF_LEVEL
+      Settings::values.vr_extra_performance_mode_enabled.GetValue() ? XR_HIGHEST_CPU_PERF_LEVEL
       : VRSettings::CPUPrefToPerfSettingsLevel(android_config->GetInteger(
             "VR", "vr_cpu_level", XR_HIGHEST_CPU_PREFERENCE));
     VRSettings::values.vr_immersive_mode = android_config->GetInteger(

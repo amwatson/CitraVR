@@ -27,8 +27,6 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
             binding.textSettingDescription.text = ""
             binding.textSettingDescription.visibility = View.GONE
         }
-        applyPerGameTextColors(item, binding.textSettingName, binding.textSettingDescription)
-
         binding.switchWidget.setOnCheckedChangeListener(null)
         binding.switchWidget.isChecked = setting.isChecked
         binding.switchWidget.setOnCheckedChangeListener { _: CompoundButton, _: Boolean ->

@@ -104,6 +104,9 @@ enum class IntSetting(
             GRAPHICS_API,
             AUDIO_INPUT_TYPE,
             RESOLUTION_FACTOR,
+            VR_ENVIRONMENT,
+            VR_CPU_LEVEL,
+            VR_IMMERSIVE_MODE
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

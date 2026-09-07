@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <codecvt>
 #include <thread>
+#include <vector>
 #include <dlfcn.h>
 
 #include <android/api-level.h>
@@ -838,6 +839,14 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIE
     return static_cast<jboolean>(!stop_run);
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_prepareGameSettings(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jlong j_program_id) {
+    const u64 program_id = static_cast<u64>(j_program_id);
+    if (program_id != 0) {
+        Config{program_id};
+    }
+}
+
 jlong Java_org_citra_citra_1emu_NativeLibrary_getRunningTitleId([[maybe_unused]] JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
     u64 title_id{};
@@ -973,38 +982,49 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
     env->ReleaseStringUTFChars(j_path, path.data());
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
-                                                            [[maybe_unused]] jobject obj) {
+void Java_org_citra_citra_1emu_NativeLibrary_reloadSettingsNative(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj,
+                                                                  jobjectArray j_non_runtime_keys) {
     Core::System& system{Core::System::GetInstance()};
     u64 program_id{};
 
     const bool is_powered_on = system.IsPoweredOn();
     if (is_powered_on) {
         system.GetAppLoader().ReadProgramId(program_id);
-    }
 
-    // Preserve settings whose owning subsystems were created at game boot. The
-    // new values remain staged in per_game.ini.vr and will take effect after a
-    // game restart; runtime-safe values such as stereoscopy are still applied.
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
-    const bool async_shader_compilation =
-        Settings::values.async_shader_compilation.GetValue();
-    const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
-    const uint32_t resolution_factor = VRSettings::values.resolution_factor;
-    const int32_t vr_environment = VRSettings::values.vr_environment;
-    const int32_t immersive_mode = VRSettings::values.vr_immersive_mode;
+        std::vector<std::string> non_runtime_keys;
+        const jsize key_count = env->GetArrayLength(j_non_runtime_keys);
+        non_runtime_keys.reserve(static_cast<size_t>(key_count));
+        for (jsize i = 0; i < key_count; ++i) {
+            auto key = static_cast<jstring>(env->GetObjectArrayElement(j_non_runtime_keys, i));
+            non_runtime_keys.emplace_back(GetJString(env, key));
+            env->DeleteLocalRef(key);
+        }
 
-    Config{program_id};
+        // Most settings are retained by RuntimeSettingsGuard. These legacy raw
+        // values do not use Settings::Setting and therefore need preserving here.
+        const auto camera_names = Settings::values.camera_name;
+        const auto camera_configs = Settings::values.camera_config;
+        const auto resolution_factor = VRSettings::values.resolution_factor;
+        const auto vr_environment = VRSettings::values.vr_environment;
+        const auto cpu_level = VRSettings::values.cpu_level;
+        const auto immersive_mode = VRSettings::values.vr_immersive_mode;
 
-    if (is_powered_on) {
-        Settings::values.graphics_api = graphics_api;
-        Settings::values.async_shader_compilation = async_shader_compilation;
-        Settings::values.is_new_3ds = is_new_3ds;
+        {
+            Settings::RuntimeSettingsGuard guard{non_runtime_keys};
+            Config{program_id};
+        }
+
+        Settings::values.camera_name = camera_names;
+        Settings::values.camera_config = camera_configs;
         VRSettings::values.resolution_factor = resolution_factor;
         Settings::values.resolution_factor.SetValue(0);
         VRSettings::values.vr_environment = vr_environment;
+        VRSettings::values.cpu_level = cpu_level;
         VRSettings::values.vr_immersive_mode = immersive_mode;
         Settings::values.vr_immersive_mode = static_cast<u32>(immersive_mode);
+    } else {
+        Config{};
     }
 
     if (multiplayer) {

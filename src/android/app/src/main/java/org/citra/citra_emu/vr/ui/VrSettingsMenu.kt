@@ -12,10 +12,8 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
-import org.citra.citra_emu.features.settings.model.view.SliderSetting
+import org.citra.citra_emu.features.settings.model.view.RunnableSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
-import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 import org.citra.citra_emu.features.settings.ui.SettingsFragmentPresenter
@@ -42,7 +40,9 @@ import org.citra.citra_emu.utils.TurboHelper
  * effect is visible in-game immediately. Settings the core only reads at boot
  * (and VR settings, which are read at VR init) still require a restart.
  */
-class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityView {
+class VrSettingsMenu(panelRoot: View, private val gameTitle: String?) :
+    SettingsFragmentView,
+    SettingsActivityView {
 
     override val settings = Settings()
 
@@ -67,16 +67,15 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
     private var perGameSnapshot: PerGameSettings.Snapshot? = null
     private var baselineValues: Map<String, String> = emptyMap()
     private var runningValues: Map<String, String> = emptyMap()
+    private var scope = Scope.PER_GAME
 
     init {
         backButton.setOnClickListener { goBack() }
-        scopeToggle.addOnButtonCheckedListener { group, checkedId, isChecked ->
-            if (isChecked && checkedId == R.id.settings_scope_global) {
-                adapter?.showMessageDialog(
-                    R.string.global_settings_require_exit_title,
-                    R.string.global_settings_require_exit_message
-                )
-                group.check(R.id.settings_scope_per_game)
+        scopeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            when (checkedId) {
+                R.id.settings_scope_global -> switchScope(Scope.GLOBAL)
+                R.id.settings_scope_per_game -> switchScope(Scope.PER_GAME)
             }
         }
     }
@@ -95,7 +94,12 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         // Reload from disk on every presentation so deleting per_game.ini.vr or
         // editing it outside the app is reflected without retaining stale state.
         settings.loadSettings(this)
-        loadPerGameSettings()
+        if (scope == Scope.PER_GAME) {
+            loadPerGameSettings()
+        } else {
+            updateBanner()
+        }
+        updateScopeToggle()
         if (menuStack.isEmpty()) {
             showSettingsFragment(SettingsFile.FILE_NAME_CONFIG, false, "")
         } else {
@@ -125,13 +129,14 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         return false
     }
 
-    private fun loadMenu(menuTag: String) {
-        presenter = SettingsFragmentPresenter(this).also {
+    private fun loadMenu(menuTag: String, resetScroll: Boolean = true) {
+        val resetSettings = if (scope == Scope.PER_GAME) ::showResetPerGameDialog else null
+        presenter = SettingsFragmentPresenter(this, resetSettings).also {
             it.onCreate(menuTag, "")
             it.onViewCreated(adapter!!)
         }
         backButton.visibility = if (menuStack.size > 1) View.VISIBLE else View.INVISIBLE
-        listView.scrollToPosition(0)
+        if (resetScroll) listView.scrollToPosition(0)
     }
 
     private fun saveAndApply() {
@@ -139,6 +144,12 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
             return
         }
         isDirty = false
+
+        if (scope == Scope.GLOBAL) {
+            settings.saveSettings(this)
+            NativeLibrary.reloadSettings()
+            return
+        }
 
         val currentValues = PerGameSettings.readCurrentValues()
         val titleId = activeTitleId
@@ -149,28 +160,15 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
             }
             if (changedValues.isNotEmpty()) {
                 if (PerGameSettings.writeUserValues(titleId, changedValues)) {
-                    perGameSnapshot = snapshot.copy(
-                        fileExists = true,
-                        hasTitleSettings = true,
-                        userValues = snapshot.userValues + changedValues,
-                        effectiveValues = currentValues
-                    )
+                    perGameSnapshot = snapshot.copy(hasTitleSettings = true)
                     baselineValues = currentValues
                 } else {
                     // Leave the menu dirty so hiding it retries instead of silently
                     // dropping a per-game selection.
                     isDirty = true
+                    return
                 }
             }
-
-            // Keep existing runtime/global settings behavior for settings outside
-            // this compatibility schema, while guaranteeing that effective
-            // per-game values never leak into config.ini.vr.
-            prepareTargetSettingsForGlobalSave(snapshot)
-            settings.saveSettings(this)
-            PerGameSettings.applyValues(currentValues)
-        } else {
-            settings.saveSettings(this)
         }
 
         NativeLibrary.reloadSettings()
@@ -198,21 +196,69 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         activeTitleId = titleId
         perGameSnapshot = snapshot
         baselineValues = resolvedValues
-        scopeToggle.check(R.id.settings_scope_per_game)
         updateBanner()
     }
 
-    private fun prepareTargetSettingsForGlobalSave(snapshot: PerGameSettings.Snapshot) {
-        PerGameSettings.definitions.forEach { definition ->
-            val section = settings.getSection(definition.section) ?: return@forEach
-            val globalValue = snapshot.globalCustomValues[definition.key]
-            if (globalValue == null) {
-                section.settings.remove(definition.key)
-            } else {
-                PerGameSettings.applyValues(mapOf(definition.key to globalValue))
-                section.putSetting(definition.setting)
-            }
+    private fun switchScope(newScope: Scope) {
+        if (scope == newScope) {
+            updateScopeToggle()
+            return
         }
+
+        handler.removeCallbacks(applyRunnable)
+        saveAndApply()
+        if (isDirty) {
+            updateScopeToggle()
+            return
+        }
+
+        scope = newScope
+        settings.loadSettings(this)
+        if (scope == Scope.PER_GAME) {
+            loadPerGameSettings()
+        } else {
+            updateBanner()
+        }
+        updateScopeToggle()
+        menuStack.lastOrNull()?.let { loadMenu(it, resetScroll = false) }
+    }
+
+    private fun updateScopeToggle() {
+        scopeToggle.check(
+            if (scope == Scope.GLOBAL) {
+                R.id.settings_scope_global
+            } else {
+                R.id.settings_scope_per_game
+            }
+        )
+    }
+
+    private fun showResetPerGameDialog() {
+        if (scope != Scope.PER_GAME || activeTitleId == null) return
+        adapter?.showConfirmationDialog(
+            R.string.reset_per_game_settings,
+            R.string.reset_per_game_settings_description
+        ) {
+            resetPerGameSettings()
+        }
+    }
+
+    private fun resetPerGameSettings() {
+        val titleId = activeTitleId ?: return
+        handler.removeCallbacks(applyRunnable)
+        isDirty = false
+        if (!PerGameSettings.clearUserValues(titleId)) {
+            adapter?.showMessageDialog(
+                R.string.reset_per_game_settings,
+                R.string.reset_per_game_settings_failed
+            )
+            return
+        }
+
+        settings.loadSettings(this)
+        loadPerGameSettings()
+        NativeLibrary.reloadSettings()
+        presenter?.loadSettingsList()
     }
 
     private fun updateBanner() {
@@ -222,10 +268,15 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
         }
         val snapshot = perGameSnapshot ?: return
         perGameBanner.visibility = View.VISIBLE
+        if (scope == Scope.GLOBAL) {
+            perGameStatus.setText(R.string.global_settings_status)
+            return
+        }
+        val gameLabel = gameTitle?.takeIf(String::isNotBlank) ?: titleId
         val status = if (snapshot.hasTitleSettings) {
-            listView.context.getString(R.string.per_game_settings_loaded, titleId)
+            listView.context.getString(R.string.per_game_settings_loaded, gameLabel)
         } else {
-            listView.context.getString(R.string.per_game_settings_not_loaded, titleId)
+            listView.context.getString(R.string.per_game_settings_not_loaded, gameLabel)
         }
         val currentValues = PerGameSettings.readCurrentValues()
         val hasPendingRestart = PerGameSettings.definitions.any { definition ->
@@ -278,9 +329,31 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
     //// SettingsFragmentView ////
 
     override fun showSettingsList(settingsList: ArrayList<SettingsItem>) {
-        val snapshot = perGameSnapshot
-        if (snapshot != null) {
-            settingsList.forEach { item -> decoratePerGameSetting(item, snapshot) }
+        if (scope == Scope.GLOBAL) {
+            settingsList.forEach { item ->
+                if (item.setting?.isRuntimeEditable == false) {
+                    item.allowRuntimeStaging = true
+                    item.perGameStatusText = listView.context.getString(
+                        R.string.in_game_restart_required
+                    )
+                }
+            }
+        } else {
+            val snapshot = perGameSnapshot
+            settingsList.forEach { item ->
+                val definition = PerGameSettings.definitionFor(item.setting?.key)
+                val isPerGameReset =
+                    item is RunnableSetting && item.nameId == R.string.reset_to_default
+                if (definition != null && snapshot != null) {
+                    decoratePerGameSetting(item, snapshot)
+                } else if (isPerGameReset) {
+                    item.isReadOnly = activeTitleId == null
+                } else if (item.setting != null || item is RunnableSetting) {
+                    // This compatibility file currently supports only the declared
+                    // per-title keys; do not let other settings silently save globally.
+                    item.isReadOnly = true
+                }
+            }
         }
         adapter?.setSettingsList(settingsList)
     }
@@ -294,41 +367,12 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
 
         val statusLines = mutableListOf<String>()
         if (snapshot.isBaseOverriddenByGlobal(definition.key)) {
-            val globalValue = displayValue(item, snapshot.globalCustomValues.getValue(definition.key))
-            val baseValue = displayValue(item, snapshot.baseValues.getValue(definition.key))
-            item.isOverriddenByGlobal = true
-            item.configuredPerGameChoice = snapshot.baseValues[definition.key]?.toIntOrNull()
-            statusLines += listView.context.getString(
-                R.string.per_game_overridden_by_global,
-                globalValue,
-                baseValue
-            )
+            statusLines += listView.context.getString(R.string.per_game_overridden_by_global)
         }
         if (definition.restartRequired) {
-            statusLines += listView.context.getString(R.string.per_game_restart_required)
+            statusLines += listView.context.getString(R.string.in_game_restart_required)
         }
         item.perGameStatusText = statusLines.takeIf { it.isNotEmpty() }?.joinToString("\n")
-    }
-
-    private fun displayValue(item: SettingsItem, value: String): String {
-        return when (item) {
-            is SingleChoiceSetting -> {
-                val intValue = value.toIntOrNull()
-                val values = listView.context.resources.getIntArray(item.valuesId)
-                val names = listView.context.resources.getStringArray(item.choicesId)
-                val index = intValue?.let(values::indexOf) ?: -1
-                index.takeIf { it >= 0 }?.let { names[it] } ?: value
-            }
-
-            is SwitchSetting -> if (value.toBoolean()) {
-                listView.context.getString(R.string.setting_value_enabled)
-            } else {
-                listView.context.getString(R.string.setting_value_disabled)
-            }
-
-            is SliderSetting -> "$value${item.units}"
-            else -> value
-        }
     }
 
     override fun loadSettingsList() {
@@ -347,5 +391,10 @@ class VrSettingsMenu(panelRoot: View) : SettingsFragmentView, SettingsActivityVi
 
     companion object {
         private const val APPLY_DELAY_MS = 500L
+    }
+
+    private enum class Scope {
+        GLOBAL,
+        PER_GAME
     }
 }

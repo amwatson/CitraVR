@@ -189,7 +189,9 @@ object SettingsFile {
 
         // Try to find the file, if it doesn't exist, create it.
         return actualConfigDirectory.findFile("$fileName.$ext")
-            ?: actualConfigDirectory.createFile("text/plain", "$fileName.$ext")
+            // ExternalStorageProvider appends `.txt` for text/plain documents,
+            // which makes native config lookup miss files such as per_game.ini.vr.
+            ?: actualConfigDirectory.createFile("application/octet-stream", "$fileName.$ext")
             ?: throw IllegalStateException("Cannot create file $fileName.$ext")
     }
 

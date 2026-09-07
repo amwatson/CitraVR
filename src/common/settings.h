@@ -19,6 +19,20 @@
 
 namespace Settings {
 
+bool IsRuntimeSettingUpdateAllowed(const std::string& label);
+
+class RuntimeSettingsGuard {
+public:
+    explicit RuntimeSettingsGuard(const std::vector<std::string>& non_runtime_editable_keys);
+    ~RuntimeSettingsGuard();
+
+    RuntimeSettingsGuard(const RuntimeSettingsGuard&) = delete;
+    RuntimeSettingsGuard& operator=(const RuntimeSettingsGuard&) = delete;
+
+private:
+    const std::vector<std::string>* previous_keys;
+};
+
 enum class GraphicsAPI {
     Software = 0,
     OpenGL = 1,
@@ -272,6 +286,9 @@ public:
      * @param val The desired value
      */
     virtual void SetValue(const Type& val) {
+        if (!IsRuntimeSettingUpdateAllowed(label)) {
+            return;
+        }
         Type temp{ranged ? std::clamp(val, minimum, maximum) : val};
         std::swap(value, temp);
     }
@@ -302,8 +319,7 @@ public:
      * @returns A reference to the setting
      */
     virtual const Type& operator=(const Type& val) {
-        Type temp{ranged ? std::clamp(val, minimum, maximum) : val};
-        std::swap(value, temp);
+        SetValue(val);
         return value;
     }
 
@@ -405,6 +421,9 @@ public:
      * @param val The new value
      */
     void SetValue(const Type& val) override {
+        if (!IsRuntimeSettingUpdateAllowed(this->label)) {
+            return;
+        }
         Type temp{ranged ? std::clamp(val, this->minimum, this->maximum) : val};
         if (use_global) {
             std::swap(this->value, temp);
@@ -421,13 +440,8 @@ public:
      * @returns A reference to the current setting value
      */
     const Type& operator=(const Type& val) override {
-        Type temp{ranged ? std::clamp(val, this->minimum, this->maximum) : val};
-        if (use_global) {
-            std::swap(this->value, temp);
-            return this->value;
-        }
-        std::swap(custom, temp);
-        return custom;
+        SetValue(val);
+        return this->GetValue();
     }
 
     /**
@@ -684,6 +698,7 @@ struct Values {
     u64 audio_bitrate;
 
     // VR
+    Setting<bool> vr_extra_performance_mode_enabled{false, "vr_extra_performance_mode"};
     Setting<u32> vr_immersive_mode{0, "vr_immersive_mode"};
     Setting<int32_t> vr_si_mode_register_offset{-1, "vr_si_mode_register_offset"};
     Setting<u32> vr_immersive_positional_game_scaler{0, "vr_immersive_positional_game_scaler"};

@@ -39,13 +39,6 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
            setting.setting is FloatSetting -> "${(setting.setting as AbstractFloatSetting).float}${setting.units}"
             else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
         }
-        applyPerGameTextColors(
-            item,
-            binding.textSettingName,
-            binding.textSettingDescription,
-            binding.textSettingValue
-        )
-
         if (setting.isActive) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f

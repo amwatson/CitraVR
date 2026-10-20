@@ -62,6 +62,39 @@
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/buttonQuickSave"
+            style="@style/VrRibbonButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/vr_quick_save" />
+
+        <Button
+            android:id="@+id/buttonQuickLoad"
+            style="@style/VrRibbonButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/vr_quick_load" />
+
+        <!-- Result of the last quick save / load. Invisible rather than gone
+             while empty, so showing it does not shift the buttons. -->
+        <TextView
+            android:id="@+id/textQuickStateStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:minLines="3"
+            android:textAlignment="center"
+            android:textColor="@color/citra_onPrimary"
+            android:textSize="14sp"
+            android:visibility="invisible" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <Button
             android:id="@+id/buttonExit"
             style="@style/VrRibbonButtonStyle"
             android:layout_width="match_parent"

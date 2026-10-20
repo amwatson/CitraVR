@@ -1,6 +1,7 @@
 package org.citra.citra_emu.vr.ui
 
 import android.os.Handler
+import android.os.Looper
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.view.KeyEvent
@@ -15,6 +16,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.vr.VrActivity
 import org.citra.citra_emu.vr.utils.VrMessageQueue
+import org.citra.citra_emu.vr.utils.VrQuickState
 import org.citra.citra_emu.utils.Log
 
 class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribbon) {
@@ -24,6 +26,10 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
     POSITION(R.id.position_panel, R.id.button_menu_positional),
     STATS(R.id.stats_panel, R.id.button_menu_stats),
     SETTINGS(R.id.settings_panel, R.id.button_menu_settings)
+  }
+
+  companion object {
+    private const val QUICK_STATE_STATUS_DURATION_MS = 3000L
   }
 
   private var menuTypeCurrent: MenuType = MenuType.MAIN
@@ -194,6 +200,32 @@ class VrRibbonLayer(activity: VrActivity) : VrUILayer(activity, R.layout.vr_ribb
       }
         false
     }
+    window?.findViewById<Button>(R.id.buttonQuickSave)?.setOnClickListener {
+      VrQuickState.quickSave()
+    }
+    window?.findViewById<Button>(R.id.buttonQuickLoad)?.setOnClickListener {
+      VrQuickState.quickLoad()
+    }
+    // Also reports quick saves/loads made with the hotkeys or the controller
+    // chord while the ribbon is open.
+    VrQuickState.listener = VrQuickState.Listener { showQuickStateResult(it) }
+  }
+
+  private val quickStateStatusHandler = Handler(Looper.getMainLooper())
+  private val hideQuickStateStatus = Runnable {
+    window?.findViewById<TextView>(R.id.textQuickStateStatus)?.visibility = View.INVISIBLE
+  }
+
+  private fun showQuickStateResult(result: VrQuickState.Result) {
+    val label = window?.findViewById<TextView>(R.id.textQuickStateStatus) ?: return
+    label.setText(when (result) {
+      VrQuickState.Result.SAVING -> R.string.saving
+      VrQuickState.Result.LOADING -> R.string.loading
+      VrQuickState.Result.NO_QUICKSAVE -> R.string.quickload_not_found
+    })
+    label.visibility = View.VISIBLE
+    quickStateStatusHandler.removeCallbacks(hideQuickStateStatus)
+    quickStateStatusHandler.postDelayed(hideQuickStateStatus, QUICK_STATE_STATUS_DURATION_MS)
   }
 
   private lateinit var valueGameFps: TextView

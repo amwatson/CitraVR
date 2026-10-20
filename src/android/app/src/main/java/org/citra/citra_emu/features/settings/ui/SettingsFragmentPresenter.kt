@@ -935,6 +935,32 @@ class SettingsFragmentPresenter(
                 add(InputBindingSetting(button, VRUtils.hotkeyTitles[i]))
             }
 
+            // Touch controllers bypass the configurable bindings above, so quick
+            // save / quick load on them is a fixed chord that can only be toggled.
+            val quickStateChord: AbstractBooleanSetting = object : AbstractBooleanSetting {
+                override var boolean: Boolean
+                    get() = preferences.getBoolean(Settings.PREF_VR_QUICK_STATE_CHORD, true)
+                    set(value) {
+                        preferences.edit()
+                            .putBoolean(Settings.PREF_VR_QUICK_STATE_CHORD, value)
+                            .apply()
+                    }
+                override val key: String? = null
+                override val section: String? = null
+                override val isRuntimeEditable = true
+                override val valueAsString: String
+                    get() = preferences.getBoolean(Settings.PREF_VR_QUICK_STATE_CHORD, true)
+                        .toString()
+                override val defaultValue = true
+            }
+            add(
+                SwitchSetting(
+                    quickStateChord,
+                    R.string.vr_quick_state_chord,
+                    R.string.vr_quick_state_chord_description
+                )
+            )
+
             add(HeaderSetting(R.string.miscellaneous))
             // Stored as a preference (never written to the ini) and applied at
             // dispatch time, so it also swaps the VR touch controller buttons,

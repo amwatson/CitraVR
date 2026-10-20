@@ -22,6 +22,8 @@ import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.ButtonSwapUtils
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.vr.utils.VrQuickState
+import org.citra.citra_emu.vr.utils.VrQuickStateChord
 import kotlin.system.exitProcess
 
 
@@ -29,6 +31,11 @@ class VrActivity : EmulationActivity() {
     private var mHandle: Long = 0
     private var clickRunnable = ClickRunnable()
     private var isQuitting = false
+    private val quickStateChord = VrQuickStateChord(
+        isEnabled = { VrQuickStateChord.isEnabledInSettings() },
+        onQuickSave = { VrQuickState.quickSave() },
+        onQuickLoad = { VrQuickState.quickLoad() }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.info("VR [Java] onCreate()");
@@ -54,6 +61,7 @@ class VrActivity : EmulationActivity() {
     override fun onDestroy() {
        Log.info("VR [Java] onDestroy");
         currentActivity = null
+        VrQuickState.listener = null
         if (mHandle != 0L) {
             nativeOnDestroy(mHandle)
             mHandle = 0L
@@ -96,6 +104,9 @@ class VrActivity : EmulationActivity() {
     }
 
     fun forwardVRInput(keycode: Int, isPressed: Boolean) {
+        // Touch controller buttons never reach HotkeyUtility, so the quick
+        // save / quick load chord is detected here, before the game sees it.
+        if (quickStateChord.onButton(keycode, isPressed)) return
         val button = org.citra.citra_emu.vr.utils.VRUtils.ButtonType.androidToNativeLibrary(keycode)
             ?: return
         NativeLibrary.onGamePadEvent(

@@ -231,6 +231,8 @@ else()
     set(ZSTD_LEGACY_SUPPORT OFF)
     set(ZSTD_BUILD_PROGRAMS OFF)
     set(ZSTD_BUILD_SHARED OFF)
+    # Off by default on Android, but needed to compress save states on several threads
+    set(ZSTD_MULTITHREAD_SUPPORT ON CACHE BOOL "MULTITHREADING SUPPORT" FORCE)
     add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
 
     target_include_directories(libzstd_static INTERFACE

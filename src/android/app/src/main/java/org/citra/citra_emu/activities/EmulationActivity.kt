@@ -109,7 +109,7 @@ open class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil)
         setContentView(binding.root)
 
         val navHostFragment =

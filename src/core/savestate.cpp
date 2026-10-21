@@ -2,13 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <sstream>
+#include <thread>
 #include <cryptopp/hex.h>
 #include <fmt/ranges.h>
 #include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/memory_streambuf.h"
 #include "common/scm_rev.h"
 #include "common/swap.h"
 #include "common/zstd_compression.h"
@@ -36,6 +40,27 @@ static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 #pragma pack(pop)
 
 constexpr std::array<u8, 4> header_magic_bytes{{'C', 'S', 'T', 0x1B}};
+
+// Saving and loading stop the emulation, so how long they take is felt directly. Compression is the
+// slowest part of saving: a low level and several threads make it several times faster, for a
+// file that is only slightly larger.
+constexpr s32 SAVE_STATE_COMPRESSION_LEVEL = 1;
+constexpr s32 SAVE_STATE_MAX_COMPRESSION_THREADS = 4;
+
+static s32 GetCompressionThreads() {
+    const s32 cores = static_cast<s32>(std::thread::hardware_concurrency());
+    return std::clamp(cores / 2, 1, SAVE_STATE_MAX_COMPRESSION_THREADS);
+}
+
+// Size of the last serialized state, to size the buffer for the next one.
+static std::atomic<std::size_t> last_state_size{128 * 1024 * 1024};
+
+using SaveStateClock = std::chrono::steady_clock;
+
+static s64 MillisecondsSince(SaveStateClock::time_point start) {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(SaveStateClock::now() - start)
+        .count();
+}
 
 static std::string GetSaveStatePath(u64 program_id, u64 movie_id, u32 slot) {
     if (movie_id) {
@@ -129,15 +154,28 @@ void System::SaveState(u32 slot) const {
         }
     }
 
-    std::ostringstream sstream{std::ios_base::binary};
-    // Serialize
+    const auto start = SaveStateClock::now();
+
+    // Serialize straight into one buffer, rather than into a stringstream that is regrown and
+    // then copied out in full.
+    Common::MemoryOutputStreamBuf serialized{last_state_size.load() + 1024 * 1024};
+    std::ostream sstream{&serialized};
     oarchive oa{sstream};
     oa&* this;
 
-    const std::string& str{sstream.str()};
-    const auto data = std::span<const u8>{reinterpret_cast<const u8*>(str.data()), str.size()};
-    auto buffer = Common::Compression::CompressDataZSTDDefault(data);
+    const auto data = serialized.Data();
+    last_state_size = data.size();
+    const s64 serialize_ms = MillisecondsSince(start);
 
+    const auto compress_start = SaveStateClock::now();
+    auto buffer = Common::Compression::CompressDataZSTD(data, SAVE_STATE_COMPRESSION_LEVEL,
+                                                        GetCompressionThreads());
+    const s64 compress_ms = MillisecondsSince(compress_start);
+    if (buffer.empty()) {
+        throw std::runtime_error("Could not compress the save state");
+    }
+
+    const auto write_start = SaveStateClock::now();
     const u64 movie_id = movie.GetCurrentMovieID();
     const auto path = GetSaveStatePath(title_id, movie_id, slot);
     if (!FileUtil::CreateFullPath(path)) {
@@ -168,6 +206,12 @@ void System::SaveState(u32 slot) const {
         file.WriteBytes(buffer.data(), buffer.size()) != buffer.size()) {
         throw std::runtime_error("Could not write to file " + path);
     }
+
+    LOG_INFO(Core,
+             "Saved state: serialized {} MiB in {} ms, compressed to {} MiB in {} ms, "
+             "written in {} ms ({} ms total)",
+             data.size() >> 20, serialize_ms, buffer.size() >> 20, compress_ms,
+             MillisecondsSince(write_start), MillisecondsSince(start));
 }
 
 void System::LoadState(u32 slot) {
@@ -176,10 +220,12 @@ void System::LoadState(u32 slot) {
             throw std::runtime_error("The current app loader doesn't support save states");
         }
     }
-    if (Network::GetRoomMember().lock()->IsConnected()) {
+    auto room_member = Network::GetRoomMember().lock();
+    if (room_member && room_member->IsConnected()) {
         throw std::runtime_error("Unable to load while connected to multiplayer");
     }
 
+    const auto start = SaveStateClock::now();
     const u64 movie_id = movie.GetCurrentMovieID();
     const auto path = GetSaveStatePath(title_id, movie_id, slot);
 
@@ -207,14 +253,19 @@ void System::LoadState(u32 slot) {
         }
         decompressed = Common::Compression::DecompressDataZSTD(buffer);
     }
-    std::istringstream sstream{
-        std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
-        std::ios_base::binary};
-    decompressed.clear();
+    const s64 read_ms = MillisecondsSince(start);
+
+    // Read straight from the decompressed data instead of copying it into a stringstream.
+    const auto deserialize_start = SaveStateClock::now();
+    Common::MemoryInputStreamBuf serialized{decompressed};
+    std::istream sstream{&serialized};
 
     // Deserialize
     iarchive ia{sstream};
     ia&* this;
+
+    LOG_INFO(Core, "Loaded state: read and decompressed {} MiB in {} ms, deserialized in {} ms",
+             decompressed.size() >> 20, read_ms, MillisecondsSince(deserialize_start));
 }
 
 std::vector<u8> System::SaveStateBuffer() const {

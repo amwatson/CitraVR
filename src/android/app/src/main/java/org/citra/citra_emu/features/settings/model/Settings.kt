@@ -268,6 +268,10 @@ class Settings {
         // altering the saved per-button mappings.
         const val PREF_SWAP_BUTTONS_B_Y = "SwapButtonsBY"
 
+        // Touch controller chord (hold ZL + ZR, press A / B) for quick save /
+        // quick load in VR. Stored as a preference for the same reason as above.
+        const val PREF_VR_QUICK_STATE_CHORD = "VrQuickStateChord"
+
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
         init {

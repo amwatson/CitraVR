@@ -25,14 +25,20 @@ object VRUtils {
     }
 
     enum class Hotkey(val button: Int) {
-        CLOSE_GAME(org.citra.citra_emu.features.hotkeys.Hotkey.CLOSE_GAME.button);
+        CLOSE_GAME(org.citra.citra_emu.features.hotkeys.Hotkey.CLOSE_GAME.button),
+        QUICKSAVE(org.citra.citra_emu.features.hotkeys.Hotkey.QUICKSAVE.button),
+        QUICKLOAD(org.citra.citra_emu.features.hotkeys.Hotkey.QUICKLOAD.button);
     }
 
     val hotKeys = listOf(
-        Settings.HOTKEY_CLOSE_GAME
+        Settings.HOTKEY_CLOSE_GAME,
+        Settings.HOTKEY_QUICKSAVE,
+        Settings.HOTKEY_QUICKLOAD
     )
     val hotkeyTitles = listOf(
-        R.string.emulation_close_game
+        R.string.emulation_close_game,
+        R.string.emulation_quicksave,
+        R.string.emulation_quickload
     )
 
     // Not really VR-related, but for some reason, Citra doesn't have default mappings for gamepad

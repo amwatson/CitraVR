@@ -4,13 +4,10 @@
 
 package org.citra.citra_emu.features.hotkeys
 
-import android.content.Context
 import android.view.KeyEvent
-import android.widget.Toast
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
@@ -18,10 +15,10 @@ import org.citra.citra_emu.utils.ButtonSwapUtils
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
+import org.citra.citra_emu.vr.utils.VrQuickState
 
 class HotkeyUtility(
-    private val screenAdjustmentUtil: ScreenAdjustmentUtil,
-    private val context: Context
+    private val screenAdjustmentUtil: ScreenAdjustmentUtil
 ) {
 
     private val hotkeyButtons = org.citra.citra_emu.vr.utils.VRUtils.Hotkey.entries.map { it.button }
@@ -126,28 +123,11 @@ class HotkeyUtility(
 
             Hotkey.TURBO_LIMIT.button -> TurboHelper.toggleTurbo(true)
 
-            Hotkey.QUICKSAVE.button -> {
-                NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.saving),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            // Toasts are not visible in VR; VrQuickState reports the result with
+            // an audio cue and on the ribbon instead.
+            Hotkey.QUICKSAVE.button -> VrQuickState.quickSave()
 
-            Hotkey.QUICKLOAD.button -> {
-                val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
-                val stringRes = if (wasLoaded) {
-                    R.string.loading
-                } else {
-                    R.string.quickload_not_found
-                }
-                Toast.makeText(
-                    context,
-                    context.getString(stringRes),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            Hotkey.QUICKLOAD.button -> VrQuickState.quickLoad()
 
             Hotkey.COMBO_BUTTON.button -> {
                 ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)

@@ -939,6 +939,10 @@
     <string name="vr_immersive_pos_game_scaler_title">Depth Factor Multiplier</string>
     <string name="vr_immersive_pos_game_scaler_description">Adjusts how much the depth slider affects the game camera (movement/separation), some games require smaller/larger values, so this multiplier adjusts how much movement the depth setting causes</string>
     <string name="vr_ribbon_menus_text_label">Menus:</string>
+    <string name="vr_quick_save">Quick Save</string>
+    <string name="vr_quick_load">Quick Load</string>
+    <string name="vr_quick_state_chord">Touch controller quick save / load</string>
+    <string name="vr_quick_state_chord_description">Hold both index triggers (ZL + ZR) and press A to quick save or B to quick load. These button presses are not sent to the game. Turn this off for games that use ZL + ZR + A or B together.</string>
     <string name="header_instructions_text">To Move a Panel:</string>
     <string name="vertical_header_text">Vertical Movement</string>
     <string name="vertical_instruction_1_text">Press and hold the index trigger while targeting the panel.</string>

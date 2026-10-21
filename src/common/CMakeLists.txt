@@ -56,6 +56,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     memory_detect.h
     memory_ref.h
     memory_ref.cpp
+    memory_streambuf.h
     microprofile.cpp
     microprofile.h
     microprofileui.h

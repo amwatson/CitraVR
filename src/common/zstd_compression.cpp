@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <memory>
 #include <mutex>
 #include <sstream>
 #include <zstd.h>
@@ -25,6 +26,11 @@
 
 namespace Common::Compression {
 std::vector<u8> CompressDataZSTD(std::span<const u8> source, s32 compression_level) {
+    return CompressDataZSTD(source, compression_level, 0);
+}
+
+std::vector<u8> CompressDataZSTD(std::span<const u8> source, s32 compression_level,
+                                 s32 worker_threads) {
     compression_level = std::clamp(compression_level, ZSTD_minCLevel(), ZSTD_maxCLevel());
     const std::size_t max_compressed_size = ZSTD_compressBound(source.size());
 
@@ -34,9 +40,21 @@ std::vector<u8> CompressDataZSTD(std::span<const u8> source, s32 compression_lev
         return {};
     }
 
+    std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)> context{ZSTD_createCCtx(), ZSTD_freeCCtx};
+    if (!context) {
+        LOG_ERROR(Common, "Error creating ZSTD compression context");
+        return {};
+    }
+    ZSTD_CCtx_setParameter(context.get(), ZSTD_c_compressionLevel, compression_level);
+    if (worker_threads > 0) {
+        // Fails, and is then ignored, if ZSTD was built without multithreading support. The
+        // output is the same single frame either way, with its decompressed size recorded.
+        ZSTD_CCtx_setParameter(context.get(), ZSTD_c_nbWorkers, worker_threads);
+    }
+
     std::vector<u8> compressed(max_compressed_size);
-    const std::size_t compressed_size = ZSTD_compress(
-        compressed.data(), compressed.size(), source.data(), source.size(), compression_level);
+    const std::size_t compressed_size = ZSTD_compress2(
+        context.get(), compressed.data(), compressed.size(), source.data(), source.size());
 
     if (ZSTD_isError(compressed_size)) {
         LOG_ERROR(Common, "Error compressing ZSTD data: {} ({})",

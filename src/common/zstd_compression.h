@@ -31,6 +31,22 @@ namespace Common::Compression {
 [[nodiscard]] std::vector<u8> CompressDataZSTD(std::span<const u8> source, s32 compression_level);
 
 /**
+ * Compresses a source memory region with Zstandard using multiple worker threads, and returns the
+ * compressed data in a vector. The result is a normal single frame that includes the decompressed
+ * size, so it is read by DecompressDataZSTD like any other.
+ *
+ * @param source the uncompressed source memory region.
+ * @param compression_level the used compression level. Should be between 1 and 22.
+ * @param worker_threads the number of threads to compress with, in addition to the calling one.
+ *                       Zero compresses on the calling thread only. Also compresses on the
+ *                       calling thread only if ZSTD was built without multithreading support.
+ *
+ * @return the compressed data.
+ */
+[[nodiscard]] std::vector<u8> CompressDataZSTD(std::span<const u8> source, s32 compression_level,
+                                               s32 worker_threads);
+
+/**
  * Compresses a source memory region with Zstandard with the default compression level and returns
  * the compressed data in a vector.
  *
